@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
 ************************************************************************************
-* Copyright (C) 2001-2006 Openbravo S.L.
+* Copyright (C) 2001-2008 Openbravo S.L.
 * Licensed under the Apache Software License version 2.0
 * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -10,7 +10,7 @@
 * specific language governing permissions and limitations under the License.
 ************************************************************************************
 -->
-<project default="jar" basedir="." name="openbravo-db">
+<project default="jar" basedir="." name="dbsourcesmanager">
 
     <property name="build.db.classes" value="${basedir}/build/classes"/>
     <property name="build.db.lib" value="${basedir}/build/lib"/>
@@ -48,7 +48,7 @@
     </target>
 
     <target name="build.jar">
-        <jar destfile="${build.db.lib}/dbmanager.jar">
+        <jar destfile="${build.db.lib}/dbsourcesmanager.jar">
             <fileset dir="${build.db.classes}"/>
             <manifest>
                 <attribute name="Built-By" value="Openbravo S.L."/>
@@ -58,7 +58,7 @@
 
 
     <target name="doc" depends="init" description="Generate api">
-        <javadoc packagenames="org.openbravo.*" 
+        <javadoc packagenames="*" 
             sourcepath="${build.db.src}"
             destdir="${build.db.docs}"
             author="true"
