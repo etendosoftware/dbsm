@@ -1,0 +1,177 @@
+<?xml version='1.0'?>
+<!-- 
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<betwixt-config>
+  <class name="org.apache.ddlutils.model.Database">
+    <element name="database">
+      <attribute name="name"            property="name"/>
+      <attribute name="defaultIdMethod" property="idMethod"/>
+      <attribute name="version"         property="version"/>
+
+      <element property="tables" updater="addTable"/>
+      <element property="sequences" updater="addSequence"/>
+      <element property="views" updater="addView"/>
+      <element property="functions" updater="addFunction"/>
+      <element property="triggers" updater="addTrigger"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.Table">
+    <element name="table">
+      <attribute name="name"        property="name"/>
+      <attribute name="primaryKey"  property="primaryKey"/>
+      <attribute name="description" property="description"/>
+
+      <element property="columns"     updater="addColumn"/>
+      <element property="foreignKeys" updater="addForeignKey"/>
+      <element property="indices"     updater="addIndex"/>
+      <element property="uniques"     updater="addUnique"/>
+      <element property="checks"      updater="addCheck"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.Column">
+    <element name="column">
+      <attribute name="name"          property="name"/>
+      <attribute name="primaryKey"    property="primaryKey"/>
+      <attribute name="required"      property="required"/>
+      <attribute name="type"          property="type"/>
+      <attribute name="size"          property="size"/>
+      <attribute name="default"       property="defaultValue"/>
+      <attribute name="autoIncrement" property="autoIncrement"/>
+      <attribute name="description"   property="description"/>
+      <attribute name="javaName"      property="javaName"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.ForeignKey">
+    <element name="foreign-key">
+      <attribute name="foreignTable" property="foreignTableName"/>
+      <attribute name="name"         property="name"/>
+      <attribute name="onUpdate"     property="onUpdate"/>
+      <attribute name="onDelete"     property="onDelete"/>
+
+      <element property="references" updater="addReference"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.Reference">
+    <element name="reference">
+      <attribute name="local"   property="localColumnName"/>
+      <attribute name="foreign" property="foreignColumnName"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.Index">
+    <element name="index">
+      <attribute name="name" property="name"/>
+      <attribute name="unique" property="unique"/>
+
+      <element name="index-column" property="columns" updater="addColumn"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.IndexColumn">
+    <element name="index-column">
+      <attribute name="name" property="name"/>
+      <attribute name="size" property="size"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.model.Unique">
+    <element name="unique">
+      <attribute name="name" property="name"/>
+
+      <element name="unique-column" property="columns" updater="addColumn"/>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.model.Check">
+    <element name="check">
+      <attribute name="name" property="name"/>
+      <attribute name="condition" property="conditionattr"/>
+        <text property="condition"/>
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.model.Sequence">
+    <element name="sequence">
+      <attribute name="name" property="name"/>
+      <attribute name="start" property="start"/>
+      <attribute name="increment" property="increment"/>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.model.View">
+    <element name="view">
+        <attribute name="name" property="name"/>
+        <text property="statement"/>
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.model.Function">
+    <element name="function">
+      <attribute name="name" property="name"/>
+      <attribute name="type" property="type"/>
+      <element property="parameters" updater="addParameter"/>
+      <element name="body" property="body">
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      </element>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.model.Parameter">
+      <element name="parameter">
+          <attribute name="name" property="name"/>
+          <attribute name="type" property="type"/>
+          <attribute name="mode" property="mode"/>
+          <attribute name="default" property="defaultValue"/>
+      </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.model.Trigger">
+    <element name="trigger">
+      <attribute name="name" property="name"/>
+      <attribute name="table" property="table"/>
+      <attribute name="fires" property="fires"/>
+      <attribute name="insert" property="insert"/>
+      <attribute name="update" property="update"/>
+      <attribute name="delete" property="delete"/>
+      <attribute name="foreach" property="foreach"/>
+      <element name="body" property="body">
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      </element>
+    </element>
+  </class>
+
+</betwixt-config>
