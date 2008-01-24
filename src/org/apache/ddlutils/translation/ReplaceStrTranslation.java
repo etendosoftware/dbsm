@@ -12,7 +12,6 @@
 
 package org.apache.ddlutils.translation;
 
-import java.util.regex.Pattern;
 
 /**
  *

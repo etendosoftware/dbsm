@@ -13,12 +13,10 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.*;
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.StringTokenizer;
-import javax.sql.DataSource;
 import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.DynamicDatabaseFilter;
@@ -134,17 +132,6 @@ public class DatabaseUtils {
         cropdb.removeTrigger(cropdb.findTrigger(sobject));
         cropdb.addTrigger(targetdb.findTrigger(sobject));
     }
-    
-    private static void executeUpdate(DataSource ds, String query) throws SQLException {
-        
-        Connection c = ds.getConnection();
-        
-        Statement s = c.createStatement();
-        s.execute(query);
-        s.close();
-        
-        c.close();
-    }    
     
     public static String readFile(File f) throws IOException {
 

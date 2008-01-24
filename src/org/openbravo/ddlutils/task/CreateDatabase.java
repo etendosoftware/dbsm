@@ -13,7 +13,6 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
-import java.sql.SQLException;
 import java.util.Properties;
 
 import org.apache.commons.dbcp.BasicDataSource;

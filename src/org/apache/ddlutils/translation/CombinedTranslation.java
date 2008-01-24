@@ -34,7 +34,6 @@ public class CombinedTranslation implements Translation {
     
     public final String exec(String s) {
         
-        String result = s;
         for (Translation t : _translations) {
             s = t.exec(s);            
         }
