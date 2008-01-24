@@ -10,7 +10,7 @@
 * specific language governing permissions and limitations under the License.
 ************************************************************************************
 -->
-<project default="jar" basedir="." name="dbsourcesmanager">
+<project default="jar" basedir="." name="dbsourcemanager">
 
     <property name="build.db.classes" value="${basedir}/build/classes"/>
     <property name="build.db.lib" value="${basedir}/build/lib"/>
@@ -48,7 +48,7 @@
     </target>
 
     <target name="build.jar">
-        <jar destfile="${build.db.lib}/dbsourcesmanager.jar">
+        <jar destfile="${build.db.lib}/dbsourcemanager.jar">
             <fileset dir="${build.db.classes}"/>
             <manifest>
                 <attribute name="Built-By" value="Openbravo S.L."/>
