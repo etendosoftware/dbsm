@@ -12,7 +12,7 @@ package org.apache.ddlutils.io;
 import org.apache.ddlutils.model.Database;
 
 /**
- *
+ * This class selects for the filter all the tables of database
  * @author adrian
  */
 public final class AllDatabaseFilter extends AbstractDatabaseFilter {
@@ -21,6 +21,10 @@ public final class AllDatabaseFilter extends AbstractDatabaseFilter {
     public AllDatabaseFilter() {
     }
     
+    /**
+     * Add to the filter all of the tables from database
+     * @param database The name of database
+     */
     public void init(Database database) {
         addAllTables(database);
     }    

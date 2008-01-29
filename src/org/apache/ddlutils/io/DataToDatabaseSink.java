@@ -167,10 +167,18 @@ public class DataToDatabaseSink implements DataSink
         _ensureFkOrder = ensureFkOrder;
     }
     
+    /**
+     * Returns the dabase filter
+     * @return The database filter
+     */
     public DatabaseFilter getDatabaseFilter() {
         return _databasefilter;
     }
     
+    /**
+     * Sets the database filter
+     * @param value The database filter
+     */
     public void setDatabaseFilter(DatabaseFilter value) {
         _databasefilter = value;
     }

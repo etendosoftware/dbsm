@@ -12,7 +12,7 @@ package org.apache.ddlutils.io;
 import org.apache.ddlutils.model.Database;
 
 /**
- *
+ * A dinamic database filter
  * @author adrian
  */
 public interface DynamicDatabaseFilter extends DatabaseFilter {

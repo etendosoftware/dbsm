@@ -268,7 +268,13 @@ public class DatabaseIO
         model.initialize();
         return model;
     }
-    
+    /**
+     * 
+     * Read recursively all the xml files of the database of a given directory
+     * 
+     * @param f The directory that contains the database model in xml format
+     * @return Array of the files contained in the directory 
+     */
     public static File[] readFileArray(File f) {
         
         if (f.isDirectory()) {
@@ -296,6 +302,14 @@ public class DatabaseIO
         }
     }
     
+    /**
+     * 
+     * Writes the database model to the specified directory.
+     * 
+     * @param model The database model
+     * @param dir The root directory for output
+     * @throws DdlUtilsException
+     */
     public void writeToDir(Database model, File dir) throws DdlUtilsException {
         
         Database d;
