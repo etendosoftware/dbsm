@@ -32,6 +32,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.ddlutils.dynabean.DynaClassCache;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaException;
+import org.apache.ddlutils.util.ExtTypes;
 
 /**
  * Represents the database model, ie. the tables in the database. It also
@@ -1150,9 +1151,21 @@ public class Database implements Serializable, Cloneable
     {
         return findFunction(name, false);
     }
+    
+    /**
+     * Finds the function with the specified name and parameters, using case sensitive matching.
+     * 
+     * @param name          The name of the function to find
+     * @param caseSensitive Whether case matters for the names
+     * @return The function or <code>null</code> if there is no such function
+     */
+    public Function findFunctionWithParams(String name, Parameter[] params)
+    {
+        return findFunctionWithParams(name, params, false);
+    }
 
     /**
-     * Finds the function with the specified name, using case insensitive matching.
+     * Finds the function with the specified name, using case sensitive matching.
      * Note that this method is not called getFunction) to avoid introspection
      * problems.
      * 
@@ -1183,6 +1196,76 @@ public class Database implements Serializable, Cloneable
         }
         return null;
     }
+
+    /**
+     * Finds the function with the specified name and parameters, using case insensitive matching.
+     * 
+     * @param name    The name of the function to find
+     * @param params   The parameters of the function to find
+     * @param caseSensitive    Whether case matters for the names
+     * @return The function or <code>null</code> if there is no such function
+     */
+    public Function findFunctionWithParams(String name, Parameter[] params ,boolean caseSensitive)
+    {
+        for (Iterator iter = _functions.iterator(); iter.hasNext();)
+        {
+            Function function = (Function) iter.next();
+
+            if (caseSensitive)
+            {
+                if (function.getName().equals(name))
+                {
+                	if(function.getParameterCount()==params.length)
+                	{
+                		boolean eqPara=true;
+                		int i=0;
+                		Parameter[] params2=function.getParameters();
+                		while(eqPara && i<params.length)
+                		{
+                			if(!params[i].equals(params2[i]))
+                				eqPara=false;
+                			i++;
+                		}
+                		if(eqPara)
+                			return function;
+                	}
+                }
+            }
+            else
+            {
+                if (function.getName().equalsIgnoreCase(name))
+                {
+            		Parameter[] params2=function.getParameters();
+            		if(params2.length==params.length)
+                	{
+                		boolean eqPara=true;
+                		int i=0;
+                		while(eqPara && i<params.length)
+                		{
+                			int type1=params[i].getTypeCode();
+                			int type2=params2[i].getTypeCode();
+
+                            int typeCode2 = type1 == ExtTypes.NVARCHAR ? Types.VARCHAR : type1;
+                            typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
+                            int othertypeCode2 = type2 == ExtTypes.NVARCHAR ? Types.VARCHAR : type2;
+                            othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
+                			if(typeCode2!=othertypeCode2)
+                			{
+                				eqPara=false;
+                			}
+                			i++;
+                		}
+                		if(eqPara)
+                		{
+                			return function;
+                		}
+                	}
+                }
+            }
+        }
+        return null;
+    }
+    
    
     /**
      * Finds the trigger with the specified name, using case insensitive matching.
@@ -1196,6 +1279,7 @@ public class Database implements Serializable, Cloneable
     {
         return findTrigger(name, false);
     }
+    
 
     /**
      * Finds the trigger with the specified name, using case insensitive matching.

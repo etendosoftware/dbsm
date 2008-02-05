@@ -19,12 +19,17 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.translation.*;
+import org.apache.ddlutils.util.ExtTypes;
 
 /**
  * Represents a database function or procedure.
@@ -41,6 +46,9 @@ public class Function implements StructureObject, Cloneable {
     private int _typeCode;
     /** The body of the function. */
     private String _body;
+    /** The translation object of the function */
+    private Translation _translation=new NullTranslation();
+    
     
     /** Creates a new instance of Function */
     public Function() {
@@ -368,13 +376,38 @@ public class Function implements StructureObject, Cloneable {
         if (obj instanceof Function) {
             Function other = (Function)obj;
 
+            int typeCode2 = _typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : _typeCode;
+            typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
+            int othertypeCode2 = other._typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : other._typeCode;
+            othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
+
+            /*System.out.println(other._translation.toString());
+            //System.out.println(other._translation.exec(other._body.trim()));
+            System.out.println("NOMBRE"+_name.equals(other._name));
+            System.out.println("PARAMETROS: "+_parameters.equals(other._parameters));
+            System.out.println("BODY: "+_translation.exec(_body.trim()).equals(other._translation.exec(other._body.trim())));
+            try{
+            PrintWriter w1 = new PrintWriter(new BufferedWriter(new FileWriter("/home/openbravo/Desktop/t1")));
+            PrintWriter w2 = new PrintWriter(new BufferedWriter(new FileWriter("/home/openbravo/Desktop/t2")));
+            String b1=_translation.exec(_body.trim());
+            String b2=other._translation.exec(other._body.trim());
+            w1.println(b1);
+            w2.println(b2);
+            w1.close();
+            w2.close();
+            System.out.println("BODYS********************");
+            System.out.println(_translation.exec(_body.trim()));
+            System.out.println(other._translation.exec(other._body.trim()));
+            System.out.println("BODYS********************");
+            }catch(Exception e){}*/
+            
             // Note that this compares case sensitive
             // TODO: For now we ignore catalog and schema (type should be irrelevant anyways)
             return new EqualsBuilder()
                     .append(_name, other._name)
                     .append(_parameters, other._parameters)
-                    .append(_body.trim(), other._body.trim())
-                    .append(_typeCode, other._typeCode)
+                    .append(_translation.exec(_body.trim()).trim(), other._translation.exec(other._body.trim()).trim())
+                    .append(typeCode2, othertypeCode2)
                     .isEquals();
         } else {
             return false;
@@ -389,12 +422,18 @@ public class Function implements StructureObject, Cloneable {
      */
     public boolean equalsIgnoreCase(Function otherFunction)
     {
+    	
+        int typeCode2 = _typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : _typeCode;
+        typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
+        int othertypeCode2 = otherFunction._typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : otherFunction._typeCode;
+        othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
         
+
         return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name) &&
                 new EqualsBuilder()
                         .append(_parameters, otherFunction._parameters)
-                        .append(_body.trim(), otherFunction._body.trim())
-                        .append(_typeCode, otherFunction._typeCode)
+                        .append(_translation.exec(_body.trim()).trim(), otherFunction._translation.exec(otherFunction._body.trim()).trim())
+                        .append(typeCode2, othertypeCode2)
                         .isEquals();
     }
     
@@ -422,6 +461,20 @@ public class Function implements StructureObject, Cloneable {
             return false;
         }
     }  
+    
+    /**
+     * Translates the function body
+     * @param translation
+     */
+    public void setTranslation(Translation translation)
+    {
+    	_translation=translation;
+    	for(int i=0;i<_parameters.size();i++)
+    	{
+    		Parameter p=(Parameter)_parameters.get(i);
+    		p.setTranslation(translation);
+    	}
+    }
     
     /**
      * {@inheritDoc}

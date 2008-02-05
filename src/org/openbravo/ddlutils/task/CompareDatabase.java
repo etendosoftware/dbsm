@@ -12,7 +12,10 @@
 
 package org.openbravo.ddlutils.task;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.Properties;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -27,10 +30,13 @@ import org.apache.log4j.LogManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.View;
+import org.apache.ddlutils.platform.postgresql.*;
+import org.apache.ddlutils.translation.*;
 import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.tools.ant.BuildException;
 
@@ -44,7 +50,8 @@ public class CompareDatabase extends Task {
     private String url;
     private String user;
     private String password;
-    private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+
+    private String excludeobjects = "com.openbravo.db.OpenbravoExcludeFilter";//"org.apache.ddlutils.platform.ExcludeFilter";
     
     private File model;   
 
@@ -76,15 +83,16 @@ public class CompareDatabase extends Task {
         _log = LogFactory.getLog(getClass());
     }    
     public void execute() {
-       
+    	
         initLogging();
     
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
         ds.setUrl(getUrl());
         ds.setUsername(getUser());
-        ds.setPassword(getPassword());    
-        
+        ds.setPassword(getPassword());   
+
+
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true); 
         
@@ -102,6 +110,8 @@ public class CompareDatabase extends Task {
             Database db2 = DatabaseUtils.readDatabase(getModel());        
             _log.info("Model database");
             _log.info(db2.toString());
+            
+            
 
             // Compare tables
             for (int i = 0; i < db1.getTableCount(); i++) {
@@ -144,17 +154,57 @@ public class CompareDatabase extends Task {
                     }
                 } 
             }
-
+            
+            Translation triggerTranslation=new NullTranslation();
+            Translation functionTranslation=null;
+            if(platform.getName().contains("Postgre"))
+            {
+            	triggerTranslation=new PostgrePLSQLTriggerTranslation(db2);
+            	functionTranslation=new PostgrePLSQLFunctionTranslation(db2);
+            }
+            else if(platform.getName().contains("Oracle"))
+            {
+            	triggerTranslation=new NullTranslation();
+            	functionTranslation=new NullTranslation();
+            	
+            }
+            /*
+            for(int i=0;i<db2.getFunctionCount();i++)
+            	System.out.println(db2.getFunction(i));
+			*/
             // Compare functions 
             for (int i = 0; i < db1.getFunctionCount(); i++) {
                 Function f1 = db1.getFunction(i);
-                Function f2 = db2.findFunction(f1.getName());
+                Function f2 = null;
+                if(platform.getName().contains("Postgre"))
+                	f2=db2.findFunctionWithParams(f1.getName(), f1.getParameters());
+                else
+                	f2=db2.findFunction(f1.getName());
 
                 if (f2 == null)  {
-                    _log.info("DIFF: FUNCTION NOT EXISTS "  + f1.getName());
+                	f2=db2.findFunction(f1.getName());
+                	if(f2!=null)
+                	{
+                		_log.info("DIFF: FUNCTION DIFFERENT "  + f1.getName()+" (different parameters)");
+                		/*
+                    	System.out.println(f1.getName());
+                        Parameter[] parameters=f1.getParameters();
+                        for(int ind=0;ind<parameters.length;ind++)
+                        	System.out.println(parameters[ind]);
+                        parameters=f2.getParameters();
+                        for(int ind=0;ind<parameters.length;ind++)
+                        	System.out.println(parameters[ind]);
+                        System.out.println(f1.getTypeCode());
+                        System.out.println(f2.getTypeCode());*/
+                	}
+                	else
+                		_log.info("DIFF: FUNCTION NOT EXISTS "  + f1.getName());
                 } else {
+                	f2.setTranslation(functionTranslation);
                     if (!f1.equals(f2)) {
-                        _log.info("DIFF: FUNCTIONS DIFFERENTS "  + f1.getName());
+                		_log.info("DIFF: FUNCTION DIFFERENT "  + f1.getName());
+                    	
+
                     }
                 } 
             }        
@@ -167,8 +217,13 @@ public class CompareDatabase extends Task {
                 if (t2 == null)  {
                     _log.info("DIFF: TRIGGER NOT EXISTS "  + t1.getName());
                 } else {
+                	t2.setTranslation(triggerTranslation);
                     if (!t1.equals(t2)) {
                         _log.info("DIFF: TRIGGERS DIFFERENTS "  + t1.getName());
+                        System.out.println(t1.getBody());
+                        System.out.println(t2.getBody());
+                        System.out.println(t1.getBody().equals(t2.getBody()));
+                        System.exit(1);
                     }
                 } 
             }               

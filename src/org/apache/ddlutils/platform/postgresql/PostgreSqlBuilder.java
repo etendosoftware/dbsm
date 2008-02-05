@@ -346,14 +346,14 @@ public class PostgreSqlBuilder extends SqlBuilder
      * {@inheritDoc}
      */
     protected String getFunctionBeginBody() {                
-        return "AS ' DECLARE ";
+        return "AS $BODY$ DECLARE ";
     }
     
     /**
      * {@inheritDoc}
      */
     protected String getFunctionEndBody() {
-        return "; ' LANGUAGE plpgsql;";
+        return "; $BODY$ LANGUAGE plpgsql;";
     }
     
     /**

@@ -22,6 +22,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.platform.ModelLoaderBase;
@@ -37,6 +41,8 @@ import org.apache.ddlutils.util.ExtTypes;
 public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     protected PreparedStatement _stmt_functionparams;
+    protected PreparedStatement _stmt_functiondefaults;
+    protected PreparedStatement _stmt_functiondefaults0;
     protected PreparedStatement _stmt_paramtypes;
     protected Translation _checkTranslation = new PostgreSqlCheckTranslation();
     
@@ -208,7 +214,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     "WHEN 24 THEN 'UPDATE, DELETE' " +
                     "WHEN 12 THEN 'INSERT, DELETE' " +
                     "END AS trigger_event, " +
-                    "p.proname AS function_name " +
+                    "p.prosrc AS function_code " +
                     "FROM pg_trigger trg, pg_class tbl, pg_proc p " +
                     "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'");
         } else {
@@ -227,7 +233,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     "WHEN 24 THEN 'UPDATE, DELETE' " +
                     "WHEN 12 THEN 'INSERT, DELETE' " +
                     "END AS trigger_event, " +
-                    "p.proname AS function_name " +
+                    "p.prosrc AS function_code " +
                     "FROM pg_trigger trg, pg_class tbl, pg_proc p " +
                     "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI' AND upper(trg.tgname) NOT IN (" + getListObjects(_filter.getExcludedTriggers()) + ")");
         }
@@ -251,15 +257,16 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     "AND upper(p.proname) NOT IN (" + getListObjects(_filter.getExcludedFunctions()) + ")");
         }
         
-        _stmt_functioncode = _connection.prepareStatement("select 'function ' || ?"); // dummy sentence        
-        
+        _stmt_functioncode = _connection.prepareStatement("select p.prosrc FROM pg_proc p WHERE UPPER(p.proname) = ?"); // dummy sentence        
+
         _stmt_functionparams = _connection.prepareStatement(
                 "  SELECT " +
                 "         pg_proc.prorettype," +
                 "         pg_proc.proargtypes," +
                 "         pg_proc.proallargtypes," +
                 "         pg_proc.proargmodes," +
-                "         pg_proc.proargnames" +
+                "         pg_proc.proargnames," +
+                "         pg_proc.prosrc" +
                 "    FROM pg_catalog.pg_proc" +
                 "         JOIN pg_catalog.pg_namespace" +
                 "         ON (pg_proc.pronamespace = pg_namespace.oid)" +
@@ -270,6 +277,42 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)" +
                 "     AND upper(pg_proc.proname) = ?" +
                 "         ORDER BY pg_proc.proargtypes DESC");
+
+        _stmt_functiondefaults = _connection.prepareStatement(
+                "  SELECT " +
+                "         pg_proc.proname," +
+                "         pg_proc.proargtypes," +
+                "         pg_proc.proallargtypes," +
+                "         pg_proc.prosrc" +
+                "    FROM pg_catalog.pg_proc" +
+                "         JOIN pg_catalog.pg_namespace" +
+                "         ON (pg_proc.pronamespace = pg_namespace.oid)" +
+                "   WHERE pg_proc.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype" +
+                "     AND (pg_proc.proargtypes[0] IS NULL" +
+                "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)" +
+                "     AND NOT pg_proc.proisagg" +
+                "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)" +
+                "     AND (upper(pg_proc.proname) = ? )" +
+                "         ORDER BY pg_proc.proargtypes ASC");
+        
+        _stmt_functiondefaults0 = _connection.prepareStatement(
+                "  SELECT " +
+                "         pg_proc.proname," +
+                "         pg_proc.proargtypes," +
+                "         pg_proc.proallargtypes," +
+                "         pg_proc.prosrc" +
+                "    FROM pg_catalog.pg_proc" +
+                "         JOIN pg_catalog.pg_namespace" +
+                "         ON (pg_proc.pronamespace = pg_namespace.oid)" +
+                "   WHERE pg_proc.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype" +
+                "     AND (pg_proc.proargtypes[0] IS NULL" +
+                "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)" +
+                "     AND NOT pg_proc.proisagg" +
+                "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)" +
+                "     AND (upper(pg_proc.proname) = ? )" +
+                "         ORDER BY pg_proc.proargtypes ASC");
+        
+        
         _stmt_paramtypes = _connection.prepareStatement("SELECT pg_catalog.format_type(?, NULL)");        
 
     }
@@ -285,14 +328,24 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         s.close();        
     }
     
+    int numDefaults;
+    int numDefaultsDif;
+    int numRemDefaults;
     protected Function readFunction(String name) throws SQLException {
         
         final Function f = new Function();
         f.setName(name);
         
         final FinalBoolean firststep = new FinalBoolean();
-            
+
         _stmt_functionparams.setString(1, name);
+        _stmt_functiondefaults.setString(1, name);
+        _stmt_functiondefaults0.setString(1, name+"0");
+        numDefaults=0;
+        numDefaultsDif=0;
+        
+        numRemDefaults=0;
+        
         fillList(_stmt_functionparams, new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
 
             if (firststep.get()) {
@@ -301,10 +354,13 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 Integer[] aalltypes = getIntArray2(r, 3);
                 if (aalltypes != null) {    
                     atypes = aalltypes;
-                }     
+                }  
+                
+                /*
                 for (int i = atypes.length; i < f.getParameterCount(); i++) {
                     f.getParameter(i).setDefaultValue("0"); // a dummy default value
-                }
+                }*/
+                numDefaults++;
                 
             } else {
                 int ireturn = r.getInt(1);
@@ -319,6 +375,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     f.setTypeCode(Types.NULL);    
                     atypes = aalltypes;
                 }
+                
 
                 for (int i = 0; i < atypes.length; i++) {
                     Parameter p = new Parameter();
@@ -337,11 +394,75 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     f.addParameter(p);
                 }          
                 firststep.set(true);
+                
+
+            	f.setBody(translatePLSQLBody(r.getString(6)));
+
+            	numDefaults=0;
             }
-        }});        
+        }});    
+        firststep.set(false);
+
+        numRemDefaults=numDefaults;
+
+
         
+        fillList(_stmt_functiondefaults, new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
+
+        	//int numParams=f.getParameterCount();
+        	if(numRemDefaults>0)
+        	{
+                Integer[] types = getIntArray(r, 2);
+                Integer[] alltypes=getIntArray2(r,3);
+        		int numParamsMin=numRemDefaults;//types.length;
+        		//if(alltypes!=null && alltypes.length>numParamsMin) numParamsMin=alltypes.length;
+        		//System.out.println(r.getString(1)+": "+numParams+";;;"+numParamsMin);
+        		try
+        		{
+		        	String bodyMin=r.getString(4);
+		        	String patternSearched=""+f.getName().toUpperCase()+"(.*)\\)";
+		        	Pattern pattern=Pattern.compile(patternSearched);
+		        	Matcher matcher=pattern.matcher(bodyMin);
+		        	if(matcher.find())
+		        	{
+			        	String defaults=matcher.group(1).trim();
+		        		//System.out.println("hemos encontrado: "+defaults);
+			        	defaults=defaults.substring(1, defaults.length());
+			        	//System.out.println("default: "+defaults);
+			        	StringTokenizer sT=new StringTokenizer(defaults);
+			        	
+			        	Vector<String> strs=new Vector<String>();
+			        	while(sT.hasMoreTokens())
+				        	strs.add(sT.nextToken());
+			        	
+		        		String pvalue=strs.lastElement().replaceAll("'", "");
+		        		//System.out.println("intento meter: "+pvalue);
+		        		f.getParameter(f.getParameterCount()-numRemDefaults).setDefaultValue(pvalue);
+
+		        		numRemDefaults--;
+		        	}
+		        	else
+		        	{
+	        			System.out.println("Error reading default values for parameters in function "+r.getString(1)+" (pattern not found)");
+		        	}
+        		}catch(Exception e)
+        		{
+        			System.out.println("Error reading default values for parameters in function "+r.getString(1)+": "+e.toString());
+        			//System.out.println("We'll try to find them in function "+r.getString(1)+"0");
+
+
+        		}
+        	}
         
-        f.setBody("/********/");           
+    	
+        }});
+        
+        if(numRemDefaults!=0)
+        {
+			System.out.println("Error reading default values for parameters in function "+name);
+        }
+        
+                
         return f;
     }    
     
@@ -548,4 +669,5 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             b = value;
         }        
     }
+    
 }

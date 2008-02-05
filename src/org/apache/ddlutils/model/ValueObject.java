@@ -18,6 +18,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.ddlutils.translation.NullTranslation;
+import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.Jdbc3Utils;
 
 /**
@@ -30,6 +32,7 @@ public abstract class ValueObject implements Cloneable {
     protected int _typeCode;
     /** The default value. */
     protected String _defaultValue;
+    protected Translation _translation=new NullTranslation();
     
     public ValueObject() {
         _typeCode = Types.VARCHAR;
@@ -208,4 +211,9 @@ public abstract class ValueObject implements Cloneable {
 
         return result;
     }    
+    
+    public void setTranslation(Translation translation)
+    {
+    	_translation=translation;
+    }
 }

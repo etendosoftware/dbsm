@@ -27,6 +27,7 @@ import java.sql.Date;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.util.ExtTypes;
 import org.apache.ddlutils.util.Jdbc3Utils;
 
 /**
@@ -139,11 +140,36 @@ public class Parameter extends ValueObject implements Cloneable {
     public boolean equals(Object obj) {
         if (obj instanceof Parameter) {
             Parameter other = (Parameter)obj;
+            
+            int typeCode2 = _typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : _typeCode;
+            typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
+            int othertypeCode2 = other._typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : other._typeCode;
+            othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
+            
+            int modeCode2 = _modeCode == MODE_NONE ? MODE_IN : _modeCode;
+            int otherModeCode2 = other._modeCode == MODE_NONE ? MODE_IN : other._modeCode;
+            
+            String _defaultValueT=null;
+            String _otherDefaultValueT=null;
+
+        	if(_defaultValue!=null)
+        	{
+        		_defaultValueT=_translation.exec(_defaultValue);
+        		if(_defaultValueT.charAt(_defaultValueT.length()-1)=='\n')
+        			_defaultValueT=_defaultValueT.substring(0,_defaultValueT.length()-1);
+        	}
+        	if(other._defaultValue!=null)
+        	{
+        		_otherDefaultValueT=other._translation.exec(other._defaultValue);
+        		if(_otherDefaultValueT.charAt(_otherDefaultValueT.length()-1)=='\n')
+        			_otherDefaultValueT=_otherDefaultValueT.substring(0,_otherDefaultValueT.length()-1);
+        	}
+            
             return new EqualsBuilder()
-                .append(_name, other._name)
-                .append(_typeCode, other._typeCode)
-                .append(_modeCode, other._modeCode)
-                .append(_defaultValue, other._defaultValue)
+                .append(_name.toLowerCase(), other._name.toLowerCase())
+                .append(typeCode2, othertypeCode2)
+                .append(modeCode2, otherModeCode2)
+                .append(_defaultValueT, _otherDefaultValueT)
                 .isEquals();
         } else {
             return false;

@@ -47,6 +47,8 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.*;
 import org.apache.ddlutils.model.*;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerTranslation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
 import org.apache.ddlutils.translation.NullTranslation;
@@ -475,8 +477,13 @@ public abstract class SqlBuilder
         _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
         _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
         _SQLTranslation = createSQLTranslation(desiredModel);
-        
-        ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
+
+    	for(int i=0;i<desiredModel.getFunctionCount();i++)
+    		desiredModel.getFunction(i).setTranslation(_PLSQLFunctionTranslation);
+    	for(int i=0;i<desiredModel.getTriggerCount();i++)
+    		desiredModel.getTrigger(i).setTranslation(_PLSQLTriggerTranslation);
+    	
+    	ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
         List changes = comparator.compare(currentModel, desiredModel);
 
         processChanges(currentModel, desiredModel, changes, params);

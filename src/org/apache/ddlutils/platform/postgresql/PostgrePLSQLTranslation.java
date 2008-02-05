@@ -74,7 +74,7 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
         append(new ReplaceStrTranslation(" BLOB ", " OID "));
         append(new ReplaceStrTranslation("BLOB$", "OID"));
         
-        append(new ReplaceStrTranslation("'", "''"));
+        //append(new ReplaceStrTranslation("'", "''"));
         //append(new ByLineTranslation(new ReplacePatTranslation("^(AS|IS)([\\s|\\t]*)$", "AS '")));  
         append(new ByLineTranslation(new ReplacePatTranslation("^(\\s|\\t)*(.+?)rowcount(\\s|\\t)*:=(\\s|\\t)*SQL%ROWCOUNT;", "$1GET DIAGNOSTICS $2rowcount:=ROW_COUNT;")));       
         append(new RemoveTranslation("COMMIT;"));

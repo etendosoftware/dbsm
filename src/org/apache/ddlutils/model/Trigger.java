@@ -19,8 +19,13 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.translation.*;
 
 /**
  * Represents a database function or procedure.
@@ -51,6 +56,9 @@ public class Trigger implements StructureObject, Cloneable {
     private int _foreachCode;
     /** The body of the trigger. */
     private String _body;
+    /** The translation object used to translate the trigger body */
+    private Translation _translation=new NullTranslation();
+    
     
     /** Creates a new instance of Trigger */
     public Trigger() {
@@ -302,7 +310,7 @@ public class Trigger implements StructureObject, Cloneable {
                                       .append(_update, other._update)
                                       .append(_delete, other._delete)
                                       .append(_foreachCode, other._foreachCode)
-                                      .append(_body.trim(), other._body.trim())
+                                      .append(_translation.exec(_body.trim()), other._translation.exec(other._body.trim()))
                                       .isEquals();
         } else {
             return false;
@@ -317,7 +325,7 @@ public class Trigger implements StructureObject, Cloneable {
      */
     public boolean equalsIgnoreCase(Trigger otherTrigger)
     {
-        
+
         return UtilsCompare.equalsIgnoreCase(_name, otherTrigger._name) &&
                new EqualsBuilder().append(_table, otherTrigger._table)
                                   .append(_firesCode, otherTrigger._firesCode)
@@ -325,8 +333,18 @@ public class Trigger implements StructureObject, Cloneable {
                                   .append(_update, otherTrigger._update)
                                   .append(_delete, otherTrigger._delete)
                                   .append(_foreachCode, otherTrigger._foreachCode)
-                                  .append(_body.trim(), otherTrigger._body.trim())
+                                  .append(_translation.exec(_body.trim()).trim(), otherTrigger._translation.exec(otherTrigger._body.trim()).trim())
                                   .isEquals();
+    }
+    
+    /**
+     * Sets the translation object of the trigger.
+     * @param translation The translation object used to translate the trigger.
+     */
+    public void setTranslation(Translation translation)
+    {
+    	_translation=translation;
+    	//_body=translation.exec(_body);
     }
     
     /**
