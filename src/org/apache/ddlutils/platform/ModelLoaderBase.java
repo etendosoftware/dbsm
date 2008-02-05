@@ -334,7 +334,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
             new RowConstructor() { public Object getRow(ResultSet r) throws SQLException {
                 View v = new View();
                 v.setName(r.getString(1));
-                v.setStatement(r.getString(2));
+                v.setStatement(translateSQL(r.getString(2)));
                 return v;
             }});
     }      
@@ -504,6 +504,10 @@ public abstract class ModelLoaderBase implements ModelLoader {
     
     protected String translateCheckCondition(String code) {
         return code;
+    }
+    
+    protected String translateSQL(String sql){
+    	return sql;
     }
     
     protected boolean translateUniqueness(String uniqueness) {

@@ -38,8 +38,7 @@ public class RuleProcessor {
         
         Matcher m = p.matcher(sql);
         if (m.find()) {
-
-            addField(m.group(2), m.group(4));
+            addField(removeNameOfTable(m.group(2)), m.group(4));
             String sseparator = m.group(5);
             int offset = m.end();
             
@@ -48,8 +47,8 @@ public class RuleProcessor {
 
             while (",".equals(sseparator)) {
                 if (m.find(offset)) {
-                    if (pField.matcher(m.group(2)).matches() && (m.group(4) == null || pFieldas.matcher(m.group(4)).matches())) {
-                        addField(m.group(2), m.group(4));
+                	if (pField.matcher(m.group(2)).matches() && (m.group(4) == null || pFieldas.matcher(m.group(4)).matches())) {
+                        addField(removeNameOfTable(m.group(2)), m.group(4));
                         sseparator = m.group(5);
                         offset = m.end();  
                     } else {
@@ -88,6 +87,10 @@ public class RuleProcessor {
         }
         
         _bupdatable = true;
+    }
+    
+    private String removeNameOfTable(String field){
+    	return field.substring(field.indexOf(".")+1); // if field not contains '.' indexof returns '-1', in this case '-1 +1 = 0' and the function will return the entire string
     }
     
     public boolean isUpdatable() {

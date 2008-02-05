@@ -45,6 +45,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     protected PreparedStatement _stmt_functiondefaults0;
     protected PreparedStatement _stmt_paramtypes;
     protected Translation _checkTranslation = new PostgreSqlCheckTranslation();
+    protected Translation _SQLTranslation = new PostgreSQLStandarization();
     
     protected Map<Integer, Integer> _paramtypes =  new HashMap<Integer, Integer>();
     
@@ -184,10 +185,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 " ORDER BY temp_findinarray(pg_constraint.conkey, pg_attribute.attnum)");
         
         if (_filter.getExcludedViews().length == 0) {
-            _stmt_listviews = _connection.prepareStatement("SELECT upper(viewname), definition FROM pg_views " +
+        	_stmt_listviews = _connection.prepareStatement("SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views " +
                     "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_'");
         } else {
-            _stmt_listviews = _connection.prepareStatement("SELECT upper(viewname), definition FROM pg_views " +
+            _stmt_listviews = _connection.prepareStatement("SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views " +
                     "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_' " +
                     "AND upper(viewname) NOT IN (" + getListObjects(_filter.getExcludedViews()) + ")"); 
         }
@@ -543,6 +544,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     
     protected String translateCheckCondition(String code) {
         return _checkTranslation.exec(code);
+    }
+    
+    protected String translateSQL(String sql){
+    	return _SQLTranslation.exec(sql);
     }
     
     protected boolean translateRequired(String required) {

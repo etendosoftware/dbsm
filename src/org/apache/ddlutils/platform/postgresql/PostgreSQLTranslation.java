@@ -24,7 +24,7 @@ public class PostgreSQLTranslation extends CombinedTranslation {
     
     /** Creates a new instance of PostgreSQLTranslation */
     public PostgreSQLTranslation() {
-        append(new ReplaceStrTranslation("SYSDATE", "CURRENT_TIMESTAMP"));
+        append(new ReplaceStrTranslation("SYSDATE", "CURRENT_TIMESTAMP")); // See also PostgresSQLBuilder.getNativeFunction();
         append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('MM')(\\))", "DATE_TRUNC('month',$3)"));
         append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'MM')(\\))", "DATE_TRUNC('month',$3)"));
         append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('DD')(\\))", "DATE_TRUNC('day',$3)"));
