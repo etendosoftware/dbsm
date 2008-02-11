@@ -3327,7 +3327,7 @@ public abstract class SqlBuilder
                 print(getFunctionBeginBody());
                 println();               
                 print(getPLSQLFunctionTranslation().exec(function.getBody()));   
-                println();
+                //println();
                 print(getFunctionEndBody());
                 
                 printEndOfStatement(getStructureObjectName(function));
@@ -3549,9 +3549,9 @@ public abstract class SqlBuilder
     }
     
     public void writeTriggerExecuteStmt(Trigger trigger) throws IOException {   
-        println("DECLARE");
+        print("DECLARE");
         print(getPLSQLTriggerTranslation().exec(trigger.getBody()));        
-        println();
+        //println();
         print(";");
     }
     
@@ -3697,7 +3697,7 @@ public abstract class SqlBuilder
         println();
         print(getPlatformInfo().getSqlCommandDelimiter());
         printComment("END " + statementName);
-        println();
+        //println();
     }
 
     protected void printStartOfStatement(String type, String statementName) throws IOException {

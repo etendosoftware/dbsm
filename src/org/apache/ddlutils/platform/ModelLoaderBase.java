@@ -144,6 +144,11 @@ public abstract class ModelLoaderBase implements ModelLoader {
         db.addTriggers(readTriggers());
         db.addFunctions(readFunctions());
         
+
+        for (int tableIdx = 0; tableIdx < db.getTableCount(); tableIdx++)
+        {
+            db.getTable(tableIdx).sortForeignKeys(false);
+        }
         return db;
     }
     

@@ -93,7 +93,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /** Whether identity override is enabled. */
     private boolean _identityOverrideOn;
     /** Whether read foreign keys shall be sorted alphabetically. */
-    private boolean _foreignKeysSorted;
+    private boolean _foreignKeysSorted=true;
 
     /**
      * {@inheritDoc}
@@ -2001,7 +2001,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     }
     
     public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException {
-               
+    
         Connection connection = borrowConnection();
         try {
             return getModelLoader().getDatabase(connection, filter);
