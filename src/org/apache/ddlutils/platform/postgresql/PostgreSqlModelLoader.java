@@ -547,7 +547,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     }
     
     protected String translateSQL(String sql){
-    	return _SQLTranslation.exec(sql);
+    	return _SQLTranslation.exec(sql).trim();
     }
     
     protected boolean translateRequired(String required) {
