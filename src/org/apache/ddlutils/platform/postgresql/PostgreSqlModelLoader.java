@@ -277,7 +277,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 "     AND NOT pg_proc.proisagg" +
                 "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)" +
                 "     AND upper(pg_proc.proname) = ?" +
-                "         ORDER BY pg_proc.proargtypes DESC");
+                "         ORDER BY pg_proc.pronargs DESC, length(pg_proc.prosrc) DESC");
+        		//we order by pronargs to get the correct source when a function is overridden by DBSourceManager
+        		//(because of default parameters).
+        		//we order by source to get the correct source when two functions have the same number of parameters
+        		//and they are different
 
         _stmt_functiondefaults = _connection.prepareStatement(
                 "  SELECT " +
@@ -294,7 +298,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 "     AND NOT pg_proc.proisagg" +
                 "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)" +
                 "     AND (upper(pg_proc.proname) = ? )" +
-                "         ORDER BY pg_proc.proargtypes ASC");
+                "         ORDER BY pg_proc.pronargs ASC");
         
         _stmt_functiondefaults0 = _connection.prepareStatement(
                 "  SELECT " +
