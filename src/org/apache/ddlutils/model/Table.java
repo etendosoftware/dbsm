@@ -871,6 +871,30 @@ public class Table implements StructureObject, Serializable, Cloneable
             });
         }
     }
+    
+    public void sortChecks(final boolean caseSensitive)
+    {
+
+        if (!_checks.isEmpty())
+        {
+            final Collator collator = Collator.getInstance();
+    
+            Collections.sort(_checks, new Comparator() {
+                public int compare(Object obj1, Object obj2)
+                {
+                    String ch1Name = ((Check)obj1).getName();
+                    String ch2Name = ((Check)obj2).getName();
+
+                    if (!caseSensitive)
+                    {
+                    	ch1Name = (ch1Name != null ? ch1Name.toLowerCase() : null);
+                    	ch2Name = (ch2Name != null ? ch2Name.toLowerCase() : null);
+                    }
+                    return collator.compare(ch1Name, ch2Name);
+                }
+            });
+        }
+    }
 
     /**
      * Returns the number of checks.

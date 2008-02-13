@@ -148,6 +148,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
         for (int tableIdx = 0; tableIdx < db.getTableCount(); tableIdx++)
         {
             db.getTable(tableIdx).sortForeignKeys(false);
+            db.getTable(tableIdx).sortChecks(false);
         }
         return db;
     }
