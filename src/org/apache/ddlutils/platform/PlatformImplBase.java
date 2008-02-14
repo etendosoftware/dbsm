@@ -1305,8 +1305,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                     // we also return properties without a value in the bean
                     // if they ain't auto-increment and don't have a default value
                     // in this case, a NULL is inserted
-                    return !prop.getColumn().isAutoIncrement() &&
-                           (prop.getColumn().getDefaultValue() == null);
+                    return !prop.getColumn().isAutoIncrement();// &&
+                           //(prop.getColumn().getDefaultValue() == null);
+                    //CORRECTION: If a property hasn't got value, and is not autoincrement,
+                    //a NULL will be inserted. We don't care about default values.
+                    //Before this change, if a nullable column had default value, if a row had NULL value
+                    //in the database, after exporting and importing it the value would have been changed
+                    //to the default value, and this is not correct.
                 }
             }
         });
