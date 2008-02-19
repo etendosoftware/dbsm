@@ -21,6 +21,7 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseFilter;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.UniqueDatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
@@ -122,7 +123,14 @@ public class ExportDataXML extends Task {
             DatabaseFilter dbfilter = DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb);
             
             if (getOutput().isDirectory()) {
-                // Create a set of files one for each table
+                //First we delete all .xml files in the directory
+            	
+            	File[] filestodelete = DatabaseIO.readFileArray(getOutput());
+                for (File filedelete : filestodelete) {
+                    filedelete.delete();
+                }
+            	
+            	// Create a set of files one for each table
                 
                 
                 String [] tablenames = dbfilter.getTableNames();
