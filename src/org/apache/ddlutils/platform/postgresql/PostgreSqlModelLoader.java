@@ -20,17 +20,24 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
+import org.apache.ddlutils.translation.CommentFilter;
+import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -44,6 +51,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     protected PreparedStatement _stmt_functiondefaults;
     protected PreparedStatement _stmt_functiondefaults0;
     protected PreparedStatement _stmt_paramtypes;
+    protected PreparedStatement _stmt_oids_funcs;
+    protected PreparedStatement _stmt_comments_funcs;
+    protected PreparedStatement _stmt_oids_tables;
+    protected PreparedStatement _stmt_comments_tables;
+    
     protected Translation _checkTranslation = new PostgreSqlCheckTranslation();
     protected Translation _SQLTranslation = new PostgreSQLStandarization();
     
@@ -55,6 +67,75 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     
     protected String readName() {
         return "PostgreSql server";
+    }
+
+    protected Database readDatabase()  throws SQLException{
+    	Database db=super.readDatabase();
+    	
+    	
+    	System.out.println("Starting function and trigger standarization.");
+    	PostgrePLSQLStandarization.generateOutPatterns(db);
+    	for(int i=0;i<db.getFunctionCount();i++)
+    	{
+        	PostgrePLSQLFunctionStandarization functionStandarization=new PostgrePLSQLFunctionStandarization(db,i);
+    		String body=db.getFunction(i).getBody();
+
+            LiteralFilter litFilter=new LiteralFilter();
+            CommentFilter comFilter=new CommentFilter();
+
+            body=litFilter.removeLiterals(body);
+            System.out.println(db.getFunction(i).getName());
+            body=comFilter.removeComments(body);
+            if(db.getFunction(i).getName().contains("AD_APPLICATION"))
+            	System.out.println(body);
+    		String standardizedBody=functionStandarization.exec(body).trim();
+            if(db.getFunction(i).getName().contains("AD_APPLICATION"))
+            	System.out.println(standardizedBody);
+
+    		standardizedBody=comFilter.restoreComments(standardizedBody);
+    		standardizedBody=litFilter.restoreLiterals(standardizedBody);
+    		
+    		
+    		while(standardizedBody.charAt(standardizedBody.length()-1)=='\n' || standardizedBody.charAt(standardizedBody.length()-1)==' ')
+    			standardizedBody=standardizedBody.substring(0,standardizedBody.length()-1);
+    		db.getFunction(i).setBody(standardizedBody+"\n");//initialBlanks+initialComments+
+    	}
+    	for(int i=0;i<db.getTriggerCount();i++)
+    	{
+        	PostgrePLSQLTriggerStandarization triggerStandarization=new PostgrePLSQLTriggerStandarization(db,i);
+    		String body=db.getTrigger(i).getBody();
+
+
+            LiteralFilter litFilter=new LiteralFilter();
+            CommentFilter comFilter=new CommentFilter();
+
+            body=litFilter.removeLiterals(body);
+            body=comFilter.removeComments(body);
+            
+    		String standardizedBody=triggerStandarization.exec(body);
+
+    		standardizedBody=comFilter.restoreComments(standardizedBody);
+    		standardizedBody=litFilter.restoreLiterals(standardizedBody);
+    		
+    		//System.out.println(db.getTrigger(i).getName()+"trad:::::::::::"+standardizedBody);
+    		while(standardizedBody.charAt(standardizedBody.length()-1)=='\n' || standardizedBody.charAt(standardizedBody.length()-1)==' ')
+    			standardizedBody=standardizedBody.substring(0,standardizedBody.length()-1);
+    		db.getTrigger(i).setBody(standardizedBody+'\n');//initialBlanks+initialComments+
+    	}
+    	
+    	return db;
+    	
+    }
+
+    protected String translatePLSQLBody(String value) {
+        String body = value.trim();
+        if (body.startsWith("DECLARE")) {
+            body = body.substring(9);
+        }
+        if (body.endsWith(";")) {
+            body = body.substring(0, body.length() -1);
+        }
+        return body;
     }
     
     protected void initMetadataSentences() throws SQLException {
@@ -318,7 +399,15 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 "         ORDER BY pg_proc.proargtypes ASC");
         
         
-        _stmt_paramtypes = _connection.prepareStatement("SELECT pg_catalog.format_type(?, NULL)");        
+        _stmt_paramtypes = _connection.prepareStatement("SELECT pg_catalog.format_type(?, NULL)");     
+        
+        _stmt_oids_funcs=_connection.prepareStatement("SELECT oid FROM pg_proc WHERE upper(proname) = ?");
+        
+        _stmt_comments_funcs=_connection.prepareStatement("SELECT obj_description(?,'pg_proc')");  
+        
+        _stmt_oids_tables=_connection.prepareStatement("SELECT oid FROM pg_class WHERE upper(relname) = ?");
+        
+        _stmt_comments_tables=_connection.prepareStatement("SELECT col_description(?,?)");
 
     }
     
@@ -336,6 +425,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     int numDefaults;
     int numDefaultsDif;
     int numRemDefaults;
+    Vector <String>paramsNVARCHAR=new Vector<String>();
+    int oidFunc;
+    String comment="";
     protected Function readFunction(String name) throws SQLException {
         
         final Function f = new Function();
@@ -350,6 +442,37 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         numDefaultsDif=0;
         
         numRemDefaults=0;
+        
+        _stmt_oids_funcs.setString(1, name);
+        fillList(_stmt_oids_funcs,new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
+        	oidFunc=r.getInt(1);
+        }});
+        
+        _stmt_comments_funcs.setInt(1, oidFunc);
+        fillList(_stmt_comments_funcs,new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
+        		comment=r.getString(1);
+        }});
+        
+        if(comment!=null && !comment.equals(""))
+        {
+        	Pattern pat=Pattern.compile("--OBTG:(.*)--");
+        	Matcher match=pat.matcher(comment);
+        	if(match.matches())
+        	{
+	        	comment=match.group(1);
+        		Pattern elem=Pattern.compile("(.*)=(.*)");
+	        	StringTokenizer tok=new StringTokenizer(comment,",");
+	        	while(tok.hasMoreTokens())
+	        	{
+	        		String token=tok.nextToken();
+	        		Matcher el=elem.matcher(token);
+	        		if(el.matches())
+	        		{
+	        			paramsNVARCHAR.add(el.group(1));
+	        		}
+	        	}
+        	}
+        }
         
         fillList(_stmt_functionparams, new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
 
@@ -374,26 +497,52 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 String[] modes = getStringArray(r, 4);
                 String[] names = getStringArray(r, 5);
 
-                if (aalltypes == null) {
-                    f.setTypeCode(getParamType(ireturn));                  
-                } else {
-                    f.setTypeCode(Types.NULL);    
-                    atypes = aalltypes;
+                Iterator<String> itf=paramsNVARCHAR.iterator();
+                boolean nvarcf=false;
+                while(itf.hasNext() && !nvarcf)
+                {
+                	String np=itf.next();
+                	if(np.equalsIgnoreCase(f.getName()+"func"))
+                	{
+                    	f.setTypeCode(ExtTypes.NVARCHAR);
+                    	nvarcf=true;
+                	}
+                }
+                if(!nvarcf)
+                {
+                	if (aalltypes == null) {
+                		f.setTypeCode(getParamType(ireturn));                  
+	                } else {
+	                    f.setTypeCode(Types.NULL);    
+	                    atypes = aalltypes;
+	                }
                 }
                 
 
                 for (int i = 0; i < atypes.length; i++) {
                     Parameter p = new Parameter();
-                    p.setTypeCode(getParamType(atypes[i]));
+                    if (names != null) {
+                        p.setName(names[i]);
+                    }
+                    Iterator<String> it=paramsNVARCHAR.iterator();
+                    boolean nvarc=false;
+                    while(it.hasNext() && !nvarc)
+                    {
+                    	String np=it.next();
+                    	if(np.equalsIgnoreCase(p.getName()))
+                    	{
+                        	p.setTypeCode(ExtTypes.NVARCHAR);
+                        	nvarc=true;
+                    	}
+                    }
+                    if(!nvarc)
+                    	p.setTypeCode(getParamType(atypes[i]));
                     if (modes == null) {
                         p.setModeCode(Parameter.MODE_IN);
                     } else {
                         p.setModeCode("i".equals(modes[i]) 
                                 ? Parameter.MODE_IN
                                 : Parameter.MODE_OUT);
-                    }
-                    if (names != null) {
-                        p.setName(names[i]);
                     }
 
                     f.addParameter(p);
@@ -407,6 +556,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             }
         }});    
         firststep.set(false);
+        paramsNVARCHAR.clear();
 
         numRemDefaults=numDefaults;
 
@@ -442,7 +592,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 			        	
 		        		String pvalue=strs.lastElement().replaceAll("'", "");
 		        		//System.out.println("intento meter: "+pvalue);
-		        		f.getParameter(f.getParameterCount()-numRemDefaults).setDefaultValue(pvalue);
+		        		f.getParameter(f.getParameterCount()-numRemDefaults).setDefaultValue(PostgrePLSQLStandarization.translateDefault(pvalue));
 
 		        		numRemDefaults--;
 		        	}
@@ -470,6 +620,46 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 
         return f;
     }    
+    
+    int oidTable;
+    String commentCol;
+    protected Table readTable(String tablename) throws SQLException {
+    	//We'll change the types of NVarchar columns (which should have a comment in the database)
+    	Table t=super.readTable(tablename);
+    	
+
+        _stmt_oids_tables.setString(1, tablename);
+        fillList(_stmt_oids_tables,new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
+        	oidTable=r.getInt(1);
+        }});
+    	
+    	
+    	for(int i=0;i<t.getColumnCount();i++)
+    	{
+            _stmt_comments_tables.setInt(1, oidTable);
+            _stmt_comments_tables.setInt(2, i+1);
+            fillList(_stmt_comments_tables,new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
+            		commentCol=r.getString(1);
+            }});
+            if(commentCol!=null && !commentCol.equals(""))
+            {
+            	Pattern pat=Pattern.compile("--OBTG:NVARCHAR--");
+            	Matcher match=pat.matcher(commentCol);
+            	if(match.matches())
+            	{
+            		t.getColumn(i).setTypeCode(ExtTypes.NVARCHAR);
+            	}
+            	Pattern pat2=Pattern.compile("--OBTG:NCHAR--");
+            	Matcher match2=pat2.matcher(commentCol);
+            	if(match2.matches())
+            	{
+            		t.getColumn(i).setTypeCode(ExtTypes.NCHAR);
+            	}
+            }
+    	}
+    	
+    	return t;
+    }
     
     protected Integer[] getIntArray(ResultSet r, int iposition) throws SQLException {
         

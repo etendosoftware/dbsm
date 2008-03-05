@@ -146,13 +146,17 @@ public class ChangeFunction2Translation implements Translation {
                 Pattern pattern34 = Pattern.compile(patternStr34);
                 Matcher matcher34= pattern34.matcher(inputStr);
 
-                String patternStr35 = "^(.+?)SAVEPOINT(.+?);(\\s|\\t)*$";
+                String patternStr35 = "^(.+?)(SAVEPOINT(.+?);(\\s|\\t)*)$";
                 Pattern pattern35 = Pattern.compile(patternStr35);
                 Matcher matcher35= pattern35.matcher(inputStr);
                 
                 String patternStr36 = "^(.+?)([\\s|\\t|\\(]+?)([^\\s|\\t|\\(]+?)\\.([Nn][Ee][Xx][Tt][Vv][Aa][Ll])(.+?)$";
                 Pattern pattern36 = Pattern.compile(patternStr36);
                 Matcher matcher36 = pattern36.matcher(inputStr);
+                
+                String patternStr37 = "(.*)ROLLBACK TO SAVEPOINT (.*);";
+                Pattern pattern37 = Pattern.compile(patternStr37);
+                Matcher matcher37 = pattern37.matcher(inputStr);
                 
                 if (matcher1.find()) {
                     String patternStr1a = "\\sFOR\\s";
@@ -193,35 +197,38 @@ public class ChangeFunction2Translation implements Translation {
                 } else if (matcher3.find()) {
                 } else if (matcher4.find()) {
                     bw.write("");
+                } else if (matcher37.find()) {
+                	bw.write(matcher37.group(1)+"RAISE EXCEPTION '%','RBack'; --OBTG:tosavepoint"+matcher37.group(2));
                 } else if (matcher5.find()) { //System.out.println(5);
                     String patternStr5_1= "'";
                     Pattern pattern5_1 = Pattern.compile(patternStr5_1);
                     Matcher matcher5_1 = pattern5_1.matcher(matcher5.group(5));
                     
-                    bw.write(matcher5.group(1)+"RAISE NOTICE '%'," + matcher5_1.replaceAll("'") + ";" + (matcher5.group(8)!=null?matcher5.group(8):""));
+                    bw.write(matcher5.group(1)+"RAISE NOTICE '%'," + matcher5_1.replaceAll("'") + (matcher5.group(7)!=null?matcher5.group(7):"")+";" + (matcher5.group(8)!=null?matcher5.group(8):""));
                 } else if (matcher5a.find()) { //System.out.println(5);
                     String patternStr5a1= "'";
                     Pattern pattern5a1 = Pattern.compile(patternStr5a1);
                     Matcher matcher5a1 = pattern5a1.matcher(matcher5a.group(5));
                     
-                    bw.write(matcher5a.group(1)+"RAISE NOTICE '%'," + matcher5a1.replaceAll("'") + ";" +(matcher5a.group(8)!=null?matcher5a.group(8):""));
+                    bw.write(matcher5a.group(1)+"RAISE NOTICE '%'," + matcher5a1.replaceAll("'") + (matcher5a.group(7)!=null?matcher5a.group(7):"") + ";" +(matcher5a.group(8)!=null?matcher5a.group(8):""));
                 } else if (matcher11.find()) {
                     
                     String patternStr11a= "'";
+                    String code=matcher11.group(4);
                     Pattern pattern11a = Pattern.compile(patternStr11a);
                     Matcher matcher11a = pattern11a.matcher(matcher11.group(6));
                     
-                    
-                    bw.write(matcher11.group(1)+"RAISE EXCEPTION '%'," + matcher11a.replaceAll("'") + ";");
+                    bw.write(matcher11.group(1)+"RAISE EXCEPTION '%'," + matcher11a.replaceAll("'") + (matcher11.group(8)!=null?matcher11.group(8):"")+";"+" --OBTG:"+code+"--");
                     
                 } else if (matcher12.find()) {
                     
                     String patternStr12a= "'";
+                    String code=matcher12.group(4);
                     Pattern pattern12a = Pattern.compile(patternStr12a);
                     Matcher matcher12a = pattern12a.matcher(matcher12.group(6));
                     
                     
-                    bw.write(matcher12.group(1)+"RAISE EXCEPTION '%'," + matcher12a.replaceAll("'") + ";");
+                    bw.write(matcher12.group(1)+"RAISE EXCEPTION '%'," + matcher12a.replaceAll("'") + (matcher12.group(8)!=null?matcher12.group(8):"")+ ";"+" --OBTG:"+code+"--");
                     
                     
                 } else if (matcher6.find()) {
@@ -246,11 +253,11 @@ public class ChangeFunction2Translation implements Translation {
 //                  bw.write("SELECT * INTO "+matcher21a.group(7) +" FROM "+matcher21a.group(1)+"("+matcher21a.group(3)+","+matcher21a.group(4)+","+matcher21a.group(5)+","+matcher21a.group(6)+");");
                     
                 } else if (matcher22.find()) {
-                    bw.write(matcher22.group(1)+matcher22.group(2)+" NOT FOUND "+matcher22.group(4));
+                    bw.write(matcher22.group(1)+matcher22.group(2)+" NOT FOUND "+matcher22.group(4)+" --OBTG:"+matcher22.group(3)+"--");
                 } else if (matcher23.find()) {//System.out.println(23);
                     bw.write(matcher23.group(1)+"RAISE EXCEPTION '%',"+matcher23.group(3)+";");
                 } else if (matcher23a.find()) {//System.out.println(23a);
-                    bw.write(matcher23a.group(1)+"RAISE EXCEPTION '%', '';");
+                	bw.write(matcher23a.group(1)+"RAISE EXCEPTION '%', SQLERRM;");
                 } else if (matcher24.find()) {
                     bw.write("--"+matcher24.group(1)+" Exception;");
                 } else if (matcher24a.find()) {//System.out.println(24);
@@ -260,11 +267,11 @@ public class ChangeFunction2Translation implements Translation {
                 } else if (matcher26.find()) {
                     bw.write(matcher26.group(1)+"Array["+matcher26.group(3)+"]"+matcher26.group(5));
                 } else if (matcher33.find()) {//System.out.println(matcher33.group(1)+" - "+matcher33.group(4));
-                    bw.write(matcher33.group(1)+"FOR UPDATE;");
+                    bw.write(matcher33.group(1)+"FOR UPDATE;"+" --OBTG:"+matcher33.group(2)+"--");
                 } else if (matcher34.find()) {//System.out.println(matcher34.group(1)+" - "+matcher34.group(4));
-                  bw.write("RAISE EXCEPTION '%','';");
+                	bw.write(matcher34.group(1)+"RAISE EXCEPTION '%','Rollback';");
                 } else if (matcher35.find()) {//System.out.println(matcher35.group(1)+" - "+matcher35.group(4));
-                  bw.write(matcher35.group(1)+"");
+                  bw.write(matcher35.group(1)+" --OBTG:"+matcher35.group(2)+"--");
                 } else if (matcher36.find()) {//System.out.println(36);System.out.println("1:"+matcher36.group(1)+"2:"+matcher36.group(2)+"3:"+matcher36.group(3)+"4:"+matcher36.group(4)+"5:"+matcher36.group(5));
                   bw.write(matcher36.group(1)+matcher36.group(2)+matcher36.group(4)+"('"+matcher36.group(3)+"')"+matcher36.group(5));
                 } else {

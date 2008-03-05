@@ -29,11 +29,14 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
@@ -51,6 +54,8 @@ import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerTranslation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
+import org.apache.ddlutils.translation.CommentFilter;
+import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;
 
@@ -3326,7 +3331,20 @@ public abstract class SqlBuilder
                 
                 print(getFunctionBeginBody());
                 println();               
-                print(getPLSQLFunctionTranslation().exec(function.getBody()));   
+
+                String body=function.getBody();
+        		
+                LiteralFilter litFilter=new LiteralFilter();
+                CommentFilter comFilter=new CommentFilter();
+                body=litFilter.removeLiterals(body);
+                body=comFilter.removeComments(body);
+                
+        		body=getPLSQLFunctionTranslation().exec(body);
+
+        		body=comFilter.restoreComments(body);
+        		body=litFilter.restoreLiterals(body);
+                
+                print(body);   
                 //println();
                 print(getFunctionEndBody());
                 
@@ -3550,7 +3568,17 @@ public abstract class SqlBuilder
     
     public void writeTriggerExecuteStmt(Trigger trigger) throws IOException {   
         print("DECLARE");
-        print(getPLSQLTriggerTranslation().exec(trigger.getBody()));        
+        
+        String body=trigger.getBody();
+        LiteralFilter litFilter=new LiteralFilter();
+        CommentFilter comFilter=new CommentFilter();
+        body=litFilter.removeLiterals(body);
+        body=comFilter.removeComments(body);
+        body=getPLSQLTriggerTranslation().exec(body);
+        body=comFilter.restoreComments(body);
+        body=litFilter.restoreLiterals(body);
+        
+        print(body);        
         //println();
         print(";");
     }

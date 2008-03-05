@@ -21,9 +21,12 @@ package org.apache.ddlutils.platform.postgresql;
 
 import java.io.IOException;
 import java.sql.Types;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
@@ -38,7 +41,10 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.SqlBuilder;
+import org.apache.ddlutils.translation.CommentFilter;
+import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.translation.Translation;
+import org.apache.ddlutils.util.ExtTypes;
 
 /**
  * The SQL Builder for PostgresSql.
@@ -114,6 +120,23 @@ public class PostgreSqlBuilder extends SqlBuilder
             }
         }
         super.createTable(database, table, parameters);
+        
+        //Add comments for NVARCHAR types
+
+        for (int idx = 0; idx < table.getColumnCount(); idx++)
+        {
+            Column column = table.getColumn(idx);
+
+            if (column.getTypeCode()==ExtTypes.NVARCHAR)
+            {
+                println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '--OBTG:NVARCHAR--';");
+            }
+
+            if (column.getTypeCode()==ExtTypes.NCHAR)
+            {
+                println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '--OBTG:NCHAR--';");
+            }
+        }
     }
 
     /**
@@ -362,7 +385,48 @@ public class PostgreSqlBuilder extends SqlBuilder
     protected void createFunction(Function function) throws IOException {
         
         super.createFunction(function);
-        
+        /*System.out.println("Funcion: "+function.getName());
+        for(int i=0;i<function.getParameterCount();i++)
+        	System.out.println("    Param: "+function.getParameter(i).getName()+"   default: "+function.getParameter(i).getDefaultValue());
+        */
+        //We'll add a comment to save the NVARCHAR, VARCHAR2, and similar types of data which don't have
+        //a corresponding type in PostgreSQL
+        String comment="--OBTG:";
+        boolean b=false;
+        if(function.getTypeCode()==ExtTypes.NVARCHAR)
+        {
+        	comment+=function.getName()+"func="+"NVARCHAR";
+        	b=true;
+        }
+        for(int i=0;i<function.getParameterCount();i++)
+        {
+        	Parameter p=function.getParameter(i);
+        	if(p.getTypeCode()==ExtTypes.NVARCHAR)
+        	{
+        		if(b)
+        			comment+=",";
+        		comment+=p.getName()+"="+"NVARCHAR";
+        		b=true;
+        	}
+        }
+        if(!comment.equals("--OBTG:"))
+        {
+            print("COMMENT ON FUNCTION "+function.getName()+" ");
+
+            if (function.getParameterCount() == 0) {
+                print(getNoParametersDeclaration());
+            } else {
+                print("(");
+                for (int idx = 0; idx < function.getParameterCount(); idx ++) {
+                    if (idx > 0) {
+                        print(", ");
+                    }
+                    writeParameter(function.getParameter(idx));
+                }
+                print(")");
+            }
+            println(" IS '"+comment+"--';");
+        }
         String sLastDefault = function.getParameterCount() == 0 ? null : getDefaultValue(function.getParameter(function.getParameterCount() - 1));
         if (sLastDefault != null && !sLastDefault.equals("")) {
             try {
@@ -386,6 +450,10 @@ public class PostgreSqlBuilder extends SqlBuilder
             } catch (CloneNotSupportedException e) {
                 // Will not happen
             }            
+        }
+        else
+        {
+        	//System.out.println("funcion "+function.getName()+" doesn't have defaults");
         }
     } 
 
@@ -445,7 +513,21 @@ public class PostgreSqlBuilder extends SqlBuilder
         
         print(getFunctionBeginBody());        
         println();
-        print(getPLSQLTriggerTranslation().exec(trigger.getBody()));
+        
+
+        String body=trigger.getBody();
+
+        LiteralFilter litFilter=new LiteralFilter();
+        CommentFilter comFilter=new CommentFilter();
+        body=litFilter.removeLiterals(body);
+        body=comFilter.removeComments(body);
+        
+        body=getPLSQLTriggerTranslation().exec(body);
+
+        body=comFilter.restoreComments(body);
+		body=litFilter.restoreLiterals(body);
+
+        print(body);
         println();
         print(getFunctionEndBody());  
         

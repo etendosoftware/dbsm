@@ -34,10 +34,24 @@ public class CombinedTranslation implements Translation {
     
     public final String exec(String s) {
         
+    	String initialComments="";
+		String initialBlanks="";
+		while(s.charAt(0)=='\n' || s.charAt(0)==' ')
+		{
+			initialBlanks+=s.substring(0, 1);
+			s=s.substring(1);
+		}
+		if(s.startsWith("/*"))
+		{
+			int ind=s.indexOf("*/");
+			initialComments=s.substring(0, ind);
+			s=s.substring(ind);
+		}
+    	
         for (Translation t : _translations) {
             s = t.exec(s);            
         }
-        return s;
+        return initialBlanks+initialComments+s;
     }
     
 }

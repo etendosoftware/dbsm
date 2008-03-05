@@ -41,19 +41,21 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
         append(new ReplaceStrTranslation("'NUMBER'", "'NUMERIC'"));
         
         // Varchar Type
-        append(new ReplaceStrTranslation("NVARCHAR", "VARCHAR"));
-        append(new ReplaceStrTranslation("VARCHAR2", "VARCHAR"));
+        append(new ByLineTranslation(new ReplacePatTranslation("(.*)([\\s|\\t])([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr]2)(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
+        append(new ByLineTranslation(new ReplacePatTranslation("(.*)([\\s|\\t])([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr])(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
+        append(new ByLineTranslation(new ReplacePatTranslation("(.*)([\\s|\\t])([Vv][Aa][Rr][Cc][Hh][Aa][Rr]2)(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
         append(new ReplaceStrTranslation(" BYTE)", ")"));
-        append(new ReplaceStrTranslation("'VARCHAR2'", "'VARCHAR'")); 
+        //append(new ReplacePatTranslation("'VARCHAR2'", "'VARCHAR'")); 
         
         // Now() function
-        append(new ReplaceStrTranslation("SYSDATE,", "now(),"));
+        append(new ReplacePatTranslation("[Ss][Yy][Ss][Dd][Aa][Tt][Ee]", "now()"));
+        /*append(new ReplaceStrTranslation("SYSDATE,", "now(),"));
         append(new ReplaceStrTranslation(" SYSDATE ", " now() "));
         append(new ReplaceStrTranslation("SYSDATE$", "now()"));
         append(new ReplaceStrTranslation("(SYSDATE", "(now()"));
         append(new ReplaceStrTranslation(" SYSDATE;", " now();"));
         append(new ReplaceStrTranslation("=SYSDATE", "=now()"));
-        append(new ReplaceStrTranslation("<SYSDATE", "<now()"));
+        append(new ReplaceStrTranslation("<SYSDATE", "<now()"));*/
         
         // TimeStamp Type
         append(new ReplaceStrTranslation(" DATE,", " TIMESTAMP,"));
@@ -76,9 +78,13 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
         
         //append(new ReplaceStrTranslation("'", "''"));
         //append(new ByLineTranslation(new ReplacePatTranslation("^(AS|IS)([\\s|\\t]*)$", "AS '")));  
-        append(new ByLineTranslation(new ReplacePatTranslation("^(\\s|\\t)*(.+?)rowcount(\\s|\\t)*:=(\\s|\\t)*SQL%ROWCOUNT;", "$1GET DIAGNOSTICS $2rowcount:=ROW_COUNT;")));       
-        append(new RemoveTranslation("COMMIT;"));
-        append(new RemoveTranslation("ROLLBACK;"));
+        append(new ByLineTranslation(new ReplacePatTranslation("^([\\s\\t]*)rowcount(\\s|\\t)*:=(\\s|\\t)*SQL%ROWCOUNT;", "$1GET DIAGNOSTICS $2rowcount:=ROW_COUNT;")));       
+        //append(new RemoveTranslation("COMMIT;"));
+        //append(new RemoveTranslation("ROLLBACK;"));
+
+        append(new ReplaceStrTranslation("COMMIT;", "-- COMMIT;"));
+        append(new ReplaceStrTranslation("ROLLBACK;", "-- ROLLBACK;"));
+        
         append(new ReplaceStrTranslation("EXECUTE IMMEDIATE", "EXECUTE"));
         
         append(new ReplaceStrTranslation("NO_DATA_FOUND", "DATA_EXCEPTION"));
@@ -91,13 +97,13 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
         //append(new ReplaceStrTranslation("TYPE ArrayName", "-- TYPE ArrayName"));
         //append(new ReplaceStrTranslation("TYPE ArrayPesos", "-- TYPE ArrayPesos"));
         
-        append(new ByLineTranslation(new ReplacePatTranslation("^(.+?)([\\s|\\t|\\(]+?)([^\\s|\\t|\\(]+?)%[Rr][Oo][Ww][Tt][Yy][Pp][Ee]","$1 RECORD")));        
+        append(new ByLineTranslation(new ReplacePatTranslation("^(.+?)([\\s|\\t|\\(]+?)([^\\s|\\t|\\(]+?)%[Rr][Oo][Ww][Tt][Yy][Pp][Ee](.*)","$1$2RECORD$4 --OBTG:$3--")));        
         
 		
         append(new ReplacePatTranslation("<<", "-- <<"));
         append(new ReplaceStrTranslation("REF CURSOR", "REFCURSOR"));
         append(new ReplaceStrTranslation("MINUS", "EXCEPT"));
-        append(new ReplacePatTranslation("[Tt][Yy][Pp][Ee]_[Rr][Ee][Ff](\\s|\\t)*;(\\s|\\t)*", "TYPE_REF%TYPE;"));
+        append(new ByLineTranslation(new ReplacePatTranslation("[Tt][Yy][Pp][Ee]_[Rr][Ee][Ff](\\s|\\t)*;(\\s|\\t)*", "TYPE_REF%TYPE;")));
         append(new ReplaceStrTranslation("NOW()", "TO_DATE(NOW())"));
         append(new ReplacePatTranslation("\\(NEW.Updated-NEW.Created\\)", "substract_days\\(NEW.Updated,NEW.Created\\)")); 
         
@@ -123,7 +129,7 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
           }
         }
         
-        // Miscellaneous translations
+        // Miscellaneous translations	
         append(new ChangeFunction2Translation());
         
         // Remove procedure name after last END

@@ -192,7 +192,7 @@ public abstract class ValueObject implements Cloneable {
                 case Types.DATE:
                 case Types.TIME:
                 case Types.TIMESTAMP:
-                    return "SYSDATE".equals(_defaultValue.toUpperCase());
+                    return "SYSDATE".equals(_defaultValue.toUpperCase()) || "NOW()".equals(_defaultValue.toUpperCase());
                 case Types.BIT:
                 default:
                     return false;
