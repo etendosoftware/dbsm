@@ -2009,6 +2009,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     
         Connection connection = borrowConnection();
         try {
+        	getModelLoader().setLog(_log);
             return getModelLoader().getDatabase(connection, filter);
         } catch (SQLException ex) {
             throw new DatabaseOperationException(ex);

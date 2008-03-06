@@ -41,6 +41,15 @@ import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.tools.ant.Task;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ddlutils.io.DatabaseIO;
+import org.apache.ddlutils.task.VerbosityLevel;
 
 /**
  *
@@ -77,6 +86,8 @@ public abstract class ModelLoaderBase implements ModelLoader {
     protected PreparedStatement _stmt_listfunctions;
     protected PreparedStatement _stmt_functioncode;
     
+    protected Log _log;
+    
     private static Pattern _pFunctionHeader = Pattern.compile(
         "\\A\\s*([Ff][Uu][Nn][Cc][Tt][Ii][Oo][Nn]|[Pp][Rr][Oo][Cc][Ee][Dd][Uu][Rr][Ee])\\s+\\w+\\s*(\\((.*?)\\))??" +
         "\\s*([Rr][Ee][Tt][Uu][Rr][Nn]\\s+(\\w+)\\s*)?" +
@@ -88,6 +99,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     
     /** Creates a new instance of BasicModelLoader */
     public ModelLoaderBase() {
+
     }    
     
     public Database getDatabase(Connection connection, ExcludeFilter filter) throws SQLException {
@@ -104,6 +116,16 @@ public abstract class ModelLoaderBase implements ModelLoader {
         } finally {
             closeMetadataSentences();
         }       
+    }
+    
+    public void setLog(Log log)
+    {
+    	_log=log;
+    }
+    
+    public Log getLog()
+    {
+    	return _log;
     }
     
     protected abstract void initMetadataSentences() throws SQLException;
@@ -134,17 +156,20 @@ public abstract class ModelLoaderBase implements ModelLoader {
     }
     
     protected Database readDatabase()  throws SQLException{
-
         Database db = new Database();
         db.setName(readName());
-        
+        _log.info("Reading tables...");
         db.addTables(readTables());
+        _log.info("Reading views...");
         db.addViews(readViews());
+        _log.info("Reading sequences...");
         db.addSequences(readSequences());
+        _log.info("Reading triggers...");
         db.addTriggers(readTriggers());
+        _log.info("Reading functions...");
         db.addFunctions(readFunctions());
         
-
+        _log.info("Sorting foreign keys and checks...");
         for (int tableIdx = 0; tableIdx < db.getTableCount(); tableIdx++)
         {
             db.getTable(tableIdx).sortForeignKeys(false);
@@ -157,6 +182,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 
         return readList(_stmt_listtables, 
             new RowConstructor() { public Object getRow(ResultSet r) throws SQLException {
+            	_log.debug("Table "+r.getString(1));
                 return readTable(r.getString(1));
             }});
     }
@@ -338,6 +364,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
         
         return readList(_stmt_listviews, 
             new RowConstructor() { public Object getRow(ResultSet r) throws SQLException {
+            	_log.debug("View "+r.getString(1));
                 View v = new View();
                 v.setName(r.getString(1));
                 v.setStatement(translateSQL(r.getString(2)));
@@ -349,6 +376,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
         
         return readList(_stmt_listsequences, 
             new RowConstructor() { public Object getRow(ResultSet r) throws SQLException {
+            	_log.debug("Sequence "+r.getString(1));
                 Sequence s = new Sequence();
                 s.setName(r.getString(1));
                 s.setStart(r.getInt(2));
@@ -361,6 +389,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
         
         return readList(_stmt_listtriggers, 
             new RowConstructor() { public Object getRow(ResultSet r) throws SQLException {
+            	_log.debug("Trigger "+r.getString(1));
                 Trigger t = new Trigger();
                 t.setName(r.getString(1));
                 t.setTable(r.getString(2));               
@@ -377,6 +406,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     protected Collection readFunctions() throws SQLException {
         
         return readList(_stmt_listfunctions, new RowConstructor() { public Object getRow(ResultSet r) throws SQLException {
+        	_log.debug("Function "+r.getString(1));
             return readFunction(r.getString(1));
         }});
     } 

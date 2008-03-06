@@ -14,6 +14,14 @@ package org.apache.ddlutils.platform;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+
+
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ddlutils.io.DatabaseIO;
+import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.ddlutils.model.Database;
 
 /**
@@ -22,5 +30,7 @@ import org.apache.ddlutils.model.Database;
  */
 public interface ModelLoader {
     
-    public Database getDatabase(Connection connection, ExcludeFilter filter) throws SQLException;    
+    public Database getDatabase(Connection connection, ExcludeFilter filter) throws SQLException;
+    public void setLog(Log log);
+    public Log getLog();
 }

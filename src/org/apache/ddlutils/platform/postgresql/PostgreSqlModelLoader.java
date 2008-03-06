@@ -84,13 +84,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             CommentFilter comFilter=new CommentFilter();
 
             body=litFilter.removeLiterals(body);
-            System.out.println(db.getFunction(i).getName());
             body=comFilter.removeComments(body);
-            if(db.getFunction(i).getName().contains("AD_APPLICATION"))
-            	System.out.println(body);
     		String standardizedBody=functionStandarization.exec(body).trim();
-            if(db.getFunction(i).getName().contains("AD_APPLICATION"))
-            	System.out.println(standardizedBody);
 
     		standardizedBody=comFilter.restoreComments(standardizedBody);
     		standardizedBody=litFilter.restoreLiterals(standardizedBody);

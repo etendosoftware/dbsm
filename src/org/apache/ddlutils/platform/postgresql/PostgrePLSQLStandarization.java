@@ -193,8 +193,6 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 							
 						String patternIn="(?i)SELECT\\s*\\*\\s*INTO"+paramsOut+"FROM\\s*("+nameRegExp+")\\s*\\("+paramsIn+"\\)";
 						String patternOut="$"+(numParamsOut+1)+"("+paramPos+")";
-						System.out.println(patternIn);
-						System.out.println(patternOut);
 						if(!outFunctions.contains(f.getName()))
 							outFunctions.add(f.getName());
 						patternsOutFunctions.add(new ByLineTranslation(new ReplacePatTranslation(patternIn,patternOut)));
