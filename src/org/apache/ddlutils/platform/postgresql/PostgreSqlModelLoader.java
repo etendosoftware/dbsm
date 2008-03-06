@@ -73,7 +73,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     	Database db=super.readDatabase();
     	
     	
-    	System.out.println("Starting function and trigger standarization.");
+    	_log.info("Starting function and trigger standarization.");
     	PostgrePLSQLStandarization.generateOutPatterns(db);
     	for(int i=0;i<db.getFunctionCount();i++)
     	{

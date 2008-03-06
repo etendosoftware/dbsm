@@ -48,7 +48,7 @@ public class CommentFilter{
         	String code="##OBCO"+j;
         	String rep=comments.get(code);
         	//System.out.println(code+";;"+rep);
-        	if(rep.startsWith("OBTG:") || rep.contains("COMMIT") || rep.contains("ROLLBACK") || rep.contains("TYPE") || rep.contains("<<")
+        	if(rep.startsWith("OBTG:") || rep.contains("COMMIT") || rep.contains("ROLLBACK") || (rep.contains("TYPE") && !rep.contains("ROWTYPE")) || rep.contains("<<")
         			||rep.contains("EXCEPTION") || rep.contains("PRAGMA") || rep.contains("INTERNAL_ERROR"))
         		body=body.replaceFirst(code, rep);
         }

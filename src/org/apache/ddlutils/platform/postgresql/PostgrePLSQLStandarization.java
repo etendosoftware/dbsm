@@ -53,7 +53,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
 
  
-        append(new ByLineTranslation(new ReplacePatTranslation("^([\\s\\t]*)GET DIAGNOSTICS (.*)rowcount:=ROW_COUNT;","$1$2rowcount:=SQL%ROWCOUNT;")));  
+        append(new ByLineTranslation(new ReplacePatTranslation("^([\\s\\t]*)GET DIAGNOSTICS (\\s|\\t)*(.+?)rowcount:=ROW_COUNT;","$1$3rowcount:=SQL%ROWCOUNT;")));  
         append(new ReplaceStrTranslation("-- COMMIT;","COMMIT;"));
         append(new ReplaceStrTranslation("-- ROLLBACK;","ROLLBACK;"));
         append(new ByLineTranslation(new ReplacePatTranslation(" --OBTG:SAVEPOINT(.*);--","SAVEPOINT$1;")));
