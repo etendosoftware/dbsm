@@ -141,6 +141,7 @@ public class AlterXML2SQL extends Task {
             Writer w = new FileWriter(output);
             pl.getSqlBuilder().setWriter(w);
             pl.getSqlBuilder().alterDatabase(originaldb, db, null);
+            pl.getSqlBuilder().alterDatabasePostScript(originaldb, db, null);    
             w.close();
             
             _log.info("Database script created in : " + output.getPath());

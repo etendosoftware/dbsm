@@ -450,8 +450,18 @@ public interface Platform
     public void alterTables(Connection connection, Database desiredDb, boolean continueOnError) throws DatabaseOperationException;
     
     public void alterTables(Connection connection, Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException;
-    
+
     public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException;
+    
+    /**
+     * Executes a small postscript to correct null constraints in new not-null columns added to the database.
+     * 
+     * @param currentModel
+     * @param desiredModel
+     * @param continueOnError
+     * @throws DatabaseOperationException
+     */
+    public void alterTablesPostScript(Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException;
 
     /**
      * Returns the SQL for altering the database schema so that it match the given model.

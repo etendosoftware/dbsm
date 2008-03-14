@@ -86,7 +86,7 @@ public abstract class ValueObject implements Cloneable {
             _typeCode = typeCode.intValue();
         }
     }
-    
+
     /**
      * Returns the default value of the column.
      * 
@@ -95,6 +95,15 @@ public abstract class ValueObject implements Cloneable {
     public String getDefaultValue()
     {
         return _defaultValue;
+    }
+    /**
+     * Returns the default value of the column.
+     * 
+     * @return The default value
+     */
+    public String getDefaultValueAttr()
+    {
+        return null;
     }
 
     /**
@@ -165,6 +174,18 @@ public abstract class ValueObject implements Cloneable {
      */
     public void setDefaultValue(String defaultValue) {
         _defaultValue = defaultValue;
+    }
+    
+    /**
+     * Sets the default value of the column. Note that this expression will be used
+     * within quotation marks when generating the column, and thus is subject to
+     * the conversion rules of the target database.
+     * 
+     * @param defaultValue The default value
+     */
+    public void setDefaultValueAttr(String defaultValue) {
+    	if(_defaultValue==null)
+    		_defaultValue = defaultValue;
     }
     
     /**

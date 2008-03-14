@@ -686,7 +686,38 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
         evaluateBatch(connection, sql, continueOnError);    
     }
-    
+    public void alterTablesPostScript(Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
+    {
+        
+        Connection connection = borrowConnection();
+
+        try
+        {
+            alterTablesPostScript(connection, currentModel, desiredModel, continueOnError);
+        }
+        finally
+        {
+            returnConnection(connection);
+        }
+    	
+    }
+    public void alterTablesPostScript(Connection connection, Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
+    {
+    	String sql = null;
+        
+        try {
+            StringWriter buffer = new StringWriter();
+
+            getSqlBuilder().setWriter(buffer);
+            getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null);
+            sql = buffer.toString();
+        } catch (IOException ex) {
+            // won't happen because we're using a string writer
+        }
+        evaluateBatch(connection, sql, continueOnError);    
+
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -1359,7 +1390,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      * {@inheritDoc}
      */
     public void upsert(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException {
-        
+        _log.debug("Attempting to update a single row " + dynaBean +" into table ");
         int count = privateupdate(connection, model, dynaBean);
         if (count == 0) {
             insert(connection, model, dynaBean);

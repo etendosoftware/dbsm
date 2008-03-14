@@ -55,8 +55,10 @@ public class Column extends ValueObject implements Cloneable, Serializable
     private Integer _sizeAsInt;
     /** The scale of the column for JDBC types that require/support this. */
     private Integer _scale;
+    /** The script to be executed when the column is added in an existing database */
+    private String _onCreateDefault;
 
-    /**
+	/**
      * Returns the name of the column.
      * 
      * @return The name
@@ -333,6 +335,16 @@ public class Column extends ValueObject implements Cloneable, Serializable
         _sizeAsInt = new Integer(precisionRadix);
         _size      = String.valueOf(precisionRadix);
     }
+    
+
+    public String getOnCreateDefault() {
+		return _onCreateDefault;
+	}
+
+	public void setOnCreateDefault(String createDefault) {
+		_onCreateDefault = createDefault;
+	}
+
     
     /**
      * {@inheritDoc}

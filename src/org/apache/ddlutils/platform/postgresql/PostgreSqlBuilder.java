@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -167,6 +168,49 @@ public class PostgreSqlBuilder extends SqlBuilder
         printEndOfStatement();
     }
 
+
+    protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+    	for(int i=0;i<newColumns.size();i++)
+    	{
+    		Column column=newColumns.get(i).getNewColumn();
+    		if(column.isRequired())
+    		{
+    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" ALTER "+getColumnName(column)+" DROP NOT NULL");
+        		printEndOfStatement();
+    		}
+    		
+    	}
+    }
+    protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+    	for(int i=0;i<newColumns.size();i++)
+    	{
+    		Column column=newColumns.get(i).getNewColumn();
+    		if(column.isRequired())
+    		{
+    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+"_ ALTER "+getColumnName(column)+" DROP NOT NULL");
+        		printEndOfStatement();
+    		}
+    		
+    	}
+    }
+    
+    protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+    	for(int i=0;i<newColumns.size();i++)
+    	{
+    		Column column=newColumns.get(i).getNewColumn();
+    		if(column.isRequired())
+    		{
+    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" ALTER "+getColumnName(column)+" SET NOT NULL");
+        		printEndOfStatement();
+    		}
+    		
+    	}
+    }
+    
+    
     /**
      * Creates the auto-increment sequence that is then used in the column.
      *  
@@ -231,6 +275,7 @@ public class PostgreSqlBuilder extends SqlBuilder
                                                 Map      parameters,
                                                 List     changes) throws IOException
     {
+    	/*
         for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
         {
             TableChange change = (TableChange)changeIt.next();
@@ -260,7 +305,7 @@ public class PostgreSqlBuilder extends SqlBuilder
                 processChange(currentModel, desiredModel, (RemoveColumnChange)change);
                 changeIt.remove();
             }
-        }
+        }*/ //We will try to insert data even in this case
         super.processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable, parameters, changes);
     }
 

@@ -154,15 +154,15 @@ public class Parameter extends ValueObject implements Cloneable {
 
         	if(_defaultValue!=null)
         	{
-        		_defaultValueT=_translation.exec(_defaultValue);
-        		if(_defaultValueT.charAt(_defaultValueT.length()-1)=='\n')
-        			_defaultValueT=_defaultValueT.substring(0,_defaultValueT.length()-1);
+        		_defaultValueT=_defaultValue;
+        		/*if(_defaultValueT.charAt(_defaultValueT.length()-1)=='\n')
+        			_defaultValueT=_defaultValueT.substring(0,_defaultValueT.length()-1);*/
         	}
         	if(other._defaultValue!=null)
         	{
-        		_otherDefaultValueT=other._translation.exec(other._defaultValue);
-        		if(_otherDefaultValueT.charAt(_otherDefaultValueT.length()-1)=='\n')
-        			_otherDefaultValueT=_otherDefaultValueT.substring(0,_otherDefaultValueT.length()-1);
+        		_otherDefaultValueT=other._defaultValue;
+        		/*if(_otherDefaultValueT.charAt(_otherDefaultValueT.length()-1)=='\n')
+        			_otherDefaultValueT=_otherDefaultValueT.substring(0,_otherDefaultValueT.length()-1);*/
         	}
             
             return new EqualsBuilder()

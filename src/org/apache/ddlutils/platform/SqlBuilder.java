@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -478,6 +479,9 @@ public abstract class SqlBuilder
      */
     public void alterDatabase(Database currentModel, Database desiredModel, CreationParameters params) throws IOException
     {
+    	
+    	ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
+        List changes = comparator.compare(currentModel, desiredModel);
         
         _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
         _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
@@ -487,16 +491,81 @@ public abstract class SqlBuilder
     		desiredModel.getFunction(i).setTranslation(_PLSQLFunctionTranslation);
     	for(int i=0;i<desiredModel.getTriggerCount();i++)
     		desiredModel.getTrigger(i).setTranslation(_PLSQLTriggerTranslation);
-    	
-    	ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
-        List changes = comparator.compare(currentModel, desiredModel);
-
         processChanges(currentModel, desiredModel, changes, params);
-        
         _PLSQLFunctionTranslation = new NullTranslation();
         _PLSQLTriggerTranslation = new NullTranslation();
         _SQLTranslation = new NullTranslation();
+        
     }
+    public void alterDatabasePostScript(Database currentModel, Database desiredModel, CreationParameters params) throws IOException
+    {
+    	
+    	ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
+        List changes = comparator.compare(currentModel, desiredModel);
+        Iterator it=changes.iterator();
+        Vector<AddColumnChange> newColumns=new Vector<AddColumnChange>();
+        while(it.hasNext())
+        {
+        	Object change = it.next();
+
+            if (change instanceof AddColumnChange)
+            {
+            	newColumns.add((AddColumnChange)change);
+            }
+        }
+        for(int i=0;i<newColumns.size();i++)
+        {
+        	AddColumnChange change=newColumns.get(i);
+        	Table table=change.getChangedTable();
+        	executeStandardDefault(table, change.getNewColumn());
+        }
+        for(int i=0;i<newColumns.size();i++)
+        {
+        	AddColumnChange change=newColumns.get(i);
+        	Table table=change.getChangedTable();
+        	Table tempTable=getTemporaryTableFor(desiredModel,change.getChangedTable());
+        	executeOnCreateDefault(table, tempTable, change.getNewColumn());
+        }
+        enableNOTNULLColumns(newColumns);
+        Vector<String> droppedTables=new Vector<String>();
+        for(int i=0;i<newColumns.size();i++)
+        {
+        	if(!droppedTables.contains(newColumns.get(i).getChangedTable().getName()))
+        	{
+                Table tempTable = getTemporaryTableFor(desiredModel, newColumns.get(i).getChangedTable());
+            	dropTemporaryTable(desiredModel, tempTable);
+            	droppedTables.add(newColumns.get(i).getChangedTable().getName());
+        	}
+        }
+
+        
+    }
+
+    public void executeStandardDefault(Table table, Column col) throws IOException
+    {
+		if(col.getDefaultValue()!=null && !col.getDefaultValue().equals(""))
+		{
+			println("UPDATE "+table.getName()+" SET "+col.getName()+"="+getDefaultValue(col)+" WHERE "+col.getName()+" IS NULL");
+			printEndOfStatement();
+		}
+    }
+    public void executeOnCreateDefault(Table table, Table tempTable, Column col) throws IOException
+    {
+    	String pk="";
+    	Column[] pks1=table.getPrimaryKeyColumns();
+    	for(int i=0;i<pks1.length;i++)
+    	{
+    		if(i>0) pk+=" AND ";
+    		pk+=table.getName()+"."+pks1[i].getName()+"="+tempTable.getName()+"."+pks1[i].getName();
+    	}
+		String oncreatedefault=col.getOnCreateDefault();
+		if(oncreatedefault!=null && !oncreatedefault.equals(""))
+		{
+			println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+")");
+			printEndOfStatement();
+		}
+    }
+    
 
     /**
      * Calls the given closure for all changes that are of one of the given types, and
@@ -1206,6 +1275,8 @@ public abstract class SqlBuilder
         // we're enforcing a full rebuild in case of the addition of a required
         // column without a default value that is not autoincrement
         boolean requiresFullRebuild = false;
+        boolean newColumn=false;
+        Vector<AddColumnChange> newColumns=new Vector<AddColumnChange>();
 
         for (Iterator changeIt = changes.iterator(); !requiresFullRebuild && changeIt.hasNext();)
         {
@@ -1213,7 +1284,9 @@ public abstract class SqlBuilder
 
             if (change instanceof AddColumnChange)
             {
+            	newColumn=true;
                 AddColumnChange addColumnChange = (AddColumnChange)change;
+                newColumns.add(addColumnChange);
 
                 if (addColumnChange.getNewColumn().isRequired() &&
                     (addColumnChange.getNewColumn().getDefaultValue() == null) &&
@@ -1248,7 +1321,8 @@ public abstract class SqlBuilder
             // we can only copy the data if no required columns without default value and
             // non-autoincrement have been added
             boolean canMigrateData = true;
-
+            
+            /*
             for (Iterator it = changes.iterator(); canMigrateData && it.hasNext();)
             {
                 TableChange change = (TableChange)it.next();
@@ -1267,21 +1341,25 @@ public abstract class SqlBuilder
                     }
                 }
             }
-
+			*/
+            
             Table realTargetTable = getRealTargetTableFor(desiredModel, sourceTable, targetTable);
 
-            if (canMigrateData)
+            if (true) //canMigrateData)  <-We will always try to insert data. If it's not possible, the user will notice the error
             {
                 Table tempTable = getTemporaryTableFor(desiredModel, targetTable);
     
                 createTemporaryTable(desiredModel, tempTable, parameters);
+                disableTempNOTNULLColumns(newColumns);
                 writeCopyDataStatement(sourceTable, tempTable);
                 // Note that we don't drop the indices here because the DROP TABLE will take care of that
                 // Likewise, foreign keys have already been dropped as necessary
                 dropTable(sourceTable);
                 createTable(desiredModel, realTargetTable, parameters);
+                disableNOTNULLColumns(newColumns);
                 writeCopyDataStatement(tempTable, targetTable);
-                dropTemporaryTable(desiredModel, tempTable);
+                if(!newColumn)
+                	dropTemporaryTable(desiredModel, tempTable);
             }
             else
             {
@@ -1378,6 +1456,47 @@ public abstract class SqlBuilder
         createTable(database, table, parameters);
     }
 
+
+    protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+    	for(int i=0;i<newColumns.size();i++)
+    	{
+    		Column column=newColumns.get(i).getNewColumn();
+    		if(column.isRequired())
+    		{
+    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
+        		printEndOfStatement();
+    		}
+    		
+    	}
+    }
+    protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+    	for(int i=0;i<newColumns.size();i++)
+    	{
+    		Column column=newColumns.get(i).getNewColumn();
+    		if(column.isRequired())
+    		{
+    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+"_ MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
+        		printEndOfStatement();
+    		}
+    		
+    	}
+    }
+    
+    protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+    	for(int i=0;i<newColumns.size();i++)
+    	{
+    		Column column=newColumns.get(i).getNewColumn();
+    		if(column.isRequired())
+    		{
+    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NOT NULL");
+        		printEndOfStatement();
+    		}
+    		
+    	}
+    }
     /**
      * Outputs the DDL to drop the given temporary table. Per default this is simply
      * a call to {@link #dropTable(Table)}.

@@ -393,8 +393,8 @@ public class Oracle8Builder extends SqlBuilder
 
                 // Oracle can only add not insert columns
                 // Also, we cannot add NOT NULL columns unless they have a default value
-                if (!addColumnChange.isAtEnd() ||
-                    (addColumnChange.getNewColumn().isRequired() && (addColumnChange.getNewColumn().getDefaultValue() == null)))
+                if (true) //!addColumnChange.isAtEnd() || <-We will always rebuild the table
+                    //(addColumnChange.getNewColumn().isRequired() && (addColumnChange.getNewColumn().getDefaultValue() == null)))
                 {
                     // we need to rebuild the full table
                     return;

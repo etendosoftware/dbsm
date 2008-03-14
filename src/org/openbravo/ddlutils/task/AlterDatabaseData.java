@@ -17,6 +17,7 @@ import java.util.Properties;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
@@ -32,8 +33,8 @@ import org.apache.ddlutils.task.VerbosityLevel;
  *
  * @author adrian
  */
-public class AlterDatabase extends Task {
-
+public class AlterDatabaseData extends Task {
+    
     private String driver;
     private String url;
     private String user;
@@ -43,6 +44,10 @@ public class AlterDatabase extends Task {
     private File prescript = null;
     private File postscript = null;
     
+    private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
+    
+    private File input;   
+    private String encoding = "UTF-8";
     private File originalmodel;   
     private File model;
     private boolean failonerror = false;
@@ -52,8 +57,9 @@ public class AlterDatabase extends Task {
     protected Log _log;
     private VerbosityLevel _verbosity = null;
     
-    /** Creates a new instance of CreateDatabase */
-    public AlterDatabase() {
+    /** Creates a new instance of ReadDataXML */
+    public AlterDatabaseData() {
+        super();
     }
     
     /**
@@ -90,7 +96,19 @@ public class AlterDatabase extends Task {
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
         
-        try {                        
+        try {      
+            // execute the pre-script
+            if (getPrescript() == null) {
+                // try to execute the default prescript
+                File fpre = new File(getInput(), "prescript-" + platform.getName() + ".sql");
+                if (fpre.exists()) {
+                    _log.info("Executing default prescript");
+                    platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
+                }
+            } else {
+                platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
+            }
+                        
 
             Database originaldb;
             if (getOriginalmodel() == null) {
@@ -106,71 +124,37 @@ public class AlterDatabase extends Task {
                 originaldb = DatabaseUtils.readDatabase(getModel());
                 _log.info("Original model loaded from file.");
             }   
-            
-            
-            // execute the pre-script
-            if (getPrescript() == null) {
-                // try to execute the default prescript
-                File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
-                if (fpre.exists()) {
-                    _log.info("Executing default prescript");
-                    platform.evaluateBatch(DatabaseUtils.readFile(fpre), !isFailonerror());
-                }
-            } else {
-                platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), !isFailonerror());
-            }         
 
+            Database db = DatabaseUtils.readDatabase(getModel());   
             
-            Database db = DatabaseUtils.readDatabase(getModel());     
+            Database oldModel=(Database)originaldb.clone();
+            platform.alterTables(originaldb, db, !isFailonerror()); 
             
-            // Alter the database
-            _log.info("Executing update script");
-            // crop database if needed
-            if (object != null) {
-                db = DatabaseUtils.cropDatabase(originaldb, db, object);
-                _log.info("for database object " + object);                
-            } else {
-                _log.info("for the complete database");                
-            }
-
-            platform.alterTables(originaldb, db, !isFailonerror());    
-            platform.alterTablesPostScript(originaldb, db, !isFailonerror());                   
+            DatabaseDataIO dbdio = new DatabaseDataIO();
+            dbdio.setEnsureFKOrder(false);
+            dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+            dbdio.writeDataToDatabase(platform, originaldb, DatabaseUtils.readFileArray(getInput())); 
             
-
+            platform.alterTablesPostScript(oldModel, db, !isFailonerror());
+            
             // execute the post-script
             if (getPostscript() == null) {
                 // try to execute the default prescript
-                File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+                File fpost = new File(getInput(), "postscript-" + platform.getName() + ".sql");
                 if (fpost.exists()) {
                     _log.info("Executing default postscript");
-                    platform.evaluateBatch(DatabaseUtils.readFile(fpost), !isFailonerror());
+                    platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
                 }                
             } else {
-                platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
-            }  
-
-            
-//            try {
-//                _log.info("Executing system model script");
-//                DatabaseUtils.manageDatabase(ds);
-//            } catch (SQLException ex) {
-//                // Exception if already exists the table.
-//            }
-//            
-//            try {                
-//                // Save model in the database if posible
-//                DatabaseUtils.saveCurrentDatabase(ds, db);
-//            } catch (SQLException ex) {
-//                _log.info("Database model not saved in the database.");
-//            }            
+                platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
+            }
         
-            // save the model
         } catch (Exception e) {
             // log(e.getLocalizedMessage());
             throw new BuildException(e);
         }   
-    } 
-    
+    }    
+
     public String getDriver() {
         return driver;
     }
@@ -211,6 +195,7 @@ public class AlterDatabase extends Task {
         this.excludeobjects = excludeobjects;
     }
 
+
     public File getOriginalmodel() {
         return originalmodel;
     }
@@ -218,7 +203,7 @@ public class AlterDatabase extends Task {
     public void setOriginalmodel(File input) {
         this.originalmodel = input;
     }
-
+    
     public File getModel() {
         return model;
     }
@@ -226,13 +211,37 @@ public class AlterDatabase extends Task {
     public void setModel(File model) {
         this.model = model;
     }
-
+    
     public boolean isFailonerror() {
         return failonerror;
     }
 
     public void setFailonerror(boolean failonerror) {
         this.failonerror = failonerror;
+    }
+    
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+    
+    public String getFilter() {
+        return filter;
+    }
+    
+    public File getInput() {
+        return input;
+    }
+
+    public void setInput(File input) {
+        this.input = input;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 
     public File getPrescript() {
@@ -249,8 +258,8 @@ public class AlterDatabase extends Task {
 
     public void setPostscript(File postscript) {
         this.postscript = postscript;
-    }
-    
+    }       
+
     public void setObject(String object) {
         if (object == null || object.trim().startsWith("$") || object.trim().equals("")) {
             this.object = null;

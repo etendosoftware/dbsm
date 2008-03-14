@@ -400,13 +400,13 @@ public class Function implements StructureObject, Cloneable {
             System.out.println(other._translation.exec(other._body.trim()));
             System.out.println("BODYS********************");
             }catch(Exception e){}*/
-            
+
             // Note that this compares case sensitive
             // TODO: For now we ignore catalog and schema (type should be irrelevant anyways)
             return new EqualsBuilder()
                     .append(_name, other._name)
                     .append(_parameters, other._parameters)
-                    .append(_translation.exec(_body.trim()).trim(), other._translation.exec(other._body.trim()).trim())
+                    .append(_body.trim(), other._body.trim())
                     .append(typeCode2, othertypeCode2)
                     .isEquals();
         } else {
@@ -432,7 +432,7 @@ public class Function implements StructureObject, Cloneable {
         return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name) &&
                 new EqualsBuilder()
                         .append(_parameters, otherFunction._parameters)
-                        .append(_translation.exec(_body.trim()).trim(), otherFunction._translation.exec(otherFunction._body.trim()).trim())
+                        .append(_body.trim(), otherFunction._body.trim())
                         .append(typeCode2, othertypeCode2)
                         .isEquals();
     }

@@ -53,10 +53,22 @@ under the License.
       <attribute name="required"      property="required"/>
       <attribute name="type"          property="type"/>
       <attribute name="size"          property="size"/>
-      <attribute name="default"       property="defaultValue"/>
+      <attribute name="default"       property="defaultValueAttr"/>
       <attribute name="autoIncrement" property="autoIncrement"/>
       <attribute name="description"   property="description"/>
       <attribute name="javaName"      property="javaName"/>
+      <element   name="default" 	  property="defaultValue">
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      </element>
+      <element   name="onCreateDefault" 	  property="onCreateDefault">
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      </element>
     </element>
   </class>
 
@@ -152,7 +164,13 @@ under the License.
           <attribute name="name" property="name"/>
           <attribute name="type" property="type"/>
           <attribute name="mode" property="mode"/>
-          <attribute name="default" property="defaultValue"/>
+          <attribute name="default" property="defaultValueAttr"/>
+	      <element name="default" property="defaultValue">
+	        <option>
+	            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+	            <value>CDATA</value>
+	        </option>
+	      </element>
       </element>
   </class>
   
