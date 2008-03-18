@@ -141,10 +141,9 @@ public class Parameter extends ValueObject implements Cloneable {
         if (obj instanceof Parameter) {
             Parameter other = (Parameter)obj;
             
-            int typeCode2 = _typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : _typeCode;
-            typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
-            int othertypeCode2 = other._typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : other._typeCode;
-            othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
+            int typeCode2 = _typeCode;
+
+            int othertypeCode2 = other._typeCode;
             
             int modeCode2 = _modeCode == MODE_NONE ? MODE_IN : _modeCode;
             int otherModeCode2 = other._modeCode == MODE_NONE ? MODE_IN : other._modeCode;

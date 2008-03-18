@@ -376,10 +376,10 @@ public class Function implements StructureObject, Cloneable {
         if (obj instanceof Function) {
             Function other = (Function)obj;
 
-            int typeCode2 = _typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : _typeCode;
-            typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
-            int othertypeCode2 = other._typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : other._typeCode;
-            othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
+            int typeCode2 = _typeCode;
+
+            int othertypeCode2 = other._typeCode;
+            
 
             /*System.out.println(other._translation.toString());
             //System.out.println(other._translation.exec(other._body.trim()));
@@ -423,10 +423,9 @@ public class Function implements StructureObject, Cloneable {
     public boolean equalsIgnoreCase(Function otherFunction)
     {
     	
-        int typeCode2 = _typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : _typeCode;
-        typeCode2 = typeCode2 == ExtTypes.NCHAR ? Types.CHAR : typeCode2;
-        int othertypeCode2 = otherFunction._typeCode == ExtTypes.NVARCHAR ? Types.VARCHAR : otherFunction._typeCode;
-        othertypeCode2 = othertypeCode2 == ExtTypes.NCHAR ? Types.CHAR : othertypeCode2;
+        int typeCode2 = _typeCode;
+
+        int othertypeCode2 = otherFunction._typeCode;
         
 
         return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name) &&
