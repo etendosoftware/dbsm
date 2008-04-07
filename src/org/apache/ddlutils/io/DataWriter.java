@@ -28,12 +28,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.commons.beanutils.BasicDynaClass;
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.LazyDynaClass;
+import org.apache.commons.beanutils.ResultSetDynaClass;
+import org.apache.commons.beanutils.ResultSetIterator;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -415,21 +420,81 @@ public class DataWriter
      * 
      * @param beans The beans iterator
      */
-    public void write(Iterator beans) throws DataWriterException
+    public void write(Iterator beans, Vector ranges) throws DataWriterException
     {
-        while (beans.hasNext())
-        {
-            DynaBean bean = (DynaBean)beans.next();
+    	try
+	    {
+    		int previousRange=0;
+	    	int range=0;
+	    	int elem=0;
+	    	_writer.writeComment("\n************************\n0. Core Range.\n************************\n");
+	    	_writer.writeCharacters("\n");
+	        while (beans.hasNext())
+	        {
+	            DynaBean bean = (DynaBean)beans.next();
+	
+	            if (bean instanceof SqlDynaBean)
+	            {
+	                SqlDynaClass dynaClass   = (SqlDynaClass)bean.getDynaClass();
+	                if(ranges!=null)
+	                {
+	                	//There is a numeric primary key. We apply the range rules.
+	                	DynaBean dbc=(DynaBean)ranges.get(elem);
+	                	elem++;
 
-            if (bean instanceof SqlDynaBean)
-            {
-                write((SqlDynaBean)bean);
-            }
-            else
-            {
-                _log.warn("Cannot write normal dyna beans (type: "+bean.getDynaClass().getName()+")");
-            }
-        }
+	                	Object value=dbc.get("ID_DEVELOPMENT_RANGE_V");
+		                String valueAsText=null;
+	                    if (value != null)
+	                    {
+	                        valueAsText = value.toString();
+
+	                        range=Integer.parseInt(valueAsText);
+	    	                if(range!=previousRange)
+	    	                {
+	    	                	if(range==1)
+	    	                	{
+	    	            	    	_writer.writeComment("\n************************\n0. End of Core Range.\n************************\n");
+			            	    	_writer.writeCharacters("\n");
+			            	    	_writer.writeComment("\n************************\n1. Custom Range.\n************************\n");
+			            	    	_writer.writeCharacters("\n");
+	    	                	}
+	    	                	previousRange=range;
+	    	                }
+	                    }
+	                }
+                    
+		                
+	                write((SqlDynaBean)bean);
+	            }
+	            else
+	            {
+	                _log.warn("Cannot write normal dyna beans (type: "+bean.getDynaClass().getName()+")");
+	            }
+
+	            
+	        }
+	        if(range==0)
+	        {
+    	    	_writer.writeComment("\n************************\n0. End of Core Range.\n************************\n");
+    	    	_writer.writeCharacters("\n");
+    	    	_writer.writeComment("\n************************\n1. Custom Range.\n************************\n");
+    	    	_writer.writeCharacters("\n");
+    	    	range=1;
+	        }
+	        if(range==1)
+        	{
+    	    	_writer.writeComment("\n************************\n1. End of Custom Range.\n************************\n");
+    	    	_writer.writeCharacters("\n");
+        	}
+	    }
+	    catch (XMLStreamException ex)
+	    {
+	        throw new DataWriterException(ex);
+	    }
+	    catch (ConversionException ex)
+	    {
+	        throw new DataWriterException(ex);
+	    }
     }
 
     /**
@@ -439,6 +504,6 @@ public class DataWriter
      */
     public void write(Collection beans) throws DataWriterException
     {
-        write(beans.iterator());
+        write(beans.iterator(),null);
     }
 }

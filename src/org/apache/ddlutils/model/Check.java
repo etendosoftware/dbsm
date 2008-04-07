@@ -73,7 +73,7 @@ public class Check implements ConstraintObject, Cloneable {
      * @return The condition
      */
     public String getCondition() {
-        return _condition;
+        return _condition.toUpperCase();
     }
 
     /**

@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.ddlutils.DdlUtilsException;
@@ -531,6 +532,19 @@ public class DatabaseDataIO
                     query.append(platform.getPlatformInfo().getDelimiterToken());
                 }
             }
+            
+            boolean ordF=false;
+            Column[] pkcolumns = tables[0].getPrimaryKeyColumns();
+            int i=0;
+            while(i<pkcolumns.length && !pkcolumns[i].isOfNumericType())
+            	i++;
+            String numPKColumn=null;
+            if(i<pkcolumns.length && pkcolumns[i].isOfNumericType())
+            {
+            	numPKColumn=pkcolumns[i].getName();
+            	ordF=true;
+            }
+
             query.append(" FROM ");
             if (platform.isDelimitedIdentifierModeOn())
             {
@@ -553,26 +567,54 @@ public class DatabaseDataIO
                 query.append(filter);
             }
             
+            String sqlRanges="";
+            Iterator ranges=null;
+            if(ordF)
+            {
+            	sqlRanges="SELECT ID_DEVELOPMENT_RANGE("+numPKColumn+") AS ID_DEVELOPMENT_RANGE_V FROM ";
+            	if(schema!=null)
+            		sqlRanges+=schema+".";
+            	sqlRanges+=tables[0].getName();
+                if (!"".equals(filter)) {
+                	sqlRanges+=" WHERE "+filter;
+                }
+                sqlRanges+=" ORDER BY ID_DEVELOPMENT_RANGE_V";
+            	query.append(" ORDER BY ID_DEVELOPMENT_RANGE("+numPKColumn+")");
+            }
+
             // Order by PK
-            Column[] pkcolumns = tables[0].getPrimaryKeyColumns();
             if (pkcolumns.length > 0) {
-                query.append(" ORDER BY ");
-                
+                if(!ordF)
+                	query.append(" ORDER BY ");
+                	
                 for (int columnIdx = 0; columnIdx < pkcolumns.length; columnIdx++) {
-                    if (columnIdx > 0) {
-                        query.append(",");
-                    }
+                	if(ordF || columnIdx>0)
+                	{
+                		query.append(",");
+                		sqlRanges+=",";
+                	}
                     if (platform.isDelimitedIdentifierModeOn()) {
                         query.append(platform.getPlatformInfo().getDelimiterToken());
                     }
                     query.append(pkcolumns[columnIdx].getName());
+                	sqlRanges+=pkcolumns[columnIdx].getName();
                     if (platform.isDelimitedIdentifierModeOn()) {
                         query.append(platform.getPlatformInfo().getDelimiterToken());
                     }
                 }
             }
 
-            writer.write(platform.query(model, query.toString(), tables));
+        	Vector rangesV=null;
+        	if(ordF)
+            {
+            	ranges=platform.query(model, sqlRanges, tables);
+	        	rangesV=new Vector();
+	        	while(ranges.hasNext())
+	        		rangesV.add(ranges.next());
+	        	
+            }
+
+            writer.write(platform.query(model, query.toString(), tables), rangesV);
         }
     }
 

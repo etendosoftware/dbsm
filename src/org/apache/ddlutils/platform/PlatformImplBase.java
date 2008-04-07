@@ -1042,6 +1042,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         catch (SQLException ex)
         {
             System.out.println(sql);
+            System.out.println(ex.getLocalizedMessage());
             return new ArrayList().iterator();
 //            throw new DatabaseOperationException("Error while performing a query", ex);
         }
