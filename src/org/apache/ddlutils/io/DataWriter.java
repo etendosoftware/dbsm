@@ -260,7 +260,10 @@ public class DataWriter
     {
         SqlDynaClass dynaClass   = (SqlDynaClass)bean.getDynaClass();
         Table        table       = dynaClass.getTable();
-        HashMap      subElements = new HashMap();
+        Vector      subElements = new Vector();
+        Vector		elementValues=new Vector();
+        Vector		elementComments=new Vector();
+        Column[] pks=table.getPrimaryKeyColumns();
 
         try
         {
@@ -272,6 +275,7 @@ public class DataWriter
                 Object           value       = bean.get(column.getName());
                 SqlTypeConverter converter   = _converterConf.getRegisteredConverter(table, column);
                 String           valueAsText = null;
+                
 
                 if (converter == null)
                 {
@@ -288,10 +292,18 @@ public class DataWriter
                 {
                     // we create an attribute only if the text is not too long
                     // and if it does not contain special characters
-                    if ((valueAsText.length() > MAX_ATTRIBUTE_LENGTH) || analyzeText(valueAsText, null))
+                    if (true)//(valueAsText.length() > MAX_ATTRIBUTE_LENGTH) || analyzeText(valueAsText, null))
                     {
                         // we defer writing the sub elements
-                        subElements.put(column.getName(), valueAsText);
+                        subElements.add(column.getName());
+                        elementValues.add(valueAsText);
+                        String comment="";
+                        for(int i=0;i<pks.length;i++)
+                        {
+                        	if(i>0) comment+=" ";
+                        	comment+=pks[i].getName()+"="+bean.get(pks[i].getName()).toString();
+                        }
+                        elementComments.add(comment);
                     }
                     else
                     {
@@ -303,14 +315,15 @@ public class DataWriter
             {
                 List cutPoints = new ArrayList();
 
-                for (Iterator it = subElements.entrySet().iterator(); it.hasNext();)
+                int i=0;
+                while(i<subElements.size())
                 {
-                    Map.Entry entry     = (Map.Entry)it.next();
-                    String    content   = entry.getValue().toString();
+                    String entry     = (String)subElements.get(i);
+                    String    content   = (String)elementValues.get(i);
 
                     printlnIfPrettyPrinting();
                     indentIfPrettyPrinting(2);
-                    _writer.writeStartElement(entry.getKey().toString());
+                    _writer.writeStartElement(entry);
 
                     // if the content contains special characters, we have to apply base64 encoding to it
                     // if the content is too short, then it has to contain special characters (otherwise
@@ -326,7 +339,11 @@ public class DataWriter
                     }
                     else
                     {
-                        if (cutPoints.isEmpty())
+                    	if(content.length() <= MAX_ATTRIBUTE_LENGTH)
+                    	{
+                    		_writer.writeCharacters(content);
+                    	}
+                    	else if (cutPoints.isEmpty())
                         {
                             _writer.writeCData(content);
                         }
@@ -347,8 +364,12 @@ public class DataWriter
                             }
                         }
                     }
-
+                    
+                    
                     _writer.writeEndElement();
+                    //We now write a comment with the primary keys of the element
+                    _writer.writeComment((String)elementComments.get(i));
+                	i++;
                 }
                 printlnIfPrettyPrinting();
                 indentIfPrettyPrinting(1);
@@ -427,6 +448,7 @@ public class DataWriter
     		int previousRange=0;
 	    	int range=0;
 	    	int elem=0;
+	    	boolean first=true;
 	    	_writer.writeComment("\n************************\n0. Core Range.\n************************\n");
 	    	_writer.writeCharacters("\n");
 	        while (beans.hasNext())
@@ -440,9 +462,19 @@ public class DataWriter
 	                {
 	                	//There is a numeric primary key. We apply the range rules.
 	                	DynaBean dbc=(DynaBean)ranges.get(elem);
+
+			        	if(first)
+			        	{
+			        		Table table=((SqlDynaClass)((SqlDynaBean)bean).getDynaClass()).getTable();
+			        		boolean hasPK=table.hasPrimaryKey();
+			        		if(!hasPK)
+			        			_log.warn("Warning: Table "+table.getName()+" doesn't have primary key. Comments will not be added to the XML file and this could cause problems when patching.");
+			        		first=false;
+			        	}
 	                	elem++;
 
-	                	Object value=dbc.get("ID_DEVELOPMENT_RANGE_V");
+	                	Object value=dbc.get("idv");
+	                	
 		                String valueAsText=null;
 	                    if (value != null)
 	                    {

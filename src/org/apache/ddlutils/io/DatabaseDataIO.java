@@ -571,14 +571,14 @@ public class DatabaseDataIO
             Iterator ranges=null;
             if(ordF)
             {
-            	sqlRanges="SELECT ID_DEVELOPMENT_RANGE("+numPKColumn+") AS ID_DEVELOPMENT_RANGE_V FROM ";
+            	sqlRanges="SELECT ID_DEVELOPMENT_RANGE("+numPKColumn+") AS idv FROM ";
             	if(schema!=null)
             		sqlRanges+=schema+".";
             	sqlRanges+=tables[0].getName();
                 if (!"".equals(filter)) {
                 	sqlRanges+=" WHERE "+filter;
                 }
-                sqlRanges+=" ORDER BY ID_DEVELOPMENT_RANGE_V";
+                sqlRanges+=" ORDER BY idv";
             	query.append(" ORDER BY ID_DEVELOPMENT_RANGE("+numPKColumn+")");
             }
 
