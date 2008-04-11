@@ -23,6 +23,7 @@ import java.beans.IntrospectionException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -139,11 +140,37 @@ public class DatabaseIO
      * @param output The target output writer
      * @return The writer
      */
-    protected BeanWriter getWriter(Writer output) throws DdlUtilsException
+    protected BeanWriter getWriter(OutputStream output) throws DdlUtilsException
     {
         try
         {
-            BeanWriter writer = new BeanWriter(output);
+            BeanWriter writer = new BeanWriter(output,"UTF8");
+    
+            writer.getXMLIntrospector().register(getBetwixtMapping());
+            writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
+            writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
+            writer.getXMLIntrospector().getConfiguration().setElementNameMapper(new HyphenatedNameMapper());
+            writer.getBindingConfiguration().setMapIDs(false);
+            writer.enablePrettyPrint();
+    
+            return writer;
+        }
+        catch (Exception ex)
+        {
+            throw new DdlUtilsException(ex);
+        }
+    }
+    /**
+     * Returns a new bean writer configured to writer database models.
+     * 
+     * @param output The target output writer
+     * @return The writer
+     */
+    protected BeanWriter getWriter(Writer writer_) throws DdlUtilsException
+    {
+        try
+        {
+            BeanWriter writer = new BeanWriter(writer_);
     
             writer.getXMLIntrospector().register(getBetwixtMapping());
             writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
@@ -393,11 +420,11 @@ public class DatabaseIO
     {
         try
         {
-            BufferedWriter writer = null;
+            FileOutputStream writer = null;
 
             try
             {
-                writer = new BufferedWriter(new FileWriter(file));
+                writer = new FileOutputStream(file);
     
                 write(model, writer);
                 writer.flush();
@@ -426,11 +453,11 @@ public class DatabaseIO
     {
         try
         {
-            BufferedWriter writer = null;
+            FileOutputStream writer = null;
 
             try
             {
-                writer = new BufferedWriter(new FileWriter(filename));
+                writer = new FileOutputStream(filename);
     
                 write(model, writer);
                 writer.flush();
@@ -458,7 +485,7 @@ public class DatabaseIO
      */
     public void write(Database model, OutputStream output) throws DdlUtilsException
     {
-        write(model, getWriter(new OutputStreamWriter(output)));
+        write(model, getWriter(output));
     }
 
     /**
