@@ -262,13 +262,19 @@ public class DataWriter
         Table        table       = dynaClass.getTable();
         Vector      subElements = new Vector();
         Vector		elementValues=new Vector();
-        Vector		elementComments=new Vector();
         Column[] pks=table.getPrimaryKeyColumns();
-
+        String comment="";
+        for(int i=0;i<pks.length;i++)
+        {
+        	if(i>0) comment+=" ";
+        	comment+=pks[i].getName()+"="+bean.get(pks[i].getName()).toString();
+        }
+        
         try
         {
             indentIfPrettyPrinting(1);
             _writer.writeStartElement(table.getName());
+            _writer.writeComment(comment);
             for (int idx = 0; idx < table.getColumnCount(); idx++)
             {
                 Column           column      = table.getColumn(idx);
@@ -297,13 +303,6 @@ public class DataWriter
                         // we defer writing the sub elements
                         subElements.add(column.getName());
                         elementValues.add(valueAsText);
-                        String comment="";
-                        for(int i=0;i<pks.length;i++)
-                        {
-                        	if(i>0) comment+=" ";
-                        	comment+=pks[i].getName()+"="+bean.get(pks[i].getName()).toString();
-                        }
-                        elementComments.add(comment);
                     }
                     else
                     {
@@ -339,7 +338,7 @@ public class DataWriter
                     }
                     else
                     {
-                    	if(content.length() <= MAX_ATTRIBUTE_LENGTH)
+                    	if(cutPoints.isEmpty() && content.length() <= MAX_ATTRIBUTE_LENGTH)
                     	{
                     		_writer.writeCharacters(content);
                     	}
@@ -368,13 +367,14 @@ public class DataWriter
                     
                     _writer.writeEndElement();
                     //We now write a comment with the primary keys of the element
-                    _writer.writeComment((String)elementComments.get(i));
+                    _writer.writeComment(comment);
                 	i++;
                 }
                 printlnIfPrettyPrinting();
                 indentIfPrettyPrinting(1);
             }
             _writer.writeEndElement();
+            _writer.writeComment(comment);
             printlnIfPrettyPrinting();
         }
         catch (XMLStreamException ex)
