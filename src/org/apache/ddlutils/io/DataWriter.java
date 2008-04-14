@@ -472,8 +472,15 @@ public class DataWriter
 			        		first=false;
 			        	}
 	                	elem++;
-
-	                	Object value=dbc.get("idv");
+	                	
+	                	Object value=null;
+	                	try{
+	                		value=dbc.get("idv");
+	                	}
+	                	catch(IllegalArgumentException excp)
+	                	{
+		                	value=dbc.get("IDV");
+	                	}
 	                	
 		                String valueAsText=null;
 	                    if (value != null)
