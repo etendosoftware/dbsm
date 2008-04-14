@@ -346,27 +346,34 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                 }
                 catch (SQLException ex)
                 {
-                    if (continueOnError)
-                    {
-                        // Since the user deciced to ignore this error, we log the error
-                        // on level warn, and the exception itself on level debug
-                        _log.warn("SQL Command failed with: " + ex.getMessage());
-                        _log.warn(command);
-                        if (_log.isDebugEnabled())
-                        {                            
-                            _log.debug(ex);
-                        }
-                        errors++;
-                        
-                        // It is a "forced" command ?
-                        if (command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
-                            aForcedCommands.add(command);
-                        }
-                    }
-                    else
-                    {
-                        throw new DatabaseOperationException("Error while executing SQL " + command, ex);
-                    }
+                	if(ex.getMessage().contains("A result was returned when none was expected"))
+                	{
+                		//We're trying to execute a "SELECT" in a script. This should not be an error
+                	}
+                	else
+                	{
+	                    if (continueOnError)
+	                    {
+	                        // Since the user deciced to ignore this error, we log the error
+	                        // on level warn, and the exception itself on level debug
+	                        _log.warn("SQL Command failed with: " + ex.getMessage());
+	                        _log.warn(command);
+	                        if (_log.isDebugEnabled())
+	                        {                            
+	                            _log.debug(ex);
+	                        }
+	                        errors++;
+	                        
+	                        // It is a "forced" command ?
+	                        if (command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
+	                            aForcedCommands.add(command);
+	                        }
+	                    }
+	                    else
+	                    {
+	                        throw new DatabaseOperationException("Error while executing SQL " + command, ex);
+	                    }
+                	}
                 }
 
                 // lets display any warnings
