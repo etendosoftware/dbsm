@@ -138,7 +138,7 @@ public class ChangeFunction2Translation implements Translation {
                 Pattern pattern26= Pattern.compile(patternStr26);
                 Matcher matcher26 = pattern26.matcher(inputStr);
                 
-                String patternStr33 = "^(.+?)FOR UPDATE(.+?);(\\s|\\t)*$";
+                String patternStr33 = "^(.+?)FOR UPDATE([^);\n]+?)(\\(?)(;?)(\\s|\\t)*$";
                 Pattern pattern33 = Pattern.compile(patternStr33);
                 Matcher matcher33= pattern33.matcher(inputStr);
                 
@@ -267,7 +267,7 @@ public class ChangeFunction2Translation implements Translation {
                 } else if (matcher26.find()) {
                     bw.write(matcher26.group(1)+"Array["+matcher26.group(3)+"]"+matcher26.group(5));
                 } else if (matcher33.find()) {//System.out.println(matcher33.group(1)+" - "+matcher33.group(4));
-                    bw.write(matcher33.group(1)+"FOR UPDATE;"+" --OBTG:"+matcher33.group(2)+"--");
+                    bw.write(matcher33.group(1)+"FOR UPDATE"+matcher33.group(3)+matcher33.group(4)+" --OBTG:"+matcher33.group(2)+"--");
                 } else if (matcher34.find()) {//System.out.println(matcher34.group(1)+" - "+matcher34.group(4));
                 	bw.write(matcher34.group(1)+"RAISE EXCEPTION '%','Rollback';");
                 } else if (matcher35.find()) {//System.out.println(matcher35.group(1)+" - "+matcher35.group(4));
