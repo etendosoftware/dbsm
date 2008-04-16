@@ -132,9 +132,9 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
         //append(new ReplaceStrTranslation("Array[","Array("));
         //append(new ReplaceStrTranslation("]",")"));
 
-        append(new ByLineTranslation(new ReplacePatTranslation("FOR UPDATE; (.*)--OBTG:(.*)--", "FOR UPDATE$2;$1")));
+        append(new ByLineTranslation(new ReplacePatTranslation("FOR UPDATE(\\(?)(;?) (.*)--OBTG:([^);\n]+?)--", "FOR UPDATE$4$1$2$3")));
         append(new ByLineTranslation(new ReplacePatTranslation("^(.+?)([\\s|\\t|\\(]+?)([Nn][Ee][Xx][Tt][Vv][Aa][Ll])\\('([^\\s|\\t|\\(]+?)'\\)(.+?)$", "$1$2$4.$3$5")));
-        
+
 	}
 	
 
