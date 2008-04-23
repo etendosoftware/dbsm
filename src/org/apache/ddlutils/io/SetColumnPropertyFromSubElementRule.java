@@ -88,7 +88,7 @@ public class SetColumnPropertyFromSubElementRule extends Rule
      */
     public void body(String namespace, String name, String text) throws Exception
     {
-        String attrValue = text.trim();
+        String attrValue = text;//.trim();
 
         if (_usesBase64 && (attrValue != null))
         {
