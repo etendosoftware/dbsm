@@ -75,11 +75,11 @@ public class ChangeFunction2Translation implements Translation {
                 Pattern pattern7 = Pattern.compile(patternStr7);
                 Matcher matcher7 = pattern7.matcher(inputStr);
                 
-                String patternStr11 = "(.+?)(RAISE_APPLICATION_ERROR)(\\()(.+?)(,)(.+?)(\\))(\\s|\\t)*;(\\s|\\t)*$";
+                String patternStr11 = "(?i)(.+?)(RAISE_APPLICATION_ERROR)(\\()(.+?)(,)(.+?)(\\))(\\s|\\t)*;(\\s|\\t)*$";
                 Pattern pattern11 = Pattern.compile(patternStr11);
                 Matcher matcher11 = pattern11.matcher(inputStr);
                 
-                String patternStr12 = "(.+?)(RAISE_APPLICATION_ERROR )(\\()(.+?)(,)(.+?)(\\))(\\s|\\t)*;(\\s|\\t)*$";
+                String patternStr12 = "(?i)(.+?)(RAISE_APPLICATION_ERROR )(\\()(.+?)(,)(.+?)(\\))(\\s|\\t)*;(\\s|\\t)*$";
                 Pattern pattern12 = Pattern.compile(patternStr12);
                 Matcher matcher12 = pattern12.matcher(inputStr);
                 
