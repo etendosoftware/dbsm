@@ -267,14 +267,14 @@ public class DataWriter
         for(int i=0;i<pks.length;i++)
         {
         	if(i>0) comment+=" ";
-        	comment+=pks[i].getName()+"="+bean.get(pks[i].getName()).toString();
+        	comment+=bean.get(pks[i].getName()).toString();
         }
         
         try
         {
-            indentIfPrettyPrinting(1);
+            _writer.writeComment(comment+"**************");
+            //indentIfPrettyPrinting(5);
             _writer.writeStartElement(table.getName());
-            _writer.writeComment(comment);
             for (int idx = 0; idx < table.getColumnCount(); idx++)
             {
                 Column           column      = table.getColumn(idx);
@@ -321,8 +321,14 @@ public class DataWriter
                     String    content   = (String)elementValues.get(i);
 
                     printlnIfPrettyPrinting();
-                    indentIfPrettyPrinting(2);
+                    _writer.writeComment(comment+" "+entry);
+                    /*indentIfPrettyPrinting(3);
+                    _writer.writeComment(entry);*/
+                    printlnIfPrettyPrinting();
+                    _writer.writeComment(comment);
+                    indentIfPrettyPrinting(7);
                     _writer.writeStartElement(entry);
+
 
                     // if the content contains special characters, we have to apply base64 encoding to it
                     // if the content is too short, then it has to contain special characters (otherwise
@@ -338,11 +344,7 @@ public class DataWriter
                     }
                     else
                     {
-                    	if(cutPoints.isEmpty() && content.length() <= MAX_ATTRIBUTE_LENGTH)
-                    	{
-                    		_writer.writeCharacters(content);
-                    	}
-                    	else if (cutPoints.isEmpty())
+                    	if (cutPoints.isEmpty())
                         {
                             _writer.writeCData(content);
                         }
@@ -363,18 +365,18 @@ public class DataWriter
                             }
                         }
                     }
-                    
-                    
+	
+
                     _writer.writeEndElement();
                     //We now write a comment with the primary keys of the element
-                    _writer.writeComment(comment);
                 	i++;
                 }
                 printlnIfPrettyPrinting();
-                indentIfPrettyPrinting(1);
+                _writer.writeComment(comment+"**************");
+                //indentIfPrettyPrinting(5);	
             }
             _writer.writeEndElement();
-            _writer.writeComment(comment);
+            printlnIfPrettyPrinting();
             printlnIfPrettyPrinting();
         }
         catch (XMLStreamException ex)
