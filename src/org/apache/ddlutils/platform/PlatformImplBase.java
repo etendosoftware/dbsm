@@ -356,13 +356,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 	                    {
 	                        // Since the user deciced to ignore this error, we log the error
 	                        // on level warn, and the exception itself on level debug
-	                        _log.warn("SQL Command failed with: " + ex.getMessage());
-	                        _log.warn(command);
-	                        if (_log.isDebugEnabled())
-	                        {                            
-	                            _log.debug(ex);
-	                        }
-	                        errors++;
+	                    	if(!command.contains("SCRIPT OPTIONS (FORCE = TRUE)"))
+	                    	{
+		                        _log.warn("SQL Command failed with: " + ex.getMessage());
+		                        _log.warn(command);
+		                        if (_log.isDebugEnabled())
+		                        {                            
+		                            _log.debug(ex);
+		                        }
+		                        errors++;
+	                    	}
 	                        
 	                        // It is a "forced" command ?
 	                        if (command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
