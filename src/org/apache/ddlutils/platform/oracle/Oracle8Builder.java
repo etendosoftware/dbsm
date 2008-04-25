@@ -43,6 +43,7 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.SqlBuilder;
+import org.apache.ddlutils.util.ExtTypes;
 import org.apache.ddlutils.util.Jdbc3Utils;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Pattern;
@@ -106,6 +107,35 @@ public class Oracle8Builder extends SqlBuilder
         for (int idx = 0; idx < columns.length; idx++)
         {
             createAutoIncrementTrigger(table, columns[idx]);
+        }
+        
+        //Create comments for onCreateDefault
+        for (int idx = 0; idx < table.getColumnCount(); idx++)
+        {
+            Column column = table.getColumn(idx);
+            String comment="";
+            if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
+            {
+            	String oncreatedefaultp=column.getOnCreateDefault();
+            	String oncreatedefault="";
+            	int lengthoncreate=oncreatedefaultp.length();
+            	//Parse oncreatedefault
+            	for(int i=0;i<lengthoncreate;i++)
+            	{
+            		String tchar=oncreatedefaultp.substring(0,1);
+            		oncreatedefaultp=oncreatedefaultp.substring(1);
+            		if(tchar.equals("'"))
+            			oncreatedefault+="''";
+            		else
+            			oncreatedefault+=tchar;
+            	}
+            	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
+            }
+            if(!comment.equals(""))
+            {
+            	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"'");
+            	printEndOfStatement();
+            }
         }
     }
 

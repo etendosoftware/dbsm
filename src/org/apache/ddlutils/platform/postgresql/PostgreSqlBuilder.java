@@ -127,16 +127,35 @@ public class PostgreSqlBuilder extends SqlBuilder
         for (int idx = 0; idx < table.getColumnCount(); idx++)
         {
             Column column = table.getColumn(idx);
-
+            String comment="";
+            if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
+            {
+            	String oncreatedefaultp=column.getOnCreateDefault();
+            	String oncreatedefault="";
+            	int lengthoncreate=oncreatedefaultp.length();
+            	//Parse oncreatedefault
+            	for(int i=0;i<lengthoncreate;i++)
+            	{
+            		String tchar=oncreatedefaultp.substring(0,1);
+            		oncreatedefaultp=oncreatedefaultp.substring(1);
+            		if(tchar.equals("'"))
+            			oncreatedefault+="''";
+            		else
+            			oncreatedefault+=tchar;
+            	}
+            	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
+            }
             if (column.getTypeCode()==ExtTypes.NVARCHAR)
             {
-                println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '--OBTG:NVARCHAR--';");
+                comment+="--OBTG:NVARCHAR--";
             }
 
             if (column.getTypeCode()==ExtTypes.NCHAR)
             {
-                println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '--OBTG:NCHAR--';");
+                comment+="--OBTG:NCHAR--";
             }
+            if(!comment.equals(""))
+            	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"';");
         }
     }
 

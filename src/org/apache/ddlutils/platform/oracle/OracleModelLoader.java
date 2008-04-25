@@ -13,9 +13,16 @@
 package org.apache.ddlutils.platform.oracle;
 
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
+import org.apache.ddlutils.platform.RowFiller;
 import org.apache.ddlutils.util.ExtTypes;
 
 /**
@@ -23,7 +30,8 @@ import org.apache.ddlutils.util.ExtTypes;
  * @author adrian
  */
 public class OracleModelLoader extends ModelLoaderBase {
-    
+
+    protected PreparedStatement _stmt_comments_tables;
     /** Creates a new instance of BasicModelLoader */
     public OracleModelLoader() {
     }  
@@ -77,6 +85,7 @@ public class OracleModelLoader extends ModelLoaderBase {
         }
         
         _stmt_functioncode = _connection.prepareStatement("SELECT TEXT FROM USER_SOURCE WHERE NAME = ? ORDER BY LINE");
+        _stmt_comments_tables= _connection.prepareStatement("SELECT COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME= ? AND COLUMN_NAME= ?");
     }
     
     protected boolean translateRequired(String required) {
@@ -178,4 +187,31 @@ public class OracleModelLoader extends ModelLoaderBase {
             return DatabaseMetaData.importedKeyNoAction;
         }
     }      
+
+    String commentCol;
+    protected Table readTable(String tablename) throws SQLException
+    {
+
+    	Table t=super.readTable(tablename);
+
+    	for(int i=0;i<t.getColumnCount();i++)
+    	{
+            _stmt_comments_tables.setString(1, tablename);
+            _stmt_comments_tables.setString(2, t.getColumn(i).getName());
+            fillList(_stmt_comments_tables,new RowFiller() { public void fillRow(ResultSet r) throws SQLException {
+            		commentCol=r.getString(1);
+            }});
+            if(commentCol!=null && !commentCol.equals(""))
+            {
+            	Pattern pat3=Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*?)--");
+            	Matcher match3=pat3.matcher(commentCol);
+            	if(match3.matches())
+            	{
+            		t.getColumn(i).setOnCreateDefault(match3.group(1));
+            	}
+            }
+    	}
+    	
+    	return t;
+    }
 }

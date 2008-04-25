@@ -650,6 +650,12 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             	{
             		t.getColumn(i).setTypeCode(ExtTypes.NCHAR);
             	}
+            	Pattern pat3=Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*?)--");
+            	Matcher match3=pat3.matcher(commentCol);
+            	if(match3.matches())
+            	{
+            		t.getColumn(i).setOnCreateDefault(match3.group(1));
+            	}
             }
     	}
     	
