@@ -117,6 +117,17 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     			standardizedBody=standardizedBody.substring(0,standardizedBody.length()-1);
     		db.getTrigger(i).setBody(standardizedBody+'\n');//initialBlanks+initialComments+
     	}
+    	for(int i=0;i<db.getViewCount();i++)
+    	{
+    		PostgreSQLStandarization viewStandarization=new PostgreSQLStandarization();
+    		String body=db.getView(i).getStatement();
+
+
+            
+    		String standardizedBody=viewStandarization.exec(body);
+
+    		db.getView(i).setStatement(standardizedBody);
+    	}
     	
     	return db;
     	

@@ -12,6 +12,7 @@
 
 package org.apache.ddlutils.platform.postgresql;
 
+import org.apache.ddlutils.translation.ByLineTranslation;
 import org.apache.ddlutils.translation.CombinedTranslation;
 import org.apache.ddlutils.translation.ReplaceStrTranslation;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
@@ -25,6 +26,7 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     
     /** Creates a new instance of PostgreSQLTranslation */
     public PostgreSQLStandarization() {
+    	System.out.println("algo hago...");
         
         // sql "in" sentence and "not in"
         append(new ReplacePatTranslation("=\\s*[Aa][Nn][Yy]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)", "IN ($1)"));
@@ -46,7 +48,7 @@ public class PostgreSQLStandarization extends CombinedTranslation {
         
         // removes the caracter ";" at the end of sql sentence
         append(new ReplaceStrTranslation(";", ""));    
-        
+        append(new ByLineTranslation(new ReplacePatTranslation("^[\\s]*(.*?)[\\s]*","$1")));
     }
     
 }
