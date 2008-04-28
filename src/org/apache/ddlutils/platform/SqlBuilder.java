@@ -3443,7 +3443,7 @@ public abstract class SqlBuilder
                     }
                     print(")");
                 }
-                
+
                 print(" ");                
                 println(getFunctionReturn(function));
                 println();
@@ -3457,7 +3457,6 @@ public abstract class SqlBuilder
                 CommentFilter comFilter=new CommentFilter();
                 body=litFilter.removeLiterals(body);
                 body=comFilter.removeComments(body);
-                
         		body=getPLSQLFunctionTranslation().exec(body);
 
         		body=comFilter.restoreComments(body);

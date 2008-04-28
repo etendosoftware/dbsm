@@ -36,9 +36,12 @@ public class PostgrePLSQLTriggerTranslation extends PostgrePLSQLTranslation {
         append(new ReplacePatTranslation(":([Oo][Ll][Dd]).", "$1."));
         append(new ReplacePatTranslation(":([Nn][Ee][Ww]).", "$1."));        
         append(new ReplacePatTranslation("RETURN;", "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; "));
-        append(new ReplacePatTranslation("(?i)INSERTING", "TG_OP = 'INSERT'"));
-        append(new ReplacePatTranslation("(?i)UPDATING", "TG_OP = 'UPDATE'"));
-        append(new ReplacePatTranslation("(?i)DELETING", "TG_OP = 'DELETE'"));
+        append(new ReplacePatTranslation("INSERTING", "TG_OP = 'INSERT'"));
+        append(new ReplacePatTranslation("UPDATING", "TG_OP = 'UPDATE'"));
+        append(new ReplacePatTranslation("DELETING", "TG_OP = 'DELETE'"));
+        append(new ReplacePatTranslation("inserting", "tg_op = 'INSERT'"));
+        append(new ReplacePatTranslation("updating", "tg_op = 'UPDATE'"));
+        append(new ReplacePatTranslation("deleting", "tg_op = 'DELETE'"));
         append(new ByLineTranslation(new ReplacePatTranslation("^EXCEPTION", "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\rEXCEPTION")));
         
         //Add return for trigger

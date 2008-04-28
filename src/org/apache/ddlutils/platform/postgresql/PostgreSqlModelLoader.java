@@ -100,12 +100,13 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         	PostgrePLSQLTriggerStandarization triggerStandarization=new PostgrePLSQLTriggerStandarization(db,i);
     		String body=db.getTrigger(i).getBody();
 
-
             LiteralFilter litFilter=new LiteralFilter();
             CommentFilter comFilter=new CommentFilter();
 
             body=litFilter.removeLiterals(body);
             body=comFilter.removeComments(body);
+            
+
             
     		String standardizedBody=triggerStandarization.exec(body);
 
@@ -651,19 +652,20 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             {
             	Pattern pat=Pattern.compile("--OBTG:NVARCHAR--");
             	Matcher match=pat.matcher(commentCol);
-            	if(match.matches())
+            	if(match.find())
             	{
             		t.getColumn(i).setTypeCode(ExtTypes.NVARCHAR);
             	}
             	Pattern pat2=Pattern.compile("--OBTG:NCHAR--");
             	Matcher match2=pat2.matcher(commentCol);
-            	if(match2.matches())
+            	if(match2.find())
             	{
             		t.getColumn(i).setTypeCode(ExtTypes.NCHAR);
             	}
-            	Pattern pat3=Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*?)--");
+
+            	Pattern pat3=Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*)--");
             	Matcher match3=pat3.matcher(commentCol);
-            	if(match3.matches())
+            	if(match3.find())
             	{
             		t.getColumn(i).setOnCreateDefault(match3.group(1));
             	}

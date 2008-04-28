@@ -21,9 +21,12 @@ public class PostgrePLSQLTriggerStandarization extends PostgrePLSQLStandarizatio
  
         //append(new ByLineTranslation(new ReplaceStrTranslation( "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\rEXCEPTION","EXCEPTION")));
 
-        append(new ReplaceStrTranslation("TG_OP = 'INSERT'","INSERTING"));
-        append(new ReplaceStrTranslation("TG_OP = 'UPDATE'","UPDATING"));
-        append(new ReplaceStrTranslation("TG_OP = 'DELETE'","DELETING"));
+        append(new ReplacePatTranslation("TG_OP = 'INSERT'","INSERTING"));
+        append(new ReplacePatTranslation("TG_OP = 'UPDATE'","UPDATING"));
+        append(new ReplacePatTranslation("TG_OP = 'DELETE'","DELETING"));
+        append(new ReplacePatTranslation("tg_op = 'INSERT'","inserting"));
+        append(new ReplacePatTranslation("tg_op = 'UPDATE'","updating"));
+        append(new ReplacePatTranslation("tg_op = 'DELETE'","deleting"));
         append(new ReplacePatTranslation("([Oo][Ll][Dd])\\.",":$1."));
         append(new ReplacePatTranslation("([Nn][Ee][Ww])\\.",":$1."));   
         

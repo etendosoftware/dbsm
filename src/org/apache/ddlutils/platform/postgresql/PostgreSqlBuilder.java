@@ -128,6 +128,16 @@ public class PostgreSqlBuilder extends SqlBuilder
         {
             Column column = table.getColumn(idx);
             String comment="";
+
+            if (column.getTypeCode()==ExtTypes.NVARCHAR)
+            {
+                comment+="--OBTG:NVARCHAR--";
+            }
+
+            if (column.getTypeCode()==ExtTypes.NCHAR)
+            {
+                comment+="--OBTG:NCHAR--";
+            }
             if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
             {
             	String oncreatedefaultp=column.getOnCreateDefault();
@@ -144,15 +154,6 @@ public class PostgreSqlBuilder extends SqlBuilder
             			oncreatedefault+=tchar;
             	}
             	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
-            }
-            if (column.getTypeCode()==ExtTypes.NVARCHAR)
-            {
-                comment+="--OBTG:NVARCHAR--";
-            }
-
-            if (column.getTypeCode()==ExtTypes.NCHAR)
-            {
-                comment+="--OBTG:NCHAR--";
             }
             if(!comment.equals(""))
             	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"';");
@@ -580,12 +581,14 @@ public class PostgreSqlBuilder extends SqlBuilder
         
 
         String body=trigger.getBody();
-
+        
         LiteralFilter litFilter=new LiteralFilter();
         CommentFilter comFilter=new CommentFilter();
         body=litFilter.removeLiterals(body);
         body=comFilter.removeComments(body);
         
+
+
         body=getPLSQLTriggerTranslation().exec(body);
 
         body=comFilter.restoreComments(body);

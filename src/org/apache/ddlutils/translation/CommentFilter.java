@@ -40,6 +40,7 @@ public class CommentFilter{
 			numLit++;
 			matcher=pattLit.matcher(body);
 		}
+		
 		body=firstPart+body;
 		
 		//We restore literals we need for the translation process
@@ -52,18 +53,23 @@ public class CommentFilter{
         			||rep.contains("EXCEPTION") || rep.contains("PRAGMA") || rep.contains("INTERNAL_ERROR"))
         		body=body.replaceFirst(code, rep);
         }
-        
         return body;
 	}
 	
 	public String restoreComments(String body)
 	{
-
 		//We finally restore literals
         for(int i=numLit-1;i>=0;i--)
         {
         	String code="##OBCO"+i;
         	String rep=comments.get(code);
+
+    		/*Pattern pattLit3 = Pattern.compile(code);
+    		Matcher matcher3=pattLit3.matcher(body);
+    		if(matcher3.find())
+    		{
+    			body=body.substring(0, matcher3.start())+rep+body.substring(matcher3.end());
+    		}*/
         	body=body.replaceFirst(code, rep);
         }
         
