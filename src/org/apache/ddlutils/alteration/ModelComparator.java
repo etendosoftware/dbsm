@@ -84,6 +84,37 @@ public class ModelComparator
     {
         ArrayList changes = new ArrayList();
 
+
+        for (int trIdx = 0; trIdx < sourceModel.getTriggerCount(); trIdx++)
+        {
+            Trigger sourceTrigger = sourceModel.getTrigger(trIdx);
+            Trigger targetTrigger = findCorrespondingTrigger(targetModel, sourceTrigger);
+            
+            if (targetTrigger == null)
+            {
+                if (_log.isInfoEnabled())
+                {
+                    _log.info("Processing Trigger " + sourceTrigger + " (removed from database " + sourceModel.getName()+")");
+                }
+                changes.add(new RemoveTriggerChange(sourceTrigger));
+            }
+        }
+        
+        for (int trIdx = 0; trIdx < targetModel.getTriggerCount(); trIdx++)
+        {
+            Trigger targetTrigger = targetModel.getTrigger(trIdx);
+            Trigger sourceTrigger = findCorrespondingTrigger(sourceModel, targetTrigger);
+            
+            if (sourceTrigger == null)
+            {
+                if (_log.isInfoEnabled())
+                {
+                    _log.info("Processing Trigger " + targetTrigger + " (created for the database " + sourceModel.getName()+")");
+                }
+                changes.add(new AddTriggerChange(targetTrigger));
+            }
+        }  
+        
         for (int tableIdx = 0; tableIdx < targetModel.getTableCount(); tableIdx++)
         {
             Table targetTable = targetModel.getTable(tableIdx);
@@ -222,35 +253,6 @@ public class ModelComparator
             }
         }         
         
-        for (int trIdx = 0; trIdx < sourceModel.getTriggerCount(); trIdx++)
-        {
-            Trigger sourceTrigger = sourceModel.getTrigger(trIdx);
-            Trigger targetTrigger = findCorrespondingTrigger(targetModel, sourceTrigger);
-            
-            if (targetTrigger == null)
-            {
-                if (_log.isInfoEnabled())
-                {
-                    _log.info("Processing Trigger " + sourceTrigger + " (removed from database " + sourceModel.getName()+")");
-                }
-                changes.add(new RemoveTriggerChange(sourceTrigger));
-            }
-        }
-        
-        for (int trIdx = 0; trIdx < targetModel.getTriggerCount(); trIdx++)
-        {
-            Trigger targetTrigger = targetModel.getTrigger(trIdx);
-            Trigger sourceTrigger = findCorrespondingTrigger(sourceModel, targetTrigger);
-            
-            if (sourceTrigger == null)
-            {
-                if (_log.isInfoEnabled())
-                {
-                    _log.info("Processing Trigger " + targetTrigger + " (created for the database " + sourceModel.getName()+")");
-                }
-                changes.add(new AddTriggerChange(targetTrigger));
-            }
-        }  
         
         return changes;
     }
