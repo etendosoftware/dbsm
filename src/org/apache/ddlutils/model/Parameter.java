@@ -59,7 +59,7 @@ public class Parameter extends ValueObject implements Cloneable {
      * @return The name
      */
     public String getName() {
-        return _name;
+        return _name.toLowerCase();
     }
 
     /**
@@ -68,7 +68,7 @@ public class Parameter extends ValueObject implements Cloneable {
      * @param name The name
      */
     public void setName(String name) {
-        _name = name;
+        _name = name.toLowerCase();
     }    
     
     /**
