@@ -315,6 +315,7 @@ public interface Platform
      * @return The SQL statements
      */
     public String getCreateTablesSql(Database model, boolean dropTablesFirst, boolean continueOnError);
+    public String getCreateTablesSql(Database model, boolean dropTablesFirst, boolean continueOnError);
 
     /**
      * Creates the tables defined in the database model.

@@ -115,7 +115,7 @@ public class CreateXML2SQL extends Task {
             }              
             
             Writer w = new FileWriter(output);
-            w.write(pl.getCreateTablesSql(db, isDropfirst(), false));
+            w.write(pl.getCreateTablesSqlScript(db, isDropfirst(), false));
             w.close();
 
             _log.info("Database script created in : " + output.getPath());

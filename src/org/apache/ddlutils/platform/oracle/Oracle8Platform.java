@@ -105,6 +105,15 @@ public class Oracle8Platform extends PlatformImplBase
         setModelLoader(new OracleModelLoader());
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getCreateTablesSqlScript(Database model, boolean dropTablesFirst, boolean continueOnError)
+    {
+        return "SET DEFINE OFF\n/\n"+getCreateTablesSql(model, dropTablesFirst, continueOnError);
+    }
+    
     /**
      * {@inheritDoc}
      */

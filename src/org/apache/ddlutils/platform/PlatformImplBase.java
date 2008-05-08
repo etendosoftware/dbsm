@@ -536,6 +536,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     /**
      * {@inheritDoc}
      */
+    public String getCreateTablesSqlScript(Database model, boolean dropTablesFirst, boolean continueOnError)
+    {
+        return getCreateTablesSql(model, dropTablesFirst, continueOnError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void createTables(Database model, CreationParameters params, boolean dropTablesFirst, boolean continueOnError) throws DatabaseOperationException
     {
         Connection connection = borrowConnection();
