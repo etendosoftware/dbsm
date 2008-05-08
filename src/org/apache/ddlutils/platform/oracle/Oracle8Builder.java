@@ -557,7 +557,7 @@ public class Oracle8Builder extends SqlBuilder
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
-        print("DROP PRIMARY KEY");
+        print("DROP PRIMARY KEY DROP INDEX");
         printEndOfStatement();
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
