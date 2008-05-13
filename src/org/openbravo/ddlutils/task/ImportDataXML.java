@@ -104,27 +104,33 @@ public class ImportDataXML extends Task {
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
             }
-                        
-            Database originaldb;
-            if (getModel() == null) {
-                originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
-                if (originaldb == null) {
-                    originaldb =  new Database();
-                    _log.info("Model considered empty.");
-                } else {
-                    _log.info("Model loaded from database.");
-                }                   
-            } else {
-                // Load the model from the file
-                originaldb = DatabaseUtils.readDatabase(getModel());
-                _log.info("Model loaded from file.");
-            }  
             
-            DatabaseDataIO dbdio = new DatabaseDataIO();
-            dbdio.setEnsureFKOrder(false);
-            dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-            dbdio.writeDataToDatabase(platform, originaldb, DatabaseUtils.readFileArray(getInput())); 
-            
+            if(getInput().isDirectory() && DatabaseUtils.readFileArray(getInput()).length==0)
+            {
+            	_log.info(getInput().getName()+" directory is empty.");
+            }
+            else
+            {
+	            Database originaldb;
+	            if (getModel() == null) {
+	                originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
+	                if (originaldb == null) {
+	                    originaldb =  new Database();
+	                    _log.info("Model considered empty.");
+	                } else {
+	                    _log.info("Model loaded from database.");
+	                }                   
+	            } else {
+	                // Load the model from the file
+	                originaldb = DatabaseUtils.readDatabase(getModel());
+	                _log.info("Model loaded from file.");
+	            }  
+	            
+	            DatabaseDataIO dbdio = new DatabaseDataIO();
+	            dbdio.setEnsureFKOrder(false);
+	            dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+	            dbdio.writeDataToDatabase(platform, originaldb, DatabaseUtils.readFileArray(getInput())); 
+            }
             // execute the post-script
             if (getPostscript() == null) {
                 // try to execute the default prescript
