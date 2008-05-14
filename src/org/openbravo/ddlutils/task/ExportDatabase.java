@@ -13,14 +13,17 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.Task;
+import org.apache.tools.ant.BuildException;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -40,6 +43,7 @@ public class ExportDatabase extends Task {
     private String user;
     private String password;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+    private String codeRevision;
     
     private File model;   
 
@@ -73,7 +77,8 @@ public class ExportDatabase extends Task {
     public void execute() {
        
         initLogging();
-    
+        
+        
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
         ds.setUrl(getUrl());
@@ -83,7 +88,12 @@ public class ExportDatabase extends Task {
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true); 
         
-        Database db = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));        
+
+        
+        Database db = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
+        
+
+        verifyRevision(platform, db);
         _log.info(db.toString());
         
         DatabaseIO io = new DatabaseIO();
@@ -148,4 +158,42 @@ public class ExportDatabase extends Task {
     {
         _verbosity = level;
     }    
+
+    public String getCodeRevision() {
+        return codeRevision;
+    }
+
+    public void setCodeRevision(String rev) {
+        codeRevision=rev;
+    }
+    
+    public void verifyRevision(Platform platform, Database database)
+    {
+    	String sql="SELECT * FROM AD_SYSTEM_INFO";
+    	List list=platform.fetch(database, sql);
+    	if(list.isEmpty())
+    	{
+    		throw new BuildException("Code revision not found in database");
+    	}
+    	else
+    	{
+    		DynaBean dynaBean=(DynaBean)list.get(0);
+    		int databaseRevision=Integer.parseInt(dynaBean.get("CODE_REVISION").toString());
+    		_log.info("Database code revision: #"+databaseRevision+"#");
+    		
+
+    		_log.info("Source code revision: #"+codeRevision+"#");
+    		if(codeRevision.equals("0"))
+    		{
+    			_log.info("Subversion code revision not found.");
+    		}
+    		else if(Integer.parseInt(codeRevision)!=databaseRevision)
+    		{
+    			throw new BuildException("Database revision different from source code revision. A update.database is needed before exporting.");
+    		}
+    		
+    		
+    	}
+    	
+    }
 }

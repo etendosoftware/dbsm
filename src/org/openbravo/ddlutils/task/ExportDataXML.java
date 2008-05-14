@@ -15,7 +15,10 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Properties;
+
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
@@ -58,6 +61,7 @@ public class ExportDataXML extends Task {
 
     protected Log _log;
     private VerbosityLevel _verbosity = null;
+    private String codeRevision;
     
     /** Creates a new instance of WriteDataXML */
     public ExportDataXML() {
@@ -117,6 +121,8 @@ public class ExportDataXML extends Task {
                 originaldb = DatabaseUtils.readDatabase(getModel());
                 _log.info("Model loaded from file.");
             } 
+
+            verifyRevision(platform, originaldb);
             
             DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
@@ -259,5 +265,43 @@ public class ExportDataXML extends Task {
     {
         _verbosity = level;
     }
+
+    public String getCodeRevision() {
+        return codeRevision;
+    }
+
+    public void setCodeRevision(String rev) {
+        codeRevision=rev;
+    }
     
+
+    public void verifyRevision(Platform platform, Database database)
+    {
+    	String sql="SELECT * FROM AD_SYSTEM_INFO";
+    	List list=platform.fetch(database, sql);
+    	if(list.isEmpty())
+    	{
+    		throw new BuildException("Code revision not found in database");
+    	}
+    	else
+    	{
+    		DynaBean dynaBean=(DynaBean)list.get(0);
+    		int databaseRevision=Integer.parseInt(dynaBean.get("CODE_REVISION").toString());
+    		_log.info("Database code revision: "+databaseRevision);
+    		
+
+    		_log.info("Source code revision: "+codeRevision);
+    		if(codeRevision.equals("0"))
+    		{
+    			_log.info("Subversion code revision not found.");
+    		}
+    		else if(Integer.parseInt(codeRevision)!=databaseRevision)
+    		{
+    			throw new BuildException("Database revision different from source code revision. A update.database is needed before exporting.");
+    		}
+    		
+    		
+    	}
+    	
+    }
 }
