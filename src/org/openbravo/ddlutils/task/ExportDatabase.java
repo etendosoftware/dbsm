@@ -178,7 +178,13 @@ public class ExportDatabase extends Task {
     	else
     	{
     		DynaBean dynaBean=(DynaBean)list.get(0);
-    		int databaseRevision=Integer.parseInt(dynaBean.get("CODE_REVISION").toString());
+    		int databaseRevision;
+    		try{
+    			databaseRevision=Integer.parseInt(dynaBean.get("CODE_REVISION").toString());
+    		}catch(Exception e)
+    		{
+    			databaseRevision=Integer.parseInt(dynaBean.get("code_revision").toString());
+    		}
     		_log.info("Database code revision: #"+databaseRevision+"#");
     		
 
