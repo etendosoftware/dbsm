@@ -14,9 +14,13 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
@@ -47,7 +51,7 @@ public class ImportDataXML extends Task {
     private File model = null;
     private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
     
-    private File input;   
+    private String input;   
     private String encoding = "UTF-8";
 
     protected Log _log;
@@ -92,6 +96,22 @@ public class ImportDataXML extends Task {
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
         
+        String filters=getFilter();
+        StringTokenizer strTokFil=new StringTokenizer(filters,",");
+        String folders=getInput();
+        StringTokenizer strTokFol=new StringTokenizer(folders,",");
+        
+
+        Vector<File> files=new Vector<File>();
+        
+        while(strTokFol.hasMoreElements())
+        {
+        	String folder=strTokFol.nextToken();
+        	File[] fileArray=DatabaseUtils.readFileArray(new File(folder));
+        	for(int i=0;i<fileArray.length;i++)
+        		files.add(fileArray[i]);
+        }
+        
         try {      
             // execute the pre-script
             if (getPrescript() == null) {
@@ -104,33 +124,39 @@ public class ImportDataXML extends Task {
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
             }
-            
-            if(getInput().isDirectory() && DatabaseUtils.readFileArray(getInput()).length==0)
+
+            Database originaldb;
+            if (getModel() == null) {
+                originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
+                if (originaldb == null) {
+                    originaldb =  new Database();
+                    _log.info("Model considered empty.");
+                } else {
+                    _log.info("Model loaded from database.");
+                }                   
+            } else {
+                // Load the model from the file
+                originaldb = DatabaseUtils.readDatabase(getModel());
+                _log.info("Model loaded from file.");
+            }  
+            DatabaseDataIO dbdio = new DatabaseDataIO();
+            dbdio.setEnsureFKOrder(false);
+            DataReader dataReader=null;
+            while(strTokFil.hasMoreElements())
             {
-            	_log.info(getInput().getName()+" directory is empty.");
+            	String filter=strTokFil.nextToken();
+            	if(filter!=null && !filter.equals(""))
+            	{
+                	dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(filter, originaldb));
+                	dataReader = dbdio.getConfiguredDataReader(platform, originaldb);
+                	dataReader.getSink().start();   //we do this to delete data from tables in each of the filters
+            	}
             }
-            else
-            {
-	            Database originaldb;
-	            if (getModel() == null) {
-	                originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
-	                if (originaldb == null) {
-	                    originaldb =  new Database();
-	                    _log.info("Model considered empty.");
-	                } else {
-	                    _log.info("Model loaded from database.");
-	                }                   
-	            } else {
-	                // Load the model from the file
-	                originaldb = DatabaseUtils.readDatabase(getModel());
-	                _log.info("Model loaded from file.");
-	            }  
-	            
-	            DatabaseDataIO dbdio = new DatabaseDataIO();
-	            dbdio.setEnsureFKOrder(false);
-	            dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-	            dbdio.writeDataToDatabase(platform, originaldb, DatabaseUtils.readFileArray(getInput())); 
-            }
+    	    for(int i=0;i<files.size();i++)
+    	    	dbdio.writeDataToDatabase(dataReader,files.get(i)); 
+                
+    	    dataReader.getSink().end();
+    	    
             // execute the post-script
             if (getPostscript() == null) {
                 // try to execute the default prescript
@@ -142,11 +168,12 @@ public class ImportDataXML extends Task {
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
             }
-        
+            
         } catch (Exception e) {
             // log(e.getLocalizedMessage());
             throw new BuildException(e);
         }   
+        
     }    
 
     public String getDriver() {
@@ -205,11 +232,11 @@ public class ImportDataXML extends Task {
         return filter;
     }
     
-    public File getInput() {
+    public String getInput() {
         return input;
     }
 
-    public void setInput(File input) {
+    public void setInput(String input) {
         this.input = input;
     }
 
