@@ -2194,6 +2194,22 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         evaluateBatch(connection, sql, continueOnError);
     }
     
+    public void deleteDataFromTable(Connection connection, Database model, String[] tables, String[] sqlfilters, boolean continueOnError) {
+    	StringWriter buffer = new StringWriter();
+    	_log.info("Deleting data from tables...");
+        getSqlBuilder().setWriter(buffer);
+    	for(int i=0;i<tables.length;i++)
+    	{
+            try {
+	            getSqlBuilder().writeDeleteTable(model, tables[i], sqlfilters[i]);
+
+            } catch (IOException e) {           
+            	_log.error(e.getLocalizedMessage());
+            }
+    	}
+        evaluateBatch(connection, buffer.toString(), continueOnError);
+    }
+    
     /**
      * Allows the platform to postprocess the model just read from the database.
      * 

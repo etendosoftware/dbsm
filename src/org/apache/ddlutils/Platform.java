@@ -1001,5 +1001,6 @@ public interface Platform
     public void deleteDataFromTable(Connection connection, Database model, Table table, boolean continueOnError) throws DatabaseOperationException;       
     
     public void deleteDataFromTable(Connection connection, Database model, String table, String sqlfilter, boolean continueOnError);
-     
+    
+    public void deleteDataFromTable(Connection connection, Database model, String[] tables, String[] sqlfilters, boolean continueOnError);
 }

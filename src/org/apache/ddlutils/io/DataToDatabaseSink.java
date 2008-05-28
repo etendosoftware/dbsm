@@ -307,9 +307,14 @@ public class DataToDatabaseSink implements DataSink
         // delete filtered tables
         if (_databasefilter != null) {
             String [] tablenames = _databasefilter.getTableNames();
+            String [] tableFilters=new String[tablenames.length];
+            int ind=0;
             for (String table : tablenames) {
-                _platform.deleteDataFromTable(_connection, _model, table, _databasefilter.getTableFilter(table), _haltOnErrors);                
+            	tableFilters[ind]=_databasefilter.getTableFilter(table);
+            	ind++;
             }
+            _platform.deleteDataFromTable(_connection, _model, tablenames, tableFilters, _haltOnErrors);
+            
         }       
     }
 
