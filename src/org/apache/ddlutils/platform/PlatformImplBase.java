@@ -2573,7 +2573,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      *                   given result set (optional)
      * @return The iterator
      */
-    protected ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet, Table[] queryHints)
+    public ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet, Table[] queryHints)
     {
         return new ModelBasedResultSetIterator(this, model, resultSet, queryHints, true);
     }

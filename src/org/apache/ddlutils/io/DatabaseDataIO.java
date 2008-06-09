@@ -645,6 +645,14 @@ public class DatabaseDataIO
         registerConverters(reader.getConverterConfiguration());
         return reader;
     }
+    
+    public DataReader getConfiguredCompareDataReader(Database database)
+    {
+        DataReader         reader   = new DataReader();
+        reader.setSink(new DataToArraySink());
+        reader.setModel(database);
+    	return reader;
+    }
 
     /**
      * Reads the data from the specified files and writes it to the database to which the given

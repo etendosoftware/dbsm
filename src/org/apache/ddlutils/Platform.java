@@ -20,6 +20,7 @@ package org.apache.ddlutils;
  */
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.JdbcModelReader;
+import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.ddlutils.platform.SqlBuilder;
 
 /**
@@ -1003,4 +1005,6 @@ public interface Platform
     public void deleteDataFromTable(Connection connection, Database model, String table, String sqlfilter, boolean continueOnError);
     
     public void deleteDataFromTable(Connection connection, Database model, String[] tables, String[] sqlfilters, boolean continueOnError);
+
+    public ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet, Table[] queryHints);
 }
