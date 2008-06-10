@@ -118,7 +118,6 @@ public class CompareData extends Task {
         		String tablename=files.get(i).getName().substring(0, files.get(i).getName().length()-4);
         		Vector<DynaBean> vectorDynaBeans=((DataToArraySink)dataReader.getSink()).getVector();
         		dataReader.parse(files.get(i));
-        		System.out.println(tablename+"...");
         		if(databaseBeans.containsKey(tablename))
         			databaseBeans.get(tablename).addAll(vectorDynaBeans);
         		else
