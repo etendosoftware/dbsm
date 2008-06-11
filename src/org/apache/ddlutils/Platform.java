@@ -1007,4 +1007,8 @@ public interface Platform
     public void deleteDataFromTable(Connection connection, Database model, String[] tables, String[] sqlfilters, boolean continueOnError);
 
     public ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet, Table[] queryHints);
+
+    public void deleteInvalidConstraintRows(Database model, boolean continueOnError);
+    
+    public void deleteInvalidConstraintRows(Connection connection, Database model, boolean continueOnError);
 }

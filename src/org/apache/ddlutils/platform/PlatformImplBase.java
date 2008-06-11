@@ -2602,5 +2602,22 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         } catch (IOException e) {           
             return null; // won't happen because we're using a string writer
         }
+    }    
+
+    public void deleteInvalidConstraintRows(Database model, boolean continueOnError){
+
+        Connection connection = borrowConnection();
+        deleteInvalidConstraintRows(connection, model, continueOnError);
+        returnConnection(connection);
+        
+    }
+    public void deleteInvalidConstraintRows(Connection connection, Database model, boolean continueOnError){
+
+
+            StringWriter buffer = new StringWriter();
+
+            getSqlBuilder().setWriter(buffer);
+            getSqlBuilder().deleteInvalidConstraintRows(model);
+            evaluateBatch(connection, buffer.toString(),continueOnError);
     }      
 }

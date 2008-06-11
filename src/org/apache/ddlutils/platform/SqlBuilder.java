@@ -496,6 +496,60 @@ public abstract class SqlBuilder
         _PLSQLTriggerTranslation = new NullTranslation();
         _SQLTranslation = new NullTranslation();
         
+        
+        
+        
+    }
+    
+    public void deleteInvalidConstraintRows(Database model)
+    {
+
+    	try{
+	        //We will now delete the rows in tables which have a foreign key constraint
+	        //with "on delete cascade" whose parent has been deleted
+	        for(int i=0;i<model.getTableCount();i++)
+	        {
+	        	Table table=model.getTable(i);
+	        	ForeignKey[] fksTable=table.getForeignKeys();
+	        	for(int j=0;j<fksTable.length;j++)
+	        	{
+	        		ForeignKey fk=fksTable[j];
+	        		Table parentTable=fk.getForeignTable();
+	        		if(fk.getOnDelete()!=null && fk.getOnDelete().contains("cascade"))
+	        		{
+		        		print("DELETE FROM "+table.getName()+" WHERE ");
+		        		boolean first=true;
+		        		for(int k=0;k<table.getColumnCount();k++)
+		        		{
+		        			if(fk.hasLocalColumn(table.getColumn(k)))
+		        			{
+		        				if(!first) print(",");
+		        				first=false;
+		        				print(table.getColumn(k).getName());
+		        			}
+		        		}
+		        		print(" NOT IN (SELECT ");
+		        		first=true;
+		        		for(int k=0;k<parentTable.getColumnCount();k++)
+		        		{
+		        			if(fk.hasForeignColumn(parentTable.getColumn(k)))
+		        			{
+		        				if(!first) print(",");
+		        				first=false;
+		        				print(parentTable.getColumn(k).getName());
+		        			}
+		        		}
+		        		
+		        		print(" FROM "+parentTable.getName()+")");
+		        		printEndOfStatement();
+	        		}
+	        	}
+	        }
+    	}catch(Exception e)
+    	{
+    		_log.error(e.getLocalizedMessage());
+    		System.exit(1);
+    	}
     }
     public void alterDatabasePostScript(Database currentModel, Database desiredModel, CreationParameters params) throws IOException
     {
@@ -537,7 +591,6 @@ public abstract class SqlBuilder
             	droppedTables.add(newColumns.get(i).getChangedTable().getName());
         	}
         }
-
         
     }
 

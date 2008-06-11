@@ -232,6 +232,8 @@ public class DataToDatabaseSink implements DataSink
         purgeBatchQueue();
         try
         {
+
+            _platform.deleteInvalidConstraintRows(_model, _haltOnErrors);
             _platform.enableAllTriggers(_connection, _model, _haltOnErrors);
             _platform.enableAllFK(_connection, _model, _haltOnErrors);
             _connection.close();

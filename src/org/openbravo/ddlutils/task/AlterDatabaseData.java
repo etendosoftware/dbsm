@@ -126,14 +126,14 @@ public class AlterDatabaseData extends Task {
             }   
 
             Database db = DatabaseUtils.readDatabase(getModel());   
-            
+
             Database oldModel=(Database)originaldb.clone();
             platform.alterTables(originaldb, db, !isFailonerror()); 
             
             DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
             dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-            dbdio.writeDataToDatabase(platform, originaldb, DatabaseUtils.readFileArray(getInput())); 
+            dbdio.writeDataToDatabase(platform, db, DatabaseUtils.readFileArray(getInput())); 
             
             platform.alterTablesPostScript(oldModel, db, !isFailonerror());
             
