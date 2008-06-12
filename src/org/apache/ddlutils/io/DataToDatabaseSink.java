@@ -80,6 +80,8 @@ public class DataToDatabaseSink implements DataSink
 //    private HashSet _mergedTables = new HashSet();
     /** Stores the database filter into the database. */
     private DatabaseFilter _databasefilter = null;
+    
+    private boolean _deleteInvalidRows=false;
 
     /**
      * Creates a new sink instance.
@@ -131,6 +133,10 @@ public class DataToDatabaseSink implements DataSink
         return _haltOnErrors;
     }
 
+    public void setDeleteInvalidRows(boolean deleteInvalidRows)
+    {
+    	_deleteInvalidRows=deleteInvalidRows;
+    }
     /**
      * Specifies whether this sink halts when an error happens during the insertion of a bean
      * into the database.
@@ -232,8 +238,8 @@ public class DataToDatabaseSink implements DataSink
         purgeBatchQueue();
         try
         {
-
-            _platform.deleteInvalidConstraintRows(_model, _haltOnErrors);
+        	if(_deleteInvalidRows)
+        		_platform.deleteInvalidConstraintRows(_model, _haltOnErrors);
             _platform.enableAllTriggers(_connection, _model, _haltOnErrors);
             _platform.enableAllFK(_connection, _model, _haltOnErrors);
             _connection.close();

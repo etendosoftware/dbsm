@@ -762,6 +762,20 @@ public class DatabaseDataIO
     {
         DataReader dataReader = getConfiguredDataReader(platform, model); 
 
+        ((DataToDatabaseSink)dataReader.getSink()).setDeleteInvalidRows(true);
+        dataReader.getSink().start();
+        
+        for (int idx = 0; (files != null) && (idx < files.length); idx++)
+        {
+            writeDataToDatabase(dataReader, files[idx]);
+        }
+        dataReader.getSink().end();
+    }
+    
+    public void writeDataToDatabaseDeleteRows(Platform platform, Database model, File[] files) throws DdlUtilsException
+    {
+        DataReader dataReader = getConfiguredDataReader(platform, model); 
+
         dataReader.getSink().start();
         for (int idx = 0; (files != null) && (idx < files.length); idx++)
         {

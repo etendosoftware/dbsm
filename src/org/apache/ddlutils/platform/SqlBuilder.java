@@ -547,8 +547,9 @@ public abstract class SqlBuilder
 	        }
     	}catch(Exception e)
     	{
+    		System.out.println(e);
+    		System.out.println(e.getMessage());
     		_log.error(e.getLocalizedMessage());
-    		System.exit(1);
     	}
     }
     public void alterDatabasePostScript(Database currentModel, Database desiredModel, CreationParameters params) throws IOException
