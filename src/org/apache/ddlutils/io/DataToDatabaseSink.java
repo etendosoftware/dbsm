@@ -240,8 +240,8 @@ public class DataToDatabaseSink implements DataSink
         {
         	if(_deleteInvalidRows)
         		_platform.deleteInvalidConstraintRows(_model, _haltOnErrors);
-            _platform.enableAllTriggers(_connection, _model, _haltOnErrors);
-            _platform.enableAllFK(_connection, _model, _haltOnErrors);
+            _platform.enableAllTriggers(_connection, _model, false);
+            _platform.enableAllFK(_connection, _model, false);
             _connection.close();
         }
         catch (SQLException ex)

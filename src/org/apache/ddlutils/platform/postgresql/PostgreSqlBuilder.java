@@ -588,7 +588,6 @@ public class PostgreSqlBuilder extends SqlBuilder
         body=comFilter.removeComments(body);
         
 
-
         body=getPLSQLTriggerTranslation().exec(body);
 
         body=comFilter.restoreComments(body);
@@ -739,7 +738,7 @@ public class PostgreSqlBuilder extends SqlBuilder
         return new PostgrePLSQLFunctionTranslation(database);
     }    
     
-    protected Translation createPLSQLTriggerTranslation(Database database) {
+    public Translation createPLSQLTriggerTranslation(Database database) {
         return new PostgrePLSQLTriggerTranslation(database);
     }    
     

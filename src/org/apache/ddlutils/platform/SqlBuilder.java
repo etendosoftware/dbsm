@@ -103,7 +103,7 @@ public abstract class SqlBuilder
     private Map _charSequencesToEscape = new ListOrderedMap();
     
     private Translation _PLSQLFunctionTranslation = new NullTranslation();
-    private Translation _PLSQLTriggerTranslation = new NullTranslation();
+    public Translation _PLSQLTriggerTranslation = new NullTranslation();
     private Translation _SQLTranslation = new NullTranslation();
 
     //
@@ -416,13 +416,24 @@ public abstract class SqlBuilder
      * @param params     The parameters used in the creation
      * @param dropTables Whether to drop tables before creating them
      */
-    public void createTables(Database database, CreationParameters params, boolean dropTables) throws IOException
+    
+    public void initializeTranslators(Database database)
     {
-        
         _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(database);
         _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(database);
         _SQLTranslation = createSQLTranslation(database);
+    }
+    
+    public void nullTranslators(Database database)
+    {
+        _PLSQLFunctionTranslation = new NullTranslation();
+        _PLSQLTriggerTranslation = new NullTranslation();
+        _SQLTranslation = new NullTranslation();
+    }
+    public void createTables(Database database, CreationParameters params, boolean dropTables) throws IOException
+    {
         
+        initializeTranslators(database);
         if (dropTables)
         {
             dropTables(database);
@@ -459,10 +470,7 @@ public abstract class SqlBuilder
         for (int idx = 0; idx < database.getTriggerCount(); idx++) {
             createTrigger(database, database.getTrigger(idx));
         }
-        
-        _PLSQLFunctionTranslation = new NullTranslation();
-        _PLSQLTriggerTranslation = new NullTranslation();
-        _SQLTranslation = new NullTranslation();
+        nullTranslators(database);
         
     }
 
@@ -3675,7 +3683,7 @@ public abstract class SqlBuilder
      * 
      * @param trigger The trigger
      */
-    protected void createTrigger(Database database, Trigger trigger) throws IOException {
+    public void createTrigger(Database database, Trigger trigger) throws IOException {
         
         if (getPlatformInfo().isTriggersSupported()) {
             
@@ -3760,7 +3768,7 @@ public abstract class SqlBuilder
      * 
      * @param trigger The trigger
      */
-    protected void dropTrigger(Database database, Trigger trigger) throws IOException {
+    public void dropTrigger(Database database, Trigger trigger) throws IOException {
         
         if (getPlatformInfo().isTriggersSupported()) {
             if (trigger.getName() == null) {
@@ -3788,7 +3796,7 @@ public abstract class SqlBuilder
         return new NullTranslation();
     }
      
-    protected Translation createPLSQLTriggerTranslation(Database database) {
+    public Translation createPLSQLTriggerTranslation(Database database) {
         return new NullTranslation();
     }
     

@@ -19,6 +19,7 @@ package org.apache.ddlutils.platform.postgresql;
  * under the License.
  */
 
+import java.io.StringWriter;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -266,11 +267,18 @@ public class PostgreSqlPlatform extends PlatformImplBase
      */
     public void disableAllFK(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
     	
-    	try {    		
-            PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers=0 WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
+    	try {    	
+            StringWriter buffer = new StringWriter();
+            getSqlBuilder().setWriter(buffer);
+    		for(int i=0;i<model.getTableCount();i++)
+    		{
+                getSqlBuilder().dropExternalForeignKeys(model.getTable(i));
+    		}
+            evaluateBatch(connection, buffer.toString(),continueOnError);	
+            /*PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers=0 WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
             pstmt.executeUpdate();  	
-            pstmt.close();    	       
-        } catch (SQLException e) {
+            pstmt.close();    	*/       
+        } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseOperationException("Error while disabling foreign key ", e);
         }              
@@ -282,10 +290,17 @@ public class PostgreSqlPlatform extends PlatformImplBase
     public void enableAllFK(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
     	
         try {
-            PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
+            StringWriter buffer = new StringWriter();
+            getSqlBuilder().setWriter(buffer);
+    		for(int i=0;i<model.getTableCount();i++)
+    		{
+                getSqlBuilder().createExternalForeignKeys(model,model.getTable(i));
+    		}
+            evaluateBatch(connection, buffer.toString(),continueOnError);	
+            /*PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
             pstmt.executeUpdate(); 
-            pstmt.close();
-        } catch (SQLException e) {
+            pstmt.close();*/
+        } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseOperationException("Error while enabling foreign key ", e);
         }        
@@ -296,11 +311,19 @@ public class PostgreSqlPlatform extends PlatformImplBase
      */
     public void disableAllTriggers(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
         
-    	try {
-            PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers=0 WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
+    	try
+    	{
+            StringWriter buffer = new StringWriter();
+            getSqlBuilder().setWriter(buffer);
+    		for(int i=0;i<model.getTriggerCount();i++)
+    		{
+                getSqlBuilder().dropTrigger(model, model.getTrigger(i));
+    		}
+            evaluateBatch(connection, buffer.toString(),continueOnError);
+            /*PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers=0 WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
             pstmt.executeUpdate();
-            pstmt.close();    	       
-        } catch (SQLException e) {
+            pstmt.close();    	*/       
+        } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseOperationException("Error while disabling triggers ", e);
         }         	    
@@ -312,10 +335,18 @@ public class PostgreSqlPlatform extends PlatformImplBase
     public void enableAllTriggers(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {    	
         
     	try {
-            PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
+    		((PostgreSqlBuilder)getSqlBuilder()).initializeTranslators(model);
+            StringWriter buffer = new StringWriter();
+            getSqlBuilder().setWriter(buffer);
+    		for(int i=0;i<model.getTriggerCount();i++)
+    		{
+                ((PostgreSqlBuilder)getSqlBuilder()).createTrigger(model, model.getTrigger(i));
+    		}
+            evaluateBatch(connection, buffer.toString(),continueOnError);
+            /*PreparedStatement pstmt=connection.prepareStatement("update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())");    	       
             pstmt.executeUpdate();
-            pstmt.close();    	       
-        } catch (SQLException e) {
+            pstmt.close();   */ 	       
+        } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseOperationException("Error while enabling triggers ", e);
         }     
