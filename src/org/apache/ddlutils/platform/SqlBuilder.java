@@ -1333,7 +1333,6 @@ public abstract class SqlBuilder
     {
         Table sourceTable = currentModel.findTable(tableName, getPlatform().isDelimitedIdentifierModeOn());
         Table targetTable = desiredModel.findTable(tableName, getPlatform().isDelimitedIdentifierModeOn());
-
         // we're enforcing a full rebuild in case of the addition of a required
         // column without a default value that is not autoincrement
         boolean requiresFullRebuild = false;
@@ -1350,11 +1349,11 @@ public abstract class SqlBuilder
                 AddColumnChange addColumnChange = (AddColumnChange)change;
                 newColumns.add(addColumnChange);
 
-                if (addColumnChange.getNewColumn().isRequired() &&
-                    (addColumnChange.getNewColumn().getDefaultValue() == null) &&
-                    !addColumnChange.getNewColumn().isAutoIncrement())
+                if (addColumnChange.getNewColumn().isRequired())// &&
+                   // (addColumnChange.getNewColumn().getDefaultValue() == null) &&
+                   // !addColumnChange.getNewColumn().isAutoIncrement())
                 {
-                    requiresFullRebuild = true;
+                	requiresFullRebuild = true;
                 }
             }
         }
@@ -1362,7 +1361,6 @@ public abstract class SqlBuilder
         {
             processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable, parameters, changes);
         }
-
         if (!changes.isEmpty())    
         {
             

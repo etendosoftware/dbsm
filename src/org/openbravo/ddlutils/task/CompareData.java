@@ -39,6 +39,8 @@ public class CompareData extends Task {
     private File prescript = null;
     private File postscript = null;
     
+    private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
+    
     private File originalmodel;   
     private boolean failonerror = false;
     
@@ -84,14 +86,15 @@ public class CompareData extends Task {
         
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         
-        DatabaseDataIO dbdio = new DatabaseDataIO();
-        dbdio.setEnsureFKOrder(false);
-        DataReader dataReader=null;
-
         _log.info("Loading model from XML files");
         Database originaldb = DatabaseUtils.readDatabase(getModel());
+        
+        DatabaseDataIO dbdio = new DatabaseDataIO();
+        dbdio.setEnsureFKOrder(false);
+        dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+
+        DataReader dataReader=null;
     	dataReader = dbdio.getConfiguredCompareDataReader(originaldb);
-    	
 
         String folders=getData();
 
@@ -133,6 +136,7 @@ public class CompareData extends Task {
         Database currentdb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
 
         DataComparator dataComparator=new DataComparator(platform.getSqlBuilder().getPlatformInfo(),platform.isDelimitedIdentifierModeOn());
+        dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
         dataComparator.compare(originaldb, currentdb, platform, databaseBeans);
         
         Vector<DataChange> changes=dataComparator.getChanges();
@@ -212,6 +216,14 @@ public class CompareData extends Task {
 
     public void setFailonerror(boolean failonerror) {
         this.failonerror = failonerror;
+    }
+    
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+    
+    public String getFilter() {
+        return filter;
     }
 
     public File getPrescript() {

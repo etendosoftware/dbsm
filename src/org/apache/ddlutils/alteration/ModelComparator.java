@@ -497,6 +497,7 @@ public class ModelComparator
         }
         
         HashMap columnPosChanges = new HashMap();
+        int diffPos=0;
 
         for (int columnIdx = 0; columnIdx < sourceTable.getColumnCount(); columnIdx++)
         {
@@ -510,12 +511,13 @@ public class ModelComparator
                     _log.info("Processing Column " + sourceColumn.getName() + " (removed from table " + sourceTable.getName()+")");
                 }
                 changes.add(new RemoveColumnChange(sourceTable, sourceColumn));
+                diffPos++;
             }
             else
             {
                 int targetColumnIdx = targetTable.getColumnIndex(targetColumn);
 
-                if (targetColumnIdx != columnIdx)
+                if (targetColumnIdx != (columnIdx-diffPos))
                 {
                     columnPosChanges.put(sourceColumn, new Integer(targetColumnIdx));
                 }

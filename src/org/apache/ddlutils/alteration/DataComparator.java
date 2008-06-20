@@ -17,6 +17,7 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
+import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
@@ -31,27 +32,49 @@ public class DataComparator {
     /** Whether comparison is case sensitive. */
     private boolean _caseSensitive;
     private Vector<DataChange> dataChanges=new Vector<DataChange>();
+    private DatabaseFilter _databasefilter = null;
 	
 	public DataComparator(PlatformInfo platformInfo, boolean caseSensitive)
     {
         _platformInfo  = platformInfo;
         _caseSensitive = caseSensitive;
     }
+	
+	public void setFilter(DatabaseFilter filter)
+	{
+		_databasefilter=filter;
+	}
 
 	public void compare(Database originaldb, Database currentdb, Platform platform, HashMap<String, Vector<DynaBean>> originalData)
 	{
 		ModelComparator modelComparator=new ModelComparator(_platformInfo, _caseSensitive);
 		List modelChanges=modelComparator.compare(originaldb, currentdb);
-
+		System.out.println(_databasefilter);
 		//First, we will find the common tables
 		Vector<Table> commonTables=new Vector<Table>();
 		Vector<Table> newTables=new Vector<Table>();
 		
 		Table[] tables=currentdb.getTables();
-
+		
+		String[] tablenames=null;
+		if(_databasefilter!=null)
+			tablenames=_databasefilter.getTableNames();
 		for(int i=0;i<tables.length;i++)
 		{
-			commonTables.add(tables[i]);
+			boolean include=true;
+			if(tablenames!=null)
+			{
+				include=false;
+				int j=0;
+				while(j<tablenames.length && !tablenames[j].equals(tables[i].getName()))
+					j++;
+				if(j<tablenames.length)
+					include=true;
+			}
+			if(include)
+			{
+				commonTables.add(tables[i]);
+			}
 		}
 		for(int i=0;i<modelChanges.size();i++)
 		{
@@ -63,7 +86,6 @@ public class DataComparator {
 			}
 		}
 		
-		//Now we should create AddRowChanges for the new tables
 		
 		//Now we will compare tables. If tables are equivalent in both models, we will compare rows.
 		for(int i=0;i<commonTables.size();i++)
@@ -115,7 +137,7 @@ public class DataComparator {
 
 						Table tableC=((AddColumnChange)change).getChangedTable();
 						Column columnC=((AddColumnChange)change).getNewColumn();
-						answer=readRowsFromTable(connection, platform, currentdb , tableC);
+						answer=readRowsFromTable(connection, platform, currentdb , tableC, _databasefilter);
 						while(answer!=null && answer.hasNext())
 						{
 							DynaBean db=(DynaBean)answer.next();
@@ -136,7 +158,7 @@ public class DataComparator {
 			Connection connection=platform.borrowConnection();
 	        Iterator   answer     = null;
 
-			answer=readRowsFromTable(connection, platform, currentdb , table);
+			answer=readRowsFromTable(connection, platform, currentdb , table, _databasefilter);
 
 			Vector<DynaBean> rowsOriginalData=originalData.get(table.getName());
 			//We now have the rows of the table in the database (answer)
@@ -158,7 +180,7 @@ public class DataComparator {
 			Connection connection=platform.borrowConnection();
 	        Iterator   answer     = null;
 
-			answer=readRowsFromTable(connection, platform, currentdb , table);
+			answer=readRowsFromTable(connection, platform, currentdb , table, _databasefilter);
 
 			while(answer.hasNext())
 			{
@@ -177,7 +199,7 @@ public class DataComparator {
 		
 	}
 	
-	private Iterator readRowsFromTable(Connection connection, Platform platform, Database model, Table table)
+	private Iterator readRowsFromTable(Connection connection, Platform platform, Database model, Table table, DatabaseFilter filter)
 	{
 		if(table.getPrimaryKeyColumns()==null || table.getPrimaryKeyColumns().length==0)
 		{
@@ -193,7 +215,8 @@ public class DataComparator {
             statement = connection.createStatement();
 
             String sqlstatement="SELECT * FROM "+table.getName();
-
+            if(filter!=null && !filter.getTableFilter(table.getName()).equals(""))
+            	sqlstatement+=" WHERE "+filter.getTableFilter(table.getName())+" ";
             sqlstatement+=" ORDER BY ";
             for(int j=0;j<table.getPrimaryKeyColumns().length;j++)
             {
