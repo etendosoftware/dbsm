@@ -5,6 +5,7 @@ import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 
 public class RemoveRowChange implements DataChange{
@@ -18,14 +19,24 @@ public class RemoveRowChange implements DataChange{
 		_row=row;
 	}
 	
-	public void apply(HashMap<String, Vector<DynaBean>> databaseBeans, boolean caseSensitive)
+	public void apply(DatabaseData databaseData, boolean caseSensitive)
 	{
-		
+		databaseData.removeRow(_table, _row);
 	}
 	
 	public String toString()
 	{
 		return "Row removed from table ["+_table.getName()+"]: <"+_row+">";
+	}
+	
+	public DynaBean getRow()
+	{
+		return _row;
+	}
+	
+	public Table getTable()
+	{
+		return _table;
 	}
 	
 	

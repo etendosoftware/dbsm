@@ -4,6 +4,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -16,6 +17,7 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
@@ -28,14 +30,16 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.Task;
 
 
-public class CompareData extends Task {
+public class AlterCustomizedDatabaseData extends Task {
 
     private String driver;
     private String url;
     private String user;
     private String password;
     private File model;
+    private File orgModel;
     private String data;
+    private String orgData;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
     
     private File prescript = null;
@@ -88,21 +92,111 @@ public class CompareData extends Task {
         
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         
-        _log.info("Loading model from XML files");
-        Database originaldb = DatabaseUtils.readDatabase(getModel());
+        _log.info("Loading original model from XML files");
+        Database originaldb = DatabaseUtils.readDatabase(getOrgModel());
         
         DatabaseDataIO dbdio = new DatabaseDataIO();
         dbdio.setEnsureFKOrder(false);
         dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
 
-        DataReader dataReader=null;
-    	dataReader = dbdio.getConfiguredCompareDataReader(originaldb);
+        DataReader dataReader = dbdio.getConfiguredCompareDataReader(originaldb);
 
-        String folders=getData();
-
-        StringTokenizer strTokFol=new StringTokenizer(folders,",");
+        Vector<File> files=loadFilesFromFolder(getOrgData());
         
+        _log.info("Loading original data from XML files");
+        DatabaseData databaseOrgData=new DatabaseData(originaldb);
+        for(int i=0;i<files.size();i++)
+        {
+        	try{
+            	dataReader.getSink().start();
+        		String tablename=files.get(i).getName().substring(0, files.get(i).getName().length()-4);
+        		Vector<DynaBean> vectorDynaBeans=((DataToArraySink)dataReader.getSink()).getVector();
+        		dataReader.parse(files.get(i));
+        		databaseOrgData.insertDynaBeansFromVector(tablename,vectorDynaBeans);
+        		dataReader.getSink().end();
+        	}catch(Exception e){
+            	System.out.println(e.getLocalizedMessage());
+            }
+        }
 
+        _log.info("Loading model from current database");
+        Database currentdb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
+
+        _log.info("Finding customizations made to the database");
+        DataComparator dataComparator=new DataComparator(platform.getSqlBuilder().getPlatformInfo(),platform.isDelimitedIdentifierModeOn());
+        dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+        dataComparator.compare(originaldb, currentdb, platform, databaseOrgData);
+        
+        Vector<DataChange> dataCustomization=dataComparator.getChanges();
+        for(int i=0;i<dataCustomization.size();i++)
+        	System.out.println(dataCustomization.get(i));
+        System.out.println("=======================");
+        
+        _log.info("Loading new version model from XML files");
+
+        Database newDb = DatabaseUtils.readDatabase(getModel());
+
+        DatabaseDataIO dbdioNew = new DatabaseDataIO();
+        dbdioNew.setEnsureFKOrder(false);
+        dbdioNew.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), newDb));
+
+        DataReader dataReaderNew = dbdio.getConfiguredCompareDataReader(newDb);
+
+        Vector<File> filesNew=loadFilesFromFolder(getData());
+
+        _log.info("Loading new version data from XML files");
+        DatabaseData databaseNewData=new DatabaseData(newDb);
+        for(int i=0;i<filesNew.size();i++)
+        {
+        	try{
+            	dataReaderNew.getSink().start();
+        		String tablename=filesNew.get(i).getName().substring(0, filesNew.get(i).getName().length()-4);
+        		Vector<DynaBean> vectorDynaBeans=((DataToArraySink)dataReaderNew.getSink()).getVector();
+        		dataReaderNew.parse(filesNew.get(i));
+        		databaseNewData.insertDynaBeansFromVector(tablename,vectorDynaBeans);
+        		dataReaderNew.getSink().end();
+        	}catch(Exception e){
+            	System.out.println(e.getLocalizedMessage());
+            }
+        }
+        
+        _log.info("Applying model customizations to the new version");
+        
+        Iterator itModelChanges=dataComparator.getModelChanges();
+        while(itModelChanges.hasNext())
+        {
+        	((ModelChange)itModelChanges.next()).apply(newDb, platform.isDelimitedIdentifierModeOn());
+        }
+
+        _log.info("Applying data customizations to the new version");
+        Iterator itDataChanges=dataCustomization.iterator();
+        while(itDataChanges.hasNext())
+        {
+        	((DataChange)itDataChanges.next()).apply(databaseNewData, platform.isDelimitedIdentifierModeOn());
+        }
+        
+        _log.info("Comparing customized new version to existing database");
+
+        DataComparator finalDataComparator=new DataComparator(platform.getSqlBuilder().getPlatformInfo(),platform.isDelimitedIdentifierModeOn());
+        dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+        dataComparator.compare(currentdb, newDb, platform, databaseNewData);
+        _log.info("Updating existing database");
+        
+        try{
+        	StringWriter stringWriter=new StringWriter();
+        	platform.getSqlBuilder().setWriter(stringWriter);
+        	platform.getSqlBuilder().processDataChanges(currentdb, databaseNewData, dataComparator.getChanges());
+        	System.out.println(stringWriter.toString());
+        }catch(Exception e)
+        {
+        	System.out.println("oops: "+e.getMessage());
+        }
+        
+    }
+
+    private Vector<File> loadFilesFromFolder(String folders)
+    {
+    	StringTokenizer strTokFol=new StringTokenizer(folders,",");
         Vector<File> files=new Vector<File>();
         
         while(strTokFol.hasMoreElements())
@@ -114,45 +208,8 @@ public class CompareData extends Task {
         		files.add(fileArray[i]);
         	}
         }
-        _log.info("Loading data from XML files");
-        DatabaseData databaseData=new DatabaseData(originaldb);
-        for(int i=0;i<files.size();i++)
-        {
-        	try{
-            	dataReader.getSink().start();
-        		String tablename=files.get(i).getName().substring(0, files.get(i).getName().length()-4);
-        		Vector<DynaBean> vectorDynaBeans=((DataToArraySink)dataReader.getSink()).getVector();
-        		dataReader.parse(files.get(i));
-        		databaseData.insertDynaBeansFromVector(tablename,vectorDynaBeans);
-        		dataReader.getSink().end();
-        	}catch(Exception e){
-            	System.out.println(e.getLocalizedMessage());
-            }
-        }
-
-        _log.info("Loading model from current database");
-        Database currentdb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects)); 
-
-        DataComparator dataComparator=new DataComparator(platform.getSqlBuilder().getPlatformInfo(),platform.isDelimitedIdentifierModeOn());
-        dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-        dataComparator.compare(originaldb, currentdb, platform, databaseData);
-        
-        Vector<DataChange> changes=dataComparator.getChanges();
-        for(int i=0;i<changes.size();i++)
-        	System.out.println(changes.get(i));
-        System.out.println("=======================");
-        try{
-        	StringWriter stringWriter=new StringWriter();
-        	platform.getSqlBuilder().setWriter(stringWriter);
-        	platform.getSqlBuilder().processDataChanges(currentdb, databaseData, changes);
-        	System.out.println(stringWriter.toString());
-        }catch(Exception e)
-        {
-        	System.out.println("oops: "+e.getMessage());
-        }
-        
+        return files;
     }
-	
 
     public String getDriver() {
         return driver;
@@ -210,12 +267,28 @@ public class CompareData extends Task {
         this.model = model;
     }
 
+    public File getOrgModel() {
+        return orgModel;
+    }
+
+    public void setOrgModel(File model) {
+        this.orgModel = model;
+    }
+
     public String getData() {
         return data;
     }
 
     public void setData(String data) {
         this.data = data;
+    }
+
+    public String getOrgData() {
+        return orgData;
+    }
+
+    public void setOrgData(String data) {
+        this.orgData = data;
     }
 
     public boolean isFailonerror() {

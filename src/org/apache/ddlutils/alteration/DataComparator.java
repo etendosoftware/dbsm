@@ -20,6 +20,7 @@ import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 
 public class DataComparator {
@@ -33,6 +34,7 @@ public class DataComparator {
     private boolean _caseSensitive;
     private Vector<DataChange> dataChanges=new Vector<DataChange>();
     private DatabaseFilter _databasefilter = null;
+    private List modelChanges;
 	
 	public DataComparator(PlatformInfo platformInfo, boolean caseSensitive)
     {
@@ -45,11 +47,11 @@ public class DataComparator {
 		_databasefilter=filter;
 	}
 
-	public void compare(Database originaldb, Database currentdb, Platform platform, HashMap<String, Vector<DynaBean>> originalData)
+	public void compare(Database originaldb, Database currentdb, Platform platform, DatabaseData originalData)
 	{
 		ModelComparator modelComparator=new ModelComparator(_platformInfo, _caseSensitive);
-		List modelChanges=modelComparator.compare(originaldb, currentdb);
-		System.out.println(_databasefilter);
+		modelChanges=modelComparator.compare(originaldb, currentdb);
+
 		//First, we will find the common tables
 		Vector<Table> commonTables=new Vector<Table>();
 		Vector<Table> newTables=new Vector<Table>();
@@ -86,11 +88,11 @@ public class DataComparator {
 			}
 		}
 		
-		
 		//Now we will compare tables. If tables are equivalent in both models, we will compare rows.
 		for(int i=0;i<commonTables.size();i++)
 		{
 			Table table=commonTables.get(i);
+			System.out.println("TABLE: "+table.getName());
 			if(table.getPrimaryKeyColumns()==null || table.getPrimaryKeyColumns().length==0)
 			{
 				_log.warn("Error: Table "+table.getName()+" could not be compared because it doesn't have primary key.");
@@ -138,9 +140,13 @@ public class DataComparator {
 						Table tableC=((AddColumnChange)change).getChangedTable();
 						Column columnC=((AddColumnChange)change).getNewColumn();
 						answer=readRowsFromTable(connection, platform, currentdb , tableC, _databasefilter);
+						System.out.println("jkdklsklsd");
 						while(answer!=null && answer.hasNext())
 						{
+							System.out.println("a");
+							if(table.getName().contains("AD_FIELD")) System.out.println("b");
 							DynaBean db=(DynaBean)answer.next();
+							if(table.getName().contains("AD_FIELD")) System.out.println(db);
 							Object value=null;
 							try{
 								value=db.get(columnC.getName());
@@ -148,21 +154,35 @@ public class DataComparator {
 							{
 								value=db.get(columnC.getName().toLowerCase());
 							}
-							dataChanges.add(new ColumnDataChange(tableC,columnC,null,db.get(columnC.getName())));
+							System.out.println("leo "+value);
+							dataChanges.add(new ColumnDataChange(tableC,columnC,null,db.get(columnC.getName()),currentdb.getDynaClassFor(db).getPrimaryKeyProperties()));
+						}
+						System.out.println("salgo");
+						try
+						{
+							if(!connection.isClosed())
+								connection.close();
+						}catch(Exception ex)
+						{
+				            //_log.error(ex.getLocalizedMessage());
 						}
 					}
 				}
 			}
-			
+
+			System.out.println("PUNTO1");
 			//Tables can now be compared.
 			Connection connection=platform.borrowConnection();
 	        Iterator   answer     = null;
 
+			System.out.println("PUNTO2");
 			answer=readRowsFromTable(connection, platform, currentdb , table, _databasefilter);
 
-			Vector<DynaBean> rowsOriginalData=originalData.get(table.getName());
+			System.out.println("PUNTO3");
+			Vector<DynaBean> rowsOriginalData=originalData.getRowsFromTable(table.getName());
 			//We now have the rows of the table in the database (answer)
 			//and the rows in the XML files (HashMap originalData)
+			System.out.println("about to compare: "+table.getName());
 			compareTables(originaldb, table, rowsOriginalData, answer);
 			try
 			{
@@ -170,10 +190,10 @@ public class DataComparator {
 					connection.close();
 			}catch(Exception ex)
 			{
-	            _log.error(ex.getLocalizedMessage());
+	            //_log.error(ex.getLocalizedMessage());
 			}
+			System.out.println("ein??");
 		}
-		
 		for(int i=0;i<newTables.size();i++)
 		{
 			Table table=newTables.get(i);
@@ -190,9 +210,11 @@ public class DataComparator {
 			}
 			try
 			{
+				if(!connection.isClosed())
+					connection.close();
 			}catch(Exception ex)
 			{
-	            _log.error(ex.getLocalizedMessage());
+	            //_log.error(ex.getLocalizedMessage());
 			}
 			
 		}
@@ -206,7 +228,7 @@ public class DataComparator {
 			_log.error("Table "+table.getName()+" cannot be read because it has no primary key.");
 			return null;
 		}
-
+		System.out.println("hola");
 		Table[] atables={table};
 		Statement  statement  = null;
         ResultSet  resultSet  = null;
@@ -242,6 +264,7 @@ public class DataComparator {
 			_log.warn("Error while reading table "+table.getName()+". Probably it doesn't have primary key.");
 			return;
 		}
+		System.out.println("comparing: "+table.getName());
 		if(originalData==null || originalData.size()==0)
 		{
 			//There is no data in the XML files. We add data from the database and leave
@@ -394,36 +417,36 @@ public class DataComparator {
         SqlDynaClass      dynaClass   = model.getDynaClassFor(db1);
         SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
         SqlDynaProperty[] nonprimaryKeys = dynaClass.getNonPrimaryKeyProperties();
+        Object[] pkVal=new Object[primaryKeys.length];
         String pk="[";
         for(int i=0;i<primaryKeys.length;i++)
         {
         	pk+=primaryKeys[i].getName()+"="+db1.get(primaryKeys[i].getName())+";";
+        	pkVal[i]=db2.get(primaryKeys[i].getName());
         }
         pk+="]";
         Vector<String> tablesModel=new Vector<String>();
-        for(int i=0;i<model.getTableCount();i++)
-        	tablesModel.add(model.getTable(i).getName());
         for(int i=0;i<nonprimaryKeys.length;i++)
         {
-        	if(tablesModel.contains(nonprimaryKeys[i].getName()))
-        	{
-	        	//System.out.println(nonprimaryKeys[i].getName());
 	        	Object v1=db1.get(nonprimaryKeys[i].getName());
 	        	Object v2=db2.get(nonprimaryKeys[i].getName());
-	        	
 	        	if((v1==null && v2!=null) ||
 	        	   (v1!=null && v2==null) ||
 	        	   (v1!=null && v2!=null && !v1.equals(v2)))
 	        	{
-	        		dataChanges.add(new ColumnDataChange(dynaClass.getTable(),nonprimaryKeys[i].getColumn(),v1,v2));
+	        		dataChanges.add(new ColumnDataChange(dynaClass.getTable(),nonprimaryKeys[i].getColumn(),v1,v2, pkVal));
 	        		//System.out.println("Column change: "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
 	        	}
-        	}
         }
 	}
 	
 	public Vector<DataChange> getChanges()
 	{
 		return dataChanges;
+	}
+	
+	public Iterator getModelChanges()
+	{
+		return modelChanges.iterator();
 	}
 }

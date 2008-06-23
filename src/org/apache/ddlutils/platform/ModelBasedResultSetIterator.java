@@ -266,6 +266,8 @@ public class ModelBasedResultSetIterator implements Iterator
             catch (Exception ex)
             {
                 cleanUp();
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
                 throw new DatabaseOperationException("Exception while reading the row from the resultset", ex);
             }
         }

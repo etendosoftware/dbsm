@@ -100,7 +100,7 @@ public class AlterDatabaseData extends Task {
             // execute the pre-script
             if (getPrescript() == null) {
                 // try to execute the default prescript
-                File fpre = new File(getInput(), "prescript-" + platform.getName() + ".sql");
+                File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
                 if (fpre.exists()) {
                     _log.info("Executing default prescript");
                     platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);

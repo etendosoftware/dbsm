@@ -7,6 +7,7 @@ import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 
 /**
  * Marker interface for changes to a database model element.
@@ -21,5 +22,5 @@ public interface DataChange
      * @param database      The database
      * @param caseSensitive Whether the case of names matters
      */
-    public void apply(HashMap<String, Vector<DynaBean>> databaseBeans, boolean caseSensitive);
+    public void apply(DatabaseData databaseData, boolean caseSensitive);
 }

@@ -28,6 +28,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -39,6 +40,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -50,6 +53,7 @@ import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.*;
+import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.*;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerTranslation;
@@ -1556,6 +1560,60 @@ public abstract class SqlBuilder
     		}
     		
     	}
+    }
+    
+    public void processDataChanges(Database database, DatabaseData databaseData, List changes) throws IOException
+    {
+    	for(int i=0;i<changes.size();i++)
+    	{
+    		if(changes.get(i) instanceof AddRowChange)
+    		{
+    			AddRowChange change=(AddRowChange)changes.get(i);
+    			DynaBean row=change.getRow();
+    			DynaProperty[] properties=database.getDynaClassFor(row).getDynaProperties();
+    	        HashMap parameters = new HashMap();
+
+    	        for (int idx = 0; idx < properties.length; idx++)
+    	        {
+    	        	parameters.put(properties[idx].getName(), row.get(properties[idx].getName()));
+    	        }
+    			println(getInsertSql(change.getTable(), parameters, false));
+    			printEndOfStatement();
+    		}
+    		else if(changes.get(i) instanceof RemoveRowChange)
+    		{
+    			RemoveRowChange change=(RemoveRowChange)changes.get(i);
+    			DynaBean row=change.getRow();
+    			DynaProperty[] properties=database.getDynaClassFor(row).getPrimaryKeyProperties();
+    	        HashMap parameters = new HashMap();
+
+    	        for (int idx = 0; idx < properties.length; idx++)
+    	        {
+    	        	parameters.put(properties[idx].getName(), row.get(properties[idx].getName()));
+    	        }
+    	        println(getDeleteSql(change.getTable(), parameters, false));
+    	        printEndOfStatement();
+    		}
+    		else if(changes.get(i) instanceof ColumnDataChange)
+    		{
+    			ColumnDataChange change=(ColumnDataChange)changes.get(i);
+    	        HashMap parameters = new HashMap();
+    	        Column[] pkCols=change.getTable().getPrimaryKeyColumns();
+    	        Object[] pkV=change.getPrimaryKey();
+    	        for (int idx = 0; idx < pkCols.length; idx++)
+    	        {
+    	        	parameters.put(pkCols[idx].getName(), pkV[idx]);
+    	        }
+    	        parameters.put(change.getColumn().getName(), change.getNewValue());
+    			println(getUpdateSql(change.getTable(),parameters, false));
+    			printEndOfStatement();
+    		}
+    		else
+    		{
+    			_log.error("Error: not a data change");
+    		}
+    	}
+    	
     }
     /**
      * Outputs the DDL to drop the given temporary table. Per default this is simply
