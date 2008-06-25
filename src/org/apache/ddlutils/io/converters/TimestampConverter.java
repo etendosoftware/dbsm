@@ -54,6 +54,10 @@ public class TimestampConverter implements SqlTypeConverter
      */
     public String convertToString(Object obj, int sqlTypeCode) throws ConversionException
     {
-        return obj == null ? null : ((Timestamp)obj).toString();
+    	if(obj==null)
+    		return null;
+    	Timestamp ts=(Timestamp)obj;
+    	ts.setNanos(0);
+    	return ts.toString();
     }
 }
