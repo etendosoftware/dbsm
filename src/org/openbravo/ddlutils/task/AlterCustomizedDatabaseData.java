@@ -3,6 +3,7 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.io.StringWriter;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -10,6 +11,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.beanutils.DynaProperty;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,8 +23,10 @@ import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -148,13 +152,14 @@ public class AlterCustomizedDatabaseData extends Task {
         DatabaseData databaseNewData=new DatabaseData(newDb);
         for(int i=0;i<filesNew.size();i++)
         {
-        	try{
+        	try{ 
             	dataReaderNew.getSink().start();
         		String tablename=filesNew.get(i).getName().substring(0, filesNew.get(i).getName().length()-4);
         		Vector<DynaBean> vectorDynaBeans=((DataToArraySink)dataReaderNew.getSink()).getVector();
         		dataReaderNew.parse(filesNew.get(i));
         		databaseNewData.insertDynaBeansFromVector(tablename,vectorDynaBeans);
         		dataReaderNew.getSink().end();
+        		
         	}catch(Exception e){
             	System.out.println(e.getLocalizedMessage());
             }
@@ -175,22 +180,92 @@ public class AlterCustomizedDatabaseData extends Task {
         	((DataChange)itDataChanges.next()).apply(databaseNewData, platform.isDelimitedIdentifierModeOn());
         }
         
-        _log.info("Comparing customized new version to existing database");
+        /*_log.info("Comparing customized new version to existing database");
 
         DataComparator finalDataComparator=new DataComparator(platform.getSqlBuilder().getPlatformInfo(),platform.isDelimitedIdentifierModeOn());
         dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-        dataComparator.compare(currentdb, newDb, platform, databaseNewData);
+        dataComparator.compare(currentdb, newDb, platform, databaseNewData);*/
         _log.info("Updating existing database");
         
+        
         try{
-        	StringWriter stringWriter=new StringWriter();
-        	platform.getSqlBuilder().setWriter(stringWriter);
-        	platform.getSqlBuilder().processDataChanges(currentdb, databaseNewData, dataComparator.getChanges());
-        	System.out.println(stringWriter.toString());
+        	
+        	  
+            // execute the pre-script
+            if (getPrescript() == null) {
+                // try to execute the default prescript
+                File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
+                if (fpre.exists()) {
+                    _log.info("Executing default prescript");
+                    platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
+                }
+            } else {
+                platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
+            }
+        	
+        	_log.info("Updating database model");
+        	platform.alterTables(currentdb, newDb, !isFailonerror()); 
+        	_log.info("Updating database data");
+        	dataReader = dbdio.getConfiguredCompareDataReader(newDb);
+        	Connection connection=platform.borrowConnection();
+        	//dataReader.getSink().start();
+        	platform.disableAllFK(connection, newDb, !isFailonerror());
+        	platform.disableAllTriggers(connection, newDb, !isFailonerror());
+        	DatabaseFilter filter=DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb);
+        	if (filter != null) {
+                String [] tablenames = filter.getTableNames();
+                String [] tableFilters=new String[tablenames.length];
+                int ind=0;
+                for (String table : tablenames) {
+                	tableFilters[ind]=filter.getTableFilter(table);
+                	ind++;
+                }
+                platform.deleteDataFromTable(connection, newDb, tablenames, tableFilters, !isFailonerror());
+                
+            }      
+        	//StringWriter stringWriter=new StringWriter();
+        	//platform.getSqlBuilder().setWriter(stringWriter);
+        	for(int i=0;i<newDb.getTableCount();i++)
+        	{
+        		Table table=newDb.getTable(i);
+        		Vector<DynaBean> rowsTable=databaseNewData.getRowsFromTable(table.getName());
+        		if(rowsTable!=null)
+        		{
+    	    		for(int j=0;j<rowsTable.size();j++)
+    	    		{
+    	    			DynaBean row=rowsTable.get(j);
+    	    			platform.upsert(connection, newDb, row);
+    	    		}
+        		}
+        	}
+        	platform.enableAllFK(connection, newDb, !isFailonerror());
+        	platform.enableAllTriggers(connection, newDb, !isFailonerror());
+        	connection.close();
+            //platform.getSqlBuilder().generateDataInsertions(newDb, databaseNewData);
+            //platform.evaluateBatch(stringWriter.toString(), true);
+            platform.alterTablesPostScript(currentdb, newDb, !isFailonerror());
+        	//dataReader.getSink().end();
+            
+        	
+
+
+            if (getPostscript() == null) {
+                // try to execute the default prescript
+                File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+                if (fpost.exists()) {
+                    _log.info("Executing default postscript");
+                    platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
+                }                
+            } else {
+                platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
+            }
         }catch(Exception e)
         {
+        	e.printStackTrace();
         	System.out.println("oops: "+e.getMessage());
         }
+        
+        
         
     }
 

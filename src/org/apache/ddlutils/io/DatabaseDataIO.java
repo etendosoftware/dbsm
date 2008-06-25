@@ -767,7 +767,13 @@ public class DatabaseDataIO
         
         for (int idx = 0; (files != null) && (idx < files.length); idx++)
         {
-            writeDataToDatabase(dataReader, files[idx]);
+        	try{
+        		writeDataToDatabase(dataReader, files[idx]);
+        	}catch(Exception e)
+        	{
+        		System.out.println("Error while inserting XML file "+files[idx].getAbsolutePath());
+        		e.printStackTrace();
+        	}
         }
         dataReader.getSink().end();
     }

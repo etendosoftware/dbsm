@@ -626,7 +626,7 @@ public class PostgreSqlBuilder extends SqlBuilder
     protected void writeCreateViewStatement(View view) throws IOException {  
         
         printScriptOptions("FORCE = TRUE");
-        print("CREATE VIEW ");
+        print("CREATE OR REPLACE VIEW ");
         printIdentifier(getStructureObjectName(view));
         print(" AS ");
         print(getSQLTranslation().exec(view.getStatement()));        

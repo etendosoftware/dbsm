@@ -92,7 +92,6 @@ public class DataComparator {
 		for(int i=0;i<commonTables.size();i++)
 		{
 			Table table=commonTables.get(i);
-			System.out.println("TABLE: "+table.getName());
 			if(table.getPrimaryKeyColumns()==null || table.getPrimaryKeyColumns().length==0)
 			{
 				_log.warn("Error: Table "+table.getName()+" could not be compared because it doesn't have primary key.");
@@ -128,7 +127,7 @@ public class DataComparator {
 						//A column has been deleted in the database. We have to delete it from the original model
 						//because if not we will have an error 
 						_log.debug("A column has been deleted in the database and we have to delete it in our original model.");
-						((RemoveColumnChange)change).apply(originaldb, false);
+						//((RemoveColumnChange)change).apply(originaldb, false);
 					}
 					else if(change instanceof AddColumnChange)
 					{
@@ -140,13 +139,9 @@ public class DataComparator {
 						Table tableC=((AddColumnChange)change).getChangedTable();
 						Column columnC=((AddColumnChange)change).getNewColumn();
 						answer=readRowsFromTable(connection, platform, currentdb , tableC, _databasefilter);
-						System.out.println("jkdklsklsd");
 						while(answer!=null && answer.hasNext())
 						{
-							System.out.println("a");
-							if(table.getName().contains("AD_FIELD")) System.out.println("b");
 							DynaBean db=(DynaBean)answer.next();
-							if(table.getName().contains("AD_FIELD")) System.out.println(db);
 							Object value=null;
 							try{
 								value=db.get(columnC.getName());
@@ -154,10 +149,8 @@ public class DataComparator {
 							{
 								value=db.get(columnC.getName().toLowerCase());
 							}
-							System.out.println("leo "+value);
 							dataChanges.add(new ColumnDataChange(tableC,columnC,null,db.get(columnC.getName()),currentdb.getDynaClassFor(db).getPrimaryKeyProperties()));
 						}
-						System.out.println("salgo");
 						try
 						{
 							if(!connection.isClosed())
@@ -170,19 +163,15 @@ public class DataComparator {
 				}
 			}
 
-			System.out.println("PUNTO1");
 			//Tables can now be compared.
 			Connection connection=platform.borrowConnection();
 	        Iterator   answer     = null;
 
-			System.out.println("PUNTO2");
 			answer=readRowsFromTable(connection, platform, currentdb , table, _databasefilter);
 
-			System.out.println("PUNTO3");
 			Vector<DynaBean> rowsOriginalData=originalData.getRowsFromTable(table.getName());
 			//We now have the rows of the table in the database (answer)
 			//and the rows in the XML files (HashMap originalData)
-			System.out.println("about to compare: "+table.getName());
 			compareTables(originaldb, table, rowsOriginalData, answer);
 			try
 			{
@@ -192,7 +181,6 @@ public class DataComparator {
 			{
 	            //_log.error(ex.getLocalizedMessage());
 			}
-			System.out.println("ein??");
 		}
 		for(int i=0;i<newTables.size();i++)
 		{
@@ -228,7 +216,6 @@ public class DataComparator {
 			_log.error("Table "+table.getName()+" cannot be read because it has no primary key.");
 			return null;
 		}
-		System.out.println("hola");
 		Table[] atables={table};
 		Statement  statement  = null;
         ResultSet  resultSet  = null;
@@ -264,7 +251,6 @@ public class DataComparator {
 			_log.warn("Error while reading table "+table.getName()+". Probably it doesn't have primary key.");
 			return;
 		}
-		System.out.println("comparing: "+table.getName());
 		if(originalData==null || originalData.size()==0)
 		{
 			//There is no data in the XML files. We add data from the database and leave

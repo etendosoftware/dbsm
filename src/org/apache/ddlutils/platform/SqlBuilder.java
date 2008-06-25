@@ -1615,6 +1615,31 @@ public abstract class SqlBuilder
     	}
     	
     }
+    
+    public void generateDataInsertions(Database database, DatabaseData databaseData) throws IOException
+    {
+    	for(int i=0;i<database.getTableCount();i++)
+    	{
+    		Table table=database.getTable(i);
+    		Vector<DynaBean> rowsTable=databaseData.getRowsFromTable(table.getName());
+    		if(rowsTable!=null)
+    		{
+	    		for(int j=0;j<rowsTable.size();j++)
+	    		{
+	    			DynaBean row=rowsTable.get(j);
+	    			DynaProperty[] properties=database.getDynaClassFor(row).getDynaProperties();
+			        HashMap parameters = new HashMap();
+		
+			        for (int idx = 0; idx < properties.length; idx++)
+			        {
+			        	parameters.put(properties[idx].getName(), row.get(properties[idx].getName()));
+			        }
+					println(getInsertSql(table, parameters, false));
+					printEndOfStatement();
+	    		}
+    		}
+    	}
+    }
     /**
      * Outputs the DDL to drop the given temporary table. Per default this is simply
      * a call to {@link #dropTable(Table)}.
@@ -3524,6 +3549,7 @@ public abstract class SqlBuilder
                 
                 print("DROP VIEW ");
                 printIdentifier(getStructureObjectName(view));
+                print(" CASCADE");
         
                 printEndOfStatement(getStructureObjectName(view));
             }

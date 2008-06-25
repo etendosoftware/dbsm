@@ -200,11 +200,22 @@ public class ModelComparator
             
             if (targetView == null)
             {
-                if (_log.isInfoEnabled())
+                boolean foundViewWithSameName=false;
+                int i=0;
+                while(i<targetModel.getViewCount() && !foundViewWithSameName)
                 {
-                    _log.info("Processing View " + sourceView + " (removed from database " + sourceModel.getName()+")");
+                	if(targetModel.getView(i).getName().equalsIgnoreCase(sourceView.getName()))
+                		foundViewWithSameName=true;
+                	i++;
                 }
-                changes.add(new RemoveViewChange(sourceView));
+                if(!foundViewWithSameName)     //We will only generate a drop view statement if the view will not be recreated
+                {
+                    if (_log.isInfoEnabled())
+                    {
+                        _log.info("Processing View " + sourceView + " (removed from database " + sourceModel.getName()+")");
+                    }
+                	changes.add(new RemoveViewChange(sourceView));
+                }
             }
         }
         

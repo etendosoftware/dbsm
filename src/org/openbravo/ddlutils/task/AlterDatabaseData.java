@@ -140,7 +140,7 @@ public class AlterDatabaseData extends Task {
             // execute the post-script
             if (getPostscript() == null) {
                 // try to execute the default prescript
-                File fpost = new File(getInput(), "postscript-" + platform.getName() + ".sql");
+                File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
                 if (fpost.exists()) {
                     _log.info("Executing default postscript");
                     platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
