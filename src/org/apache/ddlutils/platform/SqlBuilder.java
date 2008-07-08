@@ -503,10 +503,7 @@ public abstract class SqlBuilder
     		desiredModel.getFunction(i).setTranslation(_PLSQLFunctionTranslation);
     	for(int i=0;i<desiredModel.getTriggerCount();i++)
     		desiredModel.getTrigger(i).setTranslation(_PLSQLTriggerTranslation);
-        processChanges(currentModel, desiredModel, changes, params);
-        _PLSQLFunctionTranslation = new NullTranslation();
-        _PLSQLTriggerTranslation = new NullTranslation();
-        _SQLTranslation = new NullTranslation();
+        processChanges(currentModel, desiredModel, changes, params, false);
         
         
         
@@ -579,19 +576,39 @@ public abstract class SqlBuilder
             {
             	newColumns.add((AddColumnChange)change);
             }
+            else if(change instanceof AddForeignKeyChange)
+            {
+            	writeExternalForeignKeyCreateStmt(desiredModel,
+            			((AddForeignKeyChange)change).getChangedTable(),
+            			((AddForeignKeyChange)change).getNewForeignKey());
+            }
+            else if(change instanceof AddUniqueChange)
+            {
+            	processChange(currentModel, desiredModel, params,((AddUniqueChange)change));
+            }
+            else if(change instanceof AddIndexChange)
+            {
+            	processChange(currentModel, desiredModel, params,((AddIndexChange)change));
+            }
+            else if(change instanceof AddCheckChange)
+            {
+            	processChange(currentModel, desiredModel, params,((AddCheckChange)change));
+            }
+            
         }
-        for(int i=0;i<newColumns.size();i++)
+        /*for(int i=0;i<newColumns.size();i++)
         {
         	AddColumnChange change=newColumns.get(i);
         	Table table=change.getChangedTable();
         	executeStandardDefault(table, change.getNewColumn());
-        }
+        }*/
         for(int i=0;i<newColumns.size();i++)
         {
         	AddColumnChange change=newColumns.get(i);
         	Table table=change.getChangedTable();
         	Table tempTable=getTemporaryTableFor(desiredModel,change.getChangedTable());
-        	executeOnCreateDefault(table, tempTable, change.getNewColumn());
+        	if(change.getNewColumn().isRequired())
+        		executeOnCreateDefault(table, tempTable, change.getNewColumn());
         }
         enableNOTNULLColumns(newColumns);
         Vector<String> droppedTables=new Vector<String>();
@@ -605,6 +622,18 @@ public abstract class SqlBuilder
         	}
         }
         
+
+    	//Now we recreate the views, because they may have been
+    	//deleted during the table recreation process
+    	for(int i=0;i<desiredModel.getViewCount();i++)
+    	{
+    		createView(desiredModel.getView(i));
+    	}
+    	
+
+        _PLSQLFunctionTranslation = new NullTranslation();
+        _PLSQLTriggerTranslation = new NullTranslation();
+        _SQLTranslation = new NullTranslation();
     }
 
     public void executeStandardDefault(Table table, Column col) throws IOException
@@ -703,7 +732,8 @@ public abstract class SqlBuilder
     protected void processChanges(Database           currentModel,
                                   Database           desiredModel,
                                   List               changes,
-                                  CreationParameters params) throws IOException
+                                  CreationParameters params,
+                                  boolean createConstraints) throws IOException
     {
         CallbackClosure callbackClosure = new CallbackClosure(this,
                                                               "processChange",
@@ -736,6 +766,7 @@ public abstract class SqlBuilder
                                                                          ColumnOrderChange.class,
                                                                          ColumnAutoIncrementChange.class,
                                                                          ColumnDefaultValueChange.class,
+                                                                         ColumnOnCreateDefaultValueChange.class,
                                                                          ColumnRequiredChange.class,
                                                                          ColumnDataTypeChange.class,
                                                                          ColumnSizeChange.class });
@@ -754,12 +785,15 @@ public abstract class SqlBuilder
                                 callbackClosure);
         
         // 5th pass: adding external constraints and indices
-        applyForSelectedChanges(changes,
+        if(createConstraints)
+        {
+        	applyForSelectedChanges(changes,
                                 new Class[] { AddForeignKeyChange.class,
                                               AddUniqueChange.class,
                                               AddIndexChange.class,
                                               AddCheckChange.class},
                                 callbackClosure);    
+        }
         
         applyForSelectedChanges(changes,
                                 new Class[] { AddSequenceChange.class},
@@ -777,6 +811,7 @@ public abstract class SqlBuilder
                                 new Class[] { AddTriggerChange.class},
                                 callbackClosure);
     }
+    
 
     /**
      * This is a fall-through callback which generates a warning because a specific
@@ -1365,6 +1400,7 @@ public abstract class SqlBuilder
         {
             processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable, parameters, changes);
         }
+        
         if (!changes.isEmpty())    
         {
             
@@ -1468,6 +1504,11 @@ public abstract class SqlBuilder
             {
                 processChange(currentModel, desiredModel, (AddPrimaryKeyChange)change);
                 changes.clear();
+            }
+            else if(change instanceof ColumnOnCreateDefaultValueChange)
+            {
+            	processChange(currentModel, desiredModel, (ColumnOnCreateDefaultValueChange)change);
+            	changes.clear();
             }
         }
     }
@@ -1813,6 +1854,14 @@ public abstract class SqlBuilder
         writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getprimaryKeyName(), change.getPrimaryKeyColumns());
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
+    
+    protected void processChange(Database            currentModel,
+            Database            desiredModel,
+            ColumnOnCreateDefaultValueChange change) throws IOException
+	{
+    	writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn());
+    	change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+	}
 
     /**
      * Searches in the given table for a corresponding foreign key. If the given key
@@ -1927,6 +1976,16 @@ public abstract class SqlBuilder
         {
             writeExternalChecksCreateStmt(table);
         }    
+    }
+    
+    public void writeTableCommentsStmt(Database database, Table table) throws IOException
+    {
+    	
+    }
+    
+    public void writeColumnCommentStmt(Database database, Table table, Column column) throws IOException
+    {
+    	
     }
 
     /**
@@ -3549,7 +3608,6 @@ public abstract class SqlBuilder
                 
                 print("DROP VIEW ");
                 printIdentifier(getStructureObjectName(view));
-                print(" CASCADE");
         
                 printEndOfStatement(getStructureObjectName(view));
             }

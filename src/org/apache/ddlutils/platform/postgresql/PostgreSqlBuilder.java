@@ -41,6 +41,7 @@ import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.View;
+import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.translation.CommentFilter;
 import org.apache.ddlutils.translation.LiteralFilter;
@@ -76,7 +77,19 @@ public class PostgreSqlBuilder extends SqlBuilder
         addEscapedCharSequence("\r", "\\r");
         addEscapedCharSequence("\t", "\\t");
     }
-
+/*
+    public void alterDatabase(Database currentModel, Database desiredModel, CreationParameters params) throws IOException
+    {
+    	super.alterDatabase(currentModel, desiredModel, params);
+    	
+    	//Now we recreate the views, because they may have been
+    	//deleted during the table recreation process
+    	for(int i=0;i<desiredModel.getViewCount();i++)
+    	{
+    		createView(desiredModel.getView(i));
+    	}
+    }
+    */
     /**
      * {@inheritDoc}
      */
@@ -121,43 +134,56 @@ public class PostgreSqlBuilder extends SqlBuilder
             }
         }
         super.createTable(database, table, parameters);
-        
+        writeTableCommentsStmt(database, table);
+        printEndOfStatement();
+    }
+    
+
+    public void writeTableCommentsStmt(Database database, Table table) throws IOException
+    {
+
         //Add comments for NVARCHAR types
 
         for (int idx = 0; idx < table.getColumnCount(); idx++)
         {
             Column column = table.getColumn(idx);
-            String comment="";
-
-            if (column.getTypeCode()==ExtTypes.NVARCHAR)
-            {
-                comment+="--OBTG:NVARCHAR--";
-            }
-
-            if (column.getTypeCode()==ExtTypes.NCHAR)
-            {
-                comment+="--OBTG:NCHAR--";
-            }
-            if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
-            {
-            	String oncreatedefaultp=column.getOnCreateDefault();
-            	String oncreatedefault="";
-            	int lengthoncreate=oncreatedefaultp.length();
-            	//Parse oncreatedefault
-            	for(int i=0;i<lengthoncreate;i++)
-            	{
-            		String tchar=oncreatedefaultp.substring(0,1);
-            		oncreatedefaultp=oncreatedefaultp.substring(1);
-            		if(tchar.equals("'"))
-            			oncreatedefault+="''";
-            		else
-            			oncreatedefault+=tchar;
-            	}
-            	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
-            }
-            if(!comment.equals(""))
-            	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"';");
+            writeColumnCommentStmt(database, table, column);
         }
+    }
+    
+
+    public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
+    {
+    	String comment="";
+
+        if (column.getTypeCode()==ExtTypes.NVARCHAR)
+        {
+            comment+="--OBTG:NVARCHAR--";
+        }
+
+        if (column.getTypeCode()==ExtTypes.NCHAR)
+        {
+            comment+="--OBTG:NCHAR--";
+        }
+        if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
+        {
+        	String oncreatedefaultp=column.getOnCreateDefault();
+        	String oncreatedefault="";
+        	int lengthoncreate=oncreatedefaultp.length();
+        	//Parse oncreatedefault
+        	for(int i=0;i<lengthoncreate;i++)
+        	{
+        		String tchar=oncreatedefaultp.substring(0,1);
+        		oncreatedefaultp=oncreatedefaultp.substring(1);
+        		if(tchar.equals("'"))
+        			oncreatedefault+="''";
+        		else
+        			oncreatedefault+=tchar;
+        	}
+        	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
+        }
+        if(!comment.equals(""))
+        	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"';");
     }
 
     /**

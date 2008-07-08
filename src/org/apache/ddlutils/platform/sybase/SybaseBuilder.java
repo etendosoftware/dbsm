@@ -388,7 +388,7 @@ public class SybaseBuilder extends SqlBuilder
         {
             writeQuotationOnStatement();
         }
-        super.processChanges(currentModel, desiredModel, changes, params);
+        super.processChanges(currentModel, desiredModel, changes, params, true);
     }
 
     /**

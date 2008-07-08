@@ -477,7 +477,7 @@ public class MSSqlBuilder extends SqlBuilder
             }
         }
         changes.addAll(additionalChanges);
-        super.processChanges(currentModel, desiredModel, changes, params);
+        super.processChanges(currentModel, desiredModel, changes, params, true);
     }
 
     /**

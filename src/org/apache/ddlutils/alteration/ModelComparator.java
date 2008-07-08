@@ -575,20 +575,36 @@ public class ModelComparator
         if (sizeMatters &&
             !StringUtils.equals(sourceColumn.getSize(), targetColumn.getSize()))
         {
-            if (_log.isInfoEnabled()) {
-                _log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the size)" );
-            }
-            changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(), targetColumn.getScale()));
+
+        	if(targetColumn.getSize()!=null && (sourceColumn.getSize()==null || targetColumn.getSize().compareTo(sourceColumn.getSize())>=0))
+        	{
+	            if (_log.isInfoEnabled()) {
+	                _log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the size)" );
+	            }
+	            changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(), targetColumn.getScale()));
+        	}
+        	else if(targetColumn.getSize()==null)
+        	{
+                if (_log.isInfoEnabled()) {
+                	_log.info("Processing Column "+sourceColumn.getName()+" of table "+sourceTable.getName()+" (column wasn't changed as target size was null)");
+                }
+        	}
+        	else if(targetColumn.getSize().compareTo(sourceColumn.getSize())<0)
+        	{
+                if (_log.isInfoEnabled()) {
+                	_log.info("Processing Column "+sourceColumn.getName()+" of table "+sourceTable.getName()+" (column wasn't changed for precaution, as target size was smaller than original size)");
+                }
+        	}
         }
         else if (scaleMatters &&
              (!StringUtils.equals(sourceColumn.getSize(), targetColumn.getSize()) ||
              (sourceColumn.getScale() == null && targetColumn.getScale() != null) ||
              (sourceColumn.getScale() != null && !sourceColumn.getScale().equals(targetColumn.getScale()))))
         {
-            if (_log.isInfoEnabled()) {
-                _log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the scale)" );
-            }
-            changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(), targetColumn.getScale()));
+	            if (_log.isInfoEnabled()) {
+	                _log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the scale)" );
+	            }
+	            changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(), targetColumn.getScale()));
         }
 
         Object sourceDefaultValue = sourceColumn.getParsedDefaultValue();
@@ -601,6 +617,16 @@ public class ModelComparator
                 _log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the default value)" );
             }
             changes.add(new ColumnDefaultValueChange(sourceTable, sourceColumn, targetColumn.getDefaultValue()));
+        }
+        
+        String sourceOnCreateDefault = sourceColumn.getOnCreateDefault();
+        String targetOnCreateDefault = targetColumn.getOnCreateDefault();
+        if((sourceOnCreateDefault==null && targetOnCreateDefault!=null) || ((sourceOnCreateDefault!=null) && !sourceOnCreateDefault.equals(targetOnCreateDefault)))
+        {
+            if (_log.isInfoEnabled()) {
+            	_log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the onCreateDefault value)");
+            }
+            changes.add(new ColumnOnCreateDefaultValueChange(sourceTable,sourceColumn, targetColumn.getOnCreateDefault()));
         }
 
         if (sourceColumn.isRequired() != targetColumn.isRequired())

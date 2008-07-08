@@ -2196,7 +2196,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
     
     public void deleteDataFromTable(Connection connection, Database model, String[] tables, String[] sqlfilters, boolean continueOnError) {
     	StringWriter buffer = new StringWriter();
-    	_log.info("Deleting data from tables...");
         getSqlBuilder().setWriter(buffer);
     	for(int i=0;i<tables.length;i++)
     	{

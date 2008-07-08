@@ -104,41 +104,51 @@ public class Oracle8Builder extends SqlBuilder
 
         super.createTable(database, table, parameters);
 
+        writeTableCommentsStmt(database, table);
         for (int idx = 0; idx < columns.length; idx++)
         {
             createAutoIncrementTrigger(table, columns[idx]);
         }
         
+    }
+
+
+    public void writeTableCommentsStmt(Database database, Table table) throws IOException
+    {
         //Create comments for onCreateDefault
         for (int idx = 0; idx < table.getColumnCount(); idx++)
         {
             Column column = table.getColumn(idx);
-            String comment="";
-            if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
-            {
-            	String oncreatedefaultp=column.getOnCreateDefault();
-            	String oncreatedefault="";
-            	int lengthoncreate=oncreatedefaultp.length();
-            	//Parse oncreatedefault
-            	for(int i=0;i<lengthoncreate;i++)
-            	{
-            		String tchar=oncreatedefaultp.substring(0,1);
-            		oncreatedefaultp=oncreatedefaultp.substring(1);
-            		if(tchar.equals("'"))
-            			oncreatedefault+="''";
-            		else
-            			oncreatedefault+=tchar;
-            	}
-            	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
-            }
-            if(!comment.equals(""))
-            {
-            	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"'");
-            	printEndOfStatement();
-            }
+            writeColumnCommentStmt(database, table, column);
         }
     }
-
+    
+    public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
+    {
+    	String comment="";
+        if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
+        {
+        	String oncreatedefaultp=column.getOnCreateDefault();
+        	String oncreatedefault="";
+        	int lengthoncreate=oncreatedefaultp.length();
+        	//Parse oncreatedefault
+        	for(int i=0;i<lengthoncreate;i++)
+        	{
+        		String tchar=oncreatedefaultp.substring(0,1);
+        		oncreatedefaultp=oncreatedefaultp.substring(1);
+        		if(tchar.equals("'"))
+        			oncreatedefault+="''";
+        		else
+        			oncreatedefault+=tchar;
+        	}
+        	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
+        }
+        if(!comment.equals(""))
+        {
+        	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"'");
+        	printEndOfStatement();
+        }
+    }
     /**
      * {@inheritDoc}
      */
@@ -515,6 +525,11 @@ public class Oracle8Builder extends SqlBuilder
             createAutoIncrementSequence(change.getChangedTable(), change.getNewColumn());
             createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
         }
+        if(change.getNewColumn().getOnCreateDefault()!=null)
+        {
+        	executeOnCreateDefault(change.getChangedTable(), change.getChangedTable(), change.getNewColumn());
+        	writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
+        }
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
 
@@ -590,7 +605,7 @@ public class Oracle8Builder extends SqlBuilder
     
     protected void writeCreateViewStatement(View view) throws IOException {  
         
-        print("CREATE FORCE VIEW ");
+        print("CREATE OR REPLACE FORCE VIEW ");
         printIdentifier(getStructureObjectName(view));
         print(" AS ");
         print(getSQLTranslation().exec(view.getStatement()));        

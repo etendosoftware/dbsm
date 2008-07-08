@@ -1397,7 +1397,10 @@ public class Database implements Serializable, Cloneable
         result._name     = _name;
         result._idMethod = _idMethod;
         result._version  = _version;
-        result._tables   = (ArrayList)_tables.clone();
+        result._tables   = new ArrayList();
+        Iterator it=_tables.iterator();
+        while(it.hasNext())
+        	result._tables.add(((Table)it.next()).clone());
         result._views = (ArrayList)_views.clone();
         result._functions = (ArrayList)_functions.clone();
         result._triggers = (ArrayList)_triggers.clone();

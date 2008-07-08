@@ -129,6 +129,7 @@ public class Oracle8Platform extends PlatformImplBase
     	
         String current = null;
     	try {
+    		connection.prepareCall("PURGE RECYCLEBIN").execute();
             current = "SELECT 'ALTER TABLE'|| ' ' || TABLE_NAME || ' ' || 'DISABLE CONSTRAINT' || ' ' || CONSTRAINT_NAME  SQL_STR FROM USER_CONSTRAINTS WHERE  CONSTRAINT_TYPE='R' ";
             PreparedStatement pstmt  = connection.prepareStatement(current);
             ResultSet rs = pstmt.executeQuery();    	       

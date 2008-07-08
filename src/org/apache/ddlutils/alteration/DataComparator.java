@@ -97,7 +97,6 @@ public class DataComparator {
 				_log.warn("Error: Table "+table.getName()+" could not be compared because it doesn't have primary key.");
 				continue;
 			}
-			_log.debug("Comparing table: "+table.getName());
 			int indC=0;
 			Vector<ModelChange> changesToTable=new Vector<ModelChange>();
 			while(indC<modelChanges.size())
@@ -168,7 +167,6 @@ public class DataComparator {
 	        Iterator   answer     = null;
 
 			answer=readRowsFromTable(connection, platform, currentdb , table, _databasefilter);
-
 			Vector<DynaBean> rowsOriginalData=originalData.getRowsFromTable(table.getName());
 			//We now have the rows of the table in the database (answer)
 			//and the rows in the XML files (HashMap originalData)
@@ -187,10 +185,8 @@ public class DataComparator {
 			Table table=newTables.get(i);
 			Connection connection=platform.borrowConnection();
 	        Iterator   answer     = null;
-
 			answer=readRowsFromTable(connection, platform, currentdb , table, _databasefilter);
-
-			while(answer.hasNext())
+			while(answer!=null && answer.hasNext())
 			{
 				//Each row of a new table is a new row
 				DynaBean db=(DynaBean)answer.next();
@@ -224,23 +220,28 @@ public class DataComparator {
             statement = connection.createStatement();
 
             String sqlstatement="SELECT * FROM "+table.getName();
-            if(filter!=null && !filter.getTableFilter(table.getName()).equals(""))
-            	sqlstatement+=" WHERE "+filter.getTableFilter(table.getName())+" ";
-            sqlstatement+=" ORDER BY ";
-            for(int j=0;j<table.getPrimaryKeyColumns().length;j++)
+            if(filter!=null && filter.getTableFilter(table.getName())!=null && !filter.getTableFilter(table.getName()).equals(""))
             {
-            	if(j>0)
-            		sqlstatement+=",";
-            	sqlstatement+=table.getPrimaryKeyColumns()[j].getName();
+            	sqlstatement+=" WHERE "+filter.getTableFilter(table.getName())+" ";
+                sqlstatement+=" ORDER BY ";
+                for(int j=0;j<table.getPrimaryKeyColumns().length;j++)
+                {
+                	if(j>0)
+                		sqlstatement+=",";
+                	sqlstatement+=table.getPrimaryKeyColumns()[j].getName();
+                }
+                resultSet = statement.executeQuery(sqlstatement);
+                return platform.createResultSetIterator(model, resultSet, atables);
             }
-            resultSet = statement.executeQuery(sqlstatement);
+            else
+            	return null;
         }
         catch (SQLException ex)
         {
             _log.error(ex.getLocalizedMessage());
+            return null;
 //	            throw new DatabaseOperationException("Error while performing a query", ex);
         }
-        return platform.createResultSetIterator(model, resultSet, atables);
 	}
 	
 	
@@ -434,5 +435,10 @@ public class DataComparator {
 	public Iterator getModelChanges()
 	{
 		return modelChanges.iterator();
+	}
+	
+	public List getModelChangesList()
+	{
+		return modelChanges;
 	}
 }

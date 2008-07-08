@@ -102,7 +102,7 @@ public class PostgreSqlPlatform extends PlatformImplBase
         info.setHasSize(Types.BINARY,    false);
         info.setHasSize(Types.VARBINARY, false);
         
-        info.setNcharsupported(false);
+        info.setNcharsupported(true);
 
         setSqlBuilder(new PostgreSqlBuilder(this));
         setModelReader(new PostgreSqlModelReader(this));

@@ -58,8 +58,10 @@ public class DatabaseData{
 				found=true;
 				SqlDynaProperty[] primaryKeysA=_model.getDynaClassFor(rows.get(i)).getPrimaryKeyProperties();
 				for(int j=0;j<primaryKeys.length && found;j++)
-					if(!primaryKeys[j].equals(rows.get(i).get(primaryKeysA[j].getName())))
+				{
+					if(!row.get(primaryKeys[j].getName()).equals(rows.get(i).get(primaryKeysA[j].getName())))
 						found=false;
+				}
 				i++;
 			}
 			if(found)
@@ -101,7 +103,7 @@ public class DatabaseData{
 	
 	public void changeRow(Table table, Column column, Object[] primaryKeys, Object oldValue, Object newValue)
 	{
-		System.out.println("Trying to change a row from "+oldValue+" to "+newValue);
+		System.out.println("Trying to change table "+table.getName()+", column "+column.getName()+" from "+oldValue+" to "+newValue);
 		if(_model.findTable(table.getName())==null)
 		{
 			System.out.println("Error: impossible to change row in table "+table+", as the table doesn't exist.");
@@ -116,7 +118,6 @@ public class DatabaseData{
 			{
 				Vector<DynaBean> rows=_databaseBeans.get(table.getName());
 				int i=0;
-				
 				boolean found=false;
 				while(i<rows.size() && !found)
 				{
@@ -132,7 +133,8 @@ public class DatabaseData{
 				}
 				if(found)
 				{
-					if(!rows.get(i-1).equals(oldValue))
+					Object currentValue=rows.get(i-1).get(column.getName());
+					if(!(oldValue==null && currentValue==null) && ((oldValue==null && currentValue!=null) || (oldValue!=null && currentValue==null) || (!currentValue.equals(oldValue))))
 					{
 						String error="Warning: old value in row not equal to expected one. Table:["+table.getName()+"] PK[: ";
 						for(i=0;i<primaryKeys.length;i++)
@@ -140,9 +142,8 @@ public class DatabaseData{
 							if(i>0) error+=",";
 							error+=primaryKeys[i];
 						}
-						System.out.println(error+"]");
+						System.out.println(error+"] Old Value found: "+currentValue+" Old value expected "+oldValue);
 					}
-					
 					rows.get(i-1).set(column.getName(), newValue);
 				}
 				else

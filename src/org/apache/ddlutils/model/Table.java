@@ -1090,8 +1090,12 @@ public class Table implements StructureObject, Serializable, Cloneable
         result._name        = _name;
         result._primaryKey  = _primaryKey;
         result._type        = _type;
-        result._columns     = (ArrayList)_columns.clone();
-        result._foreignKeys = (ArrayList)_foreignKeys.clone();
+        result._columns     = new ArrayList();
+        for(int i=0;i<_columns.size();i++)
+        	result._columns.add(((Column)_columns.get(i)).clone());
+        result._foreignKeys = new ArrayList();
+        for(int i=0;i<_foreignKeys.size();i++)
+        	result._foreignKeys.add(((ForeignKey)_foreignKeys.get(i)).clone());
         result._indices     = (ArrayList)_indices.clone();
         result._uniques     = (ArrayList)_uniques.clone();
         result._checks     = (ArrayList)_checks.clone();

@@ -363,6 +363,7 @@ public class Column extends ValueObject implements Cloneable, Serializable
         result._scale           = _scale;
         result._size            = _size;
         result._sizeAsInt       = _sizeAsInt;
+        result._onCreateDefault = _onCreateDefault;
 
         return result;
     }
@@ -376,7 +377,7 @@ public class Column extends ValueObject implements Cloneable, Serializable
         {
             Column        other      = (Column)obj;
             EqualsBuilder comparator = new EqualsBuilder();
-
+            
             // Note that this compares case sensitive
             comparator.append(_name,                   other._name);
             comparator.append(_primaryKey,             other._primaryKey);
