@@ -480,7 +480,8 @@ public class DatabaseDataIO
         if (filter != null) {
             Table[]      tables = { table };
             StringBuffer query  = new StringBuffer();
-
+            String alternativeQuery="";
+            
             query.append("SELECT ");
 
             Connection connection = null;
@@ -569,6 +570,8 @@ public class DatabaseDataIO
             
             String sqlRanges="";
             Iterator ranges=null;
+            ordF=false;   //we will no longer order by id_development_range, as
+                          //the uuids make this unnecessary
             if(ordF)
             {
             	sqlRanges="SELECT ID_DEVELOPMENT_RANGE("+numPKColumn+") AS idv FROM ";
@@ -586,21 +589,27 @@ public class DatabaseDataIO
             if (pkcolumns.length > 0) {
                 if(!ordF)
                 	query.append(" ORDER BY ");
-                	
+
+                alternativeQuery=query.toString();
                 for (int columnIdx = 0; columnIdx < pkcolumns.length; columnIdx++) {
                 	if(ordF || columnIdx>0)
                 	{
                 		query.append(",");
+                		alternativeQuery+=",";
                 		sqlRanges+=",";
                 	}
+                	query.append("HEX_TO_INT(");
                     if (platform.isDelimitedIdentifierModeOn()) {
                         query.append(platform.getPlatformInfo().getDelimiterToken());
+                        alternativeQuery+=platform.getPlatformInfo().getDelimiterToken();
                     }
                     query.append(pkcolumns[columnIdx].getName());
+                    alternativeQuery+=pkcolumns[columnIdx].getName();
                 	sqlRanges+=pkcolumns[columnIdx].getName();
                     if (platform.isDelimitedIdentifierModeOn()) {
                         query.append(platform.getPlatformInfo().getDelimiterToken());
                     }
+                  query.append(")");
                 }
             }
 
@@ -613,8 +622,13 @@ public class DatabaseDataIO
 	        		rangesV.add(ranges.next());
 	        	
             }
-
-            writer.write(platform.query(model, query.toString(), tables), rangesV);
+        	Iterator it=platform.query(model, query.toString(), tables);
+        	if(it==null)
+        	{
+          	System.out.println("Exception while trying to read data from table "+table.getName()+". We'll try alternative query.");
+          	it=platform.query(model, alternativeQuery, tables);
+        	}
+            writer.write(it, rangesV);
         }
     }
 

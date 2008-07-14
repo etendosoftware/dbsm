@@ -1061,7 +1061,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         {
             System.out.println(sql);
             System.out.println(ex.getLocalizedMessage());
-            return new ArrayList().iterator();
+            return null;
 //            throw new DatabaseOperationException("Error while performing a query", ex);
         }
         finally
