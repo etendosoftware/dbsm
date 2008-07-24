@@ -450,6 +450,8 @@ public abstract class SqlBuilder
             createTable(database,
                         table,
                         params == null ? null : params.getParametersFor(table));
+            writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
+
         }
 
         // we're writing the external foreignkeys last to ensure that all referenced tables are already defined
@@ -567,6 +569,11 @@ public abstract class SqlBuilder
     	ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
         List changes = comparator.compare(currentModel, desiredModel);
         Iterator it=changes.iterator();
+        
+
+        
+        
+        
         Vector<AddColumnChange> newColumns=new Vector<AddColumnChange>();
         while(it.hasNext())
         {
@@ -607,7 +614,7 @@ public abstract class SqlBuilder
         	AddColumnChange change=newColumns.get(i);
         	Table table=change.getChangedTable();
         	Table tempTable=getTemporaryTableFor(desiredModel,change.getChangedTable());
-        	if(change.getNewColumn().isRequired())
+        	if(change.getNewColumn().getOnCreateDefault()!=null)
         		executeOnCreateDefault(table, tempTable, change.getNewColumn());
         }
         enableNOTNULLColumns(newColumns);
@@ -630,7 +637,89 @@ public abstract class SqlBuilder
     		createView(desiredModel.getView(i));
     	}
     	
+    	//We will now create the primary keys from recreated tables
 
+      Predicate predicate = new MultiInstanceofPredicate(new Class[] { RemovePrimaryKeyChange.class,
+          AddPrimaryKeyChange.class,
+          PrimaryKeyChange.class,
+          RemoveColumnChange.class,
+          AddColumnChange.class,
+          ColumnOrderChange.class,
+          ColumnAutoIncrementChange.class,
+          ColumnDefaultValueChange.class,
+          ColumnOnCreateDefaultValueChange.class,
+          ColumnRequiredChange.class,
+          ColumnDataTypeChange.class,
+          ColumnSizeChange.class });
+
+       Collection tableChanges=CollectionUtils.select(changes, predicate);
+       for(int i=0;i<desiredModel.getTableCount();i++)
+       {
+           boolean recreated=false;
+           Iterator itChanges=tableChanges.iterator();
+           while(!recreated && itChanges.hasNext())
+           {
+               TableChange currentChange=(TableChange)itChanges.next();
+               if(currentChange.getChangedTable().getName().equalsIgnoreCase(desiredModel.getTable(i).getName()))
+               {
+                   if(!((currentChange instanceof AddColumnChange && ((AddColumnChange)currentChange).isAtEnd() &&  !((AddColumnChange)currentChange).getNewColumn().isRequired())))
+                       recreated=true;
+               }
+           }
+           if(recreated)
+           {
+             writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i).getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
+           }
+       }
+       
+      
+      
+    	
+    	
+    	
+    	//We will now recreate the unchanged foreign keys
+
+      ListOrderedMap changesPerTable = new ListOrderedMap();
+      ListOrderedMap unchangedFKs    = new ListOrderedMap();
+      boolean        caseSensitive   = getPlatform().isDelimitedIdentifierModeOn();
+
+      // we first sort the changes for the tables
+      // however since the changes might contain source or target tables
+      // we use the names rather than the table objects
+      for (Iterator changeIt = tableChanges.iterator(); changeIt.hasNext();)
+      {
+          TableChange change = (TableChange)changeIt.next();
+          String      name   = change.getChangedTable().getName();
+
+          if (!caseSensitive)
+          {
+              name = name.toUpperCase();
+          }
+
+          List changesForTable = (ArrayList)changesPerTable.get(name);
+
+          if (changesForTable == null)
+          {
+              changesForTable = new ArrayList();
+              changesPerTable.put(name, changesForTable);
+              unchangedFKs.put(name, getUnchangedForeignKeys(currentModel, desiredModel, name));
+          }
+          changesForTable.add(change);
+      }
+      // we also need to drop the foreign keys of the unchanged tables referencing the changed tables
+      addRelevantFKsFromUnchangedTables(currentModel, desiredModel, changesPerTable.keySet(), unchangedFKs);
+
+      for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();)
+      {
+          Map.Entry entry       = (Map.Entry)tableFKIt.next();
+          Table     targetTable = desiredModel.findTable((String)entry.getKey(), caseSensitive);
+
+          for (Iterator fkIt = ((List)entry.getValue()).iterator(); fkIt.hasNext();)
+          {
+              writeExternalForeignKeyCreateStmt(desiredModel, targetTable, (ForeignKey)fkIt.next());
+          }
+      }
+    	
         _PLSQLFunctionTranslation = new NullTranslation();
         _PLSQLTriggerTranslation = new NullTranslation();
         _SQLTranslation = new NullTranslation();
@@ -1255,7 +1344,7 @@ public abstract class SqlBuilder
                                          unchangedTriggers);
         }
         // and finally we're re-creating the unchanged foreign keys
-        for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();)
+        /*for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();)
         {
             Map.Entry entry       = (Map.Entry)tableFKIt.next();
             Table     targetTable = desiredModel.findTable((String)entry.getKey(), caseSensitive);
@@ -1264,7 +1353,7 @@ public abstract class SqlBuilder
             {
                 writeExternalForeignKeyCreateStmt(desiredModel, targetTable, (ForeignKey)fkIt.next());
             }
-        }
+        }*/
     }
 
     /**
@@ -2518,7 +2607,7 @@ public abstract class SqlBuilder
         
         if (getPlatformInfo().isPrimaryKeyEmbedded())
         {
-            writeEmbeddedPrimaryKeysStmt(table);
+            //writeEmbeddedPrimaryKeysStmt(table);
         }
         if (getPlatformInfo().isForeignKeysEmbedded())
         {

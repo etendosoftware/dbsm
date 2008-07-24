@@ -451,8 +451,8 @@ public class DataWriter
 	    	int range=0;
 	    	int elem=0;
 	    	boolean first=true;
-	    	_writer.writeComment("\n************************\n0. Core Range.\n************************\n");
-	    	_writer.writeCharacters("\n");
+	    	//_writer.writeComment("\n************************\n0. Core Range.\n************************\n");
+	    	//_writer.writeCharacters("\n");
 	        while (beans.hasNext())
 	        {
 	            DynaBean bean = (DynaBean)beans.next();
@@ -494,10 +494,10 @@ public class DataWriter
 	    	                {
 	    	                	if(range==1)
 	    	                	{
-	    	            	    	_writer.writeComment("\n************************\n0. End of Core Range.\n************************\n");
-			            	    	_writer.writeCharacters("\n");
-			            	    	_writer.writeComment("\n************************\n1. Custom Range.\n************************\n");
-			            	    	_writer.writeCharacters("\n");
+	    	            	    //	_writer.writeComment("\n************************\n0. End of Core Range.\n************************\n");
+			            	    	//_writer.writeCharacters("\n");
+			            	    	//_writer.writeComment("\n************************\n1. Custom Range.\n************************\n");
+			            	    	//_writer.writeCharacters("\n");
 	    	                	}
 	    	                	previousRange=range;
 	    	                }
@@ -516,22 +516,22 @@ public class DataWriter
 	        }
 	        if(range==0)
 	        {
-    	    	_writer.writeComment("\n************************\n0. End of Core Range.\n************************\n");
-    	    	_writer.writeCharacters("\n");
-    	    	_writer.writeComment("\n************************\n1. Custom Range.\n************************\n");
-    	    	_writer.writeCharacters("\n");
+    	    	//_writer.writeComment("\n************************\n0. End of Core Range.\n************************\n");
+    	    	//_writer.writeCharacters("\n");
+    	    	//_writer.writeComment("\n************************\n1. Custom Range.\n************************\n");
+    	    	//_writer.writeCharacters("\n");
     	    	range=1;
 	        }
 	        if(range==1)
         	{
-    	    	_writer.writeComment("\n************************\n1. End of Custom Range.\n************************\n");
-    	    	_writer.writeCharacters("\n");
+    	    	//_writer.writeComment("\n************************\n1. End of Custom Range.\n************************\n");
+    	    	//_writer.writeCharacters("\n");
         	}
 	    }
-	    catch (XMLStreamException ex)
-	    {
-	        throw new DataWriterException(ex);
-	    }
+	    //catch (XMLStreamException ex)
+	   // {
+	   //     throw new DataWriterException(ex);
+	   // }
 	    catch (ConversionException ex)
 	    {
 	        throw new DataWriterException(ex);
