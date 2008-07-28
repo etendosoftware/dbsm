@@ -1561,10 +1561,10 @@ public abstract class SqlBuilder
 
             if (true) //canMigrateData)  <-We will always try to insert data. If it's not possible, the user will notice the error
             {
-                Table tempTable = getTemporaryTableFor(desiredModel, targetTable);
+                Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
     
                 createTemporaryTable(desiredModel, tempTable, parameters);
-                disableTempNOTNULLColumns(newColumns);
+                //disableTempNOTNULLColumns(newColumns);
                 writeCopyDataStatement(sourceTable, tempTable);
                 // Note that we don't drop the indices here because the DROP TABLE will take care of that
                 // Likewise, foreign keys have already been dropped as necessary
