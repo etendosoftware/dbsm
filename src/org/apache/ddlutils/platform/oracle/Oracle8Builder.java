@@ -25,6 +25,7 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
@@ -411,6 +412,37 @@ public class Oracle8Builder extends SqlBuilder
         }
     }
 
+
+    public boolean willBeRecreated(Table table, Vector<TableChange> changes)
+    {
+      boolean recreated=false;
+      for(int i=0;i<changes.size();i++)
+      {
+        TableChange currentChange=changes.get(i);
+
+        if (currentChange instanceof AddColumnChange)
+        {
+            AddColumnChange addColumnChange = (AddColumnChange)currentChange;
+
+            // Oracle can only add not insert columns
+            // Also, we cannot add NOT NULL columns unless they have a default value
+            if (!addColumnChange.isAtEnd() || //<-We will always rebuild the table
+                (addColumnChange.getNewColumn().isRequired()))// && (addColumnChange.getNewColumn().getDefaultValue() == null)))
+            {
+              // we need to rebuild the full table
+              recreated=true;
+            }
+        }
+        else if(!(currentChange instanceof RemovePrimaryKeyChange) && 
+            !(currentChange instanceof PrimaryKeyChange) &&
+            !(currentChange instanceof AddColumnChange) &&
+            !(currentChange instanceof RemoveColumnChange) &&
+            !(currentChange instanceof AddPrimaryKeyChange))
+          recreated=true;
+      }
+      return recreated;
+    }
+    
     /**
      * {@inheritDoc}
      */

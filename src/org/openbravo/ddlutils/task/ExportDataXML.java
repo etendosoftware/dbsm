@@ -15,6 +15,9 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -100,6 +103,7 @@ public class ExportDataXML extends Task {
         
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
+        verifyRevision(platform);
         
         try {      
             // execute the pre-script
@@ -122,7 +126,6 @@ public class ExportDataXML extends Task {
                 _log.info("Model loaded from file.");
             } 
 
-            verifyRevision(platform, originaldb);
             
             DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
@@ -275,39 +278,48 @@ public class ExportDataXML extends Task {
     }
     
 
-    public void verifyRevision(Platform platform, Database database)
+    public void verifyRevision(Platform platform)
     {
-    	String sql="SELECT * FROM AD_SYSTEM_INFO";
-    	List list=platform.fetch(database, sql);
-    	if(list.isEmpty())
-    	{
-    		throw new BuildException("Code revision not found in database");
-    	}
-    	else
-    	{
-    		DynaBean dynaBean=(DynaBean)list.get(0);
-    		int databaseRevision;
-    		try{
-    			databaseRevision=Integer.parseInt(dynaBean.get("CODE_REVISION").toString());
-    		}catch(Exception e)
-    		{
-    			databaseRevision=Integer.parseInt(dynaBean.get("code_revision").toString());
-    		}
-    		_log.info("Database code revision: "+databaseRevision);
-    		
+      String sql="SELECT * FROM AD_SYSTEM_INFO";
 
-    		_log.info("Source code revision: "+codeRevision);
-    		if(codeRevision.equals("0"))
-    		{
-    			_log.info("Subversion code revision not found.");
-    		}
-    		else if(Integer.parseInt(codeRevision)!=databaseRevision)
-    		{
-    			throw new BuildException("Database revision different from source code revision. A update.database is needed before exporting.");
-    		}
-    		
-    		
-    	}
-    	
+      Connection connection=platform.borrowConnection();
+      ResultSet resultSet=null;
+      try{
+        PreparedStatement statement=connection.prepareStatement(sql);
+        statement.execute();
+        resultSet=statement.getResultSet();
+      if(resultSet.next())
+      {
+        int databaseRevision=0;
+        try{
+          databaseRevision=resultSet.getInt("CODE_REVISION");
+        }catch(Exception e)
+        {
+          try{
+            databaseRevision=resultSet.getInt("code_revision");
+          }catch(Exception er)
+          {
+            System.out.println("Error while trying to fetch code revision from database.");
+          }
+        }
+        _log.info("Database code revision: #"+databaseRevision+"#");
+        
+
+        _log.info("Source code revision: #"+codeRevision+"#");
+        if(codeRevision.equals("0"))
+        {
+          _log.info("Subversion code revision not found.");
+        }
+        else if(Integer.parseInt(codeRevision)!=databaseRevision)
+        {
+          throw new BuildException("Database revision different from source code revision. A update.database is needed before exporting.");
+        }
+        }else{
+          throw new BuildException("Code revision not found in database");
+        }
+      }catch(Exception e)
+      {
+        throw new BuildException("Code revision not found in database");
+      }
     }
 }

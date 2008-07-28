@@ -617,7 +617,8 @@ public abstract class SqlBuilder
         	if(change.getNewColumn().getOnCreateDefault()!=null)
         		executeOnCreateDefault(table, tempTable, change.getNewColumn());
         }
-        enableNOTNULLColumns(newColumns);
+        //enableNOTNULLColumns(newColumns);
+        /*
         Vector<String> droppedTables=new Vector<String>();
         for(int i=0;i<newColumns.size();i++)
         {
@@ -628,15 +629,8 @@ public abstract class SqlBuilder
             	droppedTables.add(newColumns.get(i).getChangedTable().getName());
         	}
         }
-        
+        */
 
-    	//Now we recreate the views, because they may have been
-    	//deleted during the table recreation process
-    	for(int i=0;i<desiredModel.getViewCount();i++)
-    	{
-    		createView(desiredModel.getView(i));
-    	}
-    	
     	//We will now create the primary keys from recreated tables
 
       Predicate predicate = new MultiInstanceofPredicate(new Class[] { RemovePrimaryKeyChange.class,
@@ -656,26 +650,43 @@ public abstract class SqlBuilder
        for(int i=0;i<desiredModel.getTableCount();i++)
        {
            boolean recreated=false;
+           boolean newColumn=false;
            Iterator itChanges=tableChanges.iterator();
-           while(!recreated && itChanges.hasNext())
+           Vector<AddColumnChange>newColumnsThisTable=new Vector<AddColumnChange>();
+           Vector<TableChange> changesOfTable=new Vector<TableChange>();
+           while(itChanges.hasNext())
            {
                TableChange currentChange=(TableChange)itChanges.next();
+               
                if(currentChange.getChangedTable().getName().equalsIgnoreCase(desiredModel.getTable(i).getName()))
                {
-                   if(!((currentChange instanceof AddColumnChange && ((AddColumnChange)currentChange).isAtEnd() &&  !((AddColumnChange)currentChange).getNewColumn().isRequired())))
-                       recreated=true;
+                 if(currentChange instanceof AddColumnChange)
+                 {
+                   newColumnsThisTable.add((AddColumnChange)currentChange);
+                   newColumn=true;
+                 }
+                 changesOfTable.add(currentChange);
                }
+
            }
+           recreated=willBeRecreated(desiredModel.getTable(i),changesOfTable);
            if(recreated)
            {
              writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i).getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
+             enableNOTNULLColumns(newColumnsThisTable);
+             if(newColumn)
+             {
+               Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
+               dropTemporaryTable(desiredModel, tempTable);
+               
+             }
            }
        }
-       
-      
-      
-    	
-    	
+
+       for(int i=0;i<desiredModel.getViewCount();i++)
+       {
+         createView(desiredModel.getView(i));
+       }	
     	
     	//We will now recreate the unchanged foreign keys
 
@@ -724,6 +735,20 @@ public abstract class SqlBuilder
         _PLSQLTriggerTranslation = new NullTranslation();
         _SQLTranslation = new NullTranslation();
     }
+    
+    public boolean willBeRecreated(Table table, Vector<TableChange> changes)
+    {
+
+      if(changes.size()>1)
+        return true;
+      else if(changes.size()==0)
+        return false;
+      boolean recreated=false;
+      if(changes.get(0) instanceof AddPrimaryKeyChange || changes.get(0) instanceof ColumnOnCreateDefaultValueChange)
+        return false;
+      else
+        return true;
+    }
 
     public void executeStandardDefault(Table table, Column col) throws IOException
     {
@@ -735,19 +760,19 @@ public abstract class SqlBuilder
     }
     public void executeOnCreateDefault(Table table, Table tempTable, Column col) throws IOException
     {
-    	String pk="";
-    	Column[] pks1=table.getPrimaryKeyColumns();
-    	for(int i=0;i<pks1.length;i++)
-    	{
-    		if(i>0) pk+=" AND ";
-    		pk+=table.getName()+"."+pks1[i].getName()+"="+tempTable.getName()+"."+pks1[i].getName();
-    	}
-		String oncreatedefault=col.getOnCreateDefault();
-		if(oncreatedefault!=null && !oncreatedefault.equals(""))
-		{
-			println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+")");
-			printEndOfStatement();
-		}
+      String pk="";
+      Column[] pks1=table.getPrimaryKeyColumns();
+      for(int i=0;i<pks1.length;i++)
+      {
+      	if(i>0) pk+=" AND ";
+      	pk+=table.getName()+"."+pks1[i].getName()+"="+tempTable.getName()+"."+pks1[i].getName();
+      	}
+      String oncreatedefault=col.getOnCreateDefault();
+      if(oncreatedefault!=null && !oncreatedefault.equals(""))
+      {
+      	println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+")");
+      	printEndOfStatement();
+      }
     }
     
 
@@ -1467,7 +1492,7 @@ public abstract class SqlBuilder
         boolean newColumn=false;
         Vector<AddColumnChange> newColumns=new Vector<AddColumnChange>();
 
-        for (Iterator changeIt = changes.iterator(); !requiresFullRebuild && changeIt.hasNext();)
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
         {
             TableChange change = (TableChange)changeIt.next();
 
@@ -1656,7 +1681,7 @@ public abstract class SqlBuilder
     	for(int i=0;i<newColumns.size();i++)
     	{
     		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired())
+    		if(column.isRequired() && !column.isPrimaryKey())
     		{
     			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
         		printEndOfStatement();
@@ -1669,7 +1694,7 @@ public abstract class SqlBuilder
     	for(int i=0;i<newColumns.size();i++)
     	{
     		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired())
+    		if(column.isRequired() && !column.isPrimaryKey())
     		{
     			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+"_ MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
         		printEndOfStatement();
@@ -1683,7 +1708,7 @@ public abstract class SqlBuilder
     	for(int i=0;i<newColumns.size();i++)
     	{
     		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired())
+    		if(column.isRequired() && !column.isPrimaryKey())
     		{
     			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NOT NULL");
         		printEndOfStatement();
@@ -2274,14 +2299,19 @@ public abstract class SqlBuilder
         if (genPlaceholders)
         {
             addComma = false;
-            for (int idx = 0; idx < columnValues.size(); idx++)
+            for (int idx = 0; idx < table.getColumnCount(); idx++)
             {
+              Column column = table.getColumn(idx);
+
+              if (columnValues.containsKey(column.getName()))
+              {
                 if (addComma)
                 {
                     buffer.append(", ");
                 }
                 buffer.append("?");
                 addComma = true;
+              }
             }
         }
         else

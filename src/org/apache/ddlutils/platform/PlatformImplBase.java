@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -1458,6 +1459,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         boolean           autoCommitMode = false;
         PreparedStatement statement      = null;
 
+        Table   table        = model.findTable(dynaClass.getTableName());
         try
         {
             if (!getPlatformInfo().isAutoCommitModeForLastIdentityValueReading())
@@ -1470,9 +1472,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
             
             statement = connection.prepareStatement(insertSql);
 
+            int sqlIndex = 1;
             for (int idx = 0; idx < properties.length; idx++ )
             {
-                setObject(statement, idx + 1, dynaBean, properties[idx]);
+              if(table.findColumn(properties[idx].getName())!=null)
+              {
+                setObject(statement, sqlIndex++, dynaBean, properties[idx]);   //idx + 1
+              }
+              else
+                _log.debug("Rejected column: "+properties[idx].getName());
             }
 
             int count = statement.executeUpdate();
@@ -1822,6 +1830,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         String            sql        = createUpdateSql(model, dynaClass, primaryKeys, properties, null);
         PreparedStatement statement  = null;
 
+        Table   table        = model.findTable(dynaClass.getTableName());
         if (_log.isDebugEnabled())
         {
             _log.debug("About to execute SQL: " + sql);
@@ -1836,11 +1845,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
             for (int idx = 0; idx < properties.length; idx++)
             {
+              if(table.findColumn(properties[idx].getName())!=null)
                 setObject(statement, sqlIndex++, dynaBean, properties[idx]);
+              else
+                _log.debug("Rejected column: "+properties[idx].getName());
             }
             for (int idx = 0; idx < primaryKeys.length; idx++)
             {
+              if(table.findColumn(primaryKeys[idx].getName())!=null)
                 setObject(statement, sqlIndex++, dynaBean, primaryKeys[idx]);
+              else
+                _log.debug("Rejected column: "+properties[idx].getName());
             }
 
             int count = statement.executeUpdate();

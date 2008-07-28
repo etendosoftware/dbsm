@@ -18,12 +18,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.AddForeignKeyChange;
 import org.apache.ddlutils.alteration.AddFunctionChange;
+import org.apache.ddlutils.alteration.AddTableChange;
 import org.apache.ddlutils.alteration.AddTriggerChange;
 import org.apache.ddlutils.alteration.AddViewChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
+import org.apache.ddlutils.alteration.RemoveForeignKeyChange;
 import org.apache.ddlutils.alteration.RemoveFunctionChange;
 import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.alteration.RemoveViewChange;
@@ -207,24 +210,24 @@ public class AlterCustomizedDatabaseData extends Task {
         			}
         		}
         	}
-        	else if(modelChanges.get(i) instanceof RemoveFunctionChange)
-        	{
-        		boolean cont=false;
-        		RemoveFunctionChange removeFunction=(RemoveFunctionChange)modelChanges.get(i);
-        		for(int j=0;!cont && j<modelChanges.size();j++)
-        		{
-        			
-        			if(modelChanges.get(j) instanceof AddFunctionChange && 
-        					removeFunction.getFunction().getName().equalsIgnoreCase(((AddFunctionChange)modelChanges.get(j)).getNewFunction().getName()))
-        			{
-        				AddFunctionChange addFunction=(AddFunctionChange)modelChanges.get(j);
-        				modelChanges.remove(addFunction);
-        				modelChanges.remove(removeFunction);
-        				i--;
-        				cont=true;
-        			}
-        		}
-        	}
+          else if(modelChanges.get(i) instanceof RemoveFunctionChange)
+          {
+            boolean cont=false;
+            RemoveFunctionChange removeFunction=(RemoveFunctionChange)modelChanges.get(i);
+            for(int j=0;!cont && j<modelChanges.size();j++)
+            {
+              
+              if(modelChanges.get(j) instanceof AddFunctionChange && 
+                  removeFunction.getFunction().getName().equalsIgnoreCase(((AddFunctionChange)modelChanges.get(j)).getNewFunction().getName()))
+              {
+                AddFunctionChange addFunction=(AddFunctionChange)modelChanges.get(j);
+                modelChanges.remove(addFunction);
+                modelChanges.remove(removeFunction);
+                i--;
+                cont=true;
+              }
+            }
+          }
         	else if(modelChanges.get(i) instanceof AddViewChange)
         	{
 				AddViewChange addView=(AddViewChange)modelChanges.get(i);
@@ -240,7 +243,13 @@ public class AlterCustomizedDatabaseData extends Task {
         Iterator itModelChanges=dataComparator.getModelChanges();
         while(itModelChanges.hasNext())
         {
-        	((ModelChange)itModelChanges.next()).apply(newDb, platform.isDelimitedIdentifierModeOn());
+          ModelChange modelChange=(ModelChange)itModelChanges.next();
+          try{
+            modelChange.apply(newDb, platform.isDelimitedIdentifierModeOn());
+          }catch(Exception e)
+          {
+            _log.error("Couldn't apply customization: "+modelChange);
+          }
         }
 
         _log.info("Applying data customizations to the new version");
@@ -285,9 +294,9 @@ public class AlterCustomizedDatabaseData extends Task {
         }
     	Connection connection=platform.borrowConnection();
     	//dataReader.getSink().start();
-    	
+
     	_log.debug("Disabling foreign keys");
-    	platform.disableAllFK(connection, newDb, !isFailonerror());
+    	platform.disableAllFK(connection, currentdb, !isFailonerror());
     	_log.debug("Disabling triggers");
     	platform.disableAllTriggers(connection, newDb, !isFailonerror());
     	DatabaseFilter filter=DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb);
@@ -327,8 +336,8 @@ public class AlterCustomizedDatabaseData extends Task {
         platform.alterTablesPostScript(currentcloneddb, newDb, !isFailonerror());
         _log.debug("Enabling Foreign Keys and Triggers");
 		platform.deleteInvalidConstraintRows(newDb, !isFailonerror());
-    	platform.enableAllFK(connection, newDb, !isFailonerror());
-    	platform.enableAllTriggers(connection, newDb, !isFailonerror());
+    	platform.enableAllFK(connection, currentdb, !isFailonerror());
+    	platform.enableAllTriggers(connection, newDb, !isFailonerror());  //<- we use currentdb so that we don't try to activate FKs that have not been created yet.
         try
         {
         	connection.close();
@@ -345,7 +354,7 @@ public class AlterCustomizedDatabaseData extends Task {
         }catch(Exception e)
         {
         	e.printStackTrace();
-        	System.out.println("oops: "+e.getMessage());
+        	System.out.println("Exception: "+e.getMessage());
         }
         
         

@@ -63,7 +63,10 @@ public class AddTableChange implements ModelChange
     {
         try
         {
-            database.addTable((Table)_newTable.clone());
+            Table table=(Table)_newTable.clone();
+            for(int i=table.getForeignKeyCount()-1;i>=0;i--)
+              table.removeForeignKey(i);
+            database.addTable(table);
         }
         catch (CloneNotSupportedException ex)
         {
