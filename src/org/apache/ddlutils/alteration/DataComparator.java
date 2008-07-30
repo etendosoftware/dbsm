@@ -391,7 +391,16 @@ public class DataComparator {
         	}
         	catch(Exception e)
         	{
-        		return -2;
+        	  String pk1=db1.get(primaryKeys[i].getName()).toString();
+        	  String pk2=db2.get(primaryKeys[i].getName()).toString();
+        	  if(pk1.compareTo(pk2)<0)
+        	    return -1;
+        	  else if(pk1.compareTo(pk2)<0)
+        	    return 1;
+        	  else if(pk1.compareTo(pk2)==0)
+        	    return 0;
+        	  else
+        	    return -2;
         	}
         }
         return 0;
