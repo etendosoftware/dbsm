@@ -288,38 +288,46 @@ public class ExportDataXML extends Task {
         PreparedStatement statement=connection.prepareStatement(sql);
         statement.execute();
         resultSet=statement.getResultSet();
+      }catch(Exception e)
+      {
+        System.out.println(e.getMessage());
+        throw new BuildException("Code revision not found in database");
+      }
+      try
+      {
       if(resultSet.next())
       {
-        int databaseRevision=0;
-        try{
-          databaseRevision=resultSet.getInt("CODE_REVISION");
-        }catch(Exception e)
-        {
-          try{
-            databaseRevision=resultSet.getInt("code_revision");
-          }catch(Exception er)
-          {
-            System.out.println("Error while trying to fetch code revision from database.");
-          }
-        }
-        _log.info("Database code revision: #"+databaseRevision+"#");
-        
-
-        _log.info("Source code revision: #"+codeRevision+"#");
-        if(codeRevision.equals("0"))
-        {
-          _log.info("Subversion code revision not found.");
-        }
-        else if(Integer.parseInt(codeRevision)!=databaseRevision)
-        {
-          throw new BuildException("Database revision different from source code revision. A update.database is needed before exporting.");
-        }
-        }else{
-          throw new BuildException("Code revision not found in database");
-        }
+      }else{
+        throw new BuildException("Code revision not found in database");
+      }
       }catch(Exception e)
       {
         throw new BuildException("Code revision not found in database");
       }
+      int databaseRevision=0;
+      try{
+        databaseRevision=resultSet.getInt("CODE_REVISION");
+      }catch(Exception e)
+      {
+        try{
+          databaseRevision=resultSet.getInt("code_revision");
+        }catch(Exception er)
+        {
+          System.out.println("Error while trying to fetch code revision from database.");
+        }
+      }
+      _log.info("Database code revision: #"+databaseRevision+"#");
+      
+
+      _log.info("Source code revision: #"+codeRevision+"#");
+      if(codeRevision.equals("0"))
+      {
+        _log.info("Subversion code revision not found.");
+      }
+      else if(Integer.parseInt(codeRevision)!=databaseRevision)
+      {
+        throw new BuildException("Database revision different from source code revision. A update.database is needed before exporting.");
+      }
     }
+
 }
