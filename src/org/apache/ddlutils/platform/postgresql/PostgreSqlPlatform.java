@@ -61,7 +61,7 @@ public class PostgreSqlPlatform extends PlatformImplBase
 
         // this is the default length though it might be changed when building PostgreSQL
         // in file src/include/postgres_ext.h
-        info.setMaxIdentifierLength(31);
+        info.setMaxIdentifierLength(30);
 
         info.addNativeTypeMapping(Types.CHAR,          "CHAR");
         info.addNativeTypeMapping(ExtTypes.NCHAR,         "CHAR");

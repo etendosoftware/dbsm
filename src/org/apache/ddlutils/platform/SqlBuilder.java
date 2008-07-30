@@ -2565,7 +2565,7 @@ public abstract class SqlBuilder
         {
             return name;
         }
-
+        _log.warn("Warning: Name of object "+name+" is too long ("+originalLength+" characters; maximum length: "+desiredLength+" characters)");
         int delta    = originalLength - desiredLength;
         int startCut = desiredLength / 2;
 
