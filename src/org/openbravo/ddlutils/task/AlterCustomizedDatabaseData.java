@@ -332,10 +332,11 @@ public class AlterCustomizedDatabaseData extends Task {
 	    		}
     		}
     	}
+    	_log.debug("Removing invalid rows.");
+      platform.deleteInvalidConstraintRows(newDb, !isFailonerror());
     	_log.debug("Executing update final script (NOT NULLs and dropping temporal tables");
-        platform.alterTablesPostScript(currentcloneddb, newDb, !isFailonerror());
-        _log.debug("Enabling Foreign Keys and Triggers");
-		platform.deleteInvalidConstraintRows(newDb, !isFailonerror());
+      platform.alterTablesPostScript(currentcloneddb, newDb, !isFailonerror());
+      _log.debug("Enabling Foreign Keys and Triggers");
     	platform.enableAllFK(connection, currentdb, !isFailonerror());
     	platform.enableAllTriggers(connection, newDb, !isFailonerror());  //<- we use currentdb so that we don't try to activate FKs that have not been created yet.
         try
