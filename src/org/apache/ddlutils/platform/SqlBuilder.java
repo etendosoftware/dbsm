@@ -864,8 +864,10 @@ public abstract class SqlBuilder
 
         // 2nd pass: removing tables and views and functions and triggers
         applyForSelectedChanges(changes,
+                                new Class[] {RemoveViewChange.class},
+                                callbackClosure);
+        applyForSelectedChanges(changes,
                                 new Class[] { RemoveTriggerChange.class,
-                                              RemoveViewChange.class,
                                               RemoveFunctionChange.class,
                                               RemoveTableChange.class,
                                               RemoveSequenceChange.class},
