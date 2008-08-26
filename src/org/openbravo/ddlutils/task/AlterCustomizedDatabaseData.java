@@ -267,6 +267,7 @@ public class AlterCustomizedDatabaseData extends Task {
         _log.info("Updating existing database");
         
 
+        Connection connection=platform.borrowConnection();
         try{
         	
         	  
@@ -281,8 +282,8 @@ public class AlterCustomizedDatabaseData extends Task {
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
             }
-            
-        	_log.info("Updating database model");
+
+          _log.info("Updating database model");
         	platform.alterTables(currentdb, newDb, !isFailonerror()); 
 
         	_log.info("Updating database data");
@@ -292,11 +293,10 @@ public class AlterCustomizedDatabaseData extends Task {
         	e.printStackTrace();
         	System.out.println(e.getMessage());
         }
-    	Connection connection=platform.borrowConnection();
     	//dataReader.getSink().start();
-
-    	_log.debug("Disabling foreign keys");
-    	platform.disableAllFK(connection, currentdb, !isFailonerror());
+      
+      _log.debug("Disabling foreign keys");
+      platform.disableAllFK(connection, currentdb, !isFailonerror());
     	_log.debug("Disabling triggers");
     	platform.disableAllTriggers(connection, newDb, !isFailonerror());
     	DatabaseFilter filter=DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb);

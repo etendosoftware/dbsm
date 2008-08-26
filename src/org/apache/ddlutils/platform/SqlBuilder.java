@@ -583,12 +583,6 @@ public abstract class SqlBuilder
             {
             	newColumns.add((AddColumnChange)change);
             }
-            else if(change instanceof AddForeignKeyChange)
-            {
-            	writeExternalForeignKeyCreateStmt(desiredModel,
-            			((AddForeignKeyChange)change).getChangedTable(),
-            			((AddForeignKeyChange)change).getNewForeignKey());
-            }
             else if(change instanceof AddUniqueChange)
             {
             	processChange(currentModel, desiredModel, params,((AddUniqueChange)change));
@@ -731,6 +725,19 @@ public abstract class SqlBuilder
           }
       }
     	
+       
+       it=changes.iterator();
+       while(it.hasNext())
+       {
+         Object change = it.next();
+
+         if(change instanceof AddForeignKeyChange)
+         {
+           writeExternalForeignKeyCreateStmt(desiredModel,
+               ((AddForeignKeyChange)change).getChangedTable(),
+               ((AddForeignKeyChange)change).getNewForeignKey());
+         }
+       }
         _PLSQLFunctionTranslation = new NullTranslation();
         _PLSQLTriggerTranslation = new NullTranslation();
         _SQLTranslation = new NullTranslation();
@@ -1052,6 +1059,7 @@ public abstract class SqlBuilder
                                  AddTableChange     change) throws IOException
     {
         createTable(desiredModel, change.getNewTable(), params == null ? null : params.getParametersFor(change.getNewTable()));
+        writeExternalPrimaryKeysCreateStmt(change.getNewTable(), change.getNewTable().getPrimaryKey(), change.getNewTable().getPrimaryKeyColumns());
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
     
@@ -1371,16 +1379,17 @@ public abstract class SqlBuilder
                                          unchangedTriggers);
         }
         // and finally we're re-creating the unchanged foreign keys
-        /*for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();)
+        for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();)
         {
             Map.Entry entry       = (Map.Entry)tableFKIt.next();
             Table     targetTable = desiredModel.findTable((String)entry.getKey(), caseSensitive);
 
             for (Iterator fkIt = ((List)entry.getValue()).iterator(); fkIt.hasNext();)
             {
-                writeExternalForeignKeyCreateStmt(desiredModel, targetTable, (ForeignKey)fkIt.next());
+              currentModel.findTable((String)entry.getKey(),caseSensitive).removeForeignKey((ForeignKey)fkIt.next());
+              //writeExternalForeignKeyCreateStmt(desiredModel, targetTable, (ForeignKey)fkIt.next());
             }
-        }*/
+        }
     }
 
     /**
