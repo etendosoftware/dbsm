@@ -451,6 +451,7 @@ public abstract class SqlBuilder
                         table,
                         params == null ? null : params.getParametersFor(table));
             writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
+            writeExternalIndicesCreateStmt(table);
 
         }
 
@@ -2095,7 +2096,7 @@ public abstract class SqlBuilder
         }
         if (!getPlatformInfo().isIndicesEmbedded())
         {
-            writeExternalIndicesCreateStmt(table);
+            //writeExternalIndicesCreateStmt(table);
         }
         if (!getPlatformInfo().isChecksEmbedded())
         {
