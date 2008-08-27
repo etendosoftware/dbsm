@@ -668,6 +668,7 @@ public abstract class SqlBuilder
            if(recreated)
            {
              writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i).getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
+             writeExternalIndicesCreateStmt(desiredModel.getTable(i));
              enableNOTNULLColumns(newColumnsThisTable);
              if(newColumn)
              {
@@ -1061,6 +1062,7 @@ public abstract class SqlBuilder
     {
         createTable(desiredModel, change.getNewTable(), params == null ? null : params.getParametersFor(change.getNewTable()));
         writeExternalPrimaryKeysCreateStmt(change.getNewTable(), change.getNewTable().getPrimaryKey(), change.getNewTable().getPrimaryKeyColumns());
+        writeExternalIndicesCreateStmt(change.getNewTable());
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
     
