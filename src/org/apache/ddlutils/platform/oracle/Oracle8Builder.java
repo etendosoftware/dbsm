@@ -557,11 +557,11 @@ public class Oracle8Builder extends SqlBuilder
             createAutoIncrementSequence(change.getChangedTable(), change.getNewColumn());
             createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
         }
-        if(change.getNewColumn().getOnCreateDefault()!=null)
+        /*if(change.getNewColumn().getOnCreateDefault()!=null)
         {
         	executeOnCreateDefault(change.getChangedTable(), change.getChangedTable(), change.getNewColumn());
         	writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
-        }
+        }*/
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
 

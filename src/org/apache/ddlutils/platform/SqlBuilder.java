@@ -604,14 +604,6 @@ public abstract class SqlBuilder
         	Table table=change.getChangedTable();
         	executeStandardDefault(table, change.getNewColumn());
         }*/
-        for(int i=0;i<newColumns.size();i++)
-        {
-        	AddColumnChange change=newColumns.get(i);
-        	Table table=change.getChangedTable();
-        	Table tempTable=getTemporaryTableFor(desiredModel,change.getChangedTable());
-        	if(change.getNewColumn().getOnCreateDefault()!=null)
-        		executeOnCreateDefault(table, tempTable, change.getNewColumn());
-        }
         //enableNOTNULLColumns(newColumns);
         /*
         Vector<String> droppedTables=new Vector<String>();
@@ -665,6 +657,22 @@ public abstract class SqlBuilder
 
            }
            recreated=willBeRecreated(desiredModel.getTable(i),changesOfTable);
+           
+
+           for(int j=0;j<newColumns.size();j++)
+           {
+             AddColumnChange change=newColumns.get(j);
+             Table table=change.getChangedTable();
+             if(table.getName().equalsIgnoreCase(desiredModel.getTable(i).getName()))
+             {
+               Table tempTable=getTemporaryTableFor(desiredModel,change.getChangedTable());
+               if(change.getNewColumn().getOnCreateDefault()!=null)
+               {
+                 executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated);
+                 writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
+               }
+             }
+           }
            if(recreated)
            {
              writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i).getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
@@ -767,7 +775,7 @@ public abstract class SqlBuilder
 			printEndOfStatement();
 		}
     }
-    public void executeOnCreateDefault(Table table, Table tempTable, Column col) throws IOException
+    public void executeOnCreateDefault(Table table, Table tempTable, Column col, boolean recreated) throws IOException
     {
       String pk="";
       Column[] pks1=table.getPrimaryKeyColumns();
@@ -779,7 +787,10 @@ public abstract class SqlBuilder
       String oncreatedefault=col.getOnCreateDefault();
       if(oncreatedefault!=null && !oncreatedefault.equals(""))
       {
-      	println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+")");
+        if(recreated)
+          println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+")");
+        else
+          println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+")");
       	printEndOfStatement();
       }
     }
