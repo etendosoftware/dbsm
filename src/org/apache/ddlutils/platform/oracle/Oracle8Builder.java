@@ -38,6 +38,7 @@ import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.ValueObject;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
@@ -608,7 +609,19 @@ public class Oracle8Builder extends SqlBuilder
         printEndOfStatement();
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    public void writeExternalUniqueDropStmt(Table table, Unique unique) throws IOException
+    {
+        print("ALTER TABLE ");
+        printIdentifier(getStructureObjectName(table));
+        print(" DROP CONSTRAINT ");
+        printIdentifier(getConstraintObjectName(unique));
+        print(" DROP INDEX ");
+        printEndOfStatement();
+    }
     /**
      * {@inheritDoc}
      */
