@@ -240,8 +240,8 @@ public class DataToDatabaseSink implements DataSink
         {
         	if(_deleteInvalidRows)
         		_platform.deleteInvalidConstraintRows(_model, _haltOnErrors);
-            _platform.enableAllTriggers(_connection, _model, false);
-            _platform.enableAllFK(_connection, _model, false);
+            //_platform.enableAllTriggers(_connection, _model, false);
+            //_platform.enableAllFK(_connection, _model, false);
             _connection.close();
         }
         catch (SQLException ex)
@@ -304,8 +304,8 @@ public class DataToDatabaseSink implements DataSink
         try
         {
             _connection = _platform.borrowConnection();
-            _platform.disableAllTriggers(_connection, _model, _haltOnErrors);
-            _platform.disableAllFK(_connection, _model, _haltOnErrors);
+            //_platform.disableAllTriggers(_connection, _model, _haltOnErrors);
+            //_platform.disableAllFK(_connection, _model, _haltOnErrors);
         }
         catch (DatabaseOperationException ex)
         {
