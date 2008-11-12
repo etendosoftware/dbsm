@@ -126,14 +126,14 @@ public class ExportDataXMLMod extends DalInitializingTask {
 			_log.info("Loading models for AD and RD Datasets");
 			Database originaldb;
 			originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects),  "AD");
-			Database dbrd = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects), "RD");
+			Database dbrd = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects), "ADRD");
 			originaldb.mergeWith(dbrd);
 			_log.info("Model loaded");
 
 			// Create a set of files one for each table
 			Vector<String> datasets = new Vector<String>();
 			datasets.add("AD");
-			datasets.add("RD");
+			datasets.add("ADRD");
 
 			int datasetI = 0;
 
