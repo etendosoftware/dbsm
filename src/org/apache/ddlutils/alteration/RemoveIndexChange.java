@@ -64,5 +64,11 @@ public class RemoveIndexChange extends TableChangeImplBase
         Index index = table.findIndex(_index.getName(), caseSensitive);
 
         table.removeIndex(index);
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveIndexChange. Name: "+_index.getName();
     }
 }

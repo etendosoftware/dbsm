@@ -2,7 +2,6 @@ package org.apache.ddlutils.alteration;
 
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 
 /*
@@ -65,5 +64,11 @@ public class RemoveCheckChange extends TableChangeImplBase {
         Check check = table.findCheck(_check.getName(), caseSensitive);
 
         table.removeCheck(check);
-    }  
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveCheckChange. Name: "+_check.getName();
+    } 
 }

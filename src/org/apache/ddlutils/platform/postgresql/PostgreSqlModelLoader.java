@@ -20,7 +20,6 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -28,7 +27,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
@@ -65,11 +63,13 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     public PostgreSqlModelLoader() {
     }    
     
-    protected String readName() {
+    @Override
+	protected String readName() {
         return "PostgreSql server";
     }
 
-    protected Database readDatabase()  throws SQLException{
+    @Override
+	protected Database readDatabase()  throws SQLException{
     	Database db=super.readDatabase();
     	
     	
@@ -134,7 +134,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     	
     }
 
-    protected String translatePLSQLBody(String value) {
+    @Override
+	protected String translatePLSQLBody(String value) {
         String body = value.trim();
         if (body.startsWith("DECLARE")) {
             body = body.substring(9);
@@ -145,8 +146,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         return body;
     }
     
-    protected void initMetadataSentences() throws SQLException {
-
+    @Override
+	protected void initMetadataSentences() throws SQLException {
+    	String sql;
         try {
             PreparedStatement s = _connection.prepareStatement(
                     "CREATE OR REPLACE FUNCTION temp_findinarray(conkey _int4, attnum int4)  RETURNS int4 AS \n" +
@@ -179,8 +181,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     " AND UPPER(TABLENAME) NOT IN (" + getListObjects(_filter.getExcludedTables()) + ")" +
                     " ORDER BY UPPER(TABLENAME)");
         }
-        _stmt_pkname = _connection.prepareStatement(
-                "SELECT UPPER(PG_CONSTRAINT.CONNAME::TEXT)FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE::TEXT = 'p' AND UPPER(PG_CLASS.RELNAME::TEXT) =  ?");
+        
+        sql="SELECT UPPER(PG_CONSTRAINT.CONNAME::TEXT)FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE::TEXT = 'p' AND UPPER(PG_CLASS.RELNAME::TEXT) =  ?";
+        _stmt_pkname = _connection.prepareStatement(sql);
+        _stmt_pkname_noprefix = _connection.prepareStatement(sql+" AND upper(PG_CONSTRAINT.CONNAME::TEXT) NOT LIKE 'EM_%'");
+        _stmt_pkname_prefix = _connection.prepareStatement(sql+" AND upper(PG_CONSTRAINT.CONNAME::TEXT) LIKE 'EM_"+_prefix+"_%'");
         _stmt_listcolumns = _connection.prepareStatement(
                 "SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), " +
                 " CASE PG_TYPE.TYPNAME" +
@@ -216,6 +221,78 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 " WHERE pg_attribute.attrelid = pg_class.oid AND pg_attribute.atttypid = pg_type.oid AND pg_class.relnamespace = pg_namespace.oid AND pg_namespace.nspname = current_schema() AND pg_attribute.attnum > 0 " +
                 " AND upper(pg_class.relname::text) = ? " +
                 " ORDER BY pg_attribute.attnum");
+        _stmt_listcolumns_noprefix = _connection.prepareStatement(
+                "SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), " +
+                " CASE PG_TYPE.TYPNAME" +
+                "     WHEN 'varchar'::name THEN pg_attribute.atttypmod - 4" +
+                "     WHEN 'bpchar'::name THEN pg_attribute.atttypmod - 4" +
+                "     ELSE NULL::integer" +
+                " END," +
+                " CASE PG_TYPE.TYPNAME" +
+                "     WHEN 'bytea'::name THEN 4000" +
+                "     WHEN 'text'::name THEN 4000" +
+                "     WHEN 'oid'::name THEN 4000" +
+                "     ELSE CASE PG_ATTRIBUTE.ATTLEN " +
+                "              WHEN -1 THEN PG_ATTRIBUTE.ATTTYPMOD - 4 " +
+                "              ELSE PG_ATTRIBUTE.ATTLEN " +
+                "          END" +
+                " END," +
+                " CASE pg_type.typname" +
+                "     WHEN 'bytea'::name THEN 4000" +
+                "     WHEN 'text'::name THEN 4000" +
+                "     WHEN 'oid'::name THEN 4000" +
+                "     ELSE" +
+                "         CASE atttypmod" +
+                "             WHEN -1 THEN 0" +
+                "             ELSE 10" +
+                "         END" +
+                " END," +
+                " 0, not pg_attribute.attnotnull," +
+                " CASE pg_attribute.atthasdef" +
+                "     WHEN true THEN ( SELECT pg_attrdef.adsrc FROM pg_attrdef WHERE pg_attrdef.adrelid = pg_class.oid AND pg_attrdef.adnum = pg_attribute.attnum)" +
+                "     ELSE NULL::text" +
+                " END" +
+                " FROM pg_class, pg_namespace, pg_attribute, pg_type" +
+                " WHERE pg_attribute.attrelid = pg_class.oid AND pg_attribute.atttypid = pg_type.oid AND pg_class.relnamespace = pg_namespace.oid AND pg_namespace.nspname = current_schema() AND pg_attribute.attnum > 0 " +
+                " AND upper(pg_class.relname::text) = ? " +
+                " AND upper(PG_ATTRIBUTE.ATTNAME::TEXT) NOT LIKE 'EM_%'" +
+                " ORDER BY pg_attribute.attnum");
+        _stmt_listcolumns_prefix = _connection.prepareStatement(
+                "SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), " +
+                " CASE PG_TYPE.TYPNAME" +
+                "     WHEN 'varchar'::name THEN pg_attribute.atttypmod - 4" +
+                "     WHEN 'bpchar'::name THEN pg_attribute.atttypmod - 4" +
+                "     ELSE NULL::integer" +
+                " END," +
+                " CASE PG_TYPE.TYPNAME" +
+                "     WHEN 'bytea'::name THEN 4000" +
+                "     WHEN 'text'::name THEN 4000" +
+                "     WHEN 'oid'::name THEN 4000" +
+                "     ELSE CASE PG_ATTRIBUTE.ATTLEN " +
+                "              WHEN -1 THEN PG_ATTRIBUTE.ATTTYPMOD - 4 " +
+                "              ELSE PG_ATTRIBUTE.ATTLEN " +
+                "          END" +
+                " END," +
+                " CASE pg_type.typname" +
+                "     WHEN 'bytea'::name THEN 4000" +
+                "     WHEN 'text'::name THEN 4000" +
+                "     WHEN 'oid'::name THEN 4000" +
+                "     ELSE" +
+                "         CASE atttypmod" +
+                "             WHEN -1 THEN 0" +
+                "             ELSE 10" +
+                "         END" +
+                " END," +
+                " 0, not pg_attribute.attnotnull," +
+                " CASE pg_attribute.atthasdef" +
+                "     WHEN true THEN ( SELECT pg_attrdef.adsrc FROM pg_attrdef WHERE pg_attrdef.adrelid = pg_class.oid AND pg_attrdef.adnum = pg_attribute.attnum)" +
+                "     ELSE NULL::text" +
+                " END" +
+                " FROM pg_class, pg_namespace, pg_attribute, pg_type" +
+                " WHERE pg_attribute.attrelid = pg_class.oid AND pg_attribute.atttypid = pg_type.oid AND pg_class.relnamespace = pg_namespace.oid AND pg_namespace.nspname = current_schema() AND pg_attribute.attnum > 0 " +
+                " AND upper(pg_class.relname::text) = ? " +
+                " AND upper(PG_ATTRIBUTE.ATTNAME::TEXT) LIKE 'EM_"+_prefix+"_%'" + 
+                " ORDER BY pg_attribute.attnum");
         _stmt_pkcolumns = _connection.prepareStatement(
                 "SELECT upper(pg_attribute.attname::text)" +
                 " FROM pg_constraint, pg_class, pg_attribute" +
@@ -227,10 +304,34 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
                 " WHERE pg_constraint.contype::text = 'c' and upper(pg_class.relname::text) = ?" +
                 " ORDER BY upper(pg_constraint.conname::text)");
+        _stmt_listchecks_noprefix = _connection.prepareStatement(
+                "SELECT upper(pg_constraint.conname::text), pg_constraint.consrc" +
+                " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
+                " WHERE pg_constraint.contype::text = 'c' and upper(pg_class.relname::text) = ?" +
+                " AND upper(pg_constraint.conname::text) NOT LIKE 'EM_%'" +
+                " ORDER BY upper(pg_constraint.conname::text)");
+        _stmt_listchecks_prefix = _connection.prepareStatement(
+                "SELECT upper(pg_constraint.conname::text), pg_constraint.consrc" +
+                " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
+                " WHERE pg_constraint.contype::text = 'c' and upper(pg_class.relname::text) = ?" +
+                " AND upper(pg_constraint.conname::text) LIKE 'EM_"+_prefix+"_%'" +
+                " ORDER BY upper(pg_constraint.conname::text)");
         _stmt_listfks = _connection.prepareStatement(
                 "SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'" +
                 " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid LEFT JOIN pg_class fk_table ON fk_table.oid = pg_constraint.confrelid" +
                 " WHERE pg_constraint.contype::text = 'f' and upper(pg_class.relname::text) = ?" +
+                " ORDER BY upper(pg_constraint.conname::text)");
+        _stmt_listfks_noprefix = _connection.prepareStatement(
+                "SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'" +
+                " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid LEFT JOIN pg_class fk_table ON fk_table.oid = pg_constraint.confrelid" +
+                " WHERE pg_constraint.contype::text = 'f' and upper(pg_class.relname::text) = ?" +
+                " AND upper(pg_constraint.conname::text) NOT LIKE 'EM_%'" +
+                " ORDER BY upper(pg_constraint.conname::text)");
+        _stmt_listfks_prefix = _connection.prepareStatement(
+                "SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'" +
+                " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid LEFT JOIN pg_class fk_table ON fk_table.oid = pg_constraint.confrelid" +
+                " WHERE pg_constraint.contype::text = 'f' and upper(pg_class.relname::text) = ?" +
+                " AND upper(pg_constraint.conname::text) LIKE 'EM_"+_prefix+"_%'" +
                 " ORDER BY upper(pg_constraint.conname::text)");
         _stmt_fkcolumns = _connection.prepareStatement(
                 "SELECT upper(pa1.attname), upper(pa2.attname)" +
@@ -251,6 +352,36 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 "    FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
                 "    WHERE pg_constraint.contype::text = 'u')" +
                 " ORDER BY UPPER(PG_CLASS.RELNAME)");
+        _stmt_listindexes_noprefix = _connection.prepareStatement(
+                "SELECT UPPER(PG_CLASS.RELNAME), CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END" +
+                " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE" +
+                " WHERE PG_INDEX.indexrelid = PG_CLASS.OID" +
+                " AND PG_INDEX.indrelid = PG_CLASS1.OID" +
+                " AND PG_CLASS.RELNAMESPACE = PG_NAMESPACE.OID" +
+                " AND PG_CLASS1.RELNAMESPACE = PG_NAMESPACE.OID" +
+                " AND PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA()" +
+                " AND PG_INDEX.INDISPRIMARY ='f'" +
+                " AND UPPER(PG_CLASS1.RELNAME) = ?" +
+                " AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text " +
+                "    FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
+                "    WHERE pg_constraint.contype::text = 'u')" +
+                " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM_%'" +
+                " ORDER BY UPPER(PG_CLASS.RELNAME)");
+        _stmt_listindexes_prefix = _connection.prepareStatement(
+                "SELECT UPPER(PG_CLASS.RELNAME), CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END" +
+                " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE" +
+                " WHERE PG_INDEX.indexrelid = PG_CLASS.OID" +
+                " AND PG_INDEX.indrelid = PG_CLASS1.OID" +
+                " AND PG_CLASS.RELNAMESPACE = PG_NAMESPACE.OID" +
+                " AND PG_CLASS1.RELNAMESPACE = PG_NAMESPACE.OID" +
+                " AND PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA()" +
+                " AND PG_INDEX.INDISPRIMARY ='f'" +
+                " AND UPPER(PG_CLASS1.RELNAME) = ?" +
+                " AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text " +
+                "    FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
+                "    WHERE pg_constraint.contype::text = 'u')" +
+                " AND upper(PG_CLASS.RELNAME) LIKE 'EM_"+_prefix+"_%'" +
+                " ORDER BY UPPER(PG_CLASS.RELNAME)");
         _stmt_indexcolumns = _connection.prepareStatement("SELECT upper(pg_attribute.attname::text) " +
                 "FROM pg_index, pg_class, pg_namespace, pg_attribute" +
                 " WHERE pg_index.indexrelid = pg_class.oid" +
@@ -265,6 +396,18 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
                 " WHERE pg_constraint.contype::text = 'u' AND upper(pg_class.relname::text) = ?" +
                 " ORDER BY upper(pg_constraint.conname::text)");
+        _stmt_listuniques_noprefix = _connection.prepareStatement(
+                "SELECT upper(pg_constraint.conname::text)" +
+                " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
+                " WHERE pg_constraint.contype::text = 'u' AND upper(pg_class.relname::text) = ?" +
+                " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM_%'" +
+                " ORDER BY upper(pg_constraint.conname::text)");
+        _stmt_listuniques_prefix = _connection.prepareStatement(
+                "SELECT upper(pg_constraint.conname::text)" +
+                " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid" +
+                " WHERE pg_constraint.contype::text = 'u' AND upper(pg_class.relname::text) = ?" +
+                " AND upper(pg_constraint.conname::text) LIKE 'EM_"+_prefix+"_%'" +
+                " ORDER BY upper(pg_constraint.conname::text)");
         _stmt_uniquecolumns = _connection.prepareStatement(
                 "SELECT upper(pg_attribute.attname::text)" +
                 " FROM pg_constraint, pg_class, pg_attribute" +
@@ -272,23 +415,32 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                 " AND upper(pg_constraint.conname::text) = ?" +
                 " ORDER BY temp_findinarray(pg_constraint.conkey, pg_attribute.attnum)");
         
+        
         if (_filter.getExcludedViews().length == 0) {
-        	_stmt_listviews = _connection.prepareStatement("SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views " +
-                    "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_'");
-        } else {
-            _stmt_listviews = _connection.prepareStatement("SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views " +
+        	sql="SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views " +
+                    "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_'";
+        } else{
+            sql="SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views " +
                     "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_' " +
-                    "AND upper(viewname) NOT IN (" + getListObjects(_filter.getExcludedViews()) + ")"); 
+                    "AND upper(viewname) NOT IN (" + getListObjects(_filter.getExcludedViews()) + ")"; 
+        } 
+        if(_prefix!=null){
+            sql+=" AND upper(viewname) LIKE '"+_prefix+"_%'"; 
         }
+        _stmt_listviews = _connection.prepareStatement(sql);
         
         if (_filter.getExcludedSequences().length == 0) {
-            _stmt_listsequences = _connection.prepareStatement("SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S'");
+            sql="SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S'";
         } else {
-            _stmt_listsequences = _connection.prepareStatement("SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S' AND upper(relname) NOT IN (" + getListObjects(_filter.getExcludedSequences()) + ")");
+            sql="SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S' AND upper(relname) NOT IN (" + getListObjects(_filter.getExcludedSequences()) + ")";
         }
+        if(_prefix!=null){
+            sql+=" AND upper(relname) LIKE '"+_prefix+"_%'"; 
+        }
+        _stmt_listsequences = _connection.prepareStatement(sql);
 
         if (_filter.getExcludedTriggers().length == 0) {
-            _stmt_listtriggers = _connection.prepareStatement("SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, " +
+            sql="SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, " +
                     "CASE trg.tgtype & cast(3 as int2) " +
                     "WHEN 0 THEN 'AFTER EACH STATEMENT' " +
                     "WHEN 1 THEN 'AFTER EACH ROW' " +
@@ -305,9 +457,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     "END AS trigger_event, " +
                     "p.prosrc AS function_code " +
                     "FROM pg_trigger trg, pg_class tbl, pg_proc p " +
-                    "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'");
+                    "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'";
         } else {
-            _stmt_listtriggers = _connection.prepareStatement("SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, " +
+            sql="SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, " +
                     "CASE trg.tgtype & cast(3 as int2) " +
                     "WHEN 0 THEN 'AFTER EACH STATEMENT' " +
                     "WHEN 1 THEN 'AFTER EACH ROW' " +
@@ -324,27 +476,35 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
                     "END AS trigger_event, " +
                     "p.prosrc AS function_code " +
                     "FROM pg_trigger trg, pg_class tbl, pg_proc p " +
-                    "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI' AND upper(trg.tgname) NOT IN (" + getListObjects(_filter.getExcludedTriggers()) + ")");
+                    "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI' AND upper(trg.tgname) NOT IN (" + getListObjects(_filter.getExcludedTriggers()) + ")";
         }
+        if(_prefix!=null)
+        {
+            sql+=" AND upper(trg.tgname) LIKE '"+_prefix+"_%'"; 
+        }
+        _stmt_listtriggers = _connection.prepareStatement(sql);
         
         if (_filter.getExcludedFunctions().length == 0) {
-            _stmt_listfunctions = _connection.prepareStatement(
-                    "select distinct upper(proname) from pg_proc p, pg_namespace n " +
+            sql="select distinct upper(proname) from pg_proc p, pg_namespace n " +
                     "where  pronamespace = n.oid " +
                     "and n.nspname=current_schema() " +
                     "and p.oid not in (select tgfoid " +
                     "from pg_trigger) " +
-                    "and p.proname <> 'temp_findinarray'");
+                    "and p.proname <> 'temp_findinarray'";
         } else {
-            _stmt_listfunctions = _connection.prepareStatement(
-                    "select distinct upper(proname) from pg_proc p, pg_namespace n " +
+            sql="select distinct upper(proname) from pg_proc p, pg_namespace n " +
                     "where  pronamespace = n.oid " +
                     "and n.nspname=current_schema() " +
                     "and p.oid not in (select tgfoid " +
                     "from pg_trigger) " +
                     "and p.proname <> 'temp_findinarray' " +
-                    "AND upper(p.proname) NOT IN (" + getListObjects(_filter.getExcludedFunctions()) + ")");
+                    "AND upper(p.proname) NOT IN (" + getListObjects(_filter.getExcludedFunctions()) + ")";
         }
+        if(_prefix!=null)
+        {
+            sql+=" AND upper(proname) LIKE '"+_prefix+"_%'"; 
+        }
+        _stmt_listfunctions = _connection.prepareStatement(sql);
         
         _stmt_functioncode = _connection.prepareStatement("select p.prosrc FROM pg_proc p WHERE UPPER(p.proname) = ?"); // dummy sentence        
 
@@ -418,7 +578,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     }
     
-    protected void closeMetadataSentences() throws SQLException {
+    @Override
+	protected void closeMetadataSentences() throws SQLException {
         super.closeMetadataSentences();
         _stmt_functionparams.close();
         _stmt_paramtypes.close();
@@ -435,7 +596,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     Vector <String>paramsNVARCHAR=new Vector<String>();
     int oidFunc;
     String comment="";
-    protected Function readFunction(String name) throws SQLException {
+    @Override
+	protected Function readFunction(String name) throws SQLException {
         
         final Function f = new Function();
         f.setName(name);
@@ -630,9 +792,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     
     int oidTable;
     String commentCol;
-    protected Table readTable(String tablename) throws SQLException {
+    @Override
+	protected Table readTable(String tablename, boolean usePrefix) throws SQLException {
     	//We'll change the types of NVarchar columns (which should have a comment in the database)
-    	Table t=super.readTable(tablename);
+    	Table t=super.readTable(tablename, usePrefix);
     	
 
         _stmt_oids_tables.setString(1, tablename);
@@ -750,19 +913,23 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         return _paramtypes.get(pgtype);
     }
     
-    protected String translateCheckCondition(String code) {
+    @Override
+	protected String translateCheckCondition(String code) {
         return _checkTranslation.exec(code);
     }
     
-    protected String translateSQL(String sql){
+    @Override
+	protected String translateSQL(String sql){
     	return _SQLTranslation.exec(sql).trim();
     }
     
-    protected boolean translateRequired(String required) {
+    @Override
+	protected boolean translateRequired(String required) {
         return "f".equals(required);
     }
     
-    protected String translateDefault(String value, int type) {
+    @Override
+	protected String translateDefault(String value, int type) {
         
         switch (type) {
             case Types.CHAR:
@@ -809,7 +976,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         }
     }
     
-    protected int translateColumnType(String nativeType) {
+    @Override
+	protected int translateColumnType(String nativeType) {
         
         if (nativeType == null) {
             return Types.NULL;
@@ -832,7 +1000,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         }
     }
     
-    protected int translateParamType(String nativeType) {
+    @Override
+	protected int translateParamType(String nativeType) {
         
         if (nativeType == null) {
             return Types.NULL;
@@ -861,7 +1030,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         }
     }    
     
-    protected int translateFKEvent(String fkevent) {
+    @Override
+	protected int translateFKEvent(String fkevent) {
         if ("C".equalsIgnoreCase(fkevent)) {
             return DatabaseMetaData.importedKeyCascade;
         } else if ("N".equalsIgnoreCase(fkevent)) {

@@ -47,5 +47,11 @@ public class RemoveTableChange extends TableChangeImplBase
         Table table = database.findTable(getChangedTable().getName(), caseSensitive);
 
         database.removeTable(table);
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveTableChange. Name: "+_table.getName();
     }
 }

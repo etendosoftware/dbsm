@@ -25,10 +25,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.CreationParameters;
@@ -358,6 +360,7 @@ public interface Platform
      * @param continueOnError Whether to continue with the next sql statement when an error occurred
      */
     public void alterTables(Database desiredDb, boolean continueOnError) throws DatabaseOperationException;
+    
 
     /**
      * Returns the SQL for altering the database schema so that it match the given model.
@@ -453,9 +456,12 @@ public interface Platform
     public void alterTables(Connection connection, Database desiredDb, boolean continueOnError) throws DatabaseOperationException;
     
     public void alterTables(Connection connection, Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException;
-
+    public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError, List changes) throws DatabaseOperationException;
     public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException;
     
+    
+
+    public void alterData(Connection connection, Database model, Vector<Change> changes) throws DatabaseOperationException;
     /**
      * Executes a small postscript to correct null constraints in new not-null columns added to the database.
      * 
@@ -868,6 +874,7 @@ public interface Platform
      * @param dynaBean   The bean
      */
     public void upsert(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException;
+    public void updateinsert(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException;
 
     /**
      * Returns the sql for deleting the given bean from the database.
@@ -896,6 +903,8 @@ public interface Platform
     public void delete(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException;
 
     public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
+    public Database loadModelFromDatabase(ExcludeFilter filter, String prefix, boolean loadCompleteTables) throws DatabaseOperationException;
+    public Database loadModelFromDatabase(ExcludeFilter filter, String datasetName) throws DatabaseOperationException;
     
     /**
      * Reads the database model from the live database as specified by the data source set for
@@ -1011,4 +1020,6 @@ public interface Platform
     public void deleteInvalidConstraintRows(Database model, boolean continueOnError);
     
     public void deleteInvalidConstraintRows(Connection connection, Database model, boolean continueOnError);
+    
+    public void applyConfigScript(Database database, Vector<Change> changes);
 }

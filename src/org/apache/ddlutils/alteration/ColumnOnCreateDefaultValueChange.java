@@ -60,5 +60,11 @@ public class ColumnOnCreateDefaultValueChange extends TableChangeImplBase implem
         Column column = table.findColumn(_column.getName(), caseSensitive);
 
         column.setOnCreateDefault(_newonCreateDefaultValue);
-    }
+    }  
+    
+    @Override
+	public String toString()
+    {
+    	return "ColumnOnCreateDefaultChange. Column: "+_column.getName();
+    } 
 }

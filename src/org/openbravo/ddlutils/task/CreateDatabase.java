@@ -14,20 +14,21 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.util.Properties;
+import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
-
+import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.task.VerbosityLevel;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Task;
 
 /**
  *
@@ -51,6 +52,9 @@ public class CreateDatabase extends Task {
 
     protected Log _log;
     private VerbosityLevel _verbosity = null;
+    
+    private String basedir;
+    private String dirFilter;
 
     /** Creates a new instance of CreateDatabase */
     public CreateDatabase() {
@@ -77,7 +81,8 @@ public class CreateDatabase extends Task {
         _log = LogFactory.getLog(getClass());
     }
     
-    public void execute() {
+    @Override
+	public void execute() {
        
         initLogging();
     
@@ -89,6 +94,7 @@ public class CreateDatabase extends Task {
         
         Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
+		
         
         try {  
             
@@ -103,8 +109,37 @@ public class CreateDatabase extends Task {
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), !isFailonerror());
             }
-            
-            Database db = DatabaseUtils.readDatabase(getModel());
+
+            Database db =null;
+            if(basedir==null)
+            {
+              _log.info("Basedir for additional files not specified. Creating database with just Core.");
+              db = DatabaseUtils.readDatabase(getModel());
+            }
+            else
+            {
+              //We read model files using the filter, obtaining a file array. The models will be merged
+              //to create a final target model.
+              Vector<File> dirs=new Vector<File>();
+              dirs.add(model);
+              DirectoryScanner dirScanner=new DirectoryScanner();
+              dirScanner.setBasedir(new File(basedir));
+              String[] dirFilterA = {dirFilter};
+              dirScanner.setIncludes(dirFilterA);
+              dirScanner.scan();
+              String[] incDirs=dirScanner.getIncludedDirectories();
+              for(int j=0;j<incDirs.length;j++)
+              {
+                File dirF=new File(basedir, incDirs[j]);
+                dirs.add(dirF);
+              }
+              File[] fileArray=new File[dirs.size()];
+              for(int i=0;i<dirs.size();i++)
+              {
+                fileArray[i]=dirs.get(i);
+              }
+              db = DatabaseUtils.readDatabase(fileArray);
+            }
             
             // Create database
             _log.info("Executing creation script");
@@ -117,6 +152,8 @@ public class CreateDatabase extends Task {
             } else {
                 _log.info("for the complete database");                
             }             
+            
+            
             
             platform.createTables(db, isDropfirst(), !isFailonerror());   
             
@@ -132,23 +169,8 @@ public class CreateDatabase extends Task {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
             }            
             
-//            // Manage the database if not
-//            try {
-//                _log.info("Executing system model script");
-//                DatabaseUtils.manageDatabase(ds);
-//            } catch (SQLException ex) {
-//                // Exception if already exists the table.
-//            }
-//            
-//            // Save model in the database if posible
-//            try {                
-//                DatabaseUtils.saveCurrentDatabase(ds, db);
-//            } catch (SQLException ex) {
-//                _log.info("Database model not saved in the database.");
-//            }
             
         } catch (Exception e) {
-            // _log.info(e.getLocalizedMessage());
             throw new BuildException(e);
         }   
     }
@@ -191,6 +213,23 @@ public class CreateDatabase extends Task {
 
     public void setModel(File model) {
         this.model = model;
+    }
+    
+    public String getBasedir() {
+        return basedir;
+    }
+    
+    public void setBasedir(String basedir)
+    {
+      this.basedir=basedir;
+    }
+    
+    public String getDirFilter() {
+      return dirFilter;
+    }
+    
+    public void setDirFilter(String dirFilter) {
+      this.dirFilter=dirFilter;
     }
 
     public boolean isDropfirst() {
@@ -247,4 +286,10 @@ public class CreateDatabase extends Task {
     {
         _verbosity = level;
     }
+    /*
+    public void addDirset(DirSet set) throws BuildException
+    {
+      _log.info(set.toString());
+      filesets.addElement(set);
+    }*/
 }

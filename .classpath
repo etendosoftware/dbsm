@@ -18,5 +18,8 @@
 	<classpathentry kind="lib" path="lib/stax-api-1.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/wstx-asl-3.0.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/openbravo"/>
+	<classpathentry kind="lib" path="/openbravo/src-db/database/lib/dbmanager.jar"/>
+	<classpathentry kind="lib" path="/openbravo/build/classes"/>
 	<classpathentry kind="output" path="nbproject/build/classes"/>
 </classpath>

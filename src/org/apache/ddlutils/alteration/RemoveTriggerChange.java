@@ -19,7 +19,6 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Trigger;
 
@@ -60,5 +59,11 @@ public class RemoveTriggerChange implements ModelChange{
         Trigger trigger = database.findTrigger(_trigger.getName(), caseSensitive);
 
         database.removeTrigger(trigger);
-    }    
+    }        
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveTriggerChange. Name: "+_trigger.getName();
+    }
 }

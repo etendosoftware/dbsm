@@ -60,5 +60,11 @@ public class AddFunctionChange implements ModelChange {
         {
             throw new DdlUtilsException(ex);
         }
-    }        
+    }  
+    
+    @Override
+	public String toString()
+    {
+    	return "AddFunctionChange. Name: "+_newFunction.getName();
+    }      
 }

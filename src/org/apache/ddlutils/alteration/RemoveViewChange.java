@@ -19,7 +19,6 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.View;
 
@@ -60,5 +59,11 @@ public class RemoveViewChange implements ModelChange{
         View view = database.findView(_view.getName(), caseSensitive);
 
         database.removeView(view);
-    }    
+    }        
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveViewChange. Name: "+_view.getName();
+    }
 }

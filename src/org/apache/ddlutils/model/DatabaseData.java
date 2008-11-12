@@ -1,7 +1,7 @@
 package org.apache.ddlutils.model;
 
-import java.io.File;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -21,22 +21,27 @@ public class DatabaseData{
 	
 	public void insertDynaBeansFromVector(String tablename,Vector<DynaBean> vector)
 	{
-		if(_databaseBeans.containsKey(tablename))
-			_databaseBeans.get(tablename).addAll(vector);
+		if(_databaseBeans.containsKey(tablename.toUpperCase()))
+			_databaseBeans.get(tablename.toUpperCase()).addAll(vector);
 		else
-			_databaseBeans.put(tablename, vector);
+			_databaseBeans.put(tablename.toUpperCase(), vector);
 		DataToArraySink.sortArray(_model, _databaseBeans.get(tablename));
 	}
 	
 	public Vector<DynaBean> getRowsFromTable(String tablename)
 	{
-		return _databaseBeans.get(tablename);
+		return _databaseBeans.get(tablename.toUpperCase());
+	}
+	
+	public Set<String> getTableNames()
+	{
+		return _databaseBeans.keySet();
 	}
 	
 	public void removeRow(Table table, DynaBean row)
 	{
 		System.out.println("Trying to remove row "+row+"f rom table "+table);
-		Vector<DynaBean> rows=_databaseBeans.get(table.getName());
+		Vector<DynaBean> rows=getRowsFromTable(table.getName());
 		if(rows==null)
 		{
 			System.out.println("Error. Trying to remove row in table "+table.getName()+". The table doesn't exist, or is empty.");
@@ -91,11 +96,11 @@ public class DatabaseData{
 		}
 		else
 		{
-			if(!_databaseBeans.containsKey(table.getName()))
+			if(!_databaseBeans.containsKey(table.getName().toUpperCase()))
 			{
-				_databaseBeans.put(table.getName(), new Vector<DynaBean>());	
+				_databaseBeans.put(table.getName().toUpperCase(), new Vector<DynaBean>());	
 			}
-			_databaseBeans.get(table.getName()).add(row);
+			_databaseBeans.get(table.getName().toUpperCase()).add(row);
 			if(reorder)
 				DataToArraySink.sortArray(_model, _databaseBeans.get(table.getName()));
 		}
@@ -116,7 +121,7 @@ public class DatabaseData{
 			}
 			else
 			{
-				Vector<DynaBean> rows=_databaseBeans.get(table.getName());
+				Vector<DynaBean> rows=getRowsFromTable(table.getName());
 				int i=0;
 				boolean found=false;
 				while(i<rows.size() && !found)
@@ -164,6 +169,6 @@ public class DatabaseData{
 	public void reorderAllTables()
 	{
 		for(int i=0;i<_model.getTableCount();i++)
-			DataToArraySink.sortArray(_model, _databaseBeans.get(_model.getTable(i).getName()));
+			DataToArraySink.sortArray(_model, getRowsFromTable(_model.getTable(i).getName()));
 	}
 }

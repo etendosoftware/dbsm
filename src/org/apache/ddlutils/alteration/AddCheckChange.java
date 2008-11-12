@@ -22,7 +22,6 @@ package org.apache.ddlutils.alteration;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Table;
 
 public class AddCheckChange extends TableChangeImplBase {
@@ -68,6 +67,12 @@ public class AddCheckChange extends TableChangeImplBase {
             throw new DdlUtilsException(ex);
         }
         database.findTable(getChangedTable().getName()).addCheck(newCheck);
+    }
+    
+    @Override
+	public String toString()
+    {
+    	return "AddCheckChange. Name: "+_newCheck.getName();
     }
     
 }

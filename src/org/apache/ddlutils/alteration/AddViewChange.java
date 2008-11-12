@@ -60,5 +60,11 @@ public class AddViewChange implements ModelChange {
         {
             throw new DdlUtilsException(ex);
         }
+    }     
+    
+    @Override
+	public String toString()
+    {
+    	return "AddViewChange. Name: "+_newView.getName();
     }    
 }

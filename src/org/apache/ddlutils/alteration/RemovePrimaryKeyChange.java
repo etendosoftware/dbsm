@@ -70,5 +70,11 @@ public class RemovePrimaryKeyChange extends TableChangeImplBase
 
             column.setPrimaryKey(false);
         }
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemovePrimaryKeyChange. Table: "+_table.getName();
     }
 }

@@ -19,7 +19,6 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 
@@ -60,5 +59,11 @@ public class RemoveFunctionChange implements ModelChange{
         Function function = database.findFunction(_function.getName(), caseSensitive);
 
         database.removeFunction(function);
-    }    
+    }        
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveFunctionChange. Name: "+_function.getName();
+    }
 }

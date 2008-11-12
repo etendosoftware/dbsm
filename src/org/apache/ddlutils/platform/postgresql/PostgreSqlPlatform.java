@@ -211,7 +211,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public void createDatabase(String jdbcDriverClassName, String connectionUrl, String username, String password, Map parameters) throws DatabaseOperationException, UnsupportedOperationException
+    @Override
+	public void createDatabase(String jdbcDriverClassName, String connectionUrl, String username, String password, Map parameters) throws DatabaseOperationException, UnsupportedOperationException
     {
         // With PostgreSQL, you create a database by executing "CREATE DATABASE" in an existing database (usually 
         // the template1 database because it usually exists)
@@ -221,7 +222,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public void dropDatabase(String jdbcDriverClassName, String connectionUrl, String username, String password) throws DatabaseOperationException, UnsupportedOperationException
+    @Override
+	public void dropDatabase(String jdbcDriverClassName, String connectionUrl, String username, String password) throws DatabaseOperationException, UnsupportedOperationException
     {
         // With PostgreSQL, you create a database by executing "DROP DATABASE" in an existing database (usually 
         // the template1 database because it usually exists)
@@ -231,7 +233,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    protected void setObject(PreparedStatement statement, int sqlIndex, DynaBean dynaBean, SqlDynaProperty property) throws SQLException
+    @Override
+	protected void setObject(PreparedStatement statement, int sqlIndex, DynaBean dynaBean, SqlDynaProperty property) throws SQLException
     {
         int     typeCode = property.getColumn().getTypeCode();
         Object  value    = dynaBean.get(property.getName());
@@ -265,7 +268,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public void disableAllFK(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
+    @Override
+	public void disableAllFK(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
     	
     	try {    	
             StringWriter buffer = new StringWriter();
@@ -287,7 +291,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public void enableAllFK(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
+    @Override
+	public void enableAllFK(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
     	
         try {
             StringWriter buffer = new StringWriter();
@@ -309,7 +314,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public void disableAllTriggers(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
+    @Override
+	public void disableAllTriggers(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {
         
     	try
     	{
@@ -332,7 +338,8 @@ public class PostgreSqlPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public void enableAllTriggers(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {    	
+    @Override
+	public void enableAllTriggers(Connection connection, Database model,boolean continueOnError) throws DatabaseOperationException {    	
         
     	try {
     		((PostgreSqlBuilder)getSqlBuilder()).initializeTranslators(model);
@@ -351,7 +358,20 @@ public class PostgreSqlPlatform extends PlatformImplBase
             throw new DatabaseOperationException("Error while enabling triggers ", e);
         }     
     }
-    
+
+    @Override
+	protected PreparedStatement getDateStatement(Connection connection)
+    {
+    	try
+    	{
+    		return connection.prepareStatement("SELECT NOW() FROM DUAL");
+    	}catch(Exception e)
+    	{
+    		e.printStackTrace();
+    	}
+    	return null;
+    	
+    }
 //    /**
 //     * {@inheritDoc}
 //     */

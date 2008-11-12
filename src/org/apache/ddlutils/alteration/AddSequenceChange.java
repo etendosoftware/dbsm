@@ -61,4 +61,10 @@ public class AddSequenceChange implements ModelChange {
             throw new DdlUtilsException(ex);
         }
     }    
+    
+    @Override
+	public String toString()
+    {
+    	return "AddSequenceChange. Name: "+_newSequence.getName();
+    } 
 }

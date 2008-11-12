@@ -31,6 +31,7 @@ import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
+import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.PrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
@@ -38,14 +39,13 @@ import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
-import org.apache.ddlutils.model.Unique;
-import org.apache.ddlutils.model.ValueObject;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
+import org.apache.ddlutils.model.Unique;
+import org.apache.ddlutils.model.ValueObject;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.SqlBuilder;
-import org.apache.ddlutils.util.ExtTypes;
 import org.apache.ddlutils.util.Jdbc3Utils;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Pattern;
@@ -94,7 +94,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException
+    @Override
+	public void createTable(Database database, Table table, Map parameters) throws IOException
     {
         // lets create any sequences
         Column[] columns = table.getAutoIncrementColumns();
@@ -115,7 +116,8 @@ public class Oracle8Builder extends SqlBuilder
     }
 
 
-    public void writeTableCommentsStmt(Database database, Table table) throws IOException
+    @Override
+	public void writeTableCommentsStmt(Database database, Table table) throws IOException
     {
         //Create comments for onCreateDefault
         for (int idx = 0; idx < table.getColumnCount(); idx++)
@@ -125,7 +127,8 @@ public class Oracle8Builder extends SqlBuilder
         }
     }
     
-    public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
+    @Override
+	public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
     {
     	String comment="";
         if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
@@ -154,7 +157,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
+    @Override
+	public void dropTable(Table table) throws IOException
     {
         Column[] columns = table.getAutoIncrementColumns();
 
@@ -278,7 +282,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void createTemporaryTable(Database database, Table table, Map parameters) throws IOException
+    @Override
+	protected void createTemporaryTable(Database database, Table table, Map parameters) throws IOException
     {
         createTable(database, table, parameters);
     }
@@ -286,7 +291,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void dropTemporaryTable(Database database, Table table) throws IOException
+    @Override
+	protected void dropTemporaryTable(Database database, Table table) throws IOException
     {
         dropTable(table);
     }
@@ -294,7 +300,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void dropExternalForeignKeys(Table table) throws IOException
+    @Override
+	public void dropExternalForeignKeys(Table table) throws IOException
     {
         // no need to as we drop the table with CASCASE CONSTRAINTS
     }
@@ -302,7 +309,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void writeExternalIndexDropStmt(Table table, Index index) throws IOException
+    @Override
+	public void writeExternalIndexDropStmt(Table table, Index index) throws IOException
     {
         // Index names in Oracle are unique to a schema and hence Oracle does not
         // use the ON <tablename> clause
@@ -314,7 +322,8 @@ public class Oracle8Builder extends SqlBuilder
 	/**
      * {@inheritDoc}
      */
-    protected String getDefaultValue(Object defaultValue, int typeCode) throws IOException
+    @Override
+	protected String getDefaultValue(Object defaultValue, int typeCode) throws IOException
     {
         if (defaultValue == null) {
             return null;
@@ -341,7 +350,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getNativeDefaultValue(ValueObject column)
+    @Override
+	protected String getNativeDefaultValue(ValueObject column)
     {
         if ((column.getTypeCode() == Types.BIT) ||
             (Jdbc3Utils.supportsJava14JdbcTypes() && (column.getTypeCode() == Jdbc3Utils.determineBooleanTypeCode())))
@@ -378,7 +388,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
+    @Override
+	protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
     {
         // we're using sequences instead
     }
@@ -386,7 +397,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public String getSelectLastIdentityValues(Table table)
+    @Override
+	public String getSelectLastIdentityValues(Table table)
     {
         Column[] columns = table.getAutoIncrementColumns();
 
@@ -414,7 +426,8 @@ public class Oracle8Builder extends SqlBuilder
     }
 
 
-    public boolean willBeRecreated(Table table, Vector<TableChange> changes)
+    @Override
+	public boolean willBeRecreated(Table table, Vector<TableChange> changes)
     {
       boolean recreated=false;
       for(int i=0;i<changes.size();i++)
@@ -447,7 +460,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void processTableStructureChanges(Database currentModel,
+    @Override
+	protected void processTableStructureChanges(Database currentModel,
                                                 Database desiredModel,
                                                 Table    sourceTable,
                                                 Table    targetTable,
@@ -613,7 +627,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void writeExternalUniqueDropStmt(Table table, Unique unique) throws IOException
+    @Override
+	public void writeExternalUniqueDropStmt(Table table, Unique unique) throws IOException
     {
         print("ALTER TABLE ");
         printIdentifier(getStructureObjectName(table));
@@ -625,14 +640,16 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeForeignKeyOnUpdateOption(ForeignKey key) throws IOException {
+    @Override
+	protected void writeForeignKeyOnUpdateOption(ForeignKey key) throws IOException {
         // Not supported by Oracle
     }
     
     /**
      * {@inheritDoc}
      */     
-    protected void writeForeignKeyOnDeleteOption(ForeignKey key) throws IOException {
+    @Override
+	protected void writeForeignKeyOnDeleteOption(ForeignKey key) throws IOException {
         
         if (key.getOnDeleteCode() == DatabaseMetaData.importedKeyCascade) {
             print(" ON DELETE CASCADE");
@@ -644,11 +661,13 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getFunctionEndBody() {
+    @Override
+	protected String getFunctionEndBody() {
         return ";";
     }
     
-    protected void writeCreateViewStatement(View view) throws IOException {  
+    @Override
+	protected void writeCreateViewStatement(View view) throws IOException {  
         
         print("CREATE OR REPLACE FORCE VIEW ");
         printIdentifier(getStructureObjectName(view));
@@ -659,7 +678,8 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
+    @Override
+	protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
         switch (typeCode) {
             case Types.TINYINT:
             case Types.SMALLINT:
@@ -684,4 +704,16 @@ public class Oracle8Builder extends SqlBuilder
                 return neutralFunction;
         }
     }    
+    
+
+    @Override
+	public void printColumnSizeChange(Database database, ColumnSizeChange change) throws IOException
+    {
+    	Table table=database.findTable(change.getTablename());
+    	Column column=table.findColumn(change.getColumnname());
+    	column.setSize(Integer.toString(change.getNewSize()));
+    	print("ALTER TABLE "+table.getName()+" MODIFY ");
+    	writeColumn(table, column);
+    	printEndOfStatement();
+    }
 }

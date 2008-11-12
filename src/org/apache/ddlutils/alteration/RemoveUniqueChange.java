@@ -20,8 +20,8 @@ package org.apache.ddlutils.alteration;
  */
 
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Unique;
 
 /**
  * Represents the removal of an unique from a table.
@@ -64,5 +64,11 @@ public class RemoveUniqueChange extends TableChangeImplBase
         Unique unique = table.findUnique(_unique.getName(), caseSensitive);
 
         table.removeUnique(unique);
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveUniqueChange. Name: "+_unique.getName();
     }
 }

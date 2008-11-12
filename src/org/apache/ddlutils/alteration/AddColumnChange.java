@@ -137,4 +137,10 @@ public class AddColumnChange extends TableChangeImplBase
             table.addColumn(newColumn);
         }
     }
+    
+    @Override
+	public String toString()
+    {
+    	return "AddColumnChange. Name: "+_newColumn.getName();
+    }
 }

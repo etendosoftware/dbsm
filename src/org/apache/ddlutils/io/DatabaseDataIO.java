@@ -33,7 +33,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.ddlutils.DdlUtilsException;
@@ -41,915 +40,970 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+import org.openbravo.model.ad.utility.DataSetTable;
+import org.openbravo.service.db.DataSetService;
 
 /**
  * Provides basic live database data <-> XML functionality.
  * 
  * @version $Revision: $
  */
-public class DatabaseDataIO
-{
-    /** The converters to use for converting between data and its XML representation. */
-    private ArrayList _converters = new ArrayList();
-    /** Whether we should continue when an error was detected. */
-    private boolean _failOnError = true;
-    /** Whether foreign key order shall be followed when inserting data into the database. */
-    private boolean _ensureFKOrder = true;
-    /** Whether we should use batch mode. */
-    private boolean _useBatchMode;
-    /** The maximum number of objects to insert in one batch. */
-    private Integer _batchSize;
+public class DatabaseDataIO {
+	/**
+	 * The converters to use for converting between data and its XML
+	 * representation.
+	 */
+	private ArrayList _converters = new ArrayList();
+	/** Whether we should continue when an error was detected. */
+	private boolean _failOnError = true;
+	/**
+	 * Whether foreign key order shall be followed when inserting data into the
+	 * database.
+	 */
+	private boolean _ensureFKOrder = true;
+	/** Whether we should use batch mode. */
+	private boolean _useBatchMode;
+	/** The maximum number of objects to insert in one batch. */
+	private Integer _batchSize;
 
-    /** Whether DdlUtils should search for the schema of the tables. @deprecated */
-    private boolean _determineSchema;
-    /** The schema pattern for finding tables when reading data from a live database. @deprecated */
-    private String _schemaPattern;
-    
-    private DatabaseFilter _databasefilter = null;
-    
-    /**
-     * Registers a converter.
-     * 
-     * @param converterRegistration The registration info
-     */
-    public void registerConverter(DataConverterRegistration converterRegistration)
-    {
-        _converters.add(converterRegistration);
-    }
+	/** Whether DdlUtils should search for the schema of the tables. @deprecated */
+	private boolean _determineSchema;
+	/**
+	 * The schema pattern for finding tables when reading data from a live
+	 * database. @deprecated
+	 */
+	private String _schemaPattern;
 
-    /**
-     * Determines whether data io is stopped when an error happens.
-     *  
-     * @return Whether io is stopped when an error was detected (true by default)
-     */
-    public boolean isFailOnError()
-    {
-        return _failOnError;
-    }
+	private DatabaseFilter _databasefilter = null;
 
-    /**
-     * Specifies whether data io shall be stopped when an error happens.
-     *  
-     * @param failOnError Whether io should stop when an error was detected
-     */
-    public void setFailOnError(boolean failOnError)
-    {
-        _failOnError = failOnError;
-    }
+	/**
+	 * Registers a converter.
+	 * 
+	 * @param converterRegistration
+	 *            The registration info
+	 */
+	public void registerConverter(
+			DataConverterRegistration converterRegistration) {
+		_converters.add(converterRegistration);
+	}
 
-    /**
-     * Determines whether batch mode is used for inserting data into the database.
-     * 
-     * @return <code>true</code> if batch mode is used
-     */
-    public boolean getUseBatchMode()
-    {
-        return _useBatchMode;
-    }
+	/**
+	 * Determines whether data io is stopped when an error happens.
+	 * 
+	 * @return Whether io is stopped when an error was detected (true by
+	 *         default)
+	 */
+	public boolean isFailOnError() {
+		return _failOnError;
+	}
 
-    /**
-     * Specifies whether batch mode should be used for inserting data into the database.
-     * 
-     * @param useBatchMode <code>true</code> if batch mode shall be used
-     */
-    public void setUseBatchMode(boolean useBatchMode)
-    {
-        _useBatchMode = useBatchMode;
-    }
+	/**
+	 * Specifies whether data io shall be stopped when an error happens.
+	 * 
+	 * @param failOnError
+	 *            Whether io should stop when an error was detected
+	 */
+	public void setFailOnError(boolean failOnError) {
+		_failOnError = failOnError;
+	}
 
-    /**
-     * Returns the batch size override.
-     * 
-     * @return The batch size if different from the default, <code>null</code> otherwise
-     */
-    public Integer getBatchSize()
-    {
-        return _batchSize;
-    }
+	/**
+	 * Determines whether batch mode is used for inserting data into the
+	 * database.
+	 * 
+	 * @return <code>true</code> if batch mode is used
+	 */
+	public boolean getUseBatchMode() {
+		return _useBatchMode;
+	}
 
-    /**
-     * Sets the batch size to be used by this object.
-     * 
-     * @param batchSize The batch size if different from the default, or <code>null</code> if
-     *                  the default shall be used
-     */
-    public void setBatchSize(Integer batchSize)
-    {
-        _batchSize = batchSize;
-    }
+	/**
+	 * Specifies whether batch mode should be used for inserting data into the
+	 * database.
+	 * 
+	 * @param useBatchMode
+	 *            <code>true</code> if batch mode shall be used
+	 */
+	public void setUseBatchMode(boolean useBatchMode) {
+		_useBatchMode = useBatchMode;
+	}
 
-    /**
-     * Determines whether the sink delays the insertion of beans so that the beans referenced by it
-     * via foreignkeys are already inserted into the database.
-     *
-     * @return <code>true</code> if beans are inserted after its foreignkey-references
-     */
-    public boolean isEnsureFKOrder()
-    {
-        return _ensureFKOrder;
-    }
+	/**
+	 * Returns the batch size override.
+	 * 
+	 * @return The batch size if different from the default, <code>null</code>
+	 *         otherwise
+	 */
+	public Integer getBatchSize() {
+		return _batchSize;
+	}
 
-    /**
-     * Specifies whether the sink shall delay the insertion of beans so that the beans referenced by it
-     * via foreignkeys are already inserted into the database.<br/>
-     * Note that you should careful with setting <code>haltOnErrors</code> to false as this might
-     * result in beans not inserted at all. The sink will then throw an appropriate exception at the end
-     * of the insertion process (method {@link DataSink#end()}).
-     *
-     * @param ensureFKOrder <code>true</code> if beans shall be inserted after its foreignkey-references
-     */
-    public void setEnsureFKOrder(boolean ensureFKOrder)
-    {
-        _ensureFKOrder = ensureFKOrder;
-    }
-    
-    public DatabaseFilter getDatabaseFilter() {
-        return _databasefilter;
-    }
-    
-    public void setDatabaseFilter(DatabaseFilter value) {
-        _databasefilter = value;
-    }
+	/**
+	 * Sets the batch size to be used by this object.
+	 * 
+	 * @param batchSize
+	 *            The batch size if different from the default, or
+	 *            <code>null</code> if the default shall be used
+	 */
+	public void setBatchSize(Integer batchSize) {
+		_batchSize = batchSize;
+	}
 
-    /**
-     * Specifies whether DdlUtils should try to find the schema of the tables when reading data
-     * from a live database.
-     * 
-     * @param determineSchema Whether to try to find the table's schemas
-     */
-    public void setDetermineSchema(boolean determineSchema)
-    {
-        _determineSchema = determineSchema;
-    }
+	/**
+	 * Determines whether the sink delays the insertion of beans so that the
+	 * beans referenced by it via foreignkeys are already inserted into the
+	 * database.
+	 * 
+	 * @return <code>true</code> if beans are inserted after its
+	 *         foreignkey-references
+	 */
+	public boolean isEnsureFKOrder() {
+		return _ensureFKOrder;
+	}
 
-    /**
-     * Sets the schema pattern to find the schemas of tables when reading data from a live database.
-     * 
-     * @param schemaPattern The schema pattern
-     */
-    public void setSchemaPattern(String schemaPattern)
-    {
-        _schemaPattern = schemaPattern;
-    }
+	/**
+	 * Specifies whether the sink shall delay the insertion of beans so that the
+	 * beans referenced by it via foreignkeys are already inserted into the
+	 * database.<br/> Note that you should careful with setting
+	 * <code>haltOnErrors</code> to false as this might result in beans not
+	 * inserted at all. The sink will then throw an appropriate exception at the
+	 * end of the insertion process (method {@link DataSink#end()}).
+	 * 
+	 * @param ensureFKOrder
+	 *            <code>true</code> if beans shall be inserted after its
+	 *            foreignkey-references
+	 */
+	public void setEnsureFKOrder(boolean ensureFKOrder) {
+		_ensureFKOrder = ensureFKOrder;
+	}
 
-    /**
-     * Registers the converters at the given configuration.
-     * 
-     * @param converterConf The converter configuration
-     */
-    private void registerConverters(ConverterConfiguration converterConf) throws DdlUtilsException
-    {
-        for (Iterator it = _converters.iterator(); it.hasNext();)
-        {
-            DataConverterRegistration registrationInfo = (DataConverterRegistration)it.next();
+	public DatabaseFilter getDatabaseFilter() {
+		return _databasefilter;
+	}
 
-            if (registrationInfo.getTypeCode() != Integer.MIN_VALUE)
-            {
-                converterConf.registerConverter(registrationInfo.getTypeCode(),
-                                                registrationInfo.getConverter());
-            }
-            else
-            {
-                if ((registrationInfo.getTable() == null) || (registrationInfo.getColumn() == null)) 
-                {
-                    throw new DdlUtilsException("Please specify either the jdbc type or a table/column pair for which the converter shall be defined");
-                }
-                converterConf.registerConverter(registrationInfo.getTable(),
-                                                registrationInfo.getColumn(),
-                                                registrationInfo.getConverter());
-            }
-        }
-    }
+	public void setDatabaseFilter(DatabaseFilter value) {
+		_databasefilter = value;
+	}
 
-    /**
-     * Returns a data writer instance configured to write to the indicated file
-     * in the specified encoding.
-     * 
-     * @param path        The path to the output XML data file
-     * @param xmlEncoding The encoding to use for writing the XML
-     * @return The writer
-     */
-    public DataWriter getConfiguredDataWriter(String path, String xmlEncoding) throws DdlUtilsException
-    {
-        try
-        {
-            DataWriter writer = new DataWriter(new FileOutputStream(path), xmlEncoding);
-            
-            registerConverters(writer.getConverterConfiguration());
-            return writer;
-        }
-        catch (IOException ex)
-        {
-            throw new DdlUtilsException(ex);
-        }
-    }
+	/**
+	 * Specifies whether DdlUtils should try to find the schema of the tables
+	 * when reading data from a live database.
+	 * 
+	 * @param determineSchema
+	 *            Whether to try to find the table's schemas
+	 */
+	public void setDetermineSchema(boolean determineSchema) {
+		_determineSchema = determineSchema;
+	}
 
-    /**
-     * Returns a data writer instance configured to write to the given output stream
-     * in the specified encoding.
-     * 
-     * @param output      The output stream
-     * @param xmlEncoding The encoding to use for writing the XML
-     * @return The writer
-     */
-    public DataWriter getConfiguredDataWriter(OutputStream output, String xmlEncoding) throws DdlUtilsException
-    {
-        DataWriter writer = new DataWriter(output, xmlEncoding);
-        
-        registerConverters(writer.getConverterConfiguration());
-        return writer;
-    }
+	/**
+	 * Sets the schema pattern to find the schemas of tables when reading data
+	 * from a live database.
+	 * 
+	 * @param schemaPattern
+	 *            The schema pattern
+	 */
+	public void setSchemaPattern(String schemaPattern) {
+		_schemaPattern = schemaPattern;
+	}
 
-    /**
-     * Returns a data writer instance configured to write to the given output writer
-     * in the specified encoding.
-     * 
-     * @param output      The output writer; needs to be configured with the specified encoding
-     * @param xmlEncoding The encoding to use for writing the XML
-     * @return The writer
-     */
-    public DataWriter getConfiguredDataWriter(Writer output, String xmlEncoding) throws DdlUtilsException
-    {
-        DataWriter writer = new DataWriter(output, xmlEncoding);
-        
-        registerConverters(writer.getConverterConfiguration());
-        return writer;
-    }
+	/**
+	 * Registers the converters at the given configuration.
+	 * 
+	 * @param converterConf
+	 *            The converter configuration
+	 */
+	private void registerConverters(ConverterConfiguration converterConf)
+			throws DdlUtilsException {
+		for (Iterator it = _converters.iterator(); it.hasNext();) {
+			DataConverterRegistration registrationInfo = (DataConverterRegistration) it
+					.next();
 
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given output stream (which won't be closed by this method).
-     *  
-     * @param platform    The platform; needs to be connected to a live database
-     * @param path        The path of the output file
-     * @param xmlEncoding The encoding to use for the XML
-     */
-    public void writeDataToXML(Platform platform, String path, String xmlEncoding) throws DdlUtilsException
-    {
-        writeDataToXML(platform, getConfiguredDataWriter(path, xmlEncoding));
-    }
+			if (registrationInfo.getTypeCode() != Integer.MIN_VALUE) {
+				converterConf.registerConverter(registrationInfo.getTypeCode(),
+						registrationInfo.getConverter());
+			} else {
+				if ((registrationInfo.getTable() == null)
+						|| (registrationInfo.getColumn() == null)) {
+					throw new DdlUtilsException(
+							"Please specify either the jdbc type or a table/column pair for which the converter shall be defined");
+				}
+				converterConf.registerConverter(registrationInfo.getTable(),
+						registrationInfo.getColumn(), registrationInfo
+								.getConverter());
+			}
+		}
+	}
 
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given output stream (which won't be closed by this method).
-     *  
-     * @param platform    The platform; needs to be connected to a live database
-     * @param model       The model for which to retrieve and write the data
-     * @param path        The path of the output file
-     * @param xmlEncoding The encoding to use for the XML
-     */
-    public void writeDataToXML(Platform platform, Database model, String path, String xmlEncoding)
-    {
-        writeDataToXML(platform, model, getConfiguredDataWriter(path, xmlEncoding));
-    }
+	/**
+	 * Returns a data writer instance configured to write to the indicated file
+	 * in the specified encoding.
+	 * 
+	 * @param path
+	 *            The path to the output XML data file
+	 * @param xmlEncoding
+	 *            The encoding to use for writing the XML
+	 * @return The writer
+	 */
+	public DataWriter getConfiguredDataWriter(String path, String xmlEncoding)
+			throws DdlUtilsException {
+		try {
+			DataWriter writer = new DataWriter(new FileOutputStream(path),
+					xmlEncoding);
 
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given output stream (which won't be closed by this method).
-     *  
-     * @param platform    The platform; needs to be connected to a live database
-     * @param output      The output stream
-     * @param xmlEncoding The encoding to use for the XML
-     */
-    public void writeDataToXML(Platform platform, OutputStream output, String xmlEncoding)
-    {
-        writeDataToXML(platform, getConfiguredDataWriter(output, xmlEncoding));
-    }
-    
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given output stream (which won't be closed by this method).
-     *  
-     * @param platform    The platform; needs to be connected to a live database
-     * @param model       The model for which to retrieve and write the data
-     * @param output      The output stream
-     * @param xmlEncoding The encoding to use for the XML
-     */
-    public void writeDataToXML(Platform platform, Database model, OutputStream output, String xmlEncoding)
-    {
-        writeDataToXML(platform, model, getConfiguredDataWriter(output, xmlEncoding));
-    }
-    
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given output writer (which won't be closed by this method).
-     *  
-     * @param platform    The platform; needs to be connected to a live database
-     * @param output      The output writer (which needs to be openend with the specified encoding)
-     * @param xmlEncoding The encoding to use for the XML
-     */
-    public void writeDataToXML(Platform platform, Writer output, String xmlEncoding)
-    {
-        writeDataToXML(platform, getConfiguredDataWriter(output, xmlEncoding));
-    }
+			registerConverters(writer.getConverterConfiguration());
+			return writer;
+		} catch (IOException ex) {
+			throw new DdlUtilsException(ex);
+		}
+	}
 
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given output writer (which won't be closed by this method).
-     *  
-     * @param platform    The platform; needs to be connected to a live database
-     * @param model       The model for which to retrieve and write the data
-     * @param output      The output writer (which needs to be openend with the specified encoding)
-     * @param xmlEncoding The encoding to use for the XML
-     */
-    public void writeDataToXML(Platform platform, Database model, Writer output, String xmlEncoding)
-    {
-        writeDataToXML(platform, model, getConfiguredDataWriter(output, xmlEncoding));
-    }
+	/**
+	 * Returns a data writer instance configured to write to the given output
+	 * stream in the specified encoding.
+	 * 
+	 * @param output
+	 *            The output stream
+	 * @param xmlEncoding
+	 *            The encoding to use for writing the XML
+	 * @return The writer
+	 */
+	public DataWriter getConfiguredDataWriter(OutputStream output,
+			String xmlEncoding) throws DdlUtilsException {
+		DataWriter writer = new DataWriter(output, xmlEncoding);
 
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given data writer.
-     *  
-     * @param platform The platform; needs to be connected to a live database
-     * @param writer   The data writer
-     */
-    public void writeDataToXML(Platform platform, DataWriter writer)
-    {
-        writeDataToXML(platform, platform.readModelFromDatabase("unnamed"), writer);
-    }   
-    
-    /**
-     * Writes the data contained in the database to which the given platform is connected, as XML
-     * to the given data writer.
-     *  
-     * @param platform The platform; needs to be connected to a live database
-     * @param model    The model for which to retrieve and write the data
-     * @param writer   The data writer
-     */
-    public void writeDataToXML(Platform platform, Database model, DataWriter writer)
-    {
-                
-        registerConverters(writer.getConverterConfiguration());
+		registerConverters(writer.getConverterConfiguration());
+		return writer;
+	}
 
-        writer.writeDocumentStart();
-        
-        String[] tablenames = _databasefilter.getTableNames();
-        for (int i = 0; i < tablenames.length; i++) {
-            Table t = model.findTable(tablenames[i]);
-            if (t != null) {
-                writeDataForTableToXML(platform, model, t, writer, _databasefilter.getTableFilter(t.getName()));
-            }
-        }
-        writer.writeDocumentEnd();
-    }
+	/**
+	 * Returns a data writer instance configured to write to the given output
+	 * writer in the specified encoding.
+	 * 
+	 * @param output
+	 *            The output writer; needs to be configured with the specified
+	 *            encoding
+	 * @param xmlEncoding
+	 *            The encoding to use for writing the XML
+	 * @return The writer
+	 */
+	public DataWriter getConfiguredDataWriter(Writer output, String xmlEncoding)
+			throws DdlUtilsException {
+		DataWriter writer = new DataWriter(output, xmlEncoding);
 
-    /**
-     * Sorts the given table according to their foreign key order.
-     * 
-     * @param tables The tables
-     * @return The sorted tables
-     */
-    private List sortTables(Table[] tables)
-    {
-        ArrayList      result    = new ArrayList();
-        HashSet        processed = new HashSet();
-        ListOrderedMap pending   = new ListOrderedMap();
+		registerConverters(writer.getConverterConfiguration());
+		return writer;
+	}
 
-        for (int idx = 0; idx < tables.length; idx++)
-        {
-            Table table = tables[idx];
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given output stream (which won't be closed by
+	 * this method).
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param path
+	 *            The path of the output file
+	 * @param xmlEncoding
+	 *            The encoding to use for the XML
+	 */
+	public void writeDataToXML(Platform platform, String path,
+			String xmlEncoding) throws DdlUtilsException {
+		writeDataToXML(platform, getConfiguredDataWriter(path, xmlEncoding));
+	}
 
-            if (table.getForeignKeyCount() == 0)
-            {
-                result.add(table);
-                processed.add(table);
-            }
-            else
-            {
-                HashSet waitedFor = new HashSet();
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given output stream (which won't be closed by
+	 * this method).
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param model
+	 *            The model for which to retrieve and write the data
+	 * @param path
+	 *            The path of the output file
+	 * @param xmlEncoding
+	 *            The encoding to use for the XML
+	 */
+	public void writeDataToXML(Platform platform, Database model, String path,
+			String xmlEncoding) {
+		writeDataToXML(platform, model, getConfiguredDataWriter(path,
+				xmlEncoding));
+	}
 
-                for (int fkIdx = 0; fkIdx < table.getForeignKeyCount(); fkIdx++)
-                {
-                    Table waitedForTable = table.getForeignKey(fkIdx).getForeignTable();
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given output stream (which won't be closed by
+	 * this method).
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param output
+	 *            The output stream
+	 * @param xmlEncoding
+	 *            The encoding to use for the XML
+	 */
+	public void writeDataToXML(Platform platform, OutputStream output,
+			String xmlEncoding) {
+		writeDataToXML(platform, getConfiguredDataWriter(output, xmlEncoding));
+	}
 
-                    if (!table.equals(waitedForTable))
-                    {
-                        waitedFor.add(waitedForTable);
-                    }
-                }
-                pending.put(table, waitedFor);
-            }
-        }
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given output stream (which won't be closed by
+	 * this method).
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param model
+	 *            The model for which to retrieve and write the data
+	 * @param output
+	 *            The output stream
+	 * @param xmlEncoding
+	 *            The encoding to use for the XML
+	 */
+	public void writeDataToXML(Platform platform, Database model,
+			OutputStream output, String xmlEncoding) {
+		writeDataToXML(platform, model, getConfiguredDataWriter(output,
+				xmlEncoding));
+	}
 
-        HashSet newProcessed = new HashSet();
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given output writer (which won't be closed by
+	 * this method).
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param output
+	 *            The output writer (which needs to be openend with the
+	 *            specified encoding)
+	 * @param xmlEncoding
+	 *            The encoding to use for the XML
+	 */
+	public void writeDataToXML(Platform platform, Writer output,
+			String xmlEncoding) {
+		writeDataToXML(platform, getConfiguredDataWriter(output, xmlEncoding));
+	}
 
-        while (!processed.isEmpty() && !pending.isEmpty())
-        {
-            newProcessed.clear();
-            for (Iterator it = pending.entrySet().iterator(); it.hasNext();)
-            {
-                Map.Entry entry     = (Map.Entry)it.next();
-                Table     table     = (Table)entry.getKey();
-                HashSet   waitedFor = (HashSet)entry.getValue();
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given output writer (which won't be closed by
+	 * this method).
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param model
+	 *            The model for which to retrieve and write the data
+	 * @param output
+	 *            The output writer (which needs to be openend with the
+	 *            specified encoding)
+	 * @param xmlEncoding
+	 *            The encoding to use for the XML
+	 */
+	public void writeDataToXML(Platform platform, Database model,
+			Writer output, String xmlEncoding) {
+		writeDataToXML(platform, model, getConfiguredDataWriter(output,
+				xmlEncoding));
+	}
 
-                waitedFor.removeAll(processed);
-                if (waitedFor.isEmpty())
-                {
-                    it.remove();
-                    result.add(table);
-                    newProcessed.add(table);
-                }
-            }
-            processed.clear();
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given data writer.
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param writer
+	 *            The data writer
+	 */
+	public void writeDataToXML(Platform platform, DataWriter writer) {
+		writeDataToXML(platform, platform.readModelFromDatabase("unnamed"),
+				writer);
+	}
 
-            HashSet tmp = processed;
+	/**
+	 * Writes the data contained in the database to which the given platform is
+	 * connected, as XML to the given data writer.
+	 * 
+	 * @param platform
+	 *            The platform; needs to be connected to a live database
+	 * @param model
+	 *            The model for which to retrieve and write the data
+	 * @param writer
+	 *            The data writer
+	 */
+	public void writeDataToXML(Platform platform, Database model,
+			DataWriter writer) {
 
-            processed    = newProcessed;
-            newProcessed = tmp;
-        }
-        // the remaining are within circular dependencies
-        for (Iterator it = pending.keySet().iterator(); it.hasNext();)
-        {
-            result.add(it.next());
-        }
-        return result;
-    }
-    
-    /**
-     * Writes the data contained in a single table to XML.
-     * 
-     * @param platform The platform
-     * @param model    The database model
-     * @param table    The table 
-     * @param writer   The data writer
-     * @param filter   The table SQL filter, if null, no data will be written.
-     */
-    private void writeDataForTableToXML(Platform platform, Database model, Table table, DataWriter writer, String filter)
-    {
-        if (filter != null) {
-            Table[]      tables = { table };
-            StringBuffer query  = new StringBuffer();
-            String alternativeQuery="";
-            
-            query.append("SELECT ");
+		registerConverters(writer.getConverterConfiguration());
 
-            Connection connection = null;
-            String     schema     = null;
+		writer.writeDocumentStart();
 
-            if (_determineSchema)
-            {
-                try
-                {
-                    // TODO: Remove this once we have full support for schemas
-                    connection = platform.borrowConnection();
-                    schema     = platform.getModelReader().determineSchemaOf(connection, _schemaPattern, tables[0]);
-                }
-                catch (SQLException ex)
-                {
-                    // ignored
-                }
-                finally
-                {
-                    if (connection != null)
-                    {
-                        try
-                        {
-                            connection.close();
-                        }
-                        catch (SQLException ex)
-                        {
-                            // ignored
-                        }
-                    }
-                }
-            }
+		String[] tablenames = _databasefilter.getTableNames();
+		for (int i = 0; i < tablenames.length; i++) {
+			Table t = model.findTable(tablenames[i]);
+			if (t != null) {
+				writeDataForTableToXML(platform, model, t, writer,
+						_databasefilter.getTableFilter(t.getName()));
+			}
+		}
+		writer.writeDocumentEnd();
+	}
 
-            Column[] columns = tables[0].getColumns();
+	/**
+	 * Sorts the given table according to their foreign key order.
+	 * 
+	 * @param tables
+	 *            The tables
+	 * @return The sorted tables
+	 */
+	private List sortTables(Table[] tables) {
+		ArrayList result = new ArrayList();
+		HashSet processed = new HashSet();
+		ListOrderedMap pending = new ListOrderedMap();
 
-            for (int columnIdx = 0; columnIdx < columns.length; columnIdx++)
-            {
-                if (columnIdx > 0)
-                {
-                    query.append(",");
-                }
-                if (platform.isDelimitedIdentifierModeOn())
-                {
-                    query.append(platform.getPlatformInfo().getDelimiterToken());
-                }
-                query.append(columns[columnIdx].getName());
-                if (platform.isDelimitedIdentifierModeOn())
-                {
-                    query.append(platform.getPlatformInfo().getDelimiterToken());
-                }
-            }
-            
-            boolean ordF=false;
-            Column[] pkcolumns = tables[0].getPrimaryKeyColumns();
-            int i=0;
-            while(i<pkcolumns.length && !pkcolumns[i].isOfNumericType())
-            	i++;
-            String numPKColumn=null;
-            if(i<pkcolumns.length && pkcolumns[i].isOfNumericType())
-            {
-            	numPKColumn=pkcolumns[i].getName();
-            	ordF=true;
-            }
+		for (int idx = 0; idx < tables.length; idx++) {
+			Table table = tables[idx];
 
-            query.append(" FROM ");
-            if (platform.isDelimitedIdentifierModeOn())
-            {
-                query.append(platform.getPlatformInfo().getDelimiterToken());
-            }
-            if (schema != null)
-            {
-                query.append(schema);
-                query.append(".");
-            }
-            query.append(tables[0].getName());
-            if (platform.isDelimitedIdentifierModeOn())
-            {
-                query.append(platform.getPlatformInfo().getDelimiterToken());
-            }
-            
-            // adds the filter
-            if (!"".equals(filter)) {
-                query.append(" WHERE ");
-                query.append(filter);
-            }
-            
-            String sqlRanges="";
-            Iterator ranges=null;
-            ordF=false;   //we will no longer order by id_development_range, as
-                          //the uuids make this unnecessary
-            if(ordF)
-            {
-            	sqlRanges="SELECT ID_DEVELOPMENT_RANGE("+numPKColumn+") AS idv FROM ";
-            	if(schema!=null)
-            		sqlRanges+=schema+".";
-            	sqlRanges+=tables[0].getName();
-                if (!"".equals(filter)) {
-                	sqlRanges+=" WHERE "+filter;
-                }
-                sqlRanges+=" ORDER BY idv";
-            	query.append(" ORDER BY ID_DEVELOPMENT_RANGE("+numPKColumn+")");
-            }
+			if (table.getForeignKeyCount() == 0) {
+				result.add(table);
+				processed.add(table);
+			} else {
+				HashSet waitedFor = new HashSet();
 
-            // Order by PK
-            if (pkcolumns.length > 0) {
-                if(!ordF)
-                	query.append(" ORDER BY ");
+				for (int fkIdx = 0; fkIdx < table.getForeignKeyCount(); fkIdx++) {
+					Table waitedForTable = table.getForeignKey(fkIdx)
+							.getForeignTable();
 
-                alternativeQuery=query.toString();
-                for (int columnIdx = 0; columnIdx < pkcolumns.length; columnIdx++) {
-                	if(ordF || columnIdx>0)
-                	{
-                		query.append(",");
-                		alternativeQuery+=",";
-                		sqlRanges+=",";
-                	}
-                	query.append("HEX_TO_INT(");
-                    if (platform.isDelimitedIdentifierModeOn()) {
-                        query.append(platform.getPlatformInfo().getDelimiterToken());
-                        alternativeQuery+=platform.getPlatformInfo().getDelimiterToken();
-                    }
-                    query.append(pkcolumns[columnIdx].getName());
-                    alternativeQuery+=pkcolumns[columnIdx].getName();
-                	sqlRanges+=pkcolumns[columnIdx].getName();
-                    if (platform.isDelimitedIdentifierModeOn()) {
-                        query.append(platform.getPlatformInfo().getDelimiterToken());
-                    }
-                  query.append(")");
-                }
-            }
+					if (!table.equals(waitedForTable)) {
+						waitedFor.add(waitedForTable);
+					}
+				}
+				pending.put(table, waitedFor);
+			}
+		}
 
-        	Vector rangesV=null;
-        	if(ordF)
-            {
-            	ranges=platform.query(model, sqlRanges, tables);
-	        	rangesV=new Vector();
-	        	while(ranges.hasNext())
-	        		rangesV.add(ranges.next());
-	        	
-            }
-        	Iterator it=platform.query(model, query.toString(), tables);
-        	if(it==null)
-        	{
-          	System.out.println("Exception while trying to read data from table "+table.getName()+". We'll try alternative query.");
-          	it=platform.query(model, alternativeQuery, tables);
-        	}
-            writer.write(it, rangesV);
-        }
-    }
+		HashSet newProcessed = new HashSet();
 
-    /**
-     * Returns a data reader instance configured for the given platform (which needs to
-     * be connected to a live database) and model.
-     * 
-     * @param platform The database
-     * @param model    The model
-     * @return The data reader
-     */
-    public DataReader getConfiguredDataReader(Platform platform, Database model) throws DdlUtilsException
-    {
-        DataToDatabaseSink sink     = new DataToDatabaseSink(platform, model);
-        DataReader         reader   = new DataReader();
+		while (!processed.isEmpty() && !pending.isEmpty()) {
+			newProcessed.clear();
+			for (Iterator it = pending.entrySet().iterator(); it.hasNext();) {
+				Map.Entry entry = (Map.Entry) it.next();
+				Table table = (Table) entry.getKey();
+				HashSet waitedFor = (HashSet) entry.getValue();
 
-        sink.setHaltOnErrors(_failOnError);
-        sink.setEnsureForeignKeyOrder(_ensureFKOrder);
-        sink.setUseBatchMode(_useBatchMode);
-        sink.setDatabaseFilter(_databasefilter);
-        if (_batchSize != null)
-        {
-            sink.setBatchSize(_batchSize.intValue());
-        }
-        
-        reader.setModel(model);
-        reader.setSink(sink);
-        registerConverters(reader.getConverterConfiguration());
-        return reader;
-    }
-    
-    public DataReader getConfiguredCompareDataReader(Database database)
-    {
-        DataReader         reader   = new DataReader();
-        reader.setSink(new DataToArraySink());
-        reader.setModel(database);
-    	return reader;
-    }
+				waitedFor.removeAll(processed);
+				if (waitedFor.isEmpty()) {
+					it.remove();
+					result.add(table);
+					newProcessed.add(table);
+				}
+			}
+			processed.clear();
 
-    /**
-     * Reads the data from the specified files and writes it to the database to which the given
-     * platform is connected.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param files    The XML data files
-     */
-    public void writeDataToDatabase(Platform platform, String[] files) throws DdlUtilsException
-    {
-        writeDataToDatabase(platform, platform.readModelFromDatabase("unnamed"), files); 
-    }
+			HashSet tmp = processed;
 
-    /**
-     * Reads the data from the given input streams and writes it to the database to which the given
-     * platform is connected.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param inputs   The input streams for the XML data
-     */
-    public void writeDataToDatabase(Platform platform, InputStream[] inputs) throws DdlUtilsException
-    {
-        writeDataToDatabase(platform, platform.readModelFromDatabase("unnamed"), inputs); 
-    }
+			processed = newProcessed;
+			newProcessed = tmp;
+		}
+		// the remaining are within circular dependencies
+		for (Iterator it = pending.keySet().iterator(); it.hasNext();) {
+			result.add(it.next());
+		}
+		return result;
+	}
 
-    /**
-     * Reads the data from the given input readers and writes it to the database to which the given
-     * platform is connected.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param inputs   The input readers for the XML data
-     */
-    public void writeDataToDatabase(Platform platform, Reader[] inputs) throws DdlUtilsException
-    {
-        writeDataToDatabase(platform, platform.readModelFromDatabase("unnamed"), inputs); 
-    }
+	public boolean writeDataForTableToXML(Database model,
+			DataSetService datasetService, String datasetName,
+			DataSetTable table, OutputStream output, String xmlEncoding,
+			String moduleID) {
+		DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
+		registerConverters(writer.getConverterConfiguration());
+		writer.writeDocumentStart();
+		boolean b = false;
+		b = writer.write(model, datasetService, table, moduleID);
+		writer.writeDocumentEnd();
+		return b;
+	}
 
-    /**
-     * Reads the data from the indicated files and writes it to the database to which the given
-     * platform is connected. Only data that matches the given model will be written.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param model    The model to which to constrain the written data
-     * @param files    The XML data files
-     */
-    public void writeDataToDatabase(Platform platform, Database model, String[] files) throws DdlUtilsException
-    {
-        DataReader dataReader = getConfiguredDataReader(platform, model); 
+	/**
+	 * Writes the data contained in a single table to XML.
+	 * 
+	 * @param platform
+	 *            The platform
+	 * @param model
+	 *            The database model
+	 * @param table
+	 *            The table
+	 * @param writer
+	 *            The data writer
+	 * @param filter
+	 *            The table SQL filter, if null, no data will be written.
+	 */
+	private void writeDataForTableToXML(Platform platform, Database model,
+			Table table, DataWriter writer, String filter) {
+		if (filter != null) {
+			Table[] tables = { table };
+			StringBuffer query = new StringBuffer();
+			String alternativeQuery = "";
 
-        dataReader.getSink().start();
-        for (int idx = 0; (files != null) && (idx < files.length); idx++)
-        {
-            writeDataToDatabase(dataReader, files[idx]);
-        }
-        dataReader.getSink().end();
-    }
+			query.append("SELECT ");
 
-    /**
-     * Reads the data from the given input streams and writes it to the database to which the given
-     * platform is connected. Only data that matches the given model will be written.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param model    The model to which to constrain the written data
-     * @param inputs   The input streams for the XML data
-     */
-    public void writeDataToDatabase(Platform platform, Database model, InputStream[] inputs) throws DdlUtilsException
-    {
-        DataReader dataReader = getConfiguredDataReader(platform, model); 
+			Connection connection = null;
+			String schema = null;
 
-        dataReader.getSink().start();
-        for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++)
-        {
-            writeDataToDatabase(dataReader, inputs[idx]);
-        }
-        dataReader.getSink().end();
-    }
+			if (_determineSchema) {
+				try {
+					// TODO: Remove this once we have full support for schemas
+					connection = platform.borrowConnection();
+					schema = platform.getModelReader().determineSchemaOf(
+							connection, _schemaPattern, tables[0]);
+				} catch (SQLException ex) {
+					// ignored
+				} finally {
+					if (connection != null) {
+						try {
+							connection.close();
+						} catch (SQLException ex) {
+							// ignored
+						}
+					}
+				}
+			}
 
-    /**
-     * Reads the data from the given input readers and writes it to the database to which the given
-     * platform is connected. Only data that matches the given model will be written.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param model    The model to which to constrain the written data
-     * @param inputs   The input readers for the XML data
-     */
-    public void writeDataToDatabase(Platform platform, Database model, Reader[] inputs) throws DdlUtilsException
-    {
-        DataReader dataReader = getConfiguredDataReader(platform, model); 
+			Column[] columns = tables[0].getColumns();
 
-        dataReader.getSink().start();
-        for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++)
-        {
-            writeDataToDatabase(dataReader, inputs[idx]);
-        }
-        dataReader.getSink().end();
-    }
+			for (int columnIdx = 0; columnIdx < columns.length; columnIdx++) {
+				if (columnIdx > 0) {
+					query.append(",");
+				}
+				if (platform.isDelimitedIdentifierModeOn()) {
+					query
+							.append(platform.getPlatformInfo()
+									.getDelimiterToken());
+				}
+				query.append(columns[columnIdx].getName());
+				if (platform.isDelimitedIdentifierModeOn()) {
+					query
+							.append(platform.getPlatformInfo()
+									.getDelimiterToken());
+				}
+			}
 
-    /**
-     * Reads the data from the given input readers and writes it to the database to which the given
-     * platform is connected. Only data that matches the given model will be written.
-     * 
-     * @param platform The platform, must be connected to a live database
-     * @param model    The model to which to constrain the written data
-     * @param inputs   The input readers for the XML data
-     */
-    public void writeDataToDatabase(Platform platform, Database model, File[] files) throws DdlUtilsException
-    {
-        DataReader dataReader = getConfiguredDataReader(platform, model); 
+			Column[] pkcolumns = tables[0].getPrimaryKeyColumns();
+			int i = 0;
+			while (i < pkcolumns.length && !pkcolumns[i].isOfNumericType())
+				i++;
+			String numPKColumn = null;
+			if (i < pkcolumns.length && pkcolumns[i].isOfNumericType()) {
+				numPKColumn = pkcolumns[i].getName();
+			}
 
-        ((DataToDatabaseSink)dataReader.getSink()).setDeleteInvalidRows(true);
-        dataReader.getSink().start();
-        
-        for (int idx = 0; (files != null) && (idx < files.length); idx++)
-        {
-        	try{
-        		writeDataToDatabase(dataReader, files[idx]);
-        	}catch(Exception e)
-        	{
-        		System.out.println("Error while inserting XML file "+files[idx].getAbsolutePath());
-        		e.printStackTrace();
-        	}
-        }
-        dataReader.getSink().end();
-    }
-    
-    public void writeDataToDatabaseDeleteRows(Platform platform, Database model, File[] files) throws DdlUtilsException
-    {
-        DataReader dataReader = getConfiguredDataReader(platform, model); 
+			query.append(" FROM ");
+			if (platform.isDelimitedIdentifierModeOn()) {
+				query.append(platform.getPlatformInfo().getDelimiterToken());
+			}
+			if (schema != null) {
+				query.append(schema);
+				query.append(".");
+			}
+			query.append(tables[0].getName());
+			if (platform.isDelimitedIdentifierModeOn()) {
+				query.append(platform.getPlatformInfo().getDelimiterToken());
+			}
 
-        dataReader.getSink().start();
-        for (int idx = 0; (files != null) && (idx < files.length); idx++)
-        {
-            writeDataToDatabase(dataReader, files[idx]);
-        }
-        dataReader.getSink().end();
-    }
-    
-    /**
-     * Reads the data from the specified files and writes it to the database via the given data reader.
-     * Note that the sink that the data reader is configured with, won't be started or ended by
-     * this method. This has to be done by the code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param files      The XML data files
-     */
-    public void writeDataToDatabase(DataReader dataReader, String[] files) throws DdlUtilsException
-    {
-        for (int idx = 0; (files != null) && (idx < files.length); idx++)
-        {
-            writeDataToDatabase(dataReader, files[idx]);
-        }
-    }
+			// adds the filter
+			if (!"".equals(filter)) {
+				query.append(" WHERE ");
+				query.append(filter);
+			}
 
-    /**
-     * Reads the data from the given input stream and writes it to the database via the given data reader.
-     * Note that the input stream won't be closed by this method. Note also that the sink that the data
-     * reader is configured with, won't be started or ended by this method. This has to be done by the
-     * code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param inputs     The input streams for the XML data
-     */
-    public void writeDataToDatabase(DataReader dataReader, InputStream[] inputs) throws DdlUtilsException
-    {
-        for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++)
-        {
-            writeDataToDatabase(dataReader, inputs[idx]);
-        }
-    }
+			// Order by PK
+			if (pkcolumns.length > 0) {
+				query.append(" ORDER BY ");
 
-    /**
-     * Reads the data from the given input stream and writes it to the database via the given data reader.
-     * Note that the input stream won't be closed by this method. Note also that the sink that the data
-     * reader is configured with, won't be started or ended by this method. This has to be done by the
-     * code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param inputs     The input readers for the XML data
-     */
-    public void writeDataToDatabase(DataReader dataReader, Reader[] inputs) throws DdlUtilsException
-    {
-        for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++)
-        {
-            writeDataToDatabase(dataReader, inputs[idx]);
-        }
-    }
+				alternativeQuery = query.toString();
+				for (int columnIdx = 0; columnIdx < pkcolumns.length; columnIdx++) {
+					if (columnIdx > 0) {
+						query.append(",");
+						alternativeQuery += ",";
+					}
+					query.append("HEX_TO_INT(");
+					if (platform.isDelimitedIdentifierModeOn()) {
+						query.append(platform.getPlatformInfo()
+								.getDelimiterToken());
+						alternativeQuery += platform.getPlatformInfo()
+								.getDelimiterToken();
+					}
+					query.append(pkcolumns[columnIdx].getName());
+					alternativeQuery += pkcolumns[columnIdx].getName();
+					if (platform.isDelimitedIdentifierModeOn()) {
+						query.append(platform.getPlatformInfo()
+								.getDelimiterToken());
+					}
+					query.append(")");
+				}
+			}
 
-    /**
-     * Reads the data from the given input stream and writes it to the database via the given data reader.
-     * Note that the input stream won't be closed by this method. Note also that the sink that the data
-     * reader is configured with, won't be started or ended by this method. This has to be done by the
-     * code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param files     The input readers for the XML data
-     */
-    public void writeDataToDatabase(DataReader dataReader, File[] files) throws DdlUtilsException
-    {
-        for (int idx = 0; (files != null) && (idx < files.length); idx++)
-        {
-            writeDataToDatabase(dataReader, files[idx]);
-        }
-    }
-    
-    /**
-     * Reads the data from the indicated XML file and writes it to the database via the given data reader.
-     * Note that the sink that the data reader is configured with, won't be started or ended by this method.
-     * This has to be done by the code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param path       The path to the XML data file
-     */
-    public void writeDataToDatabase(DataReader dataReader, String path) throws DdlUtilsException
-    {
-        try
-        {
-            dataReader.parse(path);
-        }
-        catch (Exception ex)
-        {
-            throw new DdlUtilsException(ex);
-        }
-    }
-    
-    /**
-     * Reads the data from the indicated XML file and writes it to the database via the given data reader.
-     * Note that the sink that the data reader is configured with, won't be started or ended by this method.
-     * This has to be done by the code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param path       The path to the XML data file
-     */
-    public void writeDataToDatabase(DataReader dataReader, File file) throws DdlUtilsException
-    {
-        try
-        {
-            dataReader.parse(file);
-        }
-        catch (Exception ex)
-        {
-            throw new DdlUtilsException(ex);
-        }
-    }
-    
-    /**
-     * Reads the data from the given input stream and writes it to the database via the given data reader.
-     * Note that the input stream won't be closed by this method. Note also that the sink that the data
-     * reader is configured with, won't be started or ended by this method. This has to be done by the
-     * code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param input      The input stream for the XML data
-     */
-    public void writeDataToDatabase(DataReader dataReader, InputStream input) throws DdlUtilsException
-    {
-        try
-        {
-            dataReader.parse(input);
-        }
-        catch (Exception ex)
-        {
-            throw new DdlUtilsException(ex);
-        }
-    }
+			Iterator it = platform.query(model, query.toString(), tables);
+			if (it == null) {
+				System.out
+						.println("Exception while trying to read data from table "
+								+ table.getName()
+								+ ". We'll try alternative query.");
+				it = platform.query(model, alternativeQuery, tables);
+			}
+			writer.write(it);
+		}
+	}
 
-    /**
-     * Reads the data from the given input stream and writes it to the database via the given data reader.
-     * Note that the input stream won't be closed by this method. Note also that the sink that the data
-     * reader is configured with, won't be started or ended by this method. This has to be done by the
-     * code using this method.
-     * 
-     * @param dataReader The data reader
-     * @param input      The input reader for the XML data
-     */
-    public void writeDataToDatabase(DataReader dataReader, Reader input) throws DdlUtilsException
-    {
-        try
-        {
-            dataReader.parse(input);
-        }
-        catch (Exception ex)
-        {
-            throw new DdlUtilsException(ex);
-        }
-    }
+	/**
+	 * Returns a data reader instance configured for the given platform (which
+	 * needs to be connected to a live database) and model.
+	 * 
+	 * @param platform
+	 *            The database
+	 * @param model
+	 *            The model
+	 * @return The data reader
+	 */
+	public DataReader getConfiguredDataReader(Platform platform, Database model)
+			throws DdlUtilsException {
+		DataToDatabaseSink sink = new DataToDatabaseSink(platform, model);
+		DataReader reader = new DataReader();
+
+		sink.setHaltOnErrors(_failOnError);
+		sink.setEnsureForeignKeyOrder(_ensureFKOrder);
+		sink.setUseBatchMode(_useBatchMode);
+		sink.setDatabaseFilter(_databasefilter);
+		if (_batchSize != null) {
+			sink.setBatchSize(_batchSize.intValue());
+		}
+
+		reader.setModel(model);
+		reader.setSink(sink);
+		registerConverters(reader.getConverterConfiguration());
+		return reader;
+	}
+
+	public DataReader getConfiguredCompareDataReader(Database database) {
+		DataReader reader = new DataReader();
+		reader.setSink(new DataToArraySink());
+		reader.setModel(database);
+		return reader;
+	}
+
+	/**
+	 * Reads the data from the specified files and writes it to the database to
+	 * which the given platform is connected.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param files
+	 *            The XML data files
+	 */
+	public void writeDataToDatabase(Platform platform, String[] files)
+			throws DdlUtilsException {
+		writeDataToDatabase(platform,
+				platform.readModelFromDatabase("unnamed"), files);
+	}
+
+	/**
+	 * Reads the data from the given input streams and writes it to the database
+	 * to which the given platform is connected.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param inputs
+	 *            The input streams for the XML data
+	 */
+	public void writeDataToDatabase(Platform platform, InputStream[] inputs)
+			throws DdlUtilsException {
+		writeDataToDatabase(platform,
+				platform.readModelFromDatabase("unnamed"), inputs);
+	}
+
+	/**
+	 * Reads the data from the given input readers and writes it to the database
+	 * to which the given platform is connected.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param inputs
+	 *            The input readers for the XML data
+	 */
+	public void writeDataToDatabase(Platform platform, Reader[] inputs)
+			throws DdlUtilsException {
+		writeDataToDatabase(platform,
+				platform.readModelFromDatabase("unnamed"), inputs);
+	}
+
+	/**
+	 * Reads the data from the indicated files and writes it to the database to
+	 * which the given platform is connected. Only data that matches the given
+	 * model will be written.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param model
+	 *            The model to which to constrain the written data
+	 * @param files
+	 *            The XML data files
+	 */
+	public void writeDataToDatabase(Platform platform, Database model,
+			String[] files) throws DdlUtilsException {
+		DataReader dataReader = getConfiguredDataReader(platform, model);
+
+		dataReader.getSink().start();
+		for (int idx = 0; (files != null) && (idx < files.length); idx++) {
+			writeDataToDatabase(dataReader, files[idx]);
+		}
+		dataReader.getSink().end();
+	}
+
+	/**
+	 * Reads the data from the given input streams and writes it to the database
+	 * to which the given platform is connected. Only data that matches the
+	 * given model will be written.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param model
+	 *            The model to which to constrain the written data
+	 * @param inputs
+	 *            The input streams for the XML data
+	 */
+	public void writeDataToDatabase(Platform platform, Database model,
+			InputStream[] inputs) throws DdlUtilsException {
+		DataReader dataReader = getConfiguredDataReader(platform, model);
+
+		dataReader.getSink().start();
+		for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++) {
+			writeDataToDatabase(dataReader, inputs[idx]);
+		}
+		dataReader.getSink().end();
+	}
+
+	/**
+	 * Reads the data from the given input readers and writes it to the database
+	 * to which the given platform is connected. Only data that matches the
+	 * given model will be written.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param model
+	 *            The model to which to constrain the written data
+	 * @param inputs
+	 *            The input readers for the XML data
+	 */
+	public void writeDataToDatabase(Platform platform, Database model,
+			Reader[] inputs) throws DdlUtilsException {
+		DataReader dataReader = getConfiguredDataReader(platform, model);
+
+		dataReader.getSink().start();
+		for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++) {
+			writeDataToDatabase(dataReader, inputs[idx]);
+		}
+		dataReader.getSink().end();
+	}
+
+	/**
+	 * Reads the data from the given input readers and writes it to the database
+	 * to which the given platform is connected. Only data that matches the
+	 * given model will be written.
+	 * 
+	 * @param platform
+	 *            The platform, must be connected to a live database
+	 * @param model
+	 *            The model to which to constrain the written data
+	 * @param inputs
+	 *            The input readers for the XML data
+	 */
+	public void writeDataToDatabase(Platform platform, Database model,
+			File[] files) throws DdlUtilsException {
+		DataReader dataReader = getConfiguredDataReader(platform, model);
+
+		((DataToDatabaseSink) dataReader.getSink()).setDeleteInvalidRows(true);
+		dataReader.getSink().start();
+
+		for (int idx = 0; (files != null) && (idx < files.length); idx++) {
+			try {
+				writeDataToDatabase(dataReader, files[idx]);
+			} catch (Exception e) {
+				System.out.println("Error while inserting XML file "
+						+ files[idx].getAbsolutePath());
+				e.printStackTrace();
+			}
+		}
+		dataReader.getSink().end();
+	}
+
+	public void writeDataToDatabaseDeleteRows(Platform platform,
+			Database model, File[] files) throws DdlUtilsException {
+		DataReader dataReader = getConfiguredDataReader(platform, model);
+
+		dataReader.getSink().start();
+		for (int idx = 0; (files != null) && (idx < files.length); idx++) {
+			writeDataToDatabase(dataReader, files[idx]);
+		}
+		dataReader.getSink().end();
+	}
+
+	/**
+	 * Reads the data from the specified files and writes it to the database via
+	 * the given data reader. Note that the sink that the data reader is
+	 * configured with, won't be started or ended by this method. This has to be
+	 * done by the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param files
+	 *            The XML data files
+	 */
+	public void writeDataToDatabase(DataReader dataReader, String[] files)
+			throws DdlUtilsException {
+		for (int idx = 0; (files != null) && (idx < files.length); idx++) {
+			writeDataToDatabase(dataReader, files[idx]);
+		}
+	}
+
+	/**
+	 * Reads the data from the given input stream and writes it to the database
+	 * via the given data reader. Note that the input stream won't be closed by
+	 * this method. Note also that the sink that the data reader is configured
+	 * with, won't be started or ended by this method. This has to be done by
+	 * the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param inputs
+	 *            The input streams for the XML data
+	 */
+	public void writeDataToDatabase(DataReader dataReader, InputStream[] inputs)
+			throws DdlUtilsException {
+		for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++) {
+			writeDataToDatabase(dataReader, inputs[idx]);
+		}
+	}
+
+	/**
+	 * Reads the data from the given input stream and writes it to the database
+	 * via the given data reader. Note that the input stream won't be closed by
+	 * this method. Note also that the sink that the data reader is configured
+	 * with, won't be started or ended by this method. This has to be done by
+	 * the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param inputs
+	 *            The input readers for the XML data
+	 */
+	public void writeDataToDatabase(DataReader dataReader, Reader[] inputs)
+			throws DdlUtilsException {
+		for (int idx = 0; (inputs != null) && (idx < inputs.length); idx++) {
+			writeDataToDatabase(dataReader, inputs[idx]);
+		}
+	}
+
+	/**
+	 * Reads the data from the given input stream and writes it to the database
+	 * via the given data reader. Note that the input stream won't be closed by
+	 * this method. Note also that the sink that the data reader is configured
+	 * with, won't be started or ended by this method. This has to be done by
+	 * the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param files
+	 *            The input readers for the XML data
+	 */
+	public void writeDataToDatabase(DataReader dataReader, File[] files)
+			throws DdlUtilsException {
+		for (int idx = 0; (files != null) && (idx < files.length); idx++) {
+			writeDataToDatabase(dataReader, files[idx]);
+		}
+	}
+
+	/**
+	 * Reads the data from the indicated XML file and writes it to the database
+	 * via the given data reader. Note that the sink that the data reader is
+	 * configured with, won't be started or ended by this method. This has to be
+	 * done by the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param path
+	 *            The path to the XML data file
+	 */
+	public void writeDataToDatabase(DataReader dataReader, String path)
+			throws DdlUtilsException {
+		try {
+			dataReader.parse(path);
+		} catch (Exception ex) {
+			throw new DdlUtilsException(ex);
+		}
+	}
+
+	/**
+	 * Reads the data from the indicated XML file and writes it to the database
+	 * via the given data reader. Note that the sink that the data reader is
+	 * configured with, won't be started or ended by this method. This has to be
+	 * done by the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param path
+	 *            The path to the XML data file
+	 */
+	public void writeDataToDatabase(DataReader dataReader, File file)
+			throws DdlUtilsException {
+		try {
+			dataReader.parse(file);
+		} catch (Exception ex) {
+			throw new DdlUtilsException(ex);
+		}
+	}
+
+	/**
+	 * Reads the data from the given input stream and writes it to the database
+	 * via the given data reader. Note that the input stream won't be closed by
+	 * this method. Note also that the sink that the data reader is configured
+	 * with, won't be started or ended by this method. This has to be done by
+	 * the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param input
+	 *            The input stream for the XML data
+	 */
+	public void writeDataToDatabase(DataReader dataReader, InputStream input)
+			throws DdlUtilsException {
+		try {
+			dataReader.parse(input);
+		} catch (Exception ex) {
+			throw new DdlUtilsException(ex);
+		}
+	}
+
+	/**
+	 * Reads the data from the given input stream and writes it to the database
+	 * via the given data reader. Note that the input stream won't be closed by
+	 * this method. Note also that the sink that the data reader is configured
+	 * with, won't be started or ended by this method. This has to be done by
+	 * the code using this method.
+	 * 
+	 * @param dataReader
+	 *            The data reader
+	 * @param input
+	 *            The input reader for the XML data
+	 */
+	public void writeDataToDatabase(DataReader dataReader, Reader input)
+			throws DdlUtilsException {
+		try {
+			dataReader.parse(input);
+		} catch (Exception ex) {
+			throw new DdlUtilsException(ex);
+		}
+	}
 }

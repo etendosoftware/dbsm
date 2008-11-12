@@ -18,20 +18,24 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
-
+import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.task.VerbosityLevel;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Task;
+import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModuleRow;
 
 /**
  *
@@ -50,7 +54,8 @@ public class ImportDataXML extends Task {
     
     private File model = null;
     private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
-    
+
+    private String basedir;   
     private String input;   
     private String encoding = "UTF-8";
 
@@ -83,7 +88,8 @@ public class ImportDataXML extends Task {
         _log = LogFactory.getLog(getClass());
     }
     
-    public void execute() {
+    @Override
+	public void execute() {
        
         initLogging();
     
@@ -106,10 +112,33 @@ public class ImportDataXML extends Task {
         
         while(strTokFol.hasMoreElements())
         {
-        	String folder=strTokFol.nextToken();
-        	File[] fileArray=DatabaseUtils.readFileArray(new File(folder));
-        	for(int i=0;i<fileArray.length;i++)
-        		files.add(fileArray[i]);
+          if(basedir==null)
+          {
+               _log.info("Basedir not specified, will insert just Core data files.");
+               String folder=strTokFol.nextToken();
+               File[] fileArray=DatabaseUtils.readFileArray(new File(folder));
+               for(int i=0;i<fileArray.length;i++)
+               files.add(fileArray[i]);
+          }
+          else
+          {
+          	String token=strTokFol.nextToken();
+          	DirectoryScanner dirScanner=new DirectoryScanner();
+            dirScanner.setBasedir(new File(basedir));
+            String[] dirFilterA = {token};
+            dirScanner.setIncludes(dirFilterA);
+            dirScanner.scan();
+            String[] incDirs=dirScanner.getIncludedDirectories();
+            for(int j=0;j<incDirs.length;j++)
+            {
+              File dirFolder=new File(basedir, incDirs[j]+"/");
+              File[] fileArray=DatabaseUtils.readFileArray(dirFolder);
+              for(int i=0;i<fileArray.length;i++)
+              {
+                files.add(fileArray[i]);
+              }
+            }
+          }
         }
         
         try {      
@@ -153,7 +182,10 @@ public class ImportDataXML extends Task {
             	}
             }
     	    for(int i=0;i<files.size();i++)
+    	    {
+    	    	_log.debug("Importing data from file: "+files.get(i).getName());
     	    	dbdio.writeDataToDatabase(dataReader,files.get(i)); 
+    	    }
                 
     	    dataReader.getSink().end();
     	    
@@ -168,6 +200,28 @@ public class ImportDataXML extends Task {
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
             }
+            
+
+
+            DBSMOBUtil util = DBSMOBUtil.getInstance();
+    		util.getModules(platform, "org.apache.ddlutils.platform.ExcludeFilter");
+    		util.generateIndustryTemplateTree();
+    		for(int i=0;i<util.getIndustryTemplateCount();i++)
+    		{
+    			ModuleRow temp=util.getIndustryTemplateId(i);
+    			File f=new File(basedir, "modules/"+temp.dir+"/src-db/database/configScript.xml");
+    			_log.info("Loading config script for module "+temp.name+". Path: "+f.getAbsolutePath());
+    			if(f.exists())
+    			{
+    				DatabaseIO dbIO = new DatabaseIO();
+    				Vector<Change> changesConfigScript = dbIO.readChanges(f);
+    				platform.applyConfigScript(originaldb, changesConfigScript);
+    			}
+    			else
+    			{
+    				_log.error("Error. We couldn't find configuration script for template "+temp.name+". Path: "+f.getAbsolutePath());
+    			}
+    		}
             
         } catch (Exception e) {
             // log(e.getLocalizedMessage());
@@ -273,6 +327,14 @@ public class ImportDataXML extends Task {
     public void setVerbosity(VerbosityLevel level)
     {
         _verbosity = level;
+    }
+
+    public String getBasedir() {
+      return basedir;
+    }
+
+    public void setBasedir(String basedir) {
+      this.basedir = basedir;
     }
     
 }

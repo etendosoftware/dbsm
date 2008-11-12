@@ -60,5 +60,11 @@ public class AddTriggerChange implements ModelChange {
         {
             throw new DdlUtilsException(ex);
         }
-    }        
+    }          
+    
+    @Override
+	public String toString()
+    {
+    	return "AddTriggerChange. Name: "+_newTrigger.getName();
+    }   
 }

@@ -32,6 +32,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.platform.ExcludeFilter;
 
 /**
  * Represents a table in the database model.
@@ -1095,10 +1096,16 @@ public class Table implements StructureObject, Serializable, Cloneable
         	result._columns.add(((Column)_columns.get(i)).clone());
         result._foreignKeys = new ArrayList();
         for(int i=0;i<_foreignKeys.size();i++)
-        	result._foreignKeys.add(((ForeignKey)_foreignKeys.get(i)).clone());
-        result._indices     = (ArrayList)_indices.clone();
-        result._uniques     = (ArrayList)_uniques.clone();
-        result._checks     = (ArrayList)_checks.clone();
+          result._foreignKeys.add(((ForeignKey)_foreignKeys.get(i)).clone());
+        result._indices = new ArrayList();
+        for(int i=0;i<_indices.size();i++)
+          result._indices.add(((Index)_indices.get(i)).clone());
+        result._uniques = new ArrayList();
+        for(int i=0;i<_uniques.size();i++)
+          result._uniques.add(((Unique)_uniques.get(i)).clone());
+        result._checks = new ArrayList();
+        for(int i=0;i<_checks.size();i++)
+            result._checks.add(((Check)_checks.get(i)).clone());
 
         return result;
     }
@@ -1212,4 +1219,137 @@ public class Table implements StructureObject, Serializable, Cloneable
 
         return result.toString();
     }
+    
+    public void mergeWith(Table table)
+    {
+      try{
+        for(int i=0;i<table._columns.size();i++)
+        {
+          this._columns.add(((Column)table._columns.get(i)).clone());
+        }
+        for(int i=0;i<table._foreignKeys.size();i++)
+        {
+          this._foreignKeys.add(((ForeignKey)table._foreignKeys.get(i)).clone());
+        }
+        for(int i=0;i<table._indices.size();i++)
+        {
+          this._indices.add(((Index)table._indices.get(i)).clone());
+        }
+        for(int i=0;i<table._uniques.size();i++)
+        {
+          this._uniques.add(((Unique)table._uniques.get(i)).clone());
+        }
+        for(int i=0;i<table._checks.size();i++)
+        {
+          this._checks.add(((Check)table._checks.get(i)).clone());
+        }
+      }catch(CloneNotSupportedException e)
+      {
+        //won't happen
+      }
+    }
+    
+    public void applyNamingConventionFilter(ExcludeFilter filter)
+    {
+      if(!filter.compliesWithNamingRule(_name))
+      {
+    	  
+		  //The table doesn't comply with the naming rule, and therefore doesn't belong to the module.
+    	  //Its objects will only belong to this module if they have the external prefix, and the prefix of the module.
+	      for(int i=0;i<_columns.size();i++)
+	      {
+	        if(!filter.compliesWithExternalNamingRule(((Column)_columns.get(i)).getName()))
+	        {
+	          _columns.remove(i);
+	          i--;
+	        }
+	      }
+	      for(int i=0;i<_foreignKeys.size();i++)
+	      {
+	        if(!filter.compliesWithExternalNamingRule(((ForeignKey)_foreignKeys.get(i)).getName()))
+	        {
+	          _foreignKeys.remove(i);
+	          i--;
+	        }
+	      }
+	      for(int i=0;i<_indices.size();i++)
+	      {
+	        if(!filter.compliesWithExternalNamingRule(((Index)_indices.get(i)).getName()))
+	        {
+	          _indices.remove(i);
+	          i--;
+	        }
+	      }
+	      for(int i=0;i<_uniques.size();i++)
+	      {
+	        if(!filter.compliesWithExternalNamingRule(((Unique)_uniques.get(i)).getName()))
+	        {
+	          _uniques.remove(i);
+	          i--;
+	        }
+	      }
+	      for(int i=0;i<_checks.size();i++)
+	      {
+	        if(!filter.compliesWithExternalNamingRule(((Check)_checks.get(i)).getName()))
+	        {
+	          _checks.remove(i);
+	          i--;
+	        }
+	      }
+      }
+      else
+      {
+        //As the table name complies with naming conventions, and it's marked as isindevelopment,
+    	//all its objects should be preserved except the ones that start with the "external" prefix
+        for(int i=0;i<_columns.size();i++)
+        {
+          if(filter.compliesWithExternalPrefix(((Column)_columns.get(i)).getName()))
+          {
+            _columns.remove(i);
+            i--;
+          }
+        }
+        for(int i=0;i<_foreignKeys.size();i++)
+        {
+          if(filter.compliesWithExternalPrefix(((ForeignKey)_foreignKeys.get(i)).getName()))
+          {
+            _foreignKeys.remove(i);
+            i--;
+          }
+        }
+        for(int i=0;i<_indices.size();i++)
+        {
+          if(filter.compliesWithExternalPrefix(((Index)_indices.get(i)).getName()))
+          {
+            _indices.remove(i);
+            i--;
+          }
+        }
+        for(int i=0;i<_uniques.size();i++)
+        {
+          if(filter.compliesWithExternalPrefix(((Unique)_uniques.get(i)).getName()))
+          {
+            _uniques.remove(i);
+            i--;
+          }
+        }
+        for(int i=0;i<_checks.size();i++)
+        {
+          if(filter.compliesWithExternalPrefix(((Check)_checks.get(i)).getName()))
+          {
+            _checks.remove(i);
+            i--;
+          }
+        }
+      }
+    }
+    public boolean isEmpty()
+    {
+      return _columns.size()==0 && 
+             _foreignKeys.size()==0 &&
+             _indices.size()==0 &&
+             _uniques.size()==0 &&
+             _checks.size()==0;
+    }
+    
 }

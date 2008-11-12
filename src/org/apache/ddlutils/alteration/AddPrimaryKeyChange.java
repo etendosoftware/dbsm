@@ -77,4 +77,10 @@ public class AddPrimaryKeyChange extends TableChangeImplBase
             column.setPrimaryKey(true);
         }
     }
+    
+    @Override
+	public String toString()
+    {
+    	return "AddPrimaryKeyChange. Name: "+_primaryKeyName;
+    } 
 }

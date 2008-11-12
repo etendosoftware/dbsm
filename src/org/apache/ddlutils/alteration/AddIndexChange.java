@@ -73,4 +73,10 @@ public class AddIndexChange extends TableChangeImplBase
         }
         database.findTable(getChangedTable().getName(), caseSensitive).addIndex(newIndex);
     }
+    
+    @Override
+	public String toString()
+    {
+    	return "AddIndexChange. Name: "+_newIndex.getName();
+    } 
 }

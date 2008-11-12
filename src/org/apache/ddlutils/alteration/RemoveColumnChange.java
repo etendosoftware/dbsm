@@ -64,5 +64,11 @@ public class RemoveColumnChange extends TableChangeImplBase
         Column column = table.findColumn(_column.getName(), caseSensitive);
 
         table.removeColumn(column);
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveColumnChange. Name: "+_column.getName();
     }
 }

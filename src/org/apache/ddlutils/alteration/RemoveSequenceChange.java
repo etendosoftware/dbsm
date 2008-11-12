@@ -19,7 +19,6 @@ package org.apache.ddlutils.alteration;
  * under the License.
  */
 
-import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Sequence;
 
@@ -60,5 +59,11 @@ public class RemoveSequenceChange implements ModelChange{
         Sequence sequence = database.findSequence(_sequence.getName(), caseSensitive);
 
         database.removeSequence(sequence);
-    }    
+    }        
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveSequenceChange. Name: "+_sequence.getName();
+    }
 }

@@ -78,5 +78,11 @@ public class ColumnDefaultValueChange extends TableChangeImplBase implements Col
         Column column = table.findColumn(_column.getName(), caseSensitive);
 
         column.setDefaultValue(_newDefaultValue);
-    }
+    }  
+    
+    @Override
+	public String toString()
+    {
+    	return "ColumnDefaultChange. Column: "+_column.getName();
+    } 
 }

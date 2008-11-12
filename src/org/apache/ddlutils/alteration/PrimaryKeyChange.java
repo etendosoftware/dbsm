@@ -96,5 +96,11 @@ public class PrimaryKeyChange extends TableChangeImplBase
 
             column.setPrimaryKey(true);
         }
-    }
+    }  
+    
+    @Override
+	public String toString()
+    {
+    	return "PrimaryKeyChange. Name: "+_newName;
+    } 
 }

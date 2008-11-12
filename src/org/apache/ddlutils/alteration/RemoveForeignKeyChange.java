@@ -65,5 +65,11 @@ public class RemoveForeignKeyChange extends TableChangeImplBase
         Table table = database.findTable(getChangedTable().getName(), caseSensitive);
 
         table.removeForeignKey(_foreignKey);
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "RemoveForeignKeyChange. Name: "+_foreignKey.getName();
     }
 }

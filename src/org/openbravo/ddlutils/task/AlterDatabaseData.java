@@ -14,20 +14,23 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.util.Properties;
+import java.util.Vector;
+
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
-
+import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.task.VerbosityLevel;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Task;
 
 /**
  *
@@ -56,6 +59,10 @@ public class AlterDatabaseData extends Task {
 
     protected Log _log;
     private VerbosityLevel _verbosity = null;
+    private String basedir;
+    private String dirFilter;
+    private String datadir;   
+    private String datafilter;
     
     /** Creates a new instance of ReadDataXML */
     public AlterDatabaseData() {
@@ -83,7 +90,8 @@ public class AlterDatabaseData extends Task {
         _log = LogFactory.getLog(getClass());
     }
     
-    public void execute() {
+    @Override
+	public void execute() {
        
         initLogging();
     
@@ -125,15 +133,85 @@ public class AlterDatabaseData extends Task {
                 _log.info("Original model loaded from file.");
             }   
 
-            Database db = DatabaseUtils.readDatabase(getModel());   
-
+            Database db =null;
+            if(basedir==null)
+            {
+              _log.info("Basedir for additional files not specified. Updating database with just Core.");
+              db = DatabaseUtils.readDatabase(getModel());
+            }
+            else
+            {
+              //We read model files using the filter, obtaining a file array. The models will be merged
+              //to create a final target model.
+              Vector<File> dirs=new Vector<File>();
+              dirs.add(model);
+              DirectoryScanner dirScanner=new DirectoryScanner();
+              dirScanner.setBasedir(new File(basedir));
+              String[] dirFilterA = {dirFilter};
+              dirScanner.setIncludes(dirFilterA);
+              dirScanner.scan();
+              String[] incDirs=dirScanner.getIncludedDirectories();
+              for(int j=0;j<incDirs.length;j++)
+              {
+                File dirF=new File(basedir, incDirs[j]);
+                dirs.add(dirF);
+              }
+              File[] fileArray=new File[dirs.size()];
+              for(int i=0;i<dirs.size();i++)
+              {
+                fileArray[i]=dirs.get(i);
+              }
+              db = DatabaseUtils.readDatabase(fileArray);
+            }
+            
             Database oldModel=(Database)originaldb.clone();
             platform.alterTables(originaldb, db, !isFailonerror()); 
             
             DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
             dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-            dbdio.writeDataToDatabase(platform, db, DatabaseUtils.readFileArray(getInput())); 
+            
+            
+            if(datadir==null)
+            {
+              _log.info("There is no data directory. Only core sourcedata will be inserted.");
+              dbdio.writeDataToDatabase(platform, db, DatabaseUtils.readFileArray(getInput())); 
+            }
+            else
+            {
+              Vector<File> files=new Vector<File>();
+              File[] sourceFiles=DatabaseUtils.readFileArray(getInput());
+              for(int i=0;i<sourceFiles.length;i++)
+                files.add(sourceFiles[i]);
+
+              String token=datafilter;
+              DirectoryScanner dirScanner=new DirectoryScanner();
+              dirScanner.setBasedir(new File(basedir));
+              String[] dirFilterA = {token};
+              dirScanner.setIncludes(dirFilterA);
+              dirScanner.scan();
+              String[] incDirs=dirScanner.getIncludedDirectories();
+              for(int j=0;j<incDirs.length;j++)
+              {
+                File dirFolder=new File(basedir, incDirs[j]+"/");
+                File[] fileArray=DatabaseUtils.readFileArray(dirFolder);
+                for(int i=0;i<fileArray.length;i++)
+                {
+                  files.add(fileArray[i]);
+                }
+              }
+
+              DataReader dataReader=null;
+              dataReader = dbdio.getConfiguredDataReader(platform, originaldb);
+              dataReader.getSink().start();
+              for(int i=0;i<files.size();i++)
+              {
+                dbdio.writeDataToDatabase(dataReader,files.get(i)); 
+              }
+
+              dataReader.getSink().end();
+              
+            }
             
             platform.alterTablesPostScript(oldModel, db, !isFailonerror());
             
@@ -212,6 +290,23 @@ public class AlterDatabaseData extends Task {
         this.model = model;
     }
     
+    public String getBasedir() {
+        return basedir;
+    }
+    
+    public void setBasedir(String basedir)
+    {
+      this.basedir=basedir;
+    }
+    
+    public String getDirFilter() {
+      return dirFilter;
+    }
+    
+    public void setDirFilter(String dirFilter) {
+      this.dirFilter=dirFilter;
+    }
+    
     public boolean isFailonerror() {
         return failonerror;
     }
@@ -281,6 +376,22 @@ public class AlterDatabaseData extends Task {
     public void setVerbosity(VerbosityLevel level)
     {
         _verbosity = level;
+    }
+
+    public String getDatadir() {
+      return datadir;
+    }
+
+    public void setDatadir(String datadir) {
+      this.datadir = datadir;
+    }
+
+    public String getDatafilter() {
+      return datafilter;
+    }
+
+    public void setDatafilter(String datafilter) {
+      this.datafilter = datafilter;
     }
     
 }

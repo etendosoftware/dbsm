@@ -81,5 +81,11 @@ public class ColumnDataTypeChange extends TableChangeImplBase implements ColumnC
           if(column!=null)
             column.setTypeCode(_newTypeCode);
         }
-    }
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "ColumnDataTypeChange. Column: "+_column.getName();
+    } 
 }

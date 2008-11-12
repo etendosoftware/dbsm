@@ -72,6 +72,12 @@ public class AddTableChange implements ModelChange
         {
             throw new DdlUtilsException(ex);
         }
-    }
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "AddTableChange. Name: "+_newTable.getName();
+    } 
 
 }

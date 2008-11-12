@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -51,6 +52,10 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
+import org.apache.ddlutils.alteration.AddRowChange;
+import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.RemoveRowDALChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
@@ -668,6 +673,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
         evaluateBatch(connection, sql, continueOnError);
     }
+    
+    public void alterTables(Connection connection, Database desiredModel, boolean continueOnError, List changes) throws DatabaseOperationException
+    {
+        String sql = getAlterTablesSql(connection, desiredModel, changes);
+
+        evaluateBatch(connection, sql, continueOnError);
+    }
 
     /**
      * {@inheritDoc}
@@ -705,6 +717,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
         evaluateBatch(connection, sql, continueOnError);    
     }
+    public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError, List changes) throws DatabaseOperationException {
+        String sql = null;
+        
+        try {
+            StringWriter buffer = new StringWriter();
+
+            getSqlBuilder().setWriter(buffer);
+            getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
+            sql = buffer.toString();
+        } catch (IOException ex) {
+            // won't happen because we're using a string writer
+        }
+        evaluateBatch(sql, continueOnError);  
+    }
     public void alterTablesPostScript(Database currentModel, Database desiredModel, boolean continueOnError) throws DatabaseOperationException
     {
         
@@ -737,6 +763,38 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
     }
 
+    public void alterData(Connection connection, Database model, Vector<Change> changes) throws DatabaseOperationException
+    {
+    	for(Change change: changes)
+    	{
+    		if(change instanceof AddRowChange)
+    		{
+    			upsert(connection, model, ((AddRowChange)change).getRow());
+    		}
+    		else if(change instanceof RemoveRowDALChange)
+    		{
+    			delete(connection, model, (RemoveRowDALChange)change);
+    		}
+    		else if(change instanceof ColumnDataChange)
+    		{
+    			update(connection, model, (ColumnDataChange)change);
+    		}
+    	}
+    	
+    	/*
+    	String sql = null;
+        
+        try {
+            StringWriter buffer = new StringWriter();
+
+            getSqlBuilder().setWriter(buffer);
+            getSqlBuilder().alterData(model, changes);
+            sql = buffer.toString();
+        } catch (IOException ex) {
+            // won't happen because we're using a string writer
+        }
+        evaluateBatch(connection, sql, true);  */
+    }
     /**
      * {@inheritDoc}
      */
@@ -752,6 +810,29 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
             getSqlBuilder().setWriter(buffer);
             getSqlBuilder().alterDatabase(currentModel, desiredModel, null);
             sql = buffer.toString();
+        }
+        catch (IOException ex)
+        {
+            // won't happen because we're using a string writer
+        }
+        return sql;
+    }
+    
+    public String getAlterTablesSql(Connection connection, Database desiredModel, List changes) throws DatabaseOperationException
+    {
+        String   sql          = null;
+        Database currentModel = readModelFromDatabase(connection, desiredModel.getName());
+
+        try
+        {
+            StringWriter buffer = new StringWriter();
+
+            getSqlBuilder().setWriter(buffer);
+            System.out.println("0");
+            getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
+            System.out.println("9");
+            sql = buffer.toString();
+            System.out.println(sql);
         }
         catch (IOException ex)
         {
@@ -1411,6 +1492,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
      */
     public void upsert(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException {
         _log.debug("Attempting to update a single row " + dynaBean +" into table ");
+        //int count = privateupdate(connection, model, dynaBean);
+        //if (count == 0) {
+            insert(connection, model, dynaBean);
+        /*} else if (count != 1) {
+            _log.warn("Attempted to update a single row " + dynaBean +
+                     " into table " + model.getDynaClassFor(dynaBean).getTableName() +
+                     " but changed " + count + " row(s)");
+        }*/
+    }
+    /**
+     * {@inheritDoc}
+     */
+    public void updateinsert(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException {
+        _log.debug("Attempting to update a single row " + dynaBean +" into table ");
         int count = privateupdate(connection, model, dynaBean);
         if (count == 0) {
             insert(connection, model, dynaBean);
@@ -1438,6 +1533,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
         String insertSql        = createInsertSql(model, dynaClass, properties, null);
         String queryIdentitySql = null;
+        
 
         if (_log.isDebugEnabled())
         {
@@ -1468,6 +1564,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                 connection.setAutoCommit(false);
             }
 
+            PreparedStatement dateStatement = getDateStatement(connection);
+            dateStatement.execute();
+            ResultSet resDate=dateStatement.getResultSet();
+            resDate.next();
+            Date date=resDate.getDate(1);
+            dateStatement.close();
+            
             beforeInsert(connection, dynaClass.getTable());
             
             statement = connection.prepareStatement(insertSql);
@@ -1477,7 +1580,22 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
             {
               if(table.findColumn(properties[idx].getName())!=null)
               {
-                setObject(statement, sqlIndex++, dynaBean, properties[idx]);   //idx + 1
+            	  if((properties[idx].getName().equalsIgnoreCase("UPDATED")
+            			  || properties[idx].getName().equalsIgnoreCase("CREATED") )
+            			  && dynaBean.get(properties[idx].getName())==null)
+            	  {
+            		  setStatementParameterValue(statement, sqlIndex++, properties[idx].getColumn().getTypeCode(), date);
+            	  }
+            	  else if((properties[idx].getName().equalsIgnoreCase("UPDATEDBY")
+            			  || properties[idx].getName().equalsIgnoreCase("CREATEDBY") )
+            			  && dynaBean.get(properties[idx].getName())==null)
+            	  {
+            		  setStatementParameterValue(statement, sqlIndex++, properties[idx].getColumn().getTypeCode(), "0");
+            	  }
+            	  else
+            	  {
+            		  setObject(statement, sqlIndex++, dynaBean, properties[idx]);   //idx + 1
+            	  }
               }
               else
                 _log.debug("Rejected column: "+properties[idx].getName());
@@ -1581,6 +1699,19 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                 throw new DatabaseOperationException(ex);
             }
         }
+    }
+    
+    protected PreparedStatement getDateStatement(Connection connection)
+    {
+    	try
+    	{
+    		return connection.prepareStatement("SELECT SYSDATE FROM DUAL");
+    	}catch(Exception e)
+    	{
+    		e.printStackTrace();
+    	}
+    	return null;
+    	
     }
 
     /**
@@ -1817,12 +1948,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 
         if (primaryKeys.length == 0)
         {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys");
+            _log.info("Cannot update instances of type " + dynaClass + " because it has no primary keys (table "+dynaClass.getTableName()+")");
             return 0;
         }
         
         if (nonprimaryKeys.length == 0) {
-            _log.info("Cannot update instances of type " + dynaClass + " because it has no values to update");
+            _log.info("Cannot update instances of type " + dynaClass + " because it has no values to update (table "+dynaClass.getTableName()+")");
             return 0;
         }
 
@@ -1873,7 +2004,50 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
             closeStatement(statement);
         }
     }
-    
+
+    private int update(Connection connection, Database model, ColumnDataChange change) throws DatabaseOperationException {
+
+    	HashMap map=new HashMap();
+    	Table table=model.findTable(change.getTablename());
+    	String pk=table.getPrimaryKeyColumns()[0].getName();
+    	map.put(pk, change.getPkRow());
+    	map.put(change.getColumnname(), change.getNewValue());
+
+        String            sql        = getSqlBuilder().getUpdateSql(table, map, true);
+        	//createUpdateSql(model, dynaClass, primaryKeys, properties, null);
+        PreparedStatement statement  = null;
+
+
+        if (_log.isDebugEnabled())
+        {
+            _log.debug("About to execute SQL: " + sql);
+        }
+        try
+        {
+            beforeUpdate(connection, table);
+
+            statement = connection.prepareStatement(sql);
+
+            int sqlIndex = 1;
+            setObject(statement, sqlIndex++, change.getNewValue(), table.findColumn(change.getColumnname()));
+            setObject(statement, sqlIndex++, change.getPkRow(), table.getPrimaryKeyColumns()[0]);
+
+
+            int count = statement.executeUpdate();
+
+            afterUpdate(connection, table);
+            
+            return count;
+        }
+        catch (SQLException ex)
+        {
+            throw new DatabaseOperationException("Error while updating in the database : " + ex.getMessage(), ex);
+        }
+        finally
+        {
+            closeStatement(statement);
+        }
+    }
     /**
      * {@inheritDoc}
      */
@@ -2070,6 +2244,45 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         }
     }
     
+
+    public void delete(Connection connection, Database model, RemoveRowDALChange change) throws DatabaseOperationException
+    {
+        PreparedStatement statement  = null;
+
+        try
+        {
+        	Table table = change.getTable();
+    		Column[] pk=table.getPrimaryKeyColumns();
+    		HashMap pkValues=new HashMap();
+    		pkValues.put(pk[0].getName(), change.getRow().getId());
+            String sql = getSqlBuilder().getDeleteSql(change.getTable(), pkValues, true);
+            //createDeleteSql(model, dynaClass, primaryKeys, null);
+
+            if (_log.isDebugEnabled())
+            {
+                _log.debug("About to execute SQL " + sql);
+            }
+
+            statement = connection.prepareStatement(sql);
+
+            for (int idx = 0; idx < pk.length; idx++)
+            {
+                setObject(statement, idx + 1, change.getRow().getId(), pk[idx]);
+            }
+
+            int count = statement.executeUpdate();
+
+        }
+        catch (SQLException ex)
+        {
+            throw new DatabaseOperationException("Error while deleting from the database", ex);
+        }
+        finally
+        {
+            closeStatement(statement);
+        }
+    }
+    
     public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException {
     
         Connection connection = borrowConnection();
@@ -2077,6 +2290,34 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         	getModelLoader().setLog(_log);
             return getModelLoader().getDatabase(connection, filter);
         } catch (SQLException ex) {
+            throw new DatabaseOperationException(ex);
+        } finally {
+            returnConnection(connection);
+        }        
+    }
+    
+    public Database loadModelFromDatabase(ExcludeFilter filter, String prefix, boolean loadCompleteTables) throws DatabaseOperationException {
+    
+        Connection connection = borrowConnection();
+        try {
+        	getModelLoader().setLog(_log);
+            return getModelLoader().getDatabase(connection, filter, prefix, loadCompleteTables);
+        } catch (SQLException ex) {
+        	ex.printStackTrace();
+            throw new DatabaseOperationException(ex);
+        } finally {
+            returnConnection(connection);
+        }        
+    }
+    
+    public Database loadModelFromDatabase(ExcludeFilter filter, String datasetName) throws DatabaseOperationException {
+    
+        Connection connection = borrowConnection();
+        try {
+        	getModelLoader().setLog(_log);
+            return getModelLoader().getDatabase(connection, filter, datasetName);
+        } catch (SQLException ex) {
+        	ex.printStackTrace();
             throw new DatabaseOperationException(ex);
         } finally {
             returnConnection(connection);
@@ -2292,6 +2533,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         setStatementParameterValue(statement, sqlIndex, typeCode, value);
     }
 
+    protected void setObject(PreparedStatement statement, int sqlIndex, Object value, Column column) throws SQLException
+    {
+        int     typeCode = column.getTypeCode();
+
+        setStatementParameterValue(statement, sqlIndex, typeCode, value);
+    }
 	/**
 	 * This is the core method to set the parameter of a prepared statement to a given value.
 	 * The primary purpose of this method is to call the appropriate method on the statement,
@@ -2634,4 +2881,21 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
             getSqlBuilder().deleteInvalidConstraintRows(model);
             evaluateBatch(connection, buffer.toString(),continueOnError);
     }      
+    
+
+    public void applyConfigScript(Database database, Vector<Change> changes)
+    {
+        StringWriter buffer = new StringWriter();
+
+        getSqlBuilder().setWriter(buffer);
+        try{
+        	getSqlBuilder().getConfigScript(database, changes);
+	        Connection connection=borrowConnection();
+	        evaluateBatch(connection, buffer.toString(),true);
+	        connection.close();
+        }catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+    }
 }

@@ -191,5 +191,25 @@ under the License.
       </element>
     </element>
   </class>
-
+  
+  <class name="org.apache.ddlutils.alteration.ColumnDataChange">
+    <element name="columnDataChange">
+      <attribute name="tablename" property="tablename"/>
+      <attribute name="columnname" property="columnname"/>
+      <attribute name="oldValue" property="oldValue"/>
+      <attribute name="newValue" property="newValue"/>
+      <attribute name="pkRow" property="pkRow"/>
+    </element>
+  </class>
+  
+  
+  
+  <class name="org.apache.ddlutils.alteration.ColumnSizeChange">
+    <element name="columnSizeChange">
+      <attribute name="tablename" property="tablename"/>
+      <attribute name="columnname" property="columnname"/>
+      <attribute name="newSize" property="newSize"/>
+      <attribute name="newScale" property="newScale"/>
+    </element>
+  </class>
 </betwixt-config>

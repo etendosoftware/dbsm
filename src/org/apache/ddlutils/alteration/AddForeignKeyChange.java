@@ -86,4 +86,10 @@ public class AddForeignKeyChange extends TableChangeImplBase
           table.addForeignKey(newFK);
     }
 
+    
+    @Override
+	public String toString()
+    {
+    	return "AddForeignKeyChange. Name: "+_newForeignKey.getName();
+    }
 }

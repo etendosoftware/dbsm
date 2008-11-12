@@ -30,15 +30,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.DynaProperty;
@@ -52,17 +49,71 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
-import org.apache.ddlutils.alteration.*;
-import org.apache.ddlutils.dynabean.SqlDynaProperty;
-import org.apache.ddlutils.model.*;
-import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
-import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerTranslation;
-import org.apache.ddlutils.util.CallbackClosure;
-import org.apache.ddlutils.util.MultiInstanceofPredicate;
+import org.apache.ddlutils.alteration.AddCheckChange;
+import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.AddForeignKeyChange;
+import org.apache.ddlutils.alteration.AddFunctionChange;
+import org.apache.ddlutils.alteration.AddIndexChange;
+import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
+import org.apache.ddlutils.alteration.AddRowChange;
+import org.apache.ddlutils.alteration.AddSequenceChange;
+import org.apache.ddlutils.alteration.AddTableChange;
+import org.apache.ddlutils.alteration.AddTriggerChange;
+import org.apache.ddlutils.alteration.AddUniqueChange;
+import org.apache.ddlutils.alteration.AddViewChange;
+import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.ColumnAutoIncrementChange;
+import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.ColumnDataTypeChange;
+import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
+import org.apache.ddlutils.alteration.ColumnOnCreateDefaultValueChange;
+import org.apache.ddlutils.alteration.ColumnOrderChange;
+import org.apache.ddlutils.alteration.ColumnRequiredChange;
+import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.ModelChange;
+import org.apache.ddlutils.alteration.ModelComparator;
+import org.apache.ddlutils.alteration.PrimaryKeyChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveColumnChange;
+import org.apache.ddlutils.alteration.RemoveForeignKeyChange;
+import org.apache.ddlutils.alteration.RemoveFunctionChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
+import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
+import org.apache.ddlutils.alteration.RemoveRowChange;
+import org.apache.ddlutils.alteration.RemoveRowDALChange;
+import org.apache.ddlutils.alteration.RemoveSequenceChange;
+import org.apache.ddlutils.alteration.RemoveTableChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
+import org.apache.ddlutils.alteration.RemoveUniqueChange;
+import org.apache.ddlutils.alteration.RemoveViewChange;
+import org.apache.ddlutils.alteration.TableChange;
+import org.apache.ddlutils.model.Check;
+import org.apache.ddlutils.model.Column;
+import org.apache.ddlutils.model.ConstraintObject;
+import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.ModelException;
+import org.apache.ddlutils.model.Parameter;
+import org.apache.ddlutils.model.Reference;
+import org.apache.ddlutils.model.Sequence;
+import org.apache.ddlutils.model.StructureObject;
+import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Trigger;
+import org.apache.ddlutils.model.TypeMap;
+import org.apache.ddlutils.model.Unique;
+import org.apache.ddlutils.model.ValueObject;
+import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.translation.CommentFilter;
 import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;
+import org.apache.ddlutils.util.CallbackClosure;
+import org.apache.ddlutils.util.MultiInstanceofPredicate;
+import org.openbravo.base.structure.BaseOBObject;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop 
@@ -498,6 +549,14 @@ public abstract class SqlBuilder
     	ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform().isDelimitedIdentifierModeOn());
         List changes = comparator.compare(currentModel, desiredModel);
         
+        alterDatabase(currentModel, desiredModel, params, changes);
+        
+        
+    }
+    
+    public void alterDatabase(Database currentModel, Database desiredModel, CreationParameters params, List changes) throws IOException
+    {
+        
         _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
         _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
         _SQLTranslation = createSQLTranslation(desiredModel);
@@ -507,10 +566,25 @@ public abstract class SqlBuilder
     	for(int i=0;i<desiredModel.getTriggerCount();i++)
     		desiredModel.getTrigger(i).setTranslation(_PLSQLTriggerTranslation);
         processChanges(currentModel, desiredModel, changes, params, false);
-        
-        
-        
-        
+    }
+    
+    public void alterData(Database model, Vector<Change> changes) throws IOException
+    {
+    	for(Change change: changes)
+    	{
+    		if(change instanceof AddRowChange)
+    		{
+    			printAddRowChangeChange(model, (AddRowChange) change);
+    		}
+    		else if(change instanceof RemoveRowDALChange)
+    		{
+    			printRemoveRowDALChange(model, (RemoveRowDALChange) change);
+    		}
+    		else if(change instanceof ColumnDataChange)
+    		{
+    			printColumnDataChange(model, (ColumnDataChange) change);
+    		}
+    	}
     }
     
     public void deleteInvalidConstraintRows(Database model)
@@ -908,7 +982,7 @@ public abstract class SqlBuilder
                                                                          ColumnSizeChange.class });
         
         Predicate predicatetriggers = new MultiInstanceofPredicate(new Class[] { AddTriggerChange.class });
-
+        
         processTableStructureChanges(currentModel,
                                      desiredModel,
                                      params,
@@ -1314,7 +1388,7 @@ public abstract class SqlBuilder
         Set<String> addedTriggers = new HashSet<String>();
         for (Iterator changeIt = triggerchanges.iterator(); changeIt.hasNext();) {
             AddTriggerChange change = (AddTriggerChange) changeIt.next();
-            addedTriggers.add(((AddTriggerChange)change).getNewTrigger().getName());
+            addedTriggers.add((change).getNewTrigger().getName());
         }
         
         Set<String> unchangedTriggers = new HashSet<String>();
@@ -1779,10 +1853,10 @@ public abstract class SqlBuilder
     			ColumnDataChange change=(ColumnDataChange)changes.get(i);
     	        HashMap parameters = new HashMap();
     	        Column[] pkCols=change.getTable().getPrimaryKeyColumns();
-    	        Object[] pkV=change.getPrimaryKey();
+    	        Object pkV=change.getPrimaryKey();
     	        for (int idx = 0; idx < pkCols.length; idx++)
     	        {
-    	        	parameters.put(pkCols[idx].getName(), pkV[idx]);
+    	        	parameters.put(pkCols[idx].getName(), pkV);
     	        }
     	        parameters.put(change.getColumn().getName(), change.getNewValue());
     			println(getUpdateSql(change.getTable(),parameters, false));
@@ -2811,7 +2885,7 @@ public abstract class SqlBuilder
      */
     protected String getNativeType(Column column)
     {
-        String nativeType = (String)getPlatformInfo().getNativeType(column.getTypeCode());
+        String nativeType = getPlatformInfo().getNativeType(column.getTypeCode());
 
         return nativeType == null ? column.getType() : nativeType;
     }
@@ -3474,7 +3548,7 @@ public abstract class SqlBuilder
             print(" FOREIGN KEY (");
             writeLocalReferences(key);
             print(") REFERENCES ");
-            printIdentifier(getStructureObjectName(database.findTable(key.getForeignTableName())));
+            printIdentifier(shortenName(key.getForeignTableName(), getMaxTableNameLength()));
             print(" (");
             writeForeignReferences(key);
             print(")");
@@ -4013,7 +4087,7 @@ public abstract class SqlBuilder
                 println();
                 
                 print("ON ");
-                printIdentifier(getStructureObjectName(database.findTable(trigger.getTable())));
+                printIdentifier(shortenName(trigger.getTable(), getMaxTableNameLength()));//database.findTable(trigger.getTable())));
 
                 switch (trigger.getForeachCode()) {
                 case Trigger.FOR_EACH_ROW:
@@ -4290,4 +4364,58 @@ public abstract class SqlBuilder
     {
         return new UID().toString().replace(':', '_').replace('-', '_');
     }
+    
+    public void getConfigScript(Database database, Vector<Change> changes) throws IOException
+    {
+    	for(Change change:changes)
+    	{
+    		if(change instanceof ColumnDataChange)
+    			printColumnDataChange(database, (ColumnDataChange)change);
+    		else if(change instanceof ColumnSizeChange)
+    			printColumnSizeChange(database, (ColumnSizeChange)change);
+    	}
+    }
+    
+    public void printColumnDataChange(Database database, ColumnDataChange change) throws IOException
+    {
+    	HashMap map=new HashMap();
+    	Table table=database.findTable(change.getTablename());
+    	String pk=table.getPrimaryKeyColumns()[0].getName();
+    	map.put(pk, change.getPkRow());
+    	map.put(change.getColumnname(), change.getNewValue());
+    	println(getUpdateSql(table, map, false));
+    	printEndOfStatement();
+
+    }
+    
+    public void printColumnSizeChange(Database database, ColumnSizeChange change) throws IOException
+    {
+    	_log.error("Column size change not supported.");
+    }
+    
+
+	public void printAddRowChangeChange(Database model, AddRowChange change) throws IOException
+	{
+		Table table = change.getTable();
+		DynaBean db = change.getRow();
+		HashMap result = new HashMap();
+
+        Column[] columns = table.getColumns();
+        for(int i=0;i<columns.length;i++)
+        	result.put(columns[i].getName(), db.get(columns[i].getName()));
+		println(getInsertSql(table, result, false));
+		printEndOfStatement();
+	}
+
+	public void printRemoveRowDALChange(Database model, RemoveRowDALChange change) throws IOException
+	{
+		Table table = change.getTable();
+		Column[] pk=table.getPrimaryKeyColumns();
+		BaseOBObject object = change.getRow();
+		HashMap pkValues=new HashMap();
+		pkValues.put(pk[0].getName(), object.getId());
+		println(getDeleteSql(table, pkValues, false));
+		printEndOfStatement();
+	}
+	
 }

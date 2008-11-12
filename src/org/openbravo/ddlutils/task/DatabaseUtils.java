@@ -12,11 +12,19 @@
 
 package org.openbravo.ddlutils.task;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.StringTokenizer;
+
 import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.DynamicDatabaseFilter;
@@ -30,13 +38,46 @@ public class DatabaseUtils {
     /** Creates a new instance of DatabaseUtils */
     private DatabaseUtils() {
     }
-    
+
     public static Database readDatabase(File f) {
         
         Database d = readDatabase_noChecks(f);
-        d.initialize();
+        try{
+        	d.initialize();
+        }catch(Exception e)
+        {
+        	System.out.println("Warning: "+e.getMessage());
+        }
         return d;
     } 
+
+    public static Database readDatabaseNoInit(File f) {
+        
+        Database d = readDatabase_noChecks(f);
+        return d;
+    } 
+
+    public static Database readDatabaseNoInit(File[] f) {
+
+        Database d = readDatabase_noChecks(f[0]);
+        for(int i=1;i<f.length;i++)
+        {
+          d.mergeWith(readDatabase_noChecks(f[i]));
+        }
+
+        return d;
+    } 
+    
+    public static Database readDatabase(File[] f) {
+
+      Database d = readDatabase_noChecks(f[0]);
+      for(int i=1;i<f.length;i++)
+      {
+        d.mergeWith(readDatabase_noChecks(f[i]));
+      }
+      d.initialize();
+      return d;
+  } 
     
     public static void saveDatabase(File f, Database model) {
         
@@ -92,7 +133,10 @@ public class DatabaseUtils {
         } else {
             DatabaseIO dbIO = new DatabaseIO();
             dbIO.setValidateXml(false); 
-            return dbIO.readplain(f); 
+            Database db =  dbIO.readplain(f); 
+            if(f.getAbsolutePath().contains("modifiedTables"))
+            	db.moveTablesToModified();
+            return db;
         }
     } 
     

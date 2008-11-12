@@ -1,5 +1,6 @@
 package org.apache.ddlutils.io;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
@@ -45,7 +46,7 @@ public class DataToArraySink implements DataSink {
 		ComparatorChain chain = new ComparatorChain();
         for(int i=0;i<primaryKeys.length;i++)
         {
-    		Comparator<DynaBean> comp = new BeanComparator(primaryKeys[i].getName(), new NullComparator(true));
+    		Comparator<DynaBean> comp = new BeanComparator(primaryKeys[i].getName(), new BaseOBIDHexComparator());
     		chain.addComparator(comp,false);
     		
         }
@@ -54,5 +55,23 @@ public class DataToArraySink implements DataSink {
 
         
         
+	}
+	
+
+	private static class BaseOBIDHexComparator implements Comparator<Object> {
+
+		public int compare(Object o1, Object o2) {
+			final String bob1 = o1.toString();
+			final String bob2 = o2.toString();
+			
+			try {
+				BigInteger bd1 = new BigInteger(bob1, 32);
+				BigInteger bd2 = new BigInteger(bob2, 32);
+				return bd1.compareTo(bd2);
+			} catch (NumberFormatException n) {
+				System.out.println("problem: " + n.getMessage());
+				return 0;
+			}
+		}
 	}
 }

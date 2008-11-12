@@ -414,3 +414,12 @@ Defines a trigger in the database schema.
     delete (true, false) "false"
     foreach (row, statement) "row"
 >
+
+<!ELEMENT columnDataChange>
+<!ATTLIST columnDataChange
+  tablename             CDATA #IMPLIED
+  columnname             CDATA #IMPLIED
+  oldValue             CDATA #IMPLIED
+  newValue             CDATA #IMPLIED
+  pkRow             CDATA #IMPLIED
+>

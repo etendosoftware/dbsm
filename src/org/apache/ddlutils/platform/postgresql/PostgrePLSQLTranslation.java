@@ -13,10 +13,15 @@
 package org.apache.ddlutils.platform.postgresql;
 
 import java.sql.Types;
+
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
-import org.apache.ddlutils.translation.*;
+import org.apache.ddlutils.translation.ByLineTranslation;
+import org.apache.ddlutils.translation.CombinedTranslation;
+import org.apache.ddlutils.translation.ReplacePatTranslation;
+import org.apache.ddlutils.translation.ReplaceStrTranslation;
+import org.apache.ddlutils.translation.Translation;
 
 /**
  *

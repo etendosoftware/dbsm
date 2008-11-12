@@ -21,18 +21,14 @@ package org.apache.ddlutils.platform.postgresql;
 
 import java.io.IOException;
 import java.sql.Types;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
-import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
@@ -41,7 +37,6 @@ import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.View;
-import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.translation.CommentFilter;
 import org.apache.ddlutils.translation.LiteralFilter;
@@ -93,7 +88,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
+    @Override
+	public void dropTable(Table table) throws IOException
     { 
         printStartOfStatement("TABLE", getStructureObjectName(table));
         print("DROP TABLE ");
@@ -112,7 +108,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void writeExternalIndexDropStmt(Table table, Index index) throws IOException
+    @Override
+	public void writeExternalIndexDropStmt(Table table, Index index) throws IOException
     {
         print("DROP INDEX ");
         printIdentifier(getConstraintObjectName(index));
@@ -122,7 +119,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException
+    @Override
+	public void createTable(Database database, Table table, Map parameters) throws IOException
     {
         for (int idx = 0; idx < table.getColumnCount(); idx++)
         {
@@ -139,7 +137,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     }
     
 
-    public void writeTableCommentsStmt(Database database, Table table) throws IOException
+    @Override
+	public void writeTableCommentsStmt(Database database, Table table) throws IOException
     {
 
         //Add comments for NVARCHAR types
@@ -152,7 +151,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     }
     
 
-    public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
+    @Override
+	public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
     {
     	String comment="";
 
@@ -189,7 +189,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getDelimitedIdentifier(String identifier)
+    @Override
+	protected String getDelimitedIdentifier(String identifier)
     {
         if ("OFFSET".equalsIgnoreCase(identifier) ||
             "NOW".equalsIgnoreCase(identifier) ||
@@ -215,7 +216,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     }
 
 
-    protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    @Override
+	protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
     {
     	for(int i=0;i<newColumns.size();i++)
     	{
@@ -228,7 +230,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     		
     	}
     }
-    protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    @Override
+	protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
     {
     	for(int i=0;i<newColumns.size();i++)
     	{
@@ -242,7 +245,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     	}
     }
     
-    protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    @Override
+	protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
     {
     	for(int i=0;i<newColumns.size();i++)
     	{
@@ -273,7 +277,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
+    @Override
+	protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
     {
         print("UNIQUE DEFAULT nextval('");
         print(getConstraintName(null, table, column.getName(), "seq"));
@@ -283,7 +288,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public String getSelectLastIdentityValues(Table table)
+    @Override
+	public String getSelectLastIdentityValues(Table table)
     {
         Column[] columns = table.getAutoIncrementColumns();
 
@@ -314,7 +320,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void processTableStructureChanges(Database currentModel,
+    @Override
+	protected void processTableStructureChanges(Database currentModel,
                                                 Database desiredModel,
                                                 Table    sourceTable,
                                                 Table    targetTable,
@@ -402,7 +409,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeCreateFunctionStmt(Function function) throws IOException {
+    @Override
+	protected void writeCreateFunctionStmt(Function function) throws IOException {
         print("CREATE FUNCTION ");
         printIdentifier(getStructureObjectName(function));
     }
@@ -410,7 +418,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeDropFunctionStmt(Function function) throws IOException {
+    @Override
+	protected void writeDropFunctionStmt(Function function) throws IOException {
         print("DROP FUNCTION ");
         printIdentifier(getStructureObjectName(function));
 
@@ -427,14 +436,16 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getNoParametersDeclaration() {
+    @Override
+	protected String getNoParametersDeclaration() {
         return "()";
     }
     
     /**
      * {@inheritDoc}
      */
-    protected String getFunctionReturn(Function function) {
+    @Override
+	protected String getFunctionReturn(Function function) {
         
         if (function.getTypeCode() == Types.NULL) {
             if (isProcedure(function)) {
@@ -459,21 +470,24 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getFunctionBeginBody() {                
+    @Override
+	protected String getFunctionBeginBody() {                
         return "AS $BODY$ DECLARE ";
     }
     
     /**
      * {@inheritDoc}
      */
-    protected String getFunctionEndBody() {
+    @Override
+	protected String getFunctionEndBody() {
         return "; $BODY$ LANGUAGE plpgsql;";
     }
     
     /**
      * {@inheritDoc}
      */    
-    protected void createFunction(Function function) throws IOException {
+    @Override
+	protected void createFunction(Function function) throws IOException {
         
         super.createFunction(function);
         /*System.out.println("Funcion: "+function.getName());
@@ -552,7 +566,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void dropFunction(Function function) throws IOException {
+    @Override
+	protected void dropFunction(Function function) throws IOException {
         
         String sLastDefault = function.getParameterCount() == 0 ? null : function.getParameter(function.getParameterCount() - 1).getDefaultValue();
         if (sLastDefault != null && !sLastDefault.equals("")) {
@@ -572,7 +587,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeParameter(Parameter parameter) throws IOException {
+    @Override
+	protected void writeParameter(Parameter parameter) throws IOException {
         
         if (parameter.getName() != null) {
             print(parameter.getName());
@@ -591,7 +607,8 @@ public class PostgreSqlBuilder extends SqlBuilder
         // writeDefaultValueStmt(parameter); 
     }    
 
-    public void writeCreateTriggerFunction(Trigger trigger) throws IOException {
+    @Override
+	public void writeCreateTriggerFunction(Trigger trigger) throws IOException {
         
         printStartOfStatement("FUNCTION FOR TRIGGER", getStructureObjectName(trigger));     
         
@@ -626,20 +643,23 @@ public class PostgreSqlBuilder extends SqlBuilder
         printEndOfStatement(getStructureObjectName(trigger));
     }
     
-    public void writeTriggerExecuteStmt(Trigger trigger) throws IOException {             
+    @Override
+	public void writeTriggerExecuteStmt(Trigger trigger) throws IOException {             
         print("EXECUTE PROCEDURE ");    
         printIdentifier(getStructureObjectName(trigger));
         print("()");
     }
     
     
-    protected void writeDropTriggerEndStatement(Database database, Trigger trigger) throws IOException {
+    @Override
+	protected void writeDropTriggerEndStatement(Database database, Trigger trigger) throws IOException {
         print(" ON ");
         print(getStructureObjectName(database.findTable(trigger.getTable())));
         print(" CASCADE");
     }
     
-    protected void writeDropTriggerFunction(Trigger trigger) throws IOException {
+    @Override
+	protected void writeDropTriggerFunction(Trigger trigger) throws IOException {
         
         printStartOfStatement("FUNCTION FOR TRIGGER", getStructureObjectName(trigger));     
 
@@ -649,7 +669,8 @@ public class PostgreSqlBuilder extends SqlBuilder
         printEndOfStatement(getStructureObjectName(trigger));
     }
     
-    protected void writeCreateViewStatement(View view) throws IOException {  
+    @Override
+	protected void writeCreateViewStatement(View view) throws IOException {  
         
         printScriptOptions("FORCE = TRUE");
         print("CREATE OR REPLACE VIEW ");
@@ -658,7 +679,8 @@ public class PostgreSqlBuilder extends SqlBuilder
         print(getSQLTranslation().exec(view.getStatement()));        
     }
     
-    protected void createUpdateRules(View view) throws IOException {
+    @Override
+	protected void createUpdateRules(View view) throws IOException {
         
         RuleProcessor rule = new RuleProcessor(view.getStatement());
         
@@ -731,7 +753,8 @@ public class PostgreSqlBuilder extends SqlBuilder
     }    
     
     
-    protected void dropUpdateRules(View view) throws IOException {
+    @Override
+	protected void dropUpdateRules(View view) throws IOException {
         
         RuleProcessor rule = new RuleProcessor(view.getStatement());
         
@@ -760,22 +783,26 @@ public class PostgreSqlBuilder extends SqlBuilder
     }
     
     
-    protected Translation createPLSQLFunctionTranslation(Database database) {
+    @Override
+	protected Translation createPLSQLFunctionTranslation(Database database) {
         return new PostgrePLSQLFunctionTranslation(database);
     }    
     
-    public Translation createPLSQLTriggerTranslation(Database database) {
+    @Override
+	public Translation createPLSQLTriggerTranslation(Database database) {
         return new PostgrePLSQLTriggerTranslation(database);
     }    
     
-    protected Translation createSQLTranslation(Database database) {
+    @Override
+	protected Translation createSQLTranslation(Database database) {
         return new PostgreSQLTranslation();
     }    
     
     /**
      * {@inheritDoc}
      */
-    protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
+    @Override
+	protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
         switch (typeCode) {
             case Types.TINYINT:
             case Types.SMALLINT:
@@ -799,6 +826,17 @@ public class PostgreSqlBuilder extends SqlBuilder
             default:
                 return neutralFunction;
         }
+    }
+    
+	@Override
+	public void printColumnSizeChange(Database database, ColumnSizeChange change) throws IOException
+    {
+    	Table table=database.findTable(change.getTablename());
+    	Column column=table.findColumn(change.getColumnname());
+    	column.setSize(Integer.toString(change.getNewSize()));
+    	print("ALTER TABLE "+table.getName()+" ALTER COLUMN "+column.getName()+" TYPE ");
+        print(getSqlType(column));
+    	printEndOfStatement();
     }
     
 }

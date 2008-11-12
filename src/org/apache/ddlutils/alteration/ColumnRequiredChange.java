@@ -65,5 +65,11 @@ public class ColumnRequiredChange extends TableChangeImplBase implements ColumnC
         Column column = table.findColumn(_column.getName(), caseSensitive);
 
         column.setRequired(!_column.isRequired());
-    }
+    }  
+    
+    @Override
+	public String toString()
+    {
+    	return "ColumnRequiredChange. Column: "+_column.getName();
+    } 
 }

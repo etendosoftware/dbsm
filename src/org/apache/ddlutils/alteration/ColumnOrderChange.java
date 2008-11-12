@@ -81,5 +81,11 @@ public class ColumnOrderChange extends TableChangeImplBase
             table.removeColumn(idx);
         }
         table.addColumns(newColumns);
-    }
+    }  
+    
+    @Override
+	public String toString()
+    {
+    	return "ColumnOrderChange. Table: "+_table.getName();
+    } 
 }

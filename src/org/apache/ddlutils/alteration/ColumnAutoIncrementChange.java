@@ -65,5 +65,11 @@ public class ColumnAutoIncrementChange extends TableChangeImplBase
         Column column = table.findColumn(_column.getName(), caseSensitive);
 
         column.setAutoIncrement(!_column.isAutoIncrement());
-    }
+    }    
+    
+    @Override
+	public String toString()
+    {
+    	return "ColumnAutoIncrementChange. Column Name: "+_column.getName();
+    } 
 }

@@ -1,67 +1,106 @@
 package org.apache.ddlutils.alteration;
 
-import java.util.HashMap;
-import java.util.Vector;
-
-import org.apache.commons.beanutils.DynaBean;
-import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
-import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 
-public class ColumnDataChange implements DataChange{
-	
+public class ColumnDataChange implements DataChange {
+
 	Table _table;
 	Column _column;
 	Object _oldValue;
 	Object _newValue;
-	Object[] _pkRow;
-	
-	public ColumnDataChange(Table table, Column column, Object oldValue, Object newValue, Object[] pkRow)
+	Object _pkRow;
+	String _tablename;
+	String _columnname;
+
+	public ColumnDataChange()
 	{
-		_table=table;
-		_column=column;
-		_oldValue=oldValue;
-		_newValue=newValue;
-		_pkRow=pkRow;
+		
 	}
 	
-	public void apply(DatabaseData databaseData, boolean caseSensitive)
+	public ColumnDataChange(String tablename, String columnname, Object oldValue,Object pkRow)
 	{
-		databaseData.changeRow(_table, _column, _pkRow, _oldValue, _newValue);
+		this._tablename=tablename;
+		this._columnname=columnname;
+		this._oldValue=oldValue;
+		this._pkRow=pkRow;
 	}
-	
-	public String toString()
-	{
-		String string="Change in column ["+_column.getName()+"] in table ["+_table.getName()+"]: PK:";
-		for(int i=0;i<_pkRow.length;i++)
-			string+=_pkRow[i];
-		return string+" Old Value: <"+_oldValue+"> New Value: <"+_newValue+">";
+	public ColumnDataChange(Table table, Column column, Object oldValue,
+			Object newValue, Object pkRow) {
+		_table = table;
+		_column = column;
+		_oldValue = oldValue;
+		_newValue = newValue;
+		_pkRow = pkRow;
+		_tablename = table.getName();
+		_columnname = column.getName();
+
 	}
-	
-	public Table getTable()
-	{
+
+	public void apply(DatabaseData databaseData, boolean caseSensitive) {
+		// databaseData.changeRow(_table, _column, _pkRow, _oldValue,
+		// _newValue);
+	}
+
+	@Override
+	public String toString() {
+		String string = "Change in column [" + _columnname
+				+ "] in table [" + _tablename + "]: PK:" + _pkRow;
+		return string + " Old Value: <" + _oldValue + "> New Value: <"
+				+ _newValue + ">";
+	}
+
+	public Table getTable() {
 		return _table;
 	}
-	
-	public Column getColumn()
-	{
+
+	public Column getColumn() {
 		return _column;
 	}
-	
-	public Object getOldValue()
-	{
+
+	public Object getOldValue() {
 		return _oldValue;
 	}
-	
-	public Object getNewValue()
-	{
+
+	public Object getNewValue() {
 		return _newValue;
 	}
-	
-	public Object[] getPrimaryKey()
-	{
+
+	public Object getPrimaryKey() {
 		return _pkRow;
+	}
+
+	public String getColumnname() {
+		return _columnname;
+	}
+
+	public String getTablename() {
+		return _tablename;
+	}
+
+
+	public Object getPkRow() {
+		return _pkRow;
+	}
+	
+	public void setTablename(String tablename) {
+		_tablename = tablename;
+	}
+
+	public void setColumnname(String columnname) {
+		_columnname = columnname;
+	}
+
+	public void setPkRow(Object row) {
+		_pkRow = row;
+	}
+	
+	public void setOldValue(Object oldValue) {
+		_oldValue=oldValue;
+	}
+	
+	public void setNewValue(Object newValue) {
+		_newValue=newValue;
 	}
 }
