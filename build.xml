@@ -16,6 +16,7 @@
     <property name="build.db.lib" value="${basedir}/build/lib"/>
     <property name="build.db.docs" value="${basedir}/docs"/>
     <property name="build.db.src" value="${basedir}/src"/>
+    <property file="dbsm.properties" />
  
     <path id="db.class.path">
         <fileset dir="${basedir}/lib">
@@ -24,7 +25,7 @@
         <fileset dir="${basedir}/lib/build-only">
             <include name="**/*.jar"/>
         </fileset>
-    	<pathelement path="/path_to_openbravo/build/classes/" />
+        <pathelement path="${pathOB}/build/classes/" />
     </path>
 
     <target name="init">
