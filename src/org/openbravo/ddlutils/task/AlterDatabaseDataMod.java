@@ -105,6 +105,7 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
 	public void doExecute() {
        
         initLogging();
+        _log.info("Database connection: "+getUrl()+". User: "+getUser());
         
         if(module==null || module.equals(""))
         {

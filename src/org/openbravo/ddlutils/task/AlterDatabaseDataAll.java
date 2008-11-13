@@ -101,6 +101,7 @@ public class AlterDatabaseDataAll extends DalInitializingTask {
 	public void doExecute() {
        
         initLogging();
+        _log.info("Database connection: "+getUrl()+". User: "+getUser());
     
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
