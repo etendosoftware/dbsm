@@ -24,7 +24,7 @@
         <fileset dir="${basedir}/lib/build-only">
             <include name="**/*.jar"/>
         </fileset>
-    	<pathelement path="/home/openbravo/modularity2/build/classes/" />
+    	<pathelement path="/path_to_openbravo/build/classes/" />
     </path>
 
     <target name="init">
