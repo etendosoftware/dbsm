@@ -612,7 +612,7 @@ public class ModelComparator
             if (_log.isInfoEnabled()) {
             	_log.info("Processing Column " + sourceColumn.getName() + " of table " + sourceTable.getName() + " (changed because of the onCreateDefault value)");
             }
-            changes.add(new ColumnOnCreateDefaultValueChange(sourceTable,sourceColumn, targetColumn.getOnCreateDefault()));
+            changes.add(new ColumnOnCreateDefaultValueChange(sourceTable,targetColumn, targetColumn.getOnCreateDefault()));
         }
 
         if (sourceColumn.isRequired() != targetColumn.isRequired())

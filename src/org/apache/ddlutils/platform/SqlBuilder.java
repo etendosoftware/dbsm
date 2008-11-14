@@ -2073,6 +2073,7 @@ public abstract class SqlBuilder
             ColumnOnCreateDefaultValueChange change) throws IOException
 	{
     	writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn());
+    	printEndOfStatement();
     	change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
 	}
 

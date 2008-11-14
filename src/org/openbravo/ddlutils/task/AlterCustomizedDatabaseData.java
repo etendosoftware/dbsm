@@ -14,9 +14,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.AddFunctionChange;
+import org.apache.ddlutils.alteration.AddSequenceChange;
 import org.apache.ddlutils.alteration.AddTriggerChange;
 import org.apache.ddlutils.alteration.AddViewChange;
 import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.ColumnOnCreateDefaultValueChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
@@ -189,6 +191,7 @@ public class AlterCustomizedDatabaseData extends Task {
 						modelChanges.remove(addTrigger);
 						modelChanges.remove(removeTrigger);
 						i--;
+						i--;
 						cont = true;
 					}
 				}
@@ -203,6 +206,7 @@ public class AlterCustomizedDatabaseData extends Task {
 						modelChanges.remove(addFunction);
 						modelChanges.remove(removeFunction);
 						i--;
+            i--;
 						cont = true;
 					}
 				}
@@ -213,6 +217,16 @@ public class AlterCustomizedDatabaseData extends Task {
 					modelChanges.remove(addView);
 				}
 			}
+      else if(modelChanges.get(i) instanceof AddSequenceChange)
+      {
+          modelChanges.remove(modelChanges.get(i));
+          i--;
+      }
+      else if(modelChanges.get(i) instanceof ColumnOnCreateDefaultValueChange)
+      {
+          modelChanges.remove(modelChanges.get(i));
+          i--;
+      }
 		}
 
 		_log.info("Applying model customizations to the new version");
