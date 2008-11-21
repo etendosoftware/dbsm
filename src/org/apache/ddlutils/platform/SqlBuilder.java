@@ -662,35 +662,12 @@ public abstract class SqlBuilder
             {
             	processChange(currentModel, desiredModel, params,((AddUniqueChange)change));
             }
-            else if(change instanceof AddIndexChange)
-            {
-            	processChange(currentModel, desiredModel, params,((AddIndexChange)change));
-            }
             else if(change instanceof AddCheckChange)
             {
             	processChange(currentModel, desiredModel, params,((AddCheckChange)change));
             }
             
         }
-        /*for(int i=0;i<newColumns.size();i++)
-        {
-        	AddColumnChange change=newColumns.get(i);
-        	Table table=change.getChangedTable();
-        	executeStandardDefault(table, change.getNewColumn());
-        }*/
-        //enableNOTNULLColumns(newColumns);
-        /*
-        Vector<String> droppedTables=new Vector<String>();
-        for(int i=0;i<newColumns.size();i++)
-        {
-        	if(!droppedTables.contains(newColumns.get(i).getChangedTable().getName()))
-        	{
-                Table tempTable = getTemporaryTableFor(desiredModel, newColumns.get(i).getChangedTable());
-            	dropTemporaryTable(desiredModel, tempTable);
-            	droppedTables.add(newColumns.get(i).getChangedTable().getName());
-        	}
-        }
-        */
 
     	//We will now create the primary keys from recreated tables
 
@@ -751,12 +728,26 @@ public abstract class SqlBuilder
            {
              writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i).getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
              writeExternalIndicesCreateStmt(desiredModel.getTable(i));
-             enableNOTNULLColumns(newColumnsThisTable);
+             enableAllNOTNULLColumns(desiredModel.getTable(i));
              if(newColumn)
              {
                Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
                dropTemporaryTable(desiredModel, tempTable);
                
+             }
+           }
+           else
+           {
+             Iterator it2=changes.iterator();
+             while(it2.hasNext())
+             {
+                 Object change = it2.next();
+                 if(change instanceof AddIndexChange)
+                 {
+                   AddIndexChange ichange=((AddIndexChange)change);
+                   if(ichange.getChangedTable().getName().equalsIgnoreCase(desiredModel.getTable(i).getName()))
+                     processChange(currentModel, desiredModel, params,ichange);
+                 }
              }
            }
        }
@@ -856,13 +847,13 @@ public abstract class SqlBuilder
       for(int i=0;i<pks1.length;i++)
       {
       	if(i>0) pk+=" AND ";
-      	pk+=table.getName()+"."+pks1[i].getName()+"="+tempTable.getName()+"."+pks1[i].getName();
+      	pk+="TO_CHAR("+table.getName()+"."+pks1[i].getName()+")=TO_CHAR("+tempTable.getName()+"."+pks1[i].getName()+")";
       	}
       String oncreatedefault=col.getOnCreateDefault();
       if(oncreatedefault!=null && !oncreatedefault.equals(""))
       {
         if(recreated)
-          println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+")");
+          println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+") AND "+col.getName()+" IS NULL");
         else
           println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+")");
       	printEndOfStatement();
@@ -1669,7 +1660,7 @@ public abstract class SqlBuilder
                 // Likewise, foreign keys have already been dropped as necessary
                 dropTable(sourceTable);
                 createTable(desiredModel, realTargetTable, parameters);
-                disableNOTNULLColumns(newColumns);
+                disableAllNOTNULLColumns(realTargetTable);
                 writeCopyDataStatement(tempTable, targetTable);
                 if(!newColumn)
                 	dropTemporaryTable(desiredModel, tempTable);
@@ -1777,16 +1768,30 @@ public abstract class SqlBuilder
 
     protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
     {
-    	for(int i=0;i<newColumns.size();i++)
-    	{
-    		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired() && !column.isPrimaryKey())
-    		{
-    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
-        		printEndOfStatement();
-    		}
-    		
-    	}
+      for(int i=0;i<newColumns.size();i++)
+      {
+        Column column=newColumns.get(i).getNewColumn();
+        if(column.isRequired() && !column.isPrimaryKey())
+        {
+          println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
+            printEndOfStatement();
+        }
+        
+      }
+    }
+    
+    protected void disableAllNOTNULLColumns(Table table) throws IOException
+    {
+      for(int i=0;i<table.getColumnCount();i++)
+      {
+        Column column=table.getColumn(i);
+        if(column.isRequired())
+        {
+          println("ALTER TABLE "+table.getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NULL");
+            printEndOfStatement();
+        }
+        
+      }
     }
     protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
     {
@@ -1801,19 +1806,32 @@ public abstract class SqlBuilder
     		
     	}
     }
-    
+
+    protected void enableAllNOTNULLColumns(Table table) throws IOException
+    {
+      for(int i=0;i<table.getColumnCount();i++)
+      {
+        Column column=table.getColumn(i);
+        if(column.isRequired())
+        {
+          println("ALTER TABLE "+table.getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NOT NULL");
+            printEndOfStatement();
+        }
+        
+      }
+    }
     protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
     {
-    	for(int i=0;i<newColumns.size();i++)
-    	{
-    		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired() && !column.isPrimaryKey())
-    		{
-    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NOT NULL");
-        		printEndOfStatement();
-    		}
-    		
-    	}
+      for(int i=0;i<newColumns.size();i++)
+      {
+        Column column=newColumns.get(i).getNewColumn();
+        if(column.isRequired() && !column.isPrimaryKey())
+        {
+          println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" MODIFY "+getColumnName(column)+" "+getSqlType(column)+" NOT NULL");
+            printEndOfStatement();
+        }
+        
+      }
     }
     
     public void processDataChanges(Database database, DatabaseData databaseData, List changes) throws IOException

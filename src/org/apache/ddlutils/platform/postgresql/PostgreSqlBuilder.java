@@ -216,19 +216,31 @@ public class PostgreSqlBuilder extends SqlBuilder
     }
 
 
-    @Override
-	protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    protected void disableAllNOTNULLColumns(Table table) throws IOException
     {
-    	for(int i=0;i<newColumns.size();i++)
-    	{
-    		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired())
-    		{
-    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" ALTER "+getColumnName(column)+" DROP NOT NULL");
-        		printEndOfStatement();
-    		}
-    		
-    	}
+      for(int i=0;i<table.getColumnCount();i++)
+      {
+        Column column=table.getColumn(i);
+        if(column.isRequired())
+        {
+          println("ALTER TABLE "+table.getName()+" ALTER "+getColumnName(column)+" DROP NOT NULL");
+            printEndOfStatement();
+        }
+        
+      }
+    }
+    protected void disableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+      for(int i=0;i<newColumns.size();i++)
+      {
+        Column column=newColumns.get(i).getNewColumn();
+        if(column.isRequired())
+        {
+          println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" ALTER "+getColumnName(column)+" DROP NOT NULL");
+            printEndOfStatement();
+        }
+        
+      }
     }
     @Override
 	protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
@@ -245,19 +257,33 @@ public class PostgreSqlBuilder extends SqlBuilder
     	}
     }
     
-    @Override
-	protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+
+    protected void enableAllNOTNULLColumns(Table table) throws IOException
     {
-    	for(int i=0;i<newColumns.size();i++)
-    	{
-    		Column column=newColumns.get(i).getNewColumn();
-    		if(column.isRequired())
-    		{
-    			println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" ALTER "+getColumnName(column)+" SET NOT NULL");
-        		printEndOfStatement();
-    		}
-    		
-    	}
+      for(int i=0;i<table.getColumnCount();i++)
+      {
+        Column column=table.getColumn(i);
+        if(column.isRequired())
+        {
+          println("ALTER TABLE "+table.getName()+" ALTER "+getColumnName(column)+" SET NOT NULL");
+            printEndOfStatement();
+        }
+        
+      }
+    }
+    
+    protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException
+    {
+      for(int i=0;i<newColumns.size();i++)
+      {
+        Column column=newColumns.get(i).getNewColumn();
+        if(column.isRequired())
+        {
+          println("ALTER TABLE "+newColumns.get(i).getChangedTable().getName()+" ALTER "+getColumnName(column)+" SET NOT NULL");
+            printEndOfStatement();
+        }
+        
+      }
     }
     
     
@@ -837,6 +863,27 @@ public class PostgreSqlBuilder extends SqlBuilder
     	print("ALTER TABLE "+table.getName()+" ALTER COLUMN "+column.getName()+" TYPE ");
         print(getSqlType(column));
     	printEndOfStatement();
+    }
+    
+
+    public void executeOnCreateDefault(Table table, Table tempTable, Column col, boolean recreated) throws IOException
+    {
+      String pk="";
+      Column[] pks1=table.getPrimaryKeyColumns();
+      for(int i=0;i<pks1.length;i++)
+      {
+        if(i>0) pk+=" AND ";
+        pk+=table.getName()+"."+pks1[i].getName()+"::text="+tempTable.getName()+"."+pks1[i].getName()+"::text";
+        }
+      String oncreatedefault=col.getOnCreateDefault();
+      if(oncreatedefault!=null && !oncreatedefault.equals(""))
+      {
+        if(recreated)
+          println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+") WHERE EXISTS (SELECT 1 FROM "+tempTable.getName()+" WHERE "+pk+") AND "+col.getName()+" IS NULL");
+        else
+          println("UPDATE "+table.getName()+" SET "+col.getName()+"=("+oncreatedefault+")");
+        printEndOfStatement();
+      }
     }
     
 }
