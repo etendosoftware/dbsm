@@ -97,6 +97,11 @@ public class ExportDatabase extends Task {
 
 		DBSMOBUtil util = DBSMOBUtil.getInstance();
 		util.getModules(platform, excludeobjects);
+		if(util.getActiveModuleCount()==0)
+		{
+		  _log.info("No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
+		  return;
+		}
 
 		if(module==null || module.equals("%"))
 		{
