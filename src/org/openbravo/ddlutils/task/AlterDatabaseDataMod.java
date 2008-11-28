@@ -201,7 +201,7 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
         {
         	String modName=st.nextToken().trim();
         	_log.info("Updating module: "+modName);
-	        ModuleRow row=util.getRowFromName(modName);
+	        ModuleRow row=util.getRowFromDir(modName);
 	        moduleRows.add(row);
 	        if(row==null)
 	        	throw new BuildException("Module "+modName+" not found in AD_MODULE table.");

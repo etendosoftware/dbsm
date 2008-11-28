@@ -248,8 +248,8 @@ public class DBSMOBUtil {
 		}
 	}
 
-	public void getIncludedModulesInModule(String moduleName,Vector<String> idList) {
-		ModuleRow row=getRowFromName(moduleName);
+	public void getIncludedModulesInModule(String moduleDir,Vector<String> idList) {
+		ModuleRow row=getRowFromDir(moduleDir);
 		if(!idList.contains(row.idMod))
 		    idList.add(row.idMod);
 		if (incdependencies.get(row.idMod) != null) {
@@ -390,12 +390,20 @@ public class DBSMOBUtil {
 		}
 		return null;
 	}
-	
-	public ModuleRow getRowFromName(String name) {
-		for(ModuleRow row: allModules){
-			if(row.name.equalsIgnoreCase(name))
-				return row;
-		}
-		return null;
-	}
+  
+  public ModuleRow getRowFromName(String name) {
+    for(ModuleRow row: allModules){
+      if(row.name.equalsIgnoreCase(name))
+        return row;
+    }
+    return null;
+  }
+  
+  public ModuleRow getRowFromDir(String dir) {
+    for(ModuleRow row: allModules){
+      if(row.dir.equalsIgnoreCase(dir))
+        return row;
+    }
+    return null;
+  }
 }
