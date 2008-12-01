@@ -170,4 +170,22 @@ public class SqlDynaClass extends BasicDynaClass
         _primaryKeyProperties    = (SqlDynaProperty[])pkProps.toArray(new SqlDynaProperty[pkProps.size()]);
         _nonPrimaryKeyProperties = (SqlDynaProperty[])nonPkProps.toArray(new SqlDynaProperty[nonPkProps.size()]);
     }
+    
+    public void resetDynaClass(Table table)
+    {
+        _table=table;
+
+        List properties = new ArrayList();
+
+        for (int idx = 0; idx < table.getColumnCount(); idx++)
+        {
+            properties.add(new SqlDynaProperty(table.getColumn(idx)));
+        }
+
+        SqlDynaProperty[] array = new SqlDynaProperty[properties.size()];
+
+        properties.toArray(array);
+        setProperties(array);
+        initPrimaryKeys();
+    }
 }

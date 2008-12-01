@@ -171,4 +171,9 @@ public class DatabaseData{
 		for(int i=0;i<_model.getTableCount();i++)
 			DataToArraySink.sortArray(_model, getRowsFromTable(_model.getTable(i).getName()));
 	}
+	
+	public Database getDatabase()
+	{
+	  return _model;
+	}
 }
