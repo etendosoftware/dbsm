@@ -815,7 +815,6 @@ public class DataComparator {
     if (!iteratorDb.hasNext()) {
       // There is no data in the table. Everything must be transformed
       // into AddRowChanges
-
       for (int i = 0; i < newData.size(); i++) {
         dataChanges.add(new AddRowChange(table, newData.get(i)));
       }
@@ -830,7 +829,7 @@ public class DataComparator {
 
     List<DataSetColumn> allColumns = DataSetService.getInstance().getDataSetColumns(datasetTable);
     List<Property> properties = DataSetService.getInstance().getExportableProperties(dbOrg, datasetTable, allColumns);
-    int obPending=0;
+    int obPending=1;
     
     while (indNew < newData.size() && iteratorDb.hasNext()) {
       dbNew = newData.get(indNew);
@@ -884,7 +883,10 @@ public class DataComparator {
     if (indNew < newData.size() && !iteratorDb.hasNext()) {
       // There are rows in the XML files, but not in the database. We have to insert them
       while (indNew < newData.size())
+      {
+        System.out.println(newData.get(indNew));
         dataChanges.add(new AddRowChange(table, newData.get(indNew++)));
+      }
     } else if (indNew >= newData.size()) {
       if(obPending>0) 
       {
