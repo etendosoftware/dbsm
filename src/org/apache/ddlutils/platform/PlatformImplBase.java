@@ -337,7 +337,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
                 }
                 try
                 {
-                     int results = statement.executeUpdate(command);
+                     //int results = statement.executeUpdate(command);
+                     boolean result = statement.execute(command);
 //                    int results;                       
 //                    if (statement.execute(command)) {
 //                        results = 0; // is a result set
@@ -345,45 +346,39 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
 //                        results = statement.getUpdateCount();
 //                    }
 
-                    if (_log.isDebugEnabled())
+                    /*if (_log.isDebugEnabled())
                     {
                         _log.debug("After execution, " + results + " row(s) have been changed");
-                    }
+                    }*/
                 }
                 catch (SQLException ex)
                 {
-                	if(ex.getMessage().contains("A result was returned when none was expected"))
-                	{
-                		//We're trying to execute a "SELECT" in a script. This should not be an error
-                	}
-                	else
-                	{
-	                    if (continueOnError)
-	                    {
-	                        // Since the user deciced to ignore this error, we log the error
-	                        // on level warn, and the exception itself on level debug
-	                    	if(!command.contains("SCRIPT OPTIONS (FORCE = TRUE)"))
-	                    	{
-		                        _log.warn("SQL Command failed with: " + ex.getMessage());
-		                        _log.warn(command);
-		                        if (_log.isDebugEnabled())
-		                        {                            
-		                            _log.debug(ex);
-		                        }
-		                        errors++;
-	                    	}
-	                        
-	                        // It is a "forced" command ?
-	                        if (command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
-	                            aForcedCommands.add(command);
+                	
+                    if (continueOnError)
+                    {
+                        // Since the user deciced to ignore this error, we log the error
+                        // on level warn, and the exception itself on level debug
+                    	if(!command.contains("SCRIPT OPTIONS (FORCE = TRUE)"))
+                    	{
+	                        _log.warn("SQL Command failed with: " + ex.getMessage());
+	                        _log.warn(command);
+	                        if (_log.isDebugEnabled())
+	                        {                            
+	                            _log.debug(ex);
 	                        }
-	                    }
-	                    else
-	                    {
-	                        throw new DatabaseOperationException("Error while executing SQL " + command, ex);
-	                    }
+	                        errors++;
+                    	}
+                        
+                        // It is a "forced" command ?
+                        if (command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
+                            aForcedCommands.add(command);
+                        }
+                    }
+                    else
+                    {
+                        throw new DatabaseOperationException("Error while executing SQL " + command, ex);
+                    }
                 	}
-                }
 
                 // lets display any warnings
                 SQLWarning warning = connection.getWarnings();
