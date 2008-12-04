@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -266,9 +268,7 @@ public class DataComparator {
 					.getRowsFromTable(table.getTable().getTableName());
 			// We now have the rows of the table in the database (answer)
 			// and the rows in the XML files (HashMap originalData)
-			compareTablesDALForUpdate(newdb, table, newdb.findTable(table
-					.getTable().getTableName()), service.getExportableObjects(
-					table, moduleIds), rowsOriginalData);
+			compareTablesDALForUpdate(newdb, table, newdb.findTable(table.getTable().getTableName()), service.getExportableObjectsIterator(table, moduleIds, Collections.EMPTY_MAP), rowsOriginalData);
 		}
 	}
 
@@ -801,82 +801,168 @@ public class DataComparator {
 
 	}
 
-	private void compareTablesDALForUpdate(Database model,
-			DataSetTable datasetTable, Table table,
-			List<BaseOBObject> dbObjects, Vector<DynaBean> newData) {
 
-		if (newData == null || newData.size() == 0) {
-			// There is no data in the XML files. We remove data from the
-			// database
-			// and leave
-			for (BaseOBObject object : dbObjects) {
-				dataChanges.add(new RemoveRowDALChange(table, object));
-			}
-			return;
-		}
-		if (dbObjects.size() == 0) {
-			// There is no data in the table. Everything must be transformed
-			// into AddRowChanges
+  private void compareTablesDALForUpdate(Database model,
+      DataSetTable datasetTable, Table table,
+      Iterator iteratorDb, Vector<DynaBean> newData) {
 
-			for (int i = 0; i < newData.size(); i++) {
-				dataChanges.add(new AddRowChange(table, newData.get(i)));
-			}
-			return;
-		}
+    if (newData == null || newData.size() == 0) {
+      // There is no data in the XML files. We remove data from the database and leave
+      while(iteratorDb.hasNext())
+        dataChanges.add(new RemoveRowDALChange(table, (BaseOBObject)iteratorDb.next()));
+      return;
+    }
+    if (!iteratorDb.hasNext()) {
+      // There is no data in the table. Everything must be transformed
+      // into AddRowChanges
 
-		int indOrg = 0;
-		int indNew = 0;
-		DynaBean dbNew = newData.get(indNew);
-		BaseOBObject dbOrg = dbObjects.get(indOrg);
-		SqlDynaClass dynaClass = model.getDynaClassFor(dbNew);
-		SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
+      for (int i = 0; i < newData.size(); i++) {
+        dataChanges.add(new AddRowChange(table, newData.get(i)));
+      }
+      return;
+    }
 
-		List<DataSetColumn> allColumns = DataSetService.getInstance()
-				.getDataSetColumns(datasetTable);
-		List<Property> properties = DataSetService.getInstance()
-				.getExportableProperties(dbOrg, datasetTable, allColumns);
+    int indNew = 0;
+    DynaBean dbNew = newData.get(indNew);
+    BaseOBObject dbOrg=(BaseOBObject)iteratorDb.next();
+    SqlDynaClass dynaClass = model.getDynaClassFor(dbNew);
+    SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
 
-		while (indNew < newData.size() && indOrg < dbObjects.size()) {
-			dbNew = newData.get(indNew);
-			dbOrg = dbObjects.get(indOrg);
-			int comp = comparePKs(model, dbOrg, dbNew, primaryKeys, properties);
-			if (comp == 0) // Rows have the same PKs, we have to compare them
-			{
-				compareRows(model, dbOrg, dbNew, datasetTable, allColumns);
-				indNew++;
-				indOrg++;
-			} else if (comp == -1) // Original model has additional rows, we
-			// have to "delete" them
-			{
-				dataChanges.add(new RemoveRowDALChange(table, dbOrg));
-				indOrg++;
-			} else if (comp == 1) // Target model has additional rows, we have
-			// to "add" them
-			{
-				dataChanges.add(new AddRowChange(table, dbNew));
-				indNew++;
-			} else if (comp == -2) {
-				_log
-						.error("Error: problem while comparing primary key in table "
-								+ table.getName() + ".");
-				return;
-			}
-		}
+    List<DataSetColumn> allColumns = DataSetService.getInstance().getDataSetColumns(datasetTable);
+    List<Property> properties = DataSetService.getInstance().getExportableProperties(dbOrg, datasetTable, allColumns);
+    int obPending=0;
+    
+    while (indNew < newData.size() && iteratorDb.hasNext()) {
+      dbNew = newData.get(indNew);
+      int comp = comparePKs(model, dbOrg, dbNew, primaryKeys, properties);
+      if (comp == 0) // Rows have the same PKs, we have to compare them
+      {
+        compareRows(model, dbOrg, dbNew, datasetTable, allColumns);
+        indNew++;
+        dbOrg=(BaseOBObject)iteratorDb.next();
+        obPending=2;
+      } else if (comp == -1) // Original model has additional rows, we have to "delete" them
+      {
+        dataChanges.add(new RemoveRowDALChange(table, dbOrg));
+        dbOrg=(BaseOBObject)iteratorDb.next();
+        obPending=1;
+      } else if (comp == 1) // Target model has additional rows, we have to "add" them
+      {
+        dataChanges.add(new AddRowChange(table, dbNew));
+        indNew++;
+        obPending=0;
+      } else if (comp == -2) {
+        _log.error("Error: problem while comparing primary key in table " + table.getName() + ".");
+        return;
+      }
+    }
+    if(obPending>0)
+    {
+      //There is at least one row read from the database which wasn't compared. We have to take this into account
+      while (indNew < newData.size() && obPending>0)
+      {
+        dbNew = newData.get(indNew);
+        int comp = comparePKs(model, dbOrg, dbNew, primaryKeys, properties);
+        if (comp == 0) // Rows have the same PKs, we have to compare them
+        {
+          compareRows(model, dbOrg, dbNew, datasetTable, allColumns);
+          indNew++;
+          obPending=0;
+        } else if (comp == -1) // Original model has additional rows, we have to "delete" them
+        {
+          dataChanges.add(new RemoveRowDALChange(table, dbOrg));
+          obPending=0;
+        } else if (comp == 1) // Target model has additional rows, we have to "add" them
+        {
+          dataChanges.add(new AddRowChange(table, dbNew));
+        } else if (comp == -2) {
+          _log.error("Error: problem while comparing primary key in table " + table.getName() + ".");
+          return;
+        }
+      }
+    }
+    if (indNew < newData.size() && !iteratorDb.hasNext()) {
+      // There are rows in the XML files, but not in the database. We have to insert them
+      while (indNew < newData.size())
+        dataChanges.add(new AddRowChange(table, newData.get(indNew++)));
+    } else if (indNew >= newData.size()) {
+      if(obPending>0) 
+      {
+        System.out.println(dbOrg);
+        dataChanges.add(new RemoveRowDALChange(table,dbOrg));
+      }
+      // No rows remaining in the XML files. We will remove all the remaining rows of the database.
+      while (iteratorDb.hasNext())
+        dataChanges.add(new RemoveRowDALChange(table, (BaseOBObject)iteratorDb.next()));
+    }
+  }
+	
+  private void compareTablesDALForUpdate(Database model,
+      DataSetTable datasetTable, Table table,
+      List<BaseOBObject> dbObjects, Vector<DynaBean> newData) {
 
-		if (indNew < newData.size() && indOrg >= dbObjects.size()) {
-			// There are rows in the XML files, but not in the database. We have
-			// to insert them
-			while (indNew < newData.size())
-				dataChanges.add(new AddRowChange(table, newData.get(indNew++)));
-		} else if (indNew >= newData.size() && indOrg < dbObjects.size()) {
-			// No rows remaining in the XML files. We will remove all the
-			// remaining
-			// rows of the database.
-			while (indOrg < dbObjects.size())
-				dataChanges.add(new RemoveRowDALChange(table, dbObjects
-						.get(indOrg++)));
-		}
-	}
+    if (newData == null || newData.size() == 0) {
+      // There is no data in the XML files. We remove data from the
+      // database
+      // and leave
+      for (BaseOBObject object : dbObjects) {
+        dataChanges.add(new RemoveRowDALChange(table, object));
+      }
+      return;
+    }
+    if (dbObjects.size() == 0) {
+      // There is no data in the table. Everything must be transformed
+      // into AddRowChanges
+
+      for (int i = 0; i < newData.size(); i++) {
+        dataChanges.add(new AddRowChange(table, newData.get(i)));
+      }
+      return;
+    }
+
+    int indOrg = 0;
+    int indNew = 0;
+    DynaBean dbNew = newData.get(indNew);
+    BaseOBObject dbOrg = dbObjects.get(indOrg);
+    SqlDynaClass dynaClass = model.getDynaClassFor(dbNew);
+    SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
+
+    List<DataSetColumn> allColumns = DataSetService.getInstance().getDataSetColumns(datasetTable);
+    List<Property> properties = DataSetService.getInstance().getExportableProperties(dbOrg, datasetTable, allColumns);
+
+    while (indNew < newData.size() && indOrg < dbObjects.size()) {
+      dbNew = newData.get(indNew);
+      dbOrg = dbObjects.get(indOrg);
+      int comp = comparePKs(model, dbOrg, dbNew, primaryKeys, properties);
+      if (comp == 0) // Rows have the same PKs, we have to compare them
+      {
+        compareRows(model, dbOrg, dbNew, datasetTable, allColumns);
+        indNew++;
+        indOrg++;
+      } else if (comp == -1) // Original model has additional rows, we have to "delete" them
+      {
+        dataChanges.add(new RemoveRowDALChange(table, dbOrg));
+        indOrg++;
+      } else if (comp == 1) // Target model has additional rows, we have to "add" them
+      {
+        dataChanges.add(new AddRowChange(table, dbNew));
+        indNew++;
+      } else if (comp == -2) {
+        _log.error("Error: problem while comparing primary key in table " + table.getName() + ".");
+        return;
+      }
+    }
+
+    if (indNew < newData.size() && indOrg >= dbObjects.size()) {
+      // There are rows in the XML files, but not in the database. We have to insert them
+      while (indNew < newData.size())
+        dataChanges.add(new AddRowChange(table, newData.get(indNew++)));
+    } else if (indNew >= newData.size() && indOrg < dbObjects.size()) {
+      // No rows remaining in the XML files. We will remove all the remaining rows of the database.
+      while (indOrg < dbObjects.size())
+        dataChanges.add(new RemoveRowDALChange(table, dbObjects.get(indOrg++)));
+    }
+  }
 
 	private int comparePKs(Database model, BaseOBObject db1, DynaBean db2,
 			SqlDynaProperty[] primaryKeys, List<Property> properties) {

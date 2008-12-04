@@ -63,15 +63,15 @@ public class DataToArraySink implements DataSink {
 		public int compare(Object o1, Object o2) {
 			final String bob1 = o1.toString();
 			final String bob2 = o2.toString();
-			
-			try {
+			return bob1.compareTo(bob2);
+			/*try {
 				BigInteger bd1 = new BigInteger(bob1, 32);
 				BigInteger bd2 = new BigInteger(bob2, 32);
 				return bd1.compareTo(bd2);
 			} catch (NumberFormatException n) {
 				System.out.println("problem: " + n.getMessage());
 				return 0;
-			}
+			}*/
 		}
 	}
 }
