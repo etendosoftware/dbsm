@@ -222,10 +222,10 @@ public class AlterDatabaseDataAll extends DalInitializingTask {
     		_log.info("Comparing databases to find differences");
     		DataComparator dataComparator = new DataComparator(platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
     		dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
-    		OBDal.getInstance().commitAndClose();
     		_log.info("Data changes we will perform: ");
     		for(Change change:dataComparator.getChanges())
     			_log.info(change);
+        OBDal.getInstance().commitAndClose();
 
             Database oldModel=(Database)originaldb.clone();
             _log.info("Updating database model...");
