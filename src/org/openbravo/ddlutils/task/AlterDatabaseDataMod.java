@@ -13,6 +13,7 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -142,7 +143,10 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
           for(int j=0;j<incDirs.length;j++)
           {
             File dirF=new File(basedir, incDirs[j]);
-            dirs.add(dirF);
+            if(dirF.exists())
+              dirs.add(dirF);
+            else
+              _log.warn("Directory "+dirF.getAbsolutePath()+" doesn't exist.");
           }
           File[] fileArray=new File[dirs.size()];
           for(int i=0;i<dirs.size();i++)
@@ -234,7 +238,8 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
     				File fsourcedata=new File(basedir, "/"+row.dir+"/src-db/database/sourcedata/");
     				File[] datafiles=DatabaseUtils.readFileArray(fsourcedata);
     				for(int i=0;i<datafiles.length;i++)
-    					files.add(datafiles[i]);
+    				  if(datafiles[i].exists())
+    				    files.add(datafiles[i]);
 	
 	
 	      		DataReader dataReader = dbdio.getConfiguredCompareDataReader(dbAD);
