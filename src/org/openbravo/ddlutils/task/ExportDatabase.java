@@ -111,14 +111,6 @@ public class ExportDatabase extends Task {
 	
 			for (int i = 0; i < util.getActiveModuleCount(); i++) {
 				_log.info("Exporting module: " + util.getActiveModule(i).name);
-        System.out.println("exceptions");
-        Vector<ExceptionRow> v=util.getActiveModule(i).exceptions;
-        for(ExceptionRow row:v)
-          System.out.println(row.name1+";;"+row.name2+";;"+row.type);
-        System.out.println("otherexceptions");
-        v=util.getActiveModule(i).othersexceptions;
-        for(ExceptionRow row:v)
-          System.out.println(row.name1+";;"+row.name2+";;"+row.type);
 				Database dbI = null;
 				try {
 					dbI = (Database) db.clone();
