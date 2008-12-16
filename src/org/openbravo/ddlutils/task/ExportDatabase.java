@@ -15,6 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
@@ -30,6 +31,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ExceptionRow;
 import org.openbravo.ddlutils.util.ModuleRow;
 
 /**
@@ -109,6 +111,14 @@ public class ExportDatabase extends Task {
 	
 			for (int i = 0; i < util.getActiveModuleCount(); i++) {
 				_log.info("Exporting module: " + util.getActiveModule(i).name);
+        System.out.println("exceptions");
+        Vector<ExceptionRow> v=util.getActiveModule(i).exceptions;
+        for(ExceptionRow row:v)
+          System.out.println(row.name1+";;"+row.name2+";;"+row.type);
+        System.out.println("otherexceptions");
+        v=util.getActiveModule(i).othersexceptions;
+        for(ExceptionRow row:v)
+          System.out.println(row.name1+";;"+row.name2+";;"+row.type);
 				Database dbI = null;
 				try {
 					dbI = (Database) db.clone();
@@ -152,7 +162,7 @@ public class ExportDatabase extends Task {
         		        if(row.isInDevelopment!=null && row.isInDevelopment.equalsIgnoreCase("Y"))
         		        {
         		        	_log.info("Loading submodel from database...");
-        		        	Database db = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0), false);
+        		        	Database db = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0), false, row.idMod);
         		        	_log.info("Submodel loaded");
         		        	DatabaseIO io = new DatabaseIO();
         		        	File path = new File(moduledir, row.dir + "/src-db/database/model/");

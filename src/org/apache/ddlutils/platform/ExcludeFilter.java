@@ -15,6 +15,8 @@ package org.apache.ddlutils.platform;
 import java.util.HashMap;
 import java.util.Vector;
 
+import org.openbravo.ddlutils.util.ExceptionRow;
+
 /**
  *
  * @author adrian
@@ -24,9 +26,13 @@ public class ExcludeFilter {
     Vector<String> rejectedPrefixes = new Vector<String>();
     Vector<String> othersPrefixes = new Vector<String>();
     Vector<String> otherActivePrefixes = new Vector<String>();
+    
     private HashMap<String, Vector<String>> prefixDependencies = new HashMap<String, Vector<String>>();
     String modName;
     static String externalPrefix = "EM";
+
+    Vector<ExceptionRow> exceptions=new Vector<ExceptionRow>();
+    Vector<ExceptionRow> othersexceptions=new Vector<ExceptionRow>();
     
     public String[] getExcludedTables() {
         return new String[0];
@@ -58,54 +64,37 @@ public class ExcludeFilter {
     {
       this.otherActivePrefixes.addAll(otherActivePrefixes);
     }
-    
-    public boolean compliesWithNamingRule(String name)
+
+    public boolean compliesWithNamingRuleObject(String name)
     {
-    	for(String prefix: prefixes)
-    	{
-    		if(hasPrefix(name, prefix))
-    				return true;
-    	}
-    	return false;
+      if(isInOthersExceptionsObject(name))
+        return false;
+      
+      for(String prefix: prefixes)
+      {
+        if(hasPrefix(name, prefix))
+            return true;
+      }
+      //It doesn't comply with naming rule. We'll check exceptions table
+      return isInExceptionsObject(name);
+    }
+    public boolean compliesWithNamingRuleTableObject(String name, String tableName)
+    {
+      if(isInOthersExceptionsTableObject(name, tableName))
+        return false;
+      
+      for(String prefix: prefixes)
+      {
+        if(hasPrefix(name, prefix))
+            return true;
+      }
+      //It doesn't comply with naming rule. We'll check exceptions table
+      return isInExceptionsTableObject(name, tableName);
     }
     
     private boolean hasPrefix(String name, String prefix)
     {
       return name.toUpperCase().startsWith(prefix.toUpperCase()+"_");
-    }
-    
-    public boolean compliesWithOthersNamingRule(String name)
-    {
-      if(othersPrefixes==null || othersPrefixes.size()==0)
-      {
-        return false;
-      }
-      boolean b=false;
-      int i=0;
-      while(!b && i<othersPrefixes.size())
-      {
-        if(hasPrefix(name, othersPrefixes.get(i)))
-          b=true;
-        i++;
-      }
-      return b;
-    }
-    
-    public boolean compliesWithOtherActiveNamingRule(String name)
-    {
-        if(otherActivePrefixes==null || otherActivePrefixes.size()==0)
-        {
-          return false;
-        }
-        boolean b=false;
-        int i=0;
-        while(!b && i<otherActivePrefixes.size())
-        {
-          if(hasPrefix(name, otherActivePrefixes.get(i)))
-            b=true;
-          i++;
-        }
-        return b;
     }
     
     public void addDependencies(HashMap<String, Vector<String>> map)
@@ -133,16 +122,67 @@ public class ExcludeFilter {
 		return false;
     }
     
-    public boolean compliesWithExternalPrefix(String name)
+    public boolean compliesWithExternalPrefix(String name, String tableName)
     {
+      if(isInOthersExceptionsTableObject(name, tableName))
+        return true;
     	return hasPrefix(name, externalPrefix);
     }
     
-    public boolean compliesWithExternalNamingRule(String name)
+    public boolean compliesWithExternalNamingRule(String name, String tableName)
     {
+      if(isInExceptionsTableObject(name, tableName))
+        return true;
+      
     	for(String prefix: prefixes)
     		if(hasPrefix(name, externalPrefix+"_"+prefix))
     				return true;
     	return false;
+    }
+    
+    public Vector<ExceptionRow> getExceptions()
+    {
+      return exceptions;
+    }
+    
+    public void addException(ExceptionRow row)
+    {
+      exceptions.add(row);
+    }
+    
+    public void addOthersException(ExceptionRow row)
+    {
+      othersexceptions.add(row);
+    }
+    
+    public boolean isInOthersExceptionsObject(String objectName)
+    {
+      for(ExceptionRow row:othersexceptions)
+        if(objectName.equalsIgnoreCase(row.name1))
+          return true;
+      return false;
+    }
+    
+    public boolean isInExceptionsObject(String objectName)
+    {
+      for(ExceptionRow row:exceptions)
+        if(objectName.equalsIgnoreCase(row.name1))
+          return true;
+      return false;
+    }
+
+    public boolean isInExceptionsTableObject(String objectName, String tableName)
+    {
+      for(ExceptionRow row:exceptions)
+        if(objectName.equalsIgnoreCase(row.name1) && tableName.equalsIgnoreCase(row.name2))
+          return true;
+      return false;
+    }
+    public boolean isInOthersExceptionsTableObject(String objectName, String tableName)
+    {
+      for(ExceptionRow row:othersexceptions)
+        if(objectName.equalsIgnoreCase(row.name1) && tableName.equalsIgnoreCase(row.name2))
+          return true;
+      return false;
     }
 }

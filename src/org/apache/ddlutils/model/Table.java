@@ -1251,14 +1251,14 @@ public class Table implements StructureObject, Serializable, Cloneable
     
     public void applyNamingConventionFilter(ExcludeFilter filter)
     {
-      if(!filter.compliesWithNamingRule(_name))
+      if(!filter.compliesWithNamingRuleObject(_name))
       {
     	  
 		  //The table doesn't comply with the naming rule, and therefore doesn't belong to the module.
     	  //Its objects will only belong to this module if they have the external prefix, and the prefix of the module.
 	      for(int i=0;i<_columns.size();i++)
 	      {
-	        if(!filter.compliesWithExternalNamingRule(((Column)_columns.get(i)).getName()))
+	        if(!filter.compliesWithExternalNamingRule(((Column)_columns.get(i)).getName(), _name))
 	        {
 	          _columns.remove(i);
 	          i--;
@@ -1266,7 +1266,7 @@ public class Table implements StructureObject, Serializable, Cloneable
 	      }
 	      for(int i=0;i<_foreignKeys.size();i++)
 	      {
-	        if(!filter.compliesWithExternalNamingRule(((ForeignKey)_foreignKeys.get(i)).getName()))
+	        if(!filter.compliesWithExternalNamingRule(((ForeignKey)_foreignKeys.get(i)).getName(), _name))
 	        {
 	          _foreignKeys.remove(i);
 	          i--;
@@ -1274,7 +1274,7 @@ public class Table implements StructureObject, Serializable, Cloneable
 	      }
 	      for(int i=0;i<_indices.size();i++)
 	      {
-	        if(!filter.compliesWithExternalNamingRule(((Index)_indices.get(i)).getName()))
+	        if(!filter.compliesWithExternalNamingRule(((Index)_indices.get(i)).getName(), _name))
 	        {
 	          _indices.remove(i);
 	          i--;
@@ -1282,7 +1282,7 @@ public class Table implements StructureObject, Serializable, Cloneable
 	      }
 	      for(int i=0;i<_uniques.size();i++)
 	      {
-	        if(!filter.compliesWithExternalNamingRule(((Unique)_uniques.get(i)).getName()))
+	        if(!filter.compliesWithExternalNamingRule(((Unique)_uniques.get(i)).getName(), _name))
 	        {
 	          _uniques.remove(i);
 	          i--;
@@ -1290,7 +1290,7 @@ public class Table implements StructureObject, Serializable, Cloneable
 	      }
 	      for(int i=0;i<_checks.size();i++)
 	      {
-	        if(!filter.compliesWithExternalNamingRule(((Check)_checks.get(i)).getName()))
+	        if(!filter.compliesWithExternalNamingRule(((Check)_checks.get(i)).getName(), _name))
 	        {
 	          _checks.remove(i);
 	          i--;
@@ -1303,7 +1303,7 @@ public class Table implements StructureObject, Serializable, Cloneable
     	//all its objects should be preserved except the ones that start with the "external" prefix
         for(int i=0;i<_columns.size();i++)
         {
-          if(filter.compliesWithExternalPrefix(((Column)_columns.get(i)).getName()))
+          if(filter.compliesWithExternalPrefix(((Column)_columns.get(i)).getName(), _name))
           {
             _columns.remove(i);
             i--;
@@ -1311,7 +1311,7 @@ public class Table implements StructureObject, Serializable, Cloneable
         }
         for(int i=0;i<_foreignKeys.size();i++)
         {
-          if(filter.compliesWithExternalPrefix(((ForeignKey)_foreignKeys.get(i)).getName()))
+          if(filter.compliesWithExternalPrefix(((ForeignKey)_foreignKeys.get(i)).getName(), _name))
           {
             _foreignKeys.remove(i);
             i--;
@@ -1319,7 +1319,7 @@ public class Table implements StructureObject, Serializable, Cloneable
         }
         for(int i=0;i<_indices.size();i++)
         {
-          if(filter.compliesWithExternalPrefix(((Index)_indices.get(i)).getName()))
+          if(filter.compliesWithExternalPrefix(((Index)_indices.get(i)).getName(), _name))
           {
             _indices.remove(i);
             i--;
@@ -1327,7 +1327,7 @@ public class Table implements StructureObject, Serializable, Cloneable
         }
         for(int i=0;i<_uniques.size();i++)
         {
-          if(filter.compliesWithExternalPrefix(((Unique)_uniques.get(i)).getName()))
+          if(filter.compliesWithExternalPrefix(((Unique)_uniques.get(i)).getName(), _name))
           {
             _uniques.remove(i);
             i--;
@@ -1335,7 +1335,7 @@ public class Table implements StructureObject, Serializable, Cloneable
         }
         for(int i=0;i<_checks.size();i++)
         {
-          if(filter.compliesWithExternalPrefix(((Check)_checks.get(i)).getName()))
+          if(filter.compliesWithExternalPrefix(((Check)_checks.get(i)).getName(), _name))
           {
             _checks.remove(i);
             i--;

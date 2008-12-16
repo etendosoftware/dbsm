@@ -106,6 +106,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 
 	protected String _prefix;
 	protected boolean _loadCompleteTables;
+	protected String _moduleId;
 
 	/** Creates a new instance of BasicModelLoader */
 	public ModelLoaderBase() {
@@ -147,11 +148,12 @@ public abstract class ModelLoaderBase implements ModelLoader {
 	}
 
 	public Database getDatabase(Connection connection, ExcludeFilter filter,
-			String prefix, boolean loadCompleteTables) throws SQLException {
+			String prefix, boolean loadCompleteTables, String moduleId) throws SQLException {
 
 		_filter = filter == null ? new ExcludeFilter() : filter;
 		_prefix = prefix.toUpperCase();
 		_loadCompleteTables=loadCompleteTables;
+		_moduleId=moduleId;
 		try {
 			_connection = connection;
 
@@ -259,7 +261,8 @@ public abstract class ModelLoaderBase implements ModelLoader {
 		Table table=(Table)it.next();
 		if(_prefix==null)
 		    db.addTable(table);
-		else if(table.getName().toUpperCase().startsWith(_prefix+"_"))
+		//else if(table.getName().toUpperCase().startsWith(_prefix+"_"))
+	  else if(_filter.compliesWithNamingRuleObject(table.getName()))
 		    db.addTable(table);
 		else
 		    db.addModifiedTable(table);
@@ -310,7 +313,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 					t.setPrimaryKey(r.getString(1));
 				}
 			});
-		} else if (_filter.compliesWithNamingRule(tablename)) {
+		} else if (_filter.compliesWithNamingRuleObject(tablename)) {
 			_stmt_pkname_noprefix.setString(1, tablename);
 			fillRow(_stmt_pkname_noprefix, new RowFiller() {
 				public void fillRow(ResultSet r) throws SQLException {
@@ -363,7 +366,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 					return readColumn(r);
 				}
 			});
-		} else if (_filter.compliesWithNamingRule(tablename)) {
+		} else if (_filter.compliesWithNamingRuleObject(tablename)) {
 			_stmt_listcolumns_noprefix.setString(1, tablename);
 
 			return readList(_stmt_listcolumns_noprefix, new RowConstructor() {
@@ -423,7 +426,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 					return readCheck(r);
 				}
 			});
-		} else if (_filter.compliesWithNamingRule(tablename)) {
+		} else if (_filter.compliesWithNamingRuleObject(tablename)) {
 			_stmt_listchecks_noprefix.setString(1, tablename);
 			return readList(_stmt_listchecks_noprefix, new RowConstructor() {
 				public Object getRow(ResultSet r) throws SQLException {
@@ -459,7 +462,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 					return readForeignKey(r);
 				}
 			});
-		} else if (_filter.compliesWithNamingRule(tablename)) {
+		} else if (_filter.compliesWithNamingRuleObject(tablename)) {
 			_stmt_listfks_noprefix.setString(1, tablename);
 			return readList(_stmt_listfks_noprefix, new RowConstructor() {
 				public Object getRow(ResultSet r) throws SQLException {
@@ -507,7 +510,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 					return readIndex(r);
 				}
 			});
-		} else if (_filter.compliesWithNamingRule(tablename)) {
+		} else if (_filter.compliesWithNamingRuleObject(tablename)) {
 			_stmt_listindexes_noprefix.setString(1, tablename);
 			return readList(_stmt_listindexes_noprefix, new RowConstructor() {
 				public Object getRow(ResultSet r) throws SQLException {
@@ -552,7 +555,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 					return readUnique(r);
 				}
 			});
-		} else if (_filter.compliesWithNamingRule(tablename)) {
+		} else if (_filter.compliesWithNamingRuleObject(tablename)) {
 			_stmt_listuniques_noprefix.setString(1, tablename);
 			return readList(_stmt_listuniques_noprefix, new RowConstructor() {
 				public Object getRow(ResultSet r) throws SQLException {

@@ -98,6 +98,8 @@ public class DBSMOBUtil {
 				ModuleRow modRow = new ModuleRow();
 				// modRow.value=readStringFromRS(resultSet, "DB_PREFIX");
 				modRow.prefixes = new Vector<String>();
+        modRow.exceptions = new Vector<ExceptionRow>();
+        modRow.othersexceptions = new Vector<ExceptionRow>();
 				modRow.name = readStringFromRS(resultSet, "NAME");
 				modRow.isInDevelopment = readStringFromRS(resultSet,
 						"ISINDEVELOPMENT");
@@ -119,6 +121,31 @@ public class DBSMOBUtil {
 					modRow.prefixes.add(prefix);
 				}
 
+
+        String sqlExceptions = "SELECT * FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"+ modRow.idMod + "'";
+        PreparedStatement statementExceptions = connection.prepareStatement(sqlExceptions);
+        statementExceptions.execute();
+        ResultSet resExceptions = statementExceptions.getResultSet();
+        while (resExceptions.next()) {
+          ExceptionRow ex=new ExceptionRow();
+          ex.name1 = readStringFromRS(resExceptions, "NAME1");
+          ex.name2 = readStringFromRS(resExceptions, "NAME2");
+          ex.type = readStringFromRS(resExceptions, "TYPE");
+          modRow.exceptions.add(ex);
+        }
+
+        String sqlExceptions2 = "SELECT * FROM AD_EXCEPTIONS WHERE AD_MODULE_ID<>'"+ modRow.idMod + "'";
+        PreparedStatement statementExceptions2 = connection.prepareStatement(sqlExceptions2);
+        statementExceptions2.execute();
+        ResultSet resExceptions2 = statementExceptions2.getResultSet();
+        while (resExceptions2.next()) {
+          ExceptionRow ex=new ExceptionRow();
+          ex.name1 = readStringFromRS(resExceptions2, "NAME1");
+          ex.name2 = readStringFromRS(resExceptions2, "NAME2");
+          ex.type = readStringFromRS(resExceptions2, "TYPE");
+          modRow.othersexceptions.add(ex);
+        }
+
 			} while (resultSet.next());
 
 			for (int i = 0; i < allModules.size(); i++) {
@@ -139,6 +166,10 @@ public class DBSMOBUtil {
 				filter.addOtherActivePrefixes(otherActiveMods);
 				filter.addDependencies(prefixDependencies);
 				filter.setName(allModules.get(i).dir);
+        for(ExceptionRow row:allModules.get(i).exceptions)
+          filter.addException(row);
+        for(ExceptionRow row:allModules.get(i).othersexceptions)
+          filter.addOthersException(row);
 				allModules.get(i).filter = filter;
 			}
 

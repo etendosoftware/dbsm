@@ -218,7 +218,7 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
 	        	else
 	        	{
 		        	_log.info("Loading submodel from database...");
-		        	originaldb = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0), true);
+		        	originaldb = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0), true, row.idMod);
 		        	originaldb.moveModifiedToTables();
 		        	_log.info("Submodel loaded");
 	        	}

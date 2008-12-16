@@ -268,7 +268,7 @@ public class DataComparator {
 					.getRowsFromTable(table.getTable().getTableName());
 			// We now have the rows of the table in the database (answer)
 			// and the rows in the XML files (HashMap originalData)
-			compareTablesDALForUpdate(newdb, table, newdb.findTable(table.getTable().getTableName()), service.getExportableObjectsIterator(table, moduleIds, Collections.EMPTY_MAP), rowsOriginalData);
+			compareTablesDALForUpdate(newdb, table, newdb.findTable(table.getTable().getTableName()), service.getExportableObjects(table, moduleIds), rowsOriginalData);
 		}
 	}
 
@@ -884,7 +884,6 @@ public class DataComparator {
       // There are rows in the XML files, but not in the database. We have to insert them
       while (indNew < newData.size())
       {
-        System.out.println(newData.get(indNew));
         dataChanges.add(new AddRowChange(table, newData.get(indNew++)));
       }
     } else if (indNew >= newData.size()) {

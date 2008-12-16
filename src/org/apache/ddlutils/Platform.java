@@ -903,7 +903,7 @@ public interface Platform
     public void delete(Connection connection, Database model, DynaBean dynaBean) throws DatabaseOperationException;
 
     public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
-    public Database loadModelFromDatabase(ExcludeFilter filter, String prefix, boolean loadCompleteTables) throws DatabaseOperationException;
+    public Database loadModelFromDatabase(ExcludeFilter filter, String prefix, boolean loadCompleteTables, String moduleId) throws DatabaseOperationException;
     public Database loadModelFromDatabase(ExcludeFilter filter, String datasetName) throws DatabaseOperationException;
     
     /**

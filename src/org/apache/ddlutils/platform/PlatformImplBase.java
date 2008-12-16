@@ -2291,12 +2291,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform
         }        
     }
     
-    public Database loadModelFromDatabase(ExcludeFilter filter, String prefix, boolean loadCompleteTables) throws DatabaseOperationException {
+    public Database loadModelFromDatabase(ExcludeFilter filter, String prefix, boolean loadCompleteTables, String moduleId) throws DatabaseOperationException {
     
         Connection connection = borrowConnection();
         try {
         	getModelLoader().setLog(_log);
-            return getModelLoader().getDatabase(connection, filter, prefix, loadCompleteTables);
+            return getModelLoader().getDatabase(connection, filter, prefix, loadCompleteTables, moduleId);
         } catch (SQLException ex) {
         	ex.printStackTrace();
             throw new DatabaseOperationException(ex);

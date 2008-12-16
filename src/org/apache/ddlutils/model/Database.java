@@ -1589,7 +1589,7 @@ public class Database implements Serializable, Cloneable {
 		// We will now move incomplete tables to their specific arraylist
 		for (int i = 0; i < _tables.size(); i++) {
 			Table t = (Table) _tables.get(i);
-			if (!filter.compliesWithNamingRule(t.getName())) {
+			if (!filter.compliesWithNamingRuleObject(t.getName())) {
 				_tables.remove(t);
 				_modifiedTables.add(t);
 				i--;
@@ -1620,28 +1620,28 @@ public class Database implements Serializable, Cloneable {
 
 		for (int i = 0; i < _sequences.size(); i++) {
 			Sequence v = (Sequence) _sequences.get(i);
-			if (!filter.compliesWithNamingRule(v.getName())) {
+			if (!filter.compliesWithNamingRuleObject(v.getName())) {
 				_sequences.remove(v);
 				i--;
 			}
 		}
 		for (int i = 0; i < _views.size(); i++) {
 			View v = (View) _views.get(i);
-			if (!filter.compliesWithNamingRule(v.getName())) {
+			if (!filter.compliesWithNamingRuleObject(v.getName())) {
 				_views.remove(v);
 				i--;
 			}
 		}
 		for (int i = 0; i < _functions.size(); i++) {
 			Function v = (Function) _functions.get(i);
-			if (!filter.compliesWithNamingRule(v.getName())) {
+			if (!filter.compliesWithNamingRuleObject(v.getName())) {
 				_functions.remove(v);
 				i--;
 			}
 		}
 		for (int i = 0; i < _triggers.size(); i++) {
 			Trigger v = (Trigger) _triggers.get(i);
-			if (!filter.compliesWithNamingRule(v.getName())) {
+			if (!filter.compliesWithNamingRuleObject(v.getName())) {
 				_triggers.remove(v);
 				i--;
 			}
