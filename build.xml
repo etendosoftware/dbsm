@@ -26,6 +26,9 @@
             <include name="**/*.jar"/>
         </fileset>
         <pathelement path="${pathOB}/build/classes/" />
+        <fileset dir="${pathOB}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
     </path>
 
     <target name="init">
