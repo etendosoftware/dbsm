@@ -28,22 +28,22 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * @version $Revision$
  */
 public class View implements StructureObject, Cloneable {
-    
+
     /** The name of the view, may be <code>null</code>. */
     private String _name;
     /** The statement of the view. */
     private String _statement;
-    
+
     /** Creates a new instance of View */
     public View() {
         this(null);
     }
-    
+
     public View(String name) {
         _name = name;
         _statement = null;
     }
-    
+
     /**
      * Returns the name of this view.
      * 
@@ -56,12 +56,13 @@ public class View implements StructureObject, Cloneable {
     /**
      * Sets the name of this view.
      * 
-     * @param name The name
+     * @param name
+     *            The name
      */
     public void setName(String name) {
         _name = name;
     }
-    
+
     /**
      * Returns the statement of this view.
      * 
@@ -74,18 +75,19 @@ public class View implements StructureObject, Cloneable {
     /**
      * Sets the statement of this view.
      * 
-     * @param statement The statement
+     * @param statement
+     *            The statement
      */
     public void setStatement(String statement) {
         _statement = statement;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public Object clone() throws CloneNotSupportedException {
-        
-        View result = (View)super.clone();
+
+        View result = (View) super.clone();
 
         result._name = _name;
         result._statement = _statement;
@@ -97,44 +99,43 @@ public class View implements StructureObject, Cloneable {
      * {@inheritDoc}
      */
     public boolean equals(Object obj) {
-        
+
         if (obj instanceof View) {
-            View otherView = (View)obj;
+            View otherView = (View) obj;
 
             // Note that this compares case sensitive
-            // Note also that we can simply compare the references regardless of their order
+            // Note also that we can simply compare the references regardless of
+            // their order
             // (which is irrelevant for ccs) because they are contained in a set
-            return  new EqualsBuilder()
-                            .append(_name, otherView._name)
-                            .append(_statement.trim(), otherView._statement.trim())
-                            .isEquals();
+            return new EqualsBuilder().append(_name, otherView._name).append(
+                    _statement.trim(), otherView._statement.trim()).isEquals();
         } else {
             return false;
         }
     }
-    
+
     /**
-     * Compares this view to the given one while ignoring the case of identifiers.
+     * Compares this view to the given one while ignoring the case of
+     * identifiers.
      * 
-     * @param otherView The other view
-     * @return <code>true</code> if this view is equal (ignoring case) to the given one
+     * @param otherView
+     *            The other view
+     * @return <code>true</code> if this view is equal (ignoring case) to the
+     *         given one
      */
-    public boolean equalsIgnoreCase(View otherView)
-    {
-            return UtilsCompare.equalsIgnoreCase(_name, otherView._name) &&
-                    new EqualsBuilder()
-                            .append(_statement.trim(), otherView._statement.trim())
-                            .isEquals();
+    public boolean equalsIgnoreCase(View otherView) {
+        return UtilsCompare.equalsIgnoreCase(_name, otherView._name)
+                && new EqualsBuilder().append(_statement.trim(),
+                        otherView._statement.trim()).isEquals();
 
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(_name)
-                                          .append(_statement)
-                                          .toHashCode();
+        return new HashCodeBuilder(17, 37).append(_name).append(_statement)
+                .toHashCode();
     }
 
     /**
@@ -153,7 +154,7 @@ public class View implements StructureObject, Cloneable {
 
         return result.toString();
     }
-    
+
     public String toVerboseString() {
         StringBuffer result = new StringBuffer();
 
@@ -168,5 +169,5 @@ public class View implements StructureObject, Cloneable {
         result.append("]");
 
         return result.toString();
-    }     
+    }
 }

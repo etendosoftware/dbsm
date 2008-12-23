@@ -27,43 +27,42 @@ import org.apache.ddlutils.model.Sequence;
  * 
  * @version $Revision: $
  */
-public class RemoveSequenceChange implements ModelChange{
-    
+public class RemoveSequenceChange implements ModelChange {
+
     /** The sequence. */
     private Sequence _sequence;
-    
+
     /**
      * Creates a remove change object.
      * 
-     * @param sequence The sequence
+     * @param sequence
+     *            The sequence
      */
     public RemoveSequenceChange(Sequence sequence) {
         _sequence = sequence;
     }
 
     /**
-     * Returns the sequence. 
+     * Returns the sequence.
      * 
      * @return The sequence
      */
-    public Sequence getSequence()
-    {
+    public Sequence getSequence() {
         return _sequence;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Sequence sequence = database.findSequence(_sequence.getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Sequence sequence = database.findSequence(_sequence.getName(),
+                caseSensitive);
 
         database.removeSequence(sequence);
-    }        
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemoveSequenceChange. Name: "+_sequence.getName();
+    public String toString() {
+        return "RemoveSequenceChange. Name: " + _sequence.getName();
     }
 }

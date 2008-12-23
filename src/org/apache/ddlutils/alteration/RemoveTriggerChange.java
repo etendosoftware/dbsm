@@ -27,43 +27,42 @@ import org.apache.ddlutils.model.Trigger;
  * 
  * @version $Revision: $
  */
-public class RemoveTriggerChange implements ModelChange{
-    
+public class RemoveTriggerChange implements ModelChange {
+
     /** The trigger. */
     private Trigger _trigger;
-    
+
     /**
      * Creates a remove change object.
      * 
-     * @param trigger The trigger
+     * @param trigger
+     *            The trigger
      */
     public RemoveTriggerChange(Trigger trigger) {
         _trigger = trigger;
     }
 
     /**
-     * Returns the trigger. 
+     * Returns the trigger.
      * 
      * @return The trigger
      */
-    public Trigger getTrigger()
-    {
+    public Trigger getTrigger() {
         return _trigger;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Trigger trigger = database.findTrigger(_trigger.getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Trigger trigger = database.findTrigger(_trigger.getName(),
+                caseSensitive);
 
         database.removeTrigger(trigger);
-    }        
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemoveTriggerChange. Name: "+_trigger.getName();
+    public String toString() {
+        return "RemoveTriggerChange. Name: " + _trigger.getName();
     }
 }

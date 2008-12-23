@@ -26,13 +26,12 @@ import org.apache.commons.collections.set.ListOrderedSet;
 
 /**
  * Represents an object waiting for insertion into the database. Is used by the
- * {@link org.apache.ddlutils.io.DataToDatabaseSink} to insert the objects in the correct
- * order according to their foreign keys.
+ * {@link org.apache.ddlutils.io.DataToDatabaseSink} to insert the objects in
+ * the correct order according to their foreign keys.
  * 
  * @version $Revision: 289996 $
  */
-public class WaitingObject
-{
+public class WaitingObject {
     /** The object that is waiting for insertion. */
     private DynaBean _obj;
     /** The original identity of the waiting object. */
@@ -43,12 +42,13 @@ public class WaitingObject
     /**
      * Creates a new <code>WaitingObject</code> instance for the given object.
      * 
-     * @param obj         The object that is waiting
-     * @param objIdentity The (original) identity of the object
+     * @param obj
+     *            The object that is waiting
+     * @param objIdentity
+     *            The (original) identity of the object
      */
-    public WaitingObject(DynaBean obj, Identity objIdentity)
-    {
-        _obj         = obj;
+    public WaitingObject(DynaBean obj, Identity objIdentity) {
+        _obj = obj;
         _objIdentity = objIdentity;
     }
 
@@ -57,18 +57,17 @@ public class WaitingObject
      * 
      * @return The object
      */
-    public DynaBean getObject()
-    {
+    public DynaBean getObject() {
         return _obj;
     }
 
     /**
      * Adds the identity of another object that the object is waiting for.
      * 
-     * @param fkIdentity The identity of the waited-for object
+     * @param fkIdentity
+     *            The identity of the waited-for object
      */
-    public void addPendingFK(Identity fkIdentity)
-    {
+    public void addPendingFK(Identity fkIdentity) {
         _waitedForIdentites.add(fkIdentity);
     }
 
@@ -77,25 +76,24 @@ public class WaitingObject
      * 
      * @return The identities
      */
-    public Iterator getPendingFKs()
-    {
+    public Iterator getPendingFKs() {
         return _waitedForIdentites.iterator();
     }
 
     /**
-     * Removes the specified identity from list of identities of the waited-for objects.
+     * Removes the specified identity from list of identities of the waited-for
+     * objects.
      * 
-     * @param fkIdentity The identity to remove
+     * @param fkIdentity
+     *            The identity to remove
      * @return The removed identity if any
      */
-    public Identity removePendingFK(Identity fkIdentity)
-    {
+    public Identity removePendingFK(Identity fkIdentity) {
         Identity result = null;
-        int      idx    = _waitedForIdentites.indexOf(fkIdentity);
+        int idx = _waitedForIdentites.indexOf(fkIdentity);
 
-        if (idx >= 0)
-        {
-            result = (Identity)_waitedForIdentites.get(idx);
+        if (idx >= 0) {
+            result = (Identity) _waitedForIdentites.get(idx);
             _waitedForIdentites.remove(idx);
         }
         return result;
@@ -105,18 +103,17 @@ public class WaitingObject
      * Determines whether there are any identities of waited-for objects
      * registered with this waiting object.
      * 
-     * @return <code>true</code> if identities of waited-for objects are registered
+     * @return <code>true</code> if identities of waited-for objects are
+     *         registered
      */
-    public boolean hasPendingFKs()
-    {
+    public boolean hasPendingFKs() {
         return !_waitedForIdentites.isEmpty();
     }
 
     /**
      * {@inheritDoc}
      */
-    public String toString()
-    {
+    public String toString() {
         StringBuffer result = new StringBuffer();
 
         result.append(_objIdentity);

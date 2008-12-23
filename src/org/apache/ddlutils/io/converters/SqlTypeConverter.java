@@ -24,23 +24,30 @@ package org.apache.ddlutils.io.converters;
  * 
  * @version $Revision: 289996 $
  */
-public interface SqlTypeConverter
-{
+public interface SqlTypeConverter {
     /**
-     * Converts the given textual representation to an instance of the target type.
+     * Converts the given textual representation to an instance of the target
+     * type.
      * 
-     * @param textRep     The textual representation
-     * @param sqlTypeCode The target sql type code, one of the constants in {@link java.sql.Types}
+     * @param textRep
+     *            The textual representation
+     * @param sqlTypeCode
+     *            The target sql type code, one of the constants in
+     *            {@link java.sql.Types}
      * @return The corresponding object
      */
-    public Object convertFromString(String textRep, int sqlTypeCode) throws ConversionException;
+    public Object convertFromString(String textRep, int sqlTypeCode)
+            throws ConversionException;
 
     /**
      * Converts the given object to a string representation.
      * 
-     * @param obj         The object
-     * @param sqlTypeCode The corresponding source type code
+     * @param obj
+     *            The object
+     * @param sqlTypeCode
+     *            The corresponding source type code
      * @return The textual representation
      */
-    public String convertToString(Object obj, int sqlTypeCode) throws ConversionException;
+    public String convertToString(Object obj, int sqlTypeCode)
+            throws ConversionException;
 }

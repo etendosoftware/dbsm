@@ -24,12 +24,12 @@ import org.apache.ddlutils.model.TypeMap;
 import org.apache.tools.ant.BuildException;
 
 /**
- * Represents the registration of a data converter for tasks that work on data files.
+ * Represents the registration of a data converter for tasks that work on data
+ * files.
  * 
  * @version $Revision: 289996 $
  */
-public class DataConverterRegistration
-{
+public class DataConverterRegistration {
     /** The converter. */
     private SqlTypeConverter _converter;
     /** The sql type for which the converter shall be registered. */
@@ -41,79 +41,70 @@ public class DataConverterRegistration
 
     /**
      * Returns the converter.
-     *
+     * 
      * @return The converter
      */
-    public SqlTypeConverter getConverter()
-    {
+    public SqlTypeConverter getConverter() {
         return _converter;
     }
 
     /**
      * Sets the converter class.
-     *
-     * @param converterClassName The fully qualified converter class name
+     * 
+     * @param converterClassName
+     *            The fully qualified converter class name
      */
-    public void setClassName(String converterClassName) throws BuildException
-    {
-        try
-        {
-            _converter = (SqlTypeConverter)getClass().getClassLoader().loadClass(converterClassName).newInstance();
-        }
-        catch (Exception ex)
-        {
+    public void setClassName(String converterClassName) throws BuildException {
+        try {
+            _converter = (SqlTypeConverter) getClass().getClassLoader()
+                    .loadClass(converterClassName).newInstance();
+        } catch (Exception ex) {
             throw new BuildException(ex);
         }
     }
 
     /**
      * Returns the jdbc type.
-     *
+     * 
      * @return The jdbc type code
      */
-    public int getTypeCode()
-    {
+    public int getTypeCode() {
         return _typeCode;
     }
 
     /**
      * Sets the jdbc type.
-     *
-     * @param jdbcTypeName The jdbc type name
+     * 
+     * @param jdbcTypeName
+     *            The jdbc type name
      */
-    public void setJdbcType(String jdbcTypeName) throws BuildException
-    {
+    public void setJdbcType(String jdbcTypeName) throws BuildException {
         Integer typeCode = TypeMap.getJdbcTypeCode(jdbcTypeName);
 
-        if (typeCode == null)
-        {
-            throw new BuildException("Unknown jdbc type "+jdbcTypeName);
-        }
-        else
-        {
+        if (typeCode == null) {
+            throw new BuildException("Unknown jdbc type " + jdbcTypeName);
+        } else {
             _typeCode = typeCode.intValue();
         }
     }
 
     /**
      * Returns the column for which this converter is defined.
-     *
+     * 
      * @return The column
      */
-    public String getColumn()
-    {
+    public String getColumn() {
         return _column;
     }
 
     /**
      * Sets the column for which this converter is defined.
-     *
-     * @param column The column
+     * 
+     * @param column
+     *            The column
      */
-    public void setColumn(String column) throws BuildException
-    {
-        if ((column == null) || (column.length() == 0))
-        {
+    public void setColumn(String column) throws BuildException {
+        if ((column == null) || (column.length() == 0)) {
             throw new BuildException("Please specify a non-empty column name");
         }
         _column = column;
@@ -121,27 +112,24 @@ public class DataConverterRegistration
 
     /**
      * Returns the table for whose column this converter is defined.
-     *
+     * 
      * @return The table
      */
-    public String getTable()
-    {
+    public String getTable() {
         return _table;
     }
 
     /**
      * Sets the table for whose column this converter is defined.
-     *
-     * @param table The table
+     * 
+     * @param table
+     *            The table
      */
-    public void setTable(String table) throws BuildException
-    {
-        if ((table == null) || (table.length() == 0))
-        {
+    public void setTable(String table) throws BuildException {
+        if ((table == null) || (table.length() == 0)) {
             throw new BuildException("Please specify a non-empty table name");
         }
         _table = table;
     }
 
-    
 }

@@ -26,12 +26,11 @@ import org.apache.ddlutils.model.Column;
 import org.xml.sax.Attributes;
 
 /**
- * A digester rule for setting a bean property that corresponds to a column. 
+ * A digester rule for setting a bean property that corresponds to a column.
  * 
  * @version $Revision: 289996 $
  */
-public class SetColumnPropertyRule extends Rule
-{
+public class SetColumnPropertyRule extends Rule {
     /** The column that this rule shall set. */
     private Column _column;
     /** The converter for generating the property value from a string. */
@@ -40,44 +39,51 @@ public class SetColumnPropertyRule extends Rule
     private boolean _caseSensitive;
 
     /**
-     * Creates a new creation rule that sets the property corresponding to the given column.
+     * Creates a new creation rule that sets the property corresponding to the
+     * given column.
      * 
-     * @param column          The column that this rule shall set
-     * @param converter       The converter to be used for this column
-     * @param beCaseSensitive Whether the rule shall compare the attribute names case sensitively
+     * @param column
+     *            The column that this rule shall set
+     * @param converter
+     *            The converter to be used for this column
+     * @param beCaseSensitive
+     *            Whether the rule shall compare the attribute names case
+     *            sensitively
      */
-    public SetColumnPropertyRule(Column column, SqlTypeConverter converter, boolean beCaseSensitive)
-    {
-        _column        = column;
-        _converter     = converter;
+    public SetColumnPropertyRule(Column column, SqlTypeConverter converter,
+            boolean beCaseSensitive) {
+        _column = column;
+        _converter = converter;
         _caseSensitive = beCaseSensitive;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void begin(String namespace, String name, Attributes attributes) throws Exception
-    {
+    public void begin(String namespace, String name, Attributes attributes)
+            throws Exception {
         Object bean = digester.peek();
 
-        for (int idx = 0; idx < attributes.getLength(); idx++)
-        {
+        for (int idx = 0; idx < attributes.getLength(); idx++) {
             String attrName = attributes.getLocalName(idx);
 
-            if ("".equals(attrName))
-            {
+            if ("".equals(attrName)) {
                 attrName = attributes.getQName(idx);
             }
-            if ((_caseSensitive  && attrName.equals(_column.getName())) ||
-                (!_caseSensitive && attrName.equalsIgnoreCase(_column.getName())))
-            {
+            if ((_caseSensitive && attrName.equals(_column.getName()))
+                    || (!_caseSensitive && attrName.equalsIgnoreCase(_column
+                            .getName()))) {
                 String attrValue = attributes.getValue(idx);
-                Object propValue = (_converter != null ? _converter.convertFromString(attrValue, _column.getTypeCode()) : attrValue);
+                Object propValue = (_converter != null ? _converter
+                        .convertFromString(attrValue, _column.getTypeCode())
+                        : attrValue);
 
-                if (digester.getLogger().isDebugEnabled())
-                {
-                    digester.getLogger().debug("[SetColumnPropertyRule]{" + digester.getMatch() +
-                                               "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
+                if (digester.getLogger().isDebugEnabled()) {
+                    digester.getLogger().debug(
+                            "[SetColumnPropertyRule]{" + digester.getMatch()
+                                    + "} Setting property '"
+                                    + _column.getName() + "' to '" + propValue
+                                    + "'");
                 }
 
                 PropertyUtils.setProperty(bean, _column.getName(), propValue);

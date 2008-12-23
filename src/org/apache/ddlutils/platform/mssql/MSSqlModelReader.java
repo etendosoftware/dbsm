@@ -44,25 +44,26 @@ import org.apache.oro.text.regex.Perl5Matcher;
 
 /**
  * Reads a database model from a Microsoft Sql Server database.
- *
+ * 
  * @version $Revision: $
  */
-public class MSSqlModelReader extends JdbcModelReader
-{
-    /** Known system tables that Sql Server creates (e.g. automatic maintenance). */
+public class MSSqlModelReader extends JdbcModelReader {
+    /**
+     * Known system tables that Sql Server creates (e.g. automatic maintenance).
+     */
     private static final String[] KNOWN_SYSTEM_TABLES = { "dtproperties" };
-	/** The regular expression pattern for the ISO dates. */
-	private Pattern _isoDatePattern;
-	/** The regular expression pattern for the ISO times. */
-	private Pattern _isoTimePattern;
+    /** The regular expression pattern for the ISO dates. */
+    private Pattern _isoDatePattern;
+    /** The regular expression pattern for the ISO times. */
+    private Pattern _isoTimePattern;
 
-	/**
+    /**
      * Creates a new model reader for Microsoft Sql Server databases.
      * 
-     * @param platform The platform that this model reader belongs to
+     * @param platform
+     *            The platform that this model reader belongs to
      */
-    public MSSqlModelReader(Platform platform)
-    {
+    public MSSqlModelReader(Platform platform) {
         super(platform);
         setDefaultCatalogPattern(null);
         setDefaultSchemaPattern(null);
@@ -70,162 +71,150 @@ public class MSSqlModelReader extends JdbcModelReader
 
         PatternCompiler compiler = new Perl5Compiler();
 
-    	try
-    	{
+        try {
             _isoDatePattern = compiler.compile("'(\\d{4}\\-\\d{2}\\-\\d{2})'");
             _isoTimePattern = compiler.compile("'(\\d{2}:\\d{2}:\\d{2})'");
-        }
-    	catch (MalformedPatternException ex)
-        {
-        	throw new DdlUtilsException(ex);
+        } catch (MalformedPatternException ex) {
+            throw new DdlUtilsException(ex);
         }
     }
-
 
     /**
      * {@inheritDoc}
      */
-	protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
-	{
-        String tableName = (String)values.get("TABLE_NAME");
+    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values)
+            throws SQLException {
+        String tableName = (String) values.get("TABLE_NAME");
 
-        for (int idx = 0; idx < KNOWN_SYSTEM_TABLES.length; idx++)
-        {
-            if (KNOWN_SYSTEM_TABLES[idx].equals(tableName))
-            {
+        for (int idx = 0; idx < KNOWN_SYSTEM_TABLES.length; idx++) {
+            if (KNOWN_SYSTEM_TABLES[idx].equals(tableName)) {
                 return null;
             }
         }
 
         Table table = super.readTable(metaData, values);
 
-        if (table != null)
-        {
-            // Sql Server does not return the auto-increment status via the database metadata
-            determineAutoIncrementFromResultSetMetaData(table, table.getColumns());
+        if (table != null) {
+            // Sql Server does not return the auto-increment status via the
+            // database metadata
+            determineAutoIncrementFromResultSetMetaData(table, table
+                    .getColumns());
 
-            // TODO: Replace this manual filtering using named pks once they are available
-            //       This is then probably of interest to every platform
-            for (int idx = 0; idx < table.getIndexCount();)
-            {
+            // TODO: Replace this manual filtering using named pks once they are
+            // available
+            // This is then probably of interest to every platform
+            for (int idx = 0; idx < table.getIndexCount();) {
                 Index index = table.getIndex(idx);
 
-                if (index.isUnique() && existsPKWithName(metaData, table, index.getName()))
-                {
+                if (index.isUnique()
+                        && existsPKWithName(metaData, table, index.getName())) {
                     table.removeIndex(idx);
-                }
-                else
-                {
+                } else {
                     idx++;
                 }
             }
         }
         return table;
-	}
+    }
 
     /**
      * {@inheritDoc}
      */
-	protected boolean isInternalPrimaryKeyIndex(DatabaseMetaDataWrapper metaData, Table table, Index index)
-	{
-		// Sql Server generates an index "PK__[table name]__[hex number]"
-		StringBuffer pkIndexName = new StringBuffer();
+    protected boolean isInternalPrimaryKeyIndex(
+            DatabaseMetaDataWrapper metaData, Table table, Index index) {
+        // Sql Server generates an index "PK__[table name]__[hex number]"
+        StringBuffer pkIndexName = new StringBuffer();
 
-		pkIndexName.append("PK__");
-		pkIndexName.append(table.getName());
-		pkIndexName.append("__");
+        pkIndexName.append("PK__");
+        pkIndexName.append(table.getName());
+        pkIndexName.append("__");
 
-		return index.getName().toUpperCase().startsWith(pkIndexName.toString().toUpperCase());
-	}
+        return index.getName().toUpperCase().startsWith(
+                pkIndexName.toString().toUpperCase());
+    }
 
     /**
      * Determines whether there is a pk for the table with the given name.
      * 
-     * @param metaData The database metadata
-     * @param table    The table
-     * @param name     The pk name
+     * @param metaData
+     *            The database metadata
+     * @param table
+     *            The table
+     * @param name
+     *            The pk name
      * @return <code>true</code> if there is such a pk
      */
-    private boolean existsPKWithName(DatabaseMetaDataWrapper metaData, Table table, String name)
-    {
-        try
-        {
-            ResultSet pks   = metaData.getPrimaryKeys(table.getName());
-            boolean   found = false;
-    
-            while (pks.next() && !found)
-            {
-                if (name.equals(pks.getString("PK_NAME")))
-                {
+    private boolean existsPKWithName(DatabaseMetaDataWrapper metaData,
+            Table table, String name) {
+        try {
+            ResultSet pks = metaData.getPrimaryKeys(table.getName());
+            boolean found = false;
+
+            while (pks.next() && !found) {
+                if (name.equals(pks.getString("PK_NAME"))) {
                     found = true;
                 }
             }
             pks.close();
             return found;
-        }
-        catch (SQLException ex)
-        {
+        } catch (SQLException ex) {
             throw new DdlUtilsException(ex);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
-	protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
-	{
-		Column column       = super.readColumn(metaData, values);
-		String defaultValue = column.getDefaultValue();
+    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values)
+            throws SQLException {
+        Column column = super.readColumn(metaData, values);
+        String defaultValue = column.getDefaultValue();
 
-		// Sql Server tends to surround the returned default value with one or two sets of parentheses
-		if (defaultValue != null)
-		{
-			while (defaultValue.startsWith("(") && defaultValue.endsWith(")"))
-			{
-				defaultValue = defaultValue.substring(1, defaultValue.length() - 1);
-			}
+        // Sql Server tends to surround the returned default value with one or
+        // two sets of parentheses
+        if (defaultValue != null) {
+            while (defaultValue.startsWith("(") && defaultValue.endsWith(")")) {
+                defaultValue = defaultValue.substring(1,
+                        defaultValue.length() - 1);
+            }
 
-			if (column.getTypeCode() == Types.TIMESTAMP)
-			{
-				// Sql Server maintains the default values for DATE/TIME jdbc types, so we have to
-				// migrate the default value to TIMESTAMP
-				PatternMatcher matcher   = new Perl5Matcher();
-				Timestamp      timestamp = null;
-	
-				if (matcher.matches(defaultValue, _isoDatePattern))
-				{
-					timestamp = new Timestamp(Date.valueOf(matcher.getMatch().group(1)).getTime());
-				}
-				else if (matcher.matches(defaultValue, _isoTimePattern))
-				{
-					timestamp = new Timestamp(Time.valueOf(matcher.getMatch().group(1)).getTime());
-				}
-				if (timestamp != null)
-				{
-					defaultValue = timestamp.toString();
-				}
-			}
-			else if (column.getTypeCode() == Types.DECIMAL)
-			{
-				// For some reason, Sql Server 2005 always returns DECIMAL default values with a dot
-				// even if the scale is 0, so we remove the dot
-				if ((column.getScaleAsInt() == 0) && defaultValue.endsWith("."))
-				{
-					defaultValue = defaultValue.substring(0, defaultValue.length() - 1);
-				}
-			}
-            else if (TypeMap.isTextType(column.getTypeCode()))
-            {
+            if (column.getTypeCode() == Types.TIMESTAMP) {
+                // Sql Server maintains the default values for DATE/TIME jdbc
+                // types, so we have to
+                // migrate the default value to TIMESTAMP
+                PatternMatcher matcher = new Perl5Matcher();
+                Timestamp timestamp = null;
+
+                if (matcher.matches(defaultValue, _isoDatePattern)) {
+                    timestamp = new Timestamp(Date.valueOf(
+                            matcher.getMatch().group(1)).getTime());
+                } else if (matcher.matches(defaultValue, _isoTimePattern)) {
+                    timestamp = new Timestamp(Time.valueOf(
+                            matcher.getMatch().group(1)).getTime());
+                }
+                if (timestamp != null) {
+                    defaultValue = timestamp.toString();
+                }
+            } else if (column.getTypeCode() == Types.DECIMAL) {
+                // For some reason, Sql Server 2005 always returns DECIMAL
+                // default values with a dot
+                // even if the scale is 0, so we remove the dot
+                if ((column.getScaleAsInt() == 0) && defaultValue.endsWith(".")) {
+                    defaultValue = defaultValue.substring(0, defaultValue
+                            .length() - 1);
+                }
+            } else if (TypeMap.isTextType(column.getTypeCode())) {
                 defaultValue = unescape(defaultValue, "'", "''");
             }
-            
-			column.setDefaultValue(defaultValue);
-		}
-		if ((column.getTypeCode() == Types.DECIMAL) && (column.getSizeAsInt() == 19) && (column.getScaleAsInt() == 0))
-		{
-			column.setTypeCode(Types.BIGINT);
-		}
 
-		return column;
-	}
+            column.setDefaultValue(defaultValue);
+        }
+        if ((column.getTypeCode() == Types.DECIMAL)
+                && (column.getSizeAsInt() == 19)
+                && (column.getScaleAsInt() == 0)) {
+            column.setTypeCode(Types.BIGINT);
+        }
+
+        return column;
+    }
 }

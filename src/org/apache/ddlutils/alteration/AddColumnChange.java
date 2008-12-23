@@ -29,8 +29,7 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class AddColumnChange extends TableChangeImplBase
-{
+public class AddColumnChange extends TableChangeImplBase {
     /** The new column. */
     private Column _newColumn;
     /** The column after which the new column should be added. */
@@ -43,104 +42,97 @@ public class AddColumnChange extends TableChangeImplBase
     /**
      * Creates a new change object.
      * 
-     * @param table          The table to add the column to
-     * @param newColumn      The new column
-     * @param previousColumn The column after which the new column should be added
-     * @param nextColumn     The column before which the new column should be added
+     * @param table
+     *            The table to add the column to
+     * @param newColumn
+     *            The new column
+     * @param previousColumn
+     *            The column after which the new column should be added
+     * @param nextColumn
+     *            The column before which the new column should be added
      */
-    public AddColumnChange(Table table, Column newColumn, Column previousColumn, Column nextColumn)
-    {
+    public AddColumnChange(Table table, Column newColumn,
+            Column previousColumn, Column nextColumn) {
         super(table);
-        _newColumn      = newColumn;
+        _newColumn = newColumn;
         _previousColumn = previousColumn;
-        _nextColumn     = nextColumn;
+        _nextColumn = nextColumn;
     }
 
     /**
      * Returns the new column.
-     *
+     * 
      * @return The new column
      */
-    public Column getNewColumn()
-    {
+    public Column getNewColumn() {
         return _newColumn;
     }
 
     /**
      * Returns the column after which the new column should be added.
-     *
+     * 
      * @return The previous column
      */
-    public Column getPreviousColumn()
-    {
+    public Column getPreviousColumn() {
         return _previousColumn;
     }
 
     /**
      * Returns the column before which the new column should be added.
-     *
+     * 
      * @return The next column
      */
-    public Column getNextColumn()
-    {
+    public Column getNextColumn() {
         return _nextColumn;
     }
 
     /**
-     * Determines whether the column is added at the end (when applied in the order
-     * of creation of the changes).
+     * Determines whether the column is added at the end (when applied in the
+     * order of creation of the changes).
      * 
      * @return <code>true</code> if the column is added at the end
      */
-    public boolean isAtEnd()
-    {
+    public boolean isAtEnd() {
         return _atEnd;
     }
 
     /**
-     * Specifies whether the column is added at the end (when applied in the order
-     * of creation of the changes).
+     * Specifies whether the column is added at the end (when applied in the
+     * order of creation of the changes).
      * 
-     * @param atEnd <code>true</code> if the column is added at the end
+     * @param atEnd
+     *            <code>true</code> if the column is added at the end
      */
-    public void setAtEnd(boolean atEnd)
-    {
+    public void setAtEnd(boolean atEnd) {
         _atEnd = atEnd;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
+    public void apply(Database database, boolean caseSensitive) {
         Column newColumn = null;
 
-        try
-        {
-            newColumn = (Column)_newColumn.clone();
-        }
-        catch (CloneNotSupportedException ex)
-        {
+        try {
+            newColumn = (Column) _newColumn.clone();
+        } catch (CloneNotSupportedException ex) {
             throw new DdlUtilsException(ex);
         }
 
-        Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
 
-        if ((_previousColumn != null) && (_nextColumn != null))
-        {
+        if ((_previousColumn != null) && (_nextColumn != null)) {
             int idx = table.getColumnIndex(_previousColumn) + 1;
 
             table.addColumn(idx, newColumn);
-        }
-        else
-        {
+        } else {
             table.addColumn(newColumn);
         }
     }
-    
+
     @Override
-	public String toString()
-    {
-    	return "AddColumnChange. Name: "+_newColumn.getName();
+    public String toString() {
+        return "AddColumnChange. Name: " + _newColumn.getName();
     }
 }

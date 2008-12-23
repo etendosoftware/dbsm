@@ -1,14 +1,14 @@
 /*
-************************************************************************************
-* Copyright (C) 2001-2006 Openbravo S.L.
-* Licensed under the Apache Software License version 2.0
-* You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-* Unless required by applicable law or agreed to  in writing,  software  distributed
-* under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
-* CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
-* specific language governing permissions and limitations under the License.
-************************************************************************************
-*/
+ ************************************************************************************
+ * Copyright (C) 2001-2006 Openbravo S.L.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
 
 package org.openbravo.ddlutils.task;
 
@@ -32,135 +32,133 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 
-
 public class DatabaseUtils {
-    
+
     /** Creates a new instance of DatabaseUtils */
     private DatabaseUtils() {
     }
 
     public static Database readDatabase(File f) {
-        
+
         Database d = readDatabase_noChecks(f);
-        try{
-        	d.initialize();
-        }catch(Exception e)
-        {
-        	System.out.println("Warning: "+e.getMessage());
+        try {
+            d.initialize();
+        } catch (Exception e) {
+            System.out.println("Warning: " + e.getMessage());
         }
         return d;
-    } 
+    }
 
     public static Database readDatabaseNoInit(File f) {
-        
+
         Database d = readDatabase_noChecks(f);
         return d;
-    } 
+    }
 
     public static Database readDatabaseNoInit(File[] f) {
 
         Database d = readDatabase_noChecks(f[0]);
-        for(int i=1;i<f.length;i++)
-        {
-          d.mergeWith(readDatabase_noChecks(f[i]));
+        for (int i = 1; i < f.length; i++) {
+            d.mergeWith(readDatabase_noChecks(f[i]));
         }
 
         return d;
-    } 
-    
+    }
+
     public static Database readDatabase(File[] f) {
 
-      Database d = readDatabase_noChecks(f[0]);
-      for(int i=1;i<f.length;i++)
-      {
-        d.mergeWith(readDatabase_noChecks(f[i]));
-      }
-      d.initialize();
-      return d;
-  } 
-    
+        Database d = readDatabase_noChecks(f[0]);
+        for (int i = 1; i < f.length; i++) {
+            d.mergeWith(readDatabase_noChecks(f[i]));
+        }
+        d.initialize();
+        return d;
+    }
+
     public static void saveDatabase(File f, Database model) {
-        
-        try {          
+
+        try {
 
             Writer w = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");
             new DatabaseIO().write(model, w);
             w.flush();
             w.close();
-       
+
         } catch (IOException e) {
             e.printStackTrace();
-        }        
+        }
     }
-    
+
     public static File[] readFileArray(File f) {
-        
+
         if (f.isDirectory()) {
-            
+
             ArrayList<File> fileslist = new ArrayList<File>();
-            
+
             File[] directoryfiles = f.listFiles(new XMLFiles());
             for (File file : directoryfiles) {
                 File[] ff = readFileArray(file);
                 for (File fileint : ff) {
                     fileslist.add(fileint);
-                }                
+                }
             }
-            
+
             return fileslist.toArray(new File[fileslist.size()]);
         } else {
             return new File[] { f };
         }
     }
-    
+
     private static Database readDatabase_noChecks(File f) {
-            
+
         if (f.isDirectory()) {
-            
+
             // create an empty database
             Database d = new Database();
             d.setName(f.getName());
-            
+
             // gets the list and sort
             File[] filelist = f.listFiles(new XMLFiles());
             Arrays.sort(filelist, new FilesComparator());
-            
+
             for (File file : filelist) {
-                d.mergeWith(readDatabase_noChecks(file));                
+                d.mergeWith(readDatabase_noChecks(file));
             }
-            
+
             return d;
         } else {
             DatabaseIO dbIO = new DatabaseIO();
-            dbIO.setValidateXml(false); 
-            Database db =  dbIO.readplain(f); 
-            if(f.getAbsolutePath().contains("modifiedTables"))
-            	db.moveTablesToModified();
+            dbIO.setValidateXml(false);
+            Database db = dbIO.readplain(f);
+            if (f.getAbsolutePath().contains("modifiedTables"))
+                db.moveTablesToModified();
             return db;
         }
-    } 
-    
-    public static Database cropDatabase(Database sourcedb, Database targetdb, String sobjectlist) {
+    }
+
+    public static Database cropDatabase(Database sourcedb, Database targetdb,
+            String sobjectlist) {
 
         Database cropdb = null;
         try {
             cropdb = (Database) sourcedb.clone();
-            
+
             StringTokenizer st = new StringTokenizer(sobjectlist, ",");
-            
+
             while (st.hasMoreTokens()) {
                 moveObject(cropdb, targetdb, st.nextToken().trim());
             }
-     
+
         } catch (CloneNotSupportedException e) {
         }
-        
+
         cropdb.initialize(); // throws an exception if inconsistent
-        return cropdb;        
+        return cropdb;
     }
-    
-    public static void moveObject(Database cropdb, Database targetdb, String sobject) {
-        
+
+    public static void moveObject(Database cropdb, Database targetdb,
+            String sobject) {
+
         cropdb.removeTable(cropdb.findTable(sobject));
         cropdb.addTable(targetdb.findTable(sobject));
 
@@ -176,7 +174,7 @@ public class DatabaseUtils {
         cropdb.removeTrigger(cropdb.findTrigger(sobject));
         cropdb.addTrigger(targetdb.findTrigger(sobject));
     }
-    
+
     public static String readFile(File f) throws IOException {
 
         StringBuffer s = new StringBuffer();
@@ -188,12 +186,14 @@ public class DatabaseUtils {
             s.append('\n');
         }
         br.close();
-        return s.toString();        
+        return s.toString();
     }
-       
-    public static DatabaseFilter getDynamicDatabaseFilter(String filter, Database database) {
+
+    public static DatabaseFilter getDynamicDatabaseFilter(String filter,
+            Database database) {
         try {
-            DynamicDatabaseFilter dbfilter = (DynamicDatabaseFilter) Class.forName(filter).newInstance();
+            DynamicDatabaseFilter dbfilter = (DynamicDatabaseFilter) Class
+                    .forName(filter).newInstance();
             dbfilter.init(database);
             return dbfilter;
         } catch (InstantiationException ex) {
@@ -204,7 +204,7 @@ public class DatabaseUtils {
             throw new BuildException(ex);
         }
     }
-       
+
     public static ExcludeFilter getExcludeFilter(String filtername) {
         try {
             return (ExcludeFilter) Class.forName(filtername).newInstance();
@@ -216,13 +216,15 @@ public class DatabaseUtils {
             throw new BuildException(ex);
         }
     }
-    
+
     private static class XMLFiles implements FileFilter {
-         public boolean accept(File pathname) {
-             return pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(".xml"));
-         }
-    }   
-    
+        public boolean accept(File pathname) {
+            return pathname.isDirectory()
+                    || (pathname.isFile() && pathname.getName()
+                            .endsWith(".xml"));
+        }
+    }
+
     private static class FilesComparator implements Comparator<File> {
         public int compare(File a, File b) {
 
@@ -235,5 +237,5 @@ public class DatabaseUtils {
             }
         }
     }
-       
+
 }

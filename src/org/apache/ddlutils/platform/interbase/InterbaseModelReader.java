@@ -43,18 +43,17 @@ import org.apache.ddlutils.platform.JdbcModelReader;
 
 /**
  * The Jdbc Model Reader for Interbase.
- *
+ * 
  * @version $Revision: $
  */
-public class InterbaseModelReader extends JdbcModelReader
-{
+public class InterbaseModelReader extends JdbcModelReader {
     /**
      * Creates a new model reader for Interbase databases.
      * 
-     * @param platform The platform that this model reader belongs to
+     * @param platform
+     *            The platform that this model reader belongs to
      */
-    public InterbaseModelReader(Platform platform)
-    {
+    public InterbaseModelReader(Platform platform) {
         super(platform);
         setDefaultCatalogPattern(null);
         setDefaultSchemaPattern(null);
@@ -65,12 +64,11 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
-    {
+    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values)
+            throws SQLException {
         Table table = super.readTable(metaData, values);
 
-        if (table != null)
-        {
+        if (table != null) {
             determineExtraColumnInfo(table);
             determineAutoIncrementColumns(table);
             adjustColumns(table);
@@ -82,37 +80,32 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Collection readColumns(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
-    {
+    protected Collection readColumns(DatabaseMetaDataWrapper metaData,
+            String tableName) throws SQLException {
         ResultSet columnData = null;
 
-        try
-        {
+        try {
             List columns = new ArrayList();
 
-            if (getPlatform().isDelimitedIdentifierModeOn())
-            {
+            if (getPlatform().isDelimitedIdentifierModeOn()) {
                 // Jaybird has a problem when delimited identifiers are used as
                 // it is not able to find the columns for the table
                 // So we have to filter manually below
-                columnData = metaData.getColumns(getDefaultTablePattern(), getDefaultColumnPattern());
+                columnData = metaData.getColumns(getDefaultTablePattern(),
+                        getDefaultColumnPattern());
 
-                while (columnData.next())
-                {
+                while (columnData.next()) {
                     Map values = readColumns(columnData, getColumnsForColumn());
 
-                    if (tableName.equals(values.get("TABLE_NAME")))
-                    {
+                    if (tableName.equals(values.get("TABLE_NAME"))) {
                         columns.add(readColumn(metaData, values));
                     }
                 }
-            }
-            else
-            {
-                columnData = metaData.getColumns(tableName, getDefaultColumnPattern());
+            } else {
+                columnData = metaData.getColumns(tableName,
+                        getDefaultColumnPattern());
 
-                while (columnData.next())
-                {
+                while (columnData.next()) {
                     Map values = readColumns(columnData, getColumnsForColumn());
 
                     columns.add(readColumn(metaData, values));
@@ -120,104 +113,105 @@ public class InterbaseModelReader extends JdbcModelReader
             }
 
             return columns;
-        }
-        finally
-        {
-            if (columnData != null)
-            {
+        } finally {
+            if (columnData != null) {
                 columnData.close();
             }
         }
     }
 
     /**
-     * Helper method that determines extra column info from the system tables: default value, precision, scale.
-     *
-     * @param table The table
+     * Helper method that determines extra column info from the system tables:
+     * default value, precision, scale.
+     * 
+     * @param table
+     *            The table
      */
-    protected void determineExtraColumnInfo(Table table) throws SQLException
-    {
-        StringBuffer query   = new StringBuffer();
-        
-        query.append("SELECT a.RDB$FIELD_NAME, a.RDB$DEFAULT_SOURCE, b.RDB$FIELD_PRECISION, b.RDB$FIELD_SCALE,");
-        query.append(" b.RDB$FIELD_TYPE, b.RDB$FIELD_SUB_TYPE FROM RDB$RELATION_FIELDS a, RDB$FIELDS b");
-        query.append(" WHERE a.RDB$RELATION_NAME=? AND a.RDB$FIELD_SOURCE=b.RDB$FIELD_NAME");
+    protected void determineExtraColumnInfo(Table table) throws SQLException {
+        StringBuffer query = new StringBuffer();
 
-        PreparedStatement prepStmt = getConnection().prepareStatement(query.toString());
+        query
+                .append("SELECT a.RDB$FIELD_NAME, a.RDB$DEFAULT_SOURCE, b.RDB$FIELD_PRECISION, b.RDB$FIELD_SCALE,");
+        query
+                .append(" b.RDB$FIELD_TYPE, b.RDB$FIELD_SUB_TYPE FROM RDB$RELATION_FIELDS a, RDB$FIELDS b");
+        query
+                .append(" WHERE a.RDB$RELATION_NAME=? AND a.RDB$FIELD_SOURCE=b.RDB$FIELD_NAME");
 
-        try
-        {
-            prepStmt.setString(1, getPlatform().isDelimitedIdentifierModeOn() ? table.getName() : table.getName().toUpperCase());
+        PreparedStatement prepStmt = getConnection().prepareStatement(
+                query.toString());
+
+        try {
+            prepStmt.setString(1,
+                    getPlatform().isDelimitedIdentifierModeOn() ? table
+                            .getName() : table.getName().toUpperCase());
 
             ResultSet rs = prepStmt.executeQuery();
 
-            while (rs.next())
-            {
+            while (rs.next()) {
                 String columnName = rs.getString(1).trim();
-                Column column     = table.findColumn(columnName, getPlatform().isDelimitedIdentifierModeOn());
+                Column column = table.findColumn(columnName, getPlatform()
+                        .isDelimitedIdentifierModeOn());
 
-                if (column != null)
-                {
+                if (column != null) {
                     String defaultValue = rs.getString(2);
 
-                    if (!rs.wasNull() && (defaultValue != null))
-                    {
+                    if (!rs.wasNull() && (defaultValue != null)) {
                         defaultValue = defaultValue.trim();
-                        if (defaultValue.startsWith("DEFAULT "))
-                        {
-                            defaultValue = defaultValue.substring("DEFAULT ".length());
+                        if (defaultValue.startsWith("DEFAULT ")) {
+                            defaultValue = defaultValue.substring("DEFAULT "
+                                    .length());
                         }
                         column.setDefaultValue(defaultValue);
                     }
-                    
-                    short   precision          = rs.getShort(3);
-                    boolean precisionSpecified = !rs.wasNull();
-                    short   scale              = rs.getShort(4);
-                    boolean scaleSpecified     = !rs.wasNull();
 
-                    if (precisionSpecified)
-                    {
+                    short precision = rs.getShort(3);
+                    boolean precisionSpecified = !rs.wasNull();
+                    short scale = rs.getShort(4);
+                    boolean scaleSpecified = !rs.wasNull();
+
+                    if (precisionSpecified) {
                         // for some reason, Interbase stores the negative scale
-                        column.setSizeAndScale(precision, new Integer(scaleSpecified ? -scale : 0));
+                        column.setSizeAndScale(precision, new Integer(
+                                scaleSpecified ? -scale : 0));
                     }
 
-                    short dbType      = rs.getShort(5);
+                    short dbType = rs.getShort(5);
                     short blobSubType = rs.getShort(6);
 
                     // CLOBs are returned by the driver as VARCHAR
-                    if (!rs.wasNull() && (dbType == 261) && (blobSubType == 1))
-                    {
+                    if (!rs.wasNull() && (dbType == 261) && (blobSubType == 1)) {
                         column.setTypeCode(Types.CLOB);
                     }
                 }
             }
             rs.close();
-        }
-        finally
-        {
+        } finally {
             prepStmt.close();
         }
     }
 
     /**
-     * Helper method that determines the auto increment status using Interbase's system tables.
-     *
-     * @param table The table
+     * Helper method that determines the auto increment status using Interbase's
+     * system tables.
+     * 
+     * @param table
+     *            The table
      */
-    protected void determineAutoIncrementColumns(Table table) throws SQLException
-    {
-        // Since for long table and column names, the generator name will be shortened
-        // we have to determine for each column whether there is a generator for it
-        InterbaseBuilder builder = (InterbaseBuilder)getPlatform().getSqlBuilder();
-        Column[]         columns = table.getColumns();
-        HashMap          names   = new HashMap();
-        String           name;
+    protected void determineAutoIncrementColumns(Table table)
+            throws SQLException {
+        // Since for long table and column names, the generator name will be
+        // shortened
+        // we have to determine for each column whether there is a generator for
+        // it
+        InterbaseBuilder builder = (InterbaseBuilder) getPlatform()
+                .getSqlBuilder();
+        Column[] columns = table.getColumns();
+        HashMap names = new HashMap();
+        String name;
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             name = builder.getGeneratorName(table, columns[idx]);
-            if (!getPlatform().isDelimitedIdentifierModeOn())
-            {
+            if (!getPlatform().isDelimitedIdentifierModeOn()) {
                 name = name.toUpperCase();
             }
             names.put(name, columns[idx]);
@@ -225,24 +219,20 @@ public class InterbaseModelReader extends JdbcModelReader
 
         Statement stmt = getConnection().createStatement();
 
-        try
-        {
-            ResultSet rs = stmt.executeQuery("SELECT RDB$GENERATOR_NAME FROM RDB$GENERATORS");
+        try {
+            ResultSet rs = stmt
+                    .executeQuery("SELECT RDB$GENERATOR_NAME FROM RDB$GENERATORS");
 
-            while (rs.next())
-            {
+            while (rs.next()) {
                 String generatorName = rs.getString(1).trim();
-                Column column        = (Column)names.get(generatorName);
+                Column column = (Column) names.get(generatorName);
 
-                if (column != null)
-                {
+                if (column != null) {
                     column.setAutoIncrement(true);
                 }
             }
             rs.close();
-        }
-        finally
-        {
+        } finally {
             stmt.close();
         }
     }
@@ -250,28 +240,25 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * Adjusts the columns in the table by fixing types and default values.
      * 
-     * @param table The table
+     * @param table
+     *            The table
      */
-    protected void adjustColumns(Table table)
-    {
+    protected void adjustColumns(Table table) {
         Column[] columns = table.getColumns();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
-            if (columns[idx].getTypeCode() == Types.FLOAT)
-            {
+        for (int idx = 0; idx < columns.length; idx++) {
+            if (columns[idx].getTypeCode() == Types.FLOAT) {
                 columns[idx].setTypeCode(Types.REAL);
-            }
-            else if ((columns[idx].getTypeCode() == Types.NUMERIC) || (columns[idx].getTypeCode() == Types.DECIMAL))
-            {
-                if ((columns[idx].getTypeCode() == Types.NUMERIC) && (columns[idx].getSizeAsInt() == 18) && (columns[idx].getScaleAsInt() == 0))
-                {
+            } else if ((columns[idx].getTypeCode() == Types.NUMERIC)
+                    || (columns[idx].getTypeCode() == Types.DECIMAL)) {
+                if ((columns[idx].getTypeCode() == Types.NUMERIC)
+                        && (columns[idx].getSizeAsInt() == 18)
+                        && (columns[idx].getScaleAsInt() == 0)) {
                     columns[idx].setTypeCode(Types.BIGINT);
                 }
-            }
-            else if (TypeMap.isTextType(columns[idx].getTypeCode()))
-            {
-                columns[idx].setDefaultValue(unescape(columns[idx].getDefaultValue(), "'", "''"));
+            } else if (TypeMap.isTextType(columns[idx].getTypeCode())) {
+                columns[idx].setDefaultValue(unescape(columns[idx]
+                        .getDefaultValue(), "'", "''"));
             }
         }
     }
@@ -279,44 +266,34 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Collection readPrimaryKeyNames(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
-    {
-        List      pks   = new ArrayList();
+    protected Collection readPrimaryKeyNames(DatabaseMetaDataWrapper metaData,
+            String tableName) throws SQLException {
+        List pks = new ArrayList();
         ResultSet pkData = null;
 
-        try
-        {
-            if (getPlatform().isDelimitedIdentifierModeOn())
-            {
+        try {
+            if (getPlatform().isDelimitedIdentifierModeOn()) {
                 // Jaybird has a problem when delimited identifiers are used as
                 // it is not able to find the primary key info for the table
                 // So we have to filter manually below
                 pkData = metaData.getPrimaryKeys(getDefaultTablePattern());
-                while (pkData.next())
-                {
+                while (pkData.next()) {
                     Map values = readColumns(pkData, getColumnsForPK());
-    
-                    if (tableName.equals(values.get("TABLE_NAME")))
-                    {
+
+                    if (tableName.equals(values.get("TABLE_NAME"))) {
                         pks.add(readPrimaryKeyName(metaData, values));
                     }
                 }
-            }
-            else
-            {
+            } else {
                 pkData = metaData.getPrimaryKeys(tableName);
-                while (pkData.next())
-                {
+                while (pkData.next()) {
                     Map values = readColumns(pkData, getColumnsForPK());
-    
+
                     pks.add(readPrimaryKeyName(metaData, values));
                 }
             }
-        }
-        finally
-        {
-            if (pkData != null)
-            {
+        } finally {
+            if (pkData != null) {
                 pkData.close();
             }
         }
@@ -326,44 +303,34 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName) throws SQLException
-    {
-        Map       fks    = new ListOrderedMap();
+    protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData,
+            String tableName) throws SQLException {
+        Map fks = new ListOrderedMap();
         ResultSet fkData = null;
 
-        try
-        {
-            if (getPlatform().isDelimitedIdentifierModeOn())
-            {
+        try {
+            if (getPlatform().isDelimitedIdentifierModeOn()) {
                 // Jaybird has a problem when delimited identifiers are used as
                 // it is not able to find the foreign key info for the table
                 // So we have to filter manually below
                 fkData = metaData.getForeignKeys(getDefaultTablePattern());
-                while (fkData.next())
-                {
+                while (fkData.next()) {
                     Map values = readColumns(fkData, getColumnsForFK());
-    
-                    if (tableName.equals(values.get("FKTABLE_NAME")))
-                    {
+
+                    if (tableName.equals(values.get("FKTABLE_NAME"))) {
                         readForeignKey(metaData, values, fks);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 fkData = metaData.getForeignKeys(tableName);
-                while (fkData.next())
-                {
+                while (fkData.next()) {
                     Map values = readColumns(fkData, getColumnsForFK());
-    
+
                     readForeignKey(metaData, values, fks);
                 }
             }
-        }
-        finally
-        {
-            if (fkData != null)
-            {
+        } finally {
+            if (fkData != null) {
                 fkData.close();
             }
         }
@@ -373,30 +340,33 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected boolean isInternalPrimaryKeyIndex(DatabaseMetaDataWrapper metaData, Table table, Index index) throws SQLException
-    {
-        String       tableName = getPlatform().getSqlBuilder().getStructureObjectName(table);
-        String       indexName = getPlatform().getSqlBuilder().getConstraintObjectName(index);
-        StringBuffer query     = new StringBuffer();
+    protected boolean isInternalPrimaryKeyIndex(
+            DatabaseMetaDataWrapper metaData, Table table, Index index)
+            throws SQLException {
+        String tableName = getPlatform().getSqlBuilder()
+                .getStructureObjectName(table);
+        String indexName = getPlatform().getSqlBuilder()
+                .getConstraintObjectName(index);
+        StringBuffer query = new StringBuffer();
 
-        query.append("SELECT RDB$CONSTRAINT_NAME FROM RDB$RELATION_CONSTRAINTS where RDB$RELATION_NAME=? AND RDB$CONSTRAINT_TYPE=? AND RDB$INDEX_NAME=?");
+        query
+                .append("SELECT RDB$CONSTRAINT_NAME FROM RDB$RELATION_CONSTRAINTS where RDB$RELATION_NAME=? AND RDB$CONSTRAINT_TYPE=? AND RDB$INDEX_NAME=?");
 
-        PreparedStatement stmt = getConnection().prepareStatement(query.toString());
+        PreparedStatement stmt = getConnection().prepareStatement(
+                query.toString());
 
-        try 
-        {
-            stmt.setString(1, getPlatform().isDelimitedIdentifierModeOn() ? tableName : tableName.toUpperCase());
+        try {
+            stmt.setString(1,
+                    getPlatform().isDelimitedIdentifierModeOn() ? tableName
+                            : tableName.toUpperCase());
             stmt.setString(2, "PRIMARY KEY");
             stmt.setString(3, indexName);
 
             ResultSet resultSet = stmt.executeQuery();
 
             return resultSet.next();
-        }
-        finally
-        {
-            if (stmt != null)
-            {
+        } finally {
+            if (stmt != null) {
                 stmt.close();
             }
         }
@@ -405,20 +375,27 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index) throws SQLException
-    {
-        String       tableName = getPlatform().getSqlBuilder().getStructureObjectName(table);
-        String       indexName = getPlatform().getSqlBuilder().getConstraintObjectName(index);
-        String       fkName    = getPlatform().getSqlBuilder().getForeignKeyName(table, fk);
-        StringBuffer query     = new StringBuffer();
+    protected boolean isInternalForeignKeyIndex(
+            DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk,
+            Index index) throws SQLException {
+        String tableName = getPlatform().getSqlBuilder()
+                .getStructureObjectName(table);
+        String indexName = getPlatform().getSqlBuilder()
+                .getConstraintObjectName(index);
+        String fkName = getPlatform().getSqlBuilder().getForeignKeyName(table,
+                fk);
+        StringBuffer query = new StringBuffer();
 
-        query.append("SELECT RDB$CONSTRAINT_NAME FROM RDB$RELATION_CONSTRAINTS where RDB$RELATION_NAME=? AND RDB$CONSTRAINT_TYPE=? AND RDB$CONSTRAINT_NAME=? AND RDB$INDEX_NAME=?");
+        query
+                .append("SELECT RDB$CONSTRAINT_NAME FROM RDB$RELATION_CONSTRAINTS where RDB$RELATION_NAME=? AND RDB$CONSTRAINT_TYPE=? AND RDB$CONSTRAINT_NAME=? AND RDB$INDEX_NAME=?");
 
-        PreparedStatement stmt = getConnection().prepareStatement(query.toString());
+        PreparedStatement stmt = getConnection().prepareStatement(
+                query.toString());
 
-        try 
-        {
-            stmt.setString(1, getPlatform().isDelimitedIdentifierModeOn() ? tableName : tableName.toUpperCase());
+        try {
+            stmt.setString(1,
+                    getPlatform().isDelimitedIdentifierModeOn() ? tableName
+                            : tableName.toUpperCase());
             stmt.setString(2, "FOREIGN KEY");
             stmt.setString(3, fkName);
             stmt.setString(4, indexName);
@@ -426,11 +403,8 @@ public class InterbaseModelReader extends JdbcModelReader
             ResultSet resultSet = stmt.executeQuery();
 
             return resultSet.next();
-        }
-        finally
-        {
-            if (stmt != null)
-            {
+        } finally {
+            if (stmt != null) {
                 stmt.close();
             }
         }
@@ -439,67 +413,64 @@ public class InterbaseModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    public String determineSchemaOf(Connection connection, String schemaPattern, Table table) throws SQLException
-    {
-        ResultSet tableData  = null;
+    public String determineSchemaOf(Connection connection,
+            String schemaPattern, Table table) throws SQLException {
+        ResultSet tableData = null;
         ResultSet columnData = null;
 
-        try
-        {
+        try {
             DatabaseMetaDataWrapper metaData = new DatabaseMetaDataWrapper();
 
             metaData.setMetaData(connection.getMetaData());
             metaData.setCatalog(getDefaultCatalogPattern());
-            metaData.setSchemaPattern(schemaPattern == null ? getDefaultSchemaPattern() : schemaPattern);
+            metaData
+                    .setSchemaPattern(schemaPattern == null ? getDefaultSchemaPattern()
+                            : schemaPattern);
             metaData.setTableTypes(getDefaultTableTypes());
 
             String tablePattern = table.getName();
 
-            if (getPlatform().isDelimitedIdentifierModeOn())
-            {
+            if (getPlatform().isDelimitedIdentifierModeOn()) {
                 tablePattern = tablePattern.toUpperCase();
             }
 
             tableData = metaData.getTables(tablePattern);
 
-            boolean found  = false;
-            String  schema = null;
+            boolean found = false;
+            String schema = null;
 
-            while (!found && tableData.next())
-            {
-                Map    values    = readColumns(tableData, getColumnsForTable());
-                String tableName = (String)values.get("TABLE_NAME");
+            while (!found && tableData.next()) {
+                Map values = readColumns(tableData, getColumnsForTable());
+                String tableName = (String) values.get("TABLE_NAME");
 
-                if ((tableName != null) && (tableName.length() > 0))
-                {
-                    schema = (String)values.get("TABLE_SCHEM");
-                    found  = true;
+                if ((tableName != null) && (tableName.length() > 0)) {
+                    schema = (String) values.get("TABLE_SCHEM");
+                    found = true;
 
-                    if (getPlatform().isDelimitedIdentifierModeOn())
-                    {
-                        // Jaybird has a problem when delimited identifiers are used as
+                    if (getPlatform().isDelimitedIdentifierModeOn()) {
+                        // Jaybird has a problem when delimited identifiers are
+                        // used as
                         // it is not able to find the columns for the table
                         // So we have to filter manually below
-                        columnData = metaData.getColumns(getDefaultTablePattern(), getDefaultColumnPattern());
-                    }
-                    else
-                    {
-                        columnData = metaData.getColumns(tableName, getDefaultColumnPattern());
+                        columnData = metaData.getColumns(
+                                getDefaultTablePattern(),
+                                getDefaultColumnPattern());
+                    } else {
+                        columnData = metaData.getColumns(tableName,
+                                getDefaultColumnPattern());
                     }
 
-                    while (found && columnData.next())
-                    {
+                    while (found && columnData.next()) {
                         values = readColumns(columnData, getColumnsForColumn());
 
-                        if (getPlatform().isDelimitedIdentifierModeOn() &&
-                            !tableName.equals(values.get("TABLE_NAME")))
-                        {
+                        if (getPlatform().isDelimitedIdentifierModeOn()
+                                && !tableName.equals(values.get("TABLE_NAME"))) {
                             continue;
                         }
 
-                        if (table.findColumn((String)values.get("COLUMN_NAME"),
-                                             getPlatform().isDelimitedIdentifierModeOn()) == null)
-                        {
+                        if (table.findColumn(
+                                (String) values.get("COLUMN_NAME"),
+                                getPlatform().isDelimitedIdentifierModeOn()) == null) {
                             found = false;
                         }
                     }
@@ -508,15 +479,11 @@ public class InterbaseModelReader extends JdbcModelReader
                 }
             }
             return found ? schema : null;
-        }
-        finally
-        {
-            if (columnData != null)
-            {
+        } finally {
+            if (columnData != null) {
                 columnData.close();
             }
-            if (tableData != null)
-            {
+            if (tableData != null) {
                 tableData.close();
             }
         }

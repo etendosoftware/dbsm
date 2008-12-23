@@ -44,15 +44,14 @@ import org.apache.ddlutils.platform.SqlBuilder;
  * 
  * @version $Revision: 519537 $
  */
-public class SapDbBuilder extends SqlBuilder
-{
+public class SapDbBuilder extends SqlBuilder {
     /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public SapDbBuilder(Platform platform)
-    {
+    public SapDbBuilder(Platform platform) {
         super(platform);
         addEscapedCharSequence("'", "''");
     }
@@ -60,8 +59,7 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
-    { 
+    public void dropTable(Table table) throws IOException {
         print("DROP TABLE ");
         printIdentifier(getStructureObjectName(table));
         print(" CASCADE");
@@ -71,19 +69,19 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
-    {
+    protected void writeColumnAutoIncrementStmt(Table table, Column column)
+            throws IOException {
         print("DEFAULT SERIAL(1)");
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalPrimaryKeysCreateStmt(Table table, Column[] primaryKeyColumns) throws IOException
-    {
+    protected void writeExternalPrimaryKeysCreateStmt(Table table,
+            Column[] primaryKeyColumns) throws IOException {
         // Note that SapDB does not support the addition of named primary keys
-        if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns))
-        {
+        if ((primaryKeyColumns.length > 0)
+                && shouldGeneratePrimaryKeys(primaryKeyColumns)) {
             print("ALTER TABLE ");
             printlnIdentifier(getStructureObjectName(table));
             printIndent();
@@ -96,14 +94,11 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key) throws IOException
-    {
-        if (key.getForeignTableName() == null)
-        {
+    protected void writeExternalForeignKeyCreateStmt(Database database,
+            Table table, ForeignKey key) throws IOException {
+        if (key.getForeignTableName() == null) {
             _log.warn("Foreign key table is null for key " + key);
-        }
-        else
-        {
+        } else {
             writeTableAlterStmt(table);
 
             print(" ADD FOREIGN KEY ");
@@ -111,7 +106,8 @@ public class SapDbBuilder extends SqlBuilder
             print(" (");
             writeLocalReferences(key);
             print(") REFERENCES ");
-            printIdentifier(getStructureObjectName(database.findTable(key.getForeignTableName())));
+            printIdentifier(getStructureObjectName(database.findTable(key
+                    .getForeignTableName())));
             print(" (");
             writeForeignReferences(key);
             print(")");
@@ -122,8 +118,8 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey) throws IOException
-    {
+    protected void writeExternalForeignKeyDropStmt(Table table,
+            ForeignKey foreignKey) throws IOException {
         writeTableAlterStmt(table);
         print("DROP FOREIGN KEY ");
         printIdentifier(getForeignKeyName(table, foreignKey));
@@ -133,8 +129,7 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public String getSelectLastIdentityValues(Table table)
-    {
+    public String getSelectLastIdentityValues(Table table) {
         StringBuffer result = new StringBuffer();
 
         result.append("SELECT ");
@@ -147,91 +142,76 @@ public class SapDbBuilder extends SqlBuilder
      * {@inheritDoc}
      */
     protected void processTableStructureChanges(Database currentModel,
-                                                Database desiredModel,
-                                                Table    sourceTable,
-                                                Table    targetTable,
-                                                Map      parameters,
-                                                List     changes) throws IOException
-    {
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+            Database desiredModel, Table sourceTable, Table targetTable,
+            Map parameters, List changes) throws IOException {
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
-                AddColumnChange addColumnChange = (AddColumnChange)change;
+            if (change instanceof AddColumnChange) {
+                AddColumnChange addColumnChange = (AddColumnChange) change;
 
                 // SapDB can only add not insert columns
-                if (!addColumnChange.isAtEnd())
-                {
+                if (!addColumnChange.isAtEnd()) {
                     return;
                 }
             }
         }
 
         // First we drop primary keys as necessary
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof RemovePrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (RemovePrimaryKeyChange)change);
+            if (change instanceof RemovePrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (RemovePrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof PrimaryKeyChange)
-            {
-                PrimaryKeyChange       pkChange       = (PrimaryKeyChange)change;
-                RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(pkChange.getChangedTable(),
-                                                                                   pkChange.getOldPrimaryKeyColumns());
+            } else if (change instanceof PrimaryKeyChange) {
+                PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
+                RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
+                        pkChange.getChangedTable(), pkChange
+                                .getOldPrimaryKeyColumns());
 
                 processChange(currentModel, desiredModel, removePkChange);
             }
         }
         // Next we add/change/remove columns
-        // SapDB has a ALTER TABLE MODIFY COLUMN but it is limited regarding the type conversions
+        // SapDB has a ALTER TABLE MODIFY COLUMN but it is limited regarding the
+        // type conversions
         // it can perform, so we don't use it here but rather rebuild the table
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
-                processChange(currentModel, desiredModel, (AddColumnChange)change);
+            if (change instanceof AddColumnChange) {
+                processChange(currentModel, desiredModel,
+                        (AddColumnChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof ColumnDefaultValueChange)
-            {
-                processChange(currentModel, desiredModel, (ColumnDefaultValueChange)change);
+            } else if (change instanceof ColumnDefaultValueChange) {
+                processChange(currentModel, desiredModel,
+                        (ColumnDefaultValueChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof ColumnRequiredChange)
-            {
-                processChange(currentModel, desiredModel, (ColumnRequiredChange)change);
+            } else if (change instanceof ColumnRequiredChange) {
+                processChange(currentModel, desiredModel,
+                        (ColumnRequiredChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof RemoveColumnChange)
-            {
-                processChange(currentModel, desiredModel, (RemoveColumnChange)change);
+            } else if (change instanceof RemoveColumnChange) {
+                processChange(currentModel, desiredModel,
+                        (RemoveColumnChange) change);
                 changeIt.remove();
             }
         }
         // Finally we add primary keys
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddPrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (AddPrimaryKeyChange)change);
+            if (change instanceof AddPrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (AddPrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof PrimaryKeyChange)
-            {
-                PrimaryKeyChange    pkChange    = (PrimaryKeyChange)change;
-                AddPrimaryKeyChange addPkChange = new AddPrimaryKeyChange(pkChange.getChangedTable(),
-                                                                          pkChange.getNewName(),
-                                                                          pkChange.getNewPrimaryKeyColumns());
+            } else if (change instanceof PrimaryKeyChange) {
+                PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
+                AddPrimaryKeyChange addPkChange = new AddPrimaryKeyChange(
+                        pkChange.getChangedTable(), pkChange.getNewName(),
+                        pkChange.getNewPrimaryKeyColumns());
 
                 processChange(currentModel, desiredModel, addPkChange);
                 changeIt.remove();
@@ -242,14 +222,15 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * Processes the addition of a column to a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database        currentModel,
-                                 Database        desiredModel,
-                                 AddColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            AddColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -262,14 +243,15 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * Processes the removal of a column from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database           currentModel,
-                                 Database           desiredModel,
-                                 RemoveColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemoveColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -283,14 +265,15 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * Processes the removal of a primary key from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database               currentModel,
-                                 Database               desiredModel,
-                                 RemovePrimaryKeyChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemovePrimaryKeyChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -302,25 +285,23 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * Processes the change of the required constraint of a column.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database             currentModel,
-                                 Database             desiredModel,
-                                 ColumnRequiredChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            ColumnRequiredChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
         print("COLUMN ");
         printIdentifier(getColumnName(change.getChangedColumn()));
-        if (change.getChangedColumn().isRequired())
-        {
+        if (change.getChangedColumn().isRequired()) {
             print(" DEFAULT NULL");
-        }
-        else
-        {
+        } else {
             print(" NOT NULL");
         }
         printEndOfStatement();
@@ -330,38 +311,37 @@ public class SapDbBuilder extends SqlBuilder
     /**
      * Processes the change of the default value of a column.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database                 currentModel,
-                                 Database                 desiredModel,
-                                 ColumnDefaultValueChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            ColumnDefaultValueChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
         print("COLUMN ");
         printIdentifier(getColumnName(change.getChangedColumn()));
 
-        Table   curTable   = currentModel.findTable(change.getChangedTable().getName(), getPlatform().isDelimitedIdentifierModeOn());
-        Column  curColumn  = curTable.findColumn(change.getChangedColumn().getName(), getPlatform().isDelimitedIdentifierModeOn());
+        Table curTable = currentModel.findTable(change.getChangedTable()
+                .getName(), getPlatform().isDelimitedIdentifierModeOn());
+        Column curColumn = curTable.findColumn(change.getChangedColumn()
+                .getName(), getPlatform().isDelimitedIdentifierModeOn());
         boolean hasDefault = curColumn.getParsedDefaultValue() != null;
 
-        if (isValidDefaultValue(change.getNewDefaultValue(), curColumn.getTypeCode()))
-        {
-            if (hasDefault)
-            {
+        if (isValidDefaultValue(change.getNewDefaultValue(), curColumn
+                .getTypeCode())) {
+            if (hasDefault) {
                 print(" ALTER DEFAULT ");
-            }
-            else
-            {
+            } else {
                 print(" ADD DEFAULT ");
             }
-            print(getDefaultValue(change.getNewDefaultValue(), curColumn.getTypeCode()));
-        }
-        else if (hasDefault)
-        {
+            print(getDefaultValue(change.getNewDefaultValue(), curColumn
+                    .getTypeCode()));
+        } else if (hasDefault) {
             print(" DROP DEFAULT");
         }
         printEndOfStatement();

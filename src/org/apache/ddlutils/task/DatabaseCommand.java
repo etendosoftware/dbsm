@@ -29,8 +29,7 @@ import org.apache.tools.ant.BuildException;
  * @version $Revision: 289996 $
  * @ant.type ignore="true"
  */
-public abstract class DatabaseCommand extends Command
-{
+public abstract class DatabaseCommand extends Command {
     /** The platform configuration. */
     private PlatformConfiguration _platformConf = new PlatformConfiguration();
 
@@ -39,8 +38,7 @@ public abstract class DatabaseCommand extends Command
      * 
      * @return The database type
      */
-    protected String getDatabaseType()
-    {
+    protected String getDatabaseType() {
         return _platformConf.getDatabaseType();
     }
 
@@ -49,8 +47,7 @@ public abstract class DatabaseCommand extends Command
      * 
      * @return The data source
      */
-    protected BasicDataSource getDataSource()
-    {
+    protected BasicDataSource getDataSource() {
         return _platformConf.getDataSource();
     }
 
@@ -59,8 +56,7 @@ public abstract class DatabaseCommand extends Command
      * 
      * @return The catalog pattern
      */
-    public String getCatalogPattern()
-    {
+    public String getCatalogPattern() {
         return _platformConf.getCatalogPattern();
     }
 
@@ -69,18 +65,17 @@ public abstract class DatabaseCommand extends Command
      * 
      * @return The schema pattern
      */
-    public String getSchemaPattern()
-    {
+    public String getSchemaPattern() {
         return _platformConf.getSchemaPattern();
     }
 
     /**
      * Sets the platform configuration.
      * 
-     * @param platformConf The platform configuration
+     * @param platformConf
+     *            The platform configuration
      */
-    protected void setPlatformConfiguration(PlatformConfiguration platformConf)
-    {
+    protected void setPlatformConfiguration(PlatformConfiguration platformConf) {
         _platformConf = platformConf;
     }
 
@@ -89,16 +84,14 @@ public abstract class DatabaseCommand extends Command
      * 
      * @return The platform
      */
-    protected Platform getPlatform() throws BuildException
-    {
+    protected Platform getPlatform() throws BuildException {
         return _platformConf.getPlatform();
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean isRequiringModel()
-    {
+    public boolean isRequiringModel() {
         return true;
     }
 }

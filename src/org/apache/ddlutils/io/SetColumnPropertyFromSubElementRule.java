@@ -27,13 +27,12 @@ import org.apache.ddlutils.model.Column;
 import org.xml.sax.Attributes;
 
 /**
- * A digester rule for setting a bean property that corresponds to a column
- * with the value derived from a sub element. 
+ * A digester rule for setting a bean property that corresponds to a column with
+ * the value derived from a sub element.
  * 
  * @version $Revision: 289996 $
  */
-public class SetColumnPropertyFromSubElementRule extends Rule
-{
+public class SetColumnPropertyFromSubElementRule extends Rule {
     /** The column that this rule shall set. */
     private Column _column;
     /** The converter for generating the property value from a string. */
@@ -42,33 +41,33 @@ public class SetColumnPropertyFromSubElementRule extends Rule
     private boolean _usesBase64 = false;
 
     /**
-     * Creates a new creation rule that sets the property corresponding to the given column.
+     * Creates a new creation rule that sets the property corresponding to the
+     * given column.
      * 
-     * @param column    The column that this rule shall set
-     * @param converter The converter to be used for this column
+     * @param column
+     *            The column that this rule shall set
+     * @param converter
+     *            The converter to be used for this column
      */
-    public SetColumnPropertyFromSubElementRule(Column column, SqlTypeConverter converter)
-    {
-        _column    = column;
+    public SetColumnPropertyFromSubElementRule(Column column,
+            SqlTypeConverter converter) {
+        _column = column;
         _converter = converter;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void begin(String namespace, String name, Attributes attributes) throws Exception
-    {
-        for (int idx = 0; idx < attributes.getLength(); idx++)
-        {
+    public void begin(String namespace, String name, Attributes attributes)
+            throws Exception {
+        for (int idx = 0; idx < attributes.getLength(); idx++) {
             String attrName = attributes.getLocalName(idx);
 
-            if ("".equals(attrName))
-            {
+            if ("".equals(attrName)) {
                 attrName = attributes.getQName(idx);
             }
-            if (DatabaseIO.BASE64_ATTR_NAME.equals(attrName) &&
-                "true".equalsIgnoreCase(attributes.getValue(idx)))
-            {
+            if (DatabaseIO.BASE64_ATTR_NAME.equals(attrName)
+                    && "true".equalsIgnoreCase(attributes.getValue(idx))) {
                 _usesBase64 = true;
                 break;
             }
@@ -78,31 +77,32 @@ public class SetColumnPropertyFromSubElementRule extends Rule
     /**
      * {@inheritDoc}
      */
-    public void end(String namespace, String name) throws Exception
-    {
+    public void end(String namespace, String name) throws Exception {
         _usesBase64 = false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void body(String namespace, String name, String text) throws Exception
-    {
-        String attrValue = text;//.trim();
+    public void body(String namespace, String name, String text)
+            throws Exception {
+        String attrValue = text;// .trim();
 
-        if (_usesBase64 && (attrValue != null))
-        {
+        if (_usesBase64 && (attrValue != null)) {
             attrValue = new String(Base64.decodeBase64(attrValue.getBytes()));
         }
 
-        Object propValue = (_converter != null ? _converter.convertFromString(attrValue, _column.getTypeCode()) : attrValue);
+        Object propValue = (_converter != null ? _converter.convertFromString(
+                attrValue, _column.getTypeCode()) : attrValue);
 
-        if (digester.getLogger().isDebugEnabled())
-        {
-            digester.getLogger().debug("[SetColumnPropertyFromSubElementRule]{" + digester.getMatch() +
-                                       "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
+        if (digester.getLogger().isDebugEnabled()) {
+            digester.getLogger().debug(
+                    "[SetColumnPropertyFromSubElementRule]{"
+                            + digester.getMatch() + "} Setting property '"
+                            + _column.getName() + "' to '" + propValue + "'");
         }
 
-        PropertyUtils.setProperty(digester.peek(), _column.getName(), propValue);
+        PropertyUtils
+                .setProperty(digester.peek(), _column.getName(), propValue);
     }
 }

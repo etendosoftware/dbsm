@@ -43,15 +43,14 @@ import org.apache.ddlutils.util.Jdbc3Utils;
  * 
  * @version $Revision: 231306 $
  */
-public class InterbaseBuilder extends SqlBuilder
-{
+public class InterbaseBuilder extends SqlBuilder {
     /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public InterbaseBuilder(Platform platform)
-    {
+    public InterbaseBuilder(Platform platform) {
         super(platform);
         addEscapedCharSequence("'", "''");
     }
@@ -59,15 +58,14 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void createTable(Database database, Table table, Map parameters) throws IOException
-    {
+    public void createTable(Database database, Table table, Map parameters)
+            throws IOException {
         super.createTable(database, table, parameters);
 
         // creating generator and trigger for auto-increment
         Column[] columns = table.getAutoIncrementColumns();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             writeAutoIncrementCreateStmts(database, table, columns[idx]);
         }
     }
@@ -75,15 +73,13 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected String getNativeDefaultValue(ValueObject column)
-    {
-        if ((column.getTypeCode() == Types.BIT) ||
-            (Jdbc3Utils.supportsJava14JdbcTypes() && (column.getTypeCode() == Jdbc3Utils.determineBooleanTypeCode())))
-        {
-            return getDefaultValueHelper().convert(column.getDefaultValue(), column.getTypeCode(), Types.SMALLINT).toString();
-        }
-        else
-        {
+    protected String getNativeDefaultValue(ValueObject column) {
+        if ((column.getTypeCode() == Types.BIT)
+                || (Jdbc3Utils.supportsJava14JdbcTypes() && (column
+                        .getTypeCode() == Jdbc3Utils.determineBooleanTypeCode()))) {
+            return getDefaultValueHelper().convert(column.getDefaultValue(),
+                    column.getTypeCode(), Types.SMALLINT).toString();
+        } else {
             return super.getNativeDefaultValue(column);
         }
     }
@@ -91,13 +87,11 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
-    {
+    public void dropTable(Table table) throws IOException {
         // dropping generators for auto-increment
         Column[] columns = table.getAutoIncrementColumns();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             writeAutoIncrementDropStmts(table, columns[idx]);
         }
         super.dropTable(table);
@@ -106,8 +100,8 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void writeExternalIndexDropStmt(Table table, Index index) throws IOException
-    {
+    public void writeExternalIndexDropStmt(Table table, Index index)
+            throws IOException {
         // Index names in Interbase are unique to a schema and hence we do not
         // need the ON <tablename> clause
         print("DROP INDEX ");
@@ -116,14 +110,18 @@ public class InterbaseBuilder extends SqlBuilder
     }
 
     /**
-     * Writes the creation statements to make the given column an auto-increment column.
+     * Writes the creation statements to make the given column an auto-increment
+     * column.
      * 
-     * @param database The database model
-     * @param table    The table
-     * @param column   The column to make auto-increment
+     * @param database
+     *            The database model
+     * @param table
+     *            The table
+     * @param column
+     *            The column to make auto-increment
      */
-    private void writeAutoIncrementCreateStmts(Database database, Table table, Column column) throws IOException
-    {
+    private void writeAutoIncrementCreateStmts(Database database, Table table,
+            Column column) throws IOException {
         print("CREATE GENERATOR ");
         printIdentifier(getGeneratorName(table, column));
         printEndOfStatement();
@@ -144,13 +142,16 @@ public class InterbaseBuilder extends SqlBuilder
     }
 
     /**
-     * Writes the statements to drop the auto-increment status for the given column.
+     * Writes the statements to drop the auto-increment status for the given
+     * column.
      * 
-     * @param table  The table
-     * @param column The column to remove the auto-increment status for
+     * @param table
+     *            The table
+     * @param column
+     *            The column to remove the auto-increment status for
      */
-    private void writeAutoIncrementDropStmts(Table table, Column column) throws IOException
-    {
+    private void writeAutoIncrementDropStmts(Table table, Column column)
+            throws IOException {
         print("DROP TRIGGER ");
         printIdentifier(getTriggerName(table, column));
         printEndOfStatement();
@@ -163,55 +164,53 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * Determines the name of the trigger for an auto-increment column.
      * 
-     * @param table  The table
-     * @param column The auto-increment column
+     * @param table
+     *            The table
+     * @param column
+     *            The auto-increment column
      * @return The trigger name
      */
-    protected String getTriggerName(Table table, Column column)
-    {
+    protected String getTriggerName(Table table, Column column) {
         return getConstraintName("trg", table, column.getName(), null);
     }
 
     /**
      * Determines the name of the generator for an auto-increment column.
      * 
-     * @param table  The table
-     * @param column The auto-increment column
+     * @param table
+     *            The table
+     * @param column
+     *            The auto-increment column
      * @return The generator name
      */
-    protected String getGeneratorName(Table table, Column column)
-    {
+    protected String getGeneratorName(Table table, Column column) {
         return getConstraintName("gen", table, column.getName(), null);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
-    {
+    protected void writeColumnAutoIncrementStmt(Table table, Column column)
+            throws IOException {
         // we're using a generator
     }
 
     /**
      * {@inheritDoc}
      */
-    public String getSelectLastIdentityValues(Table table)
-    {
+    public String getSelectLastIdentityValues(Table table) {
         Column[] columns = table.getAutoIncrementColumns();
 
-        if (columns.length == 0)
-        {
+        if (columns.length == 0) {
             return null;
-        }
-        else
-        {
+        } else {
             StringBuffer result = new StringBuffer();
-    
+
             result.append("SELECT ");
-            for (int idx = 0; idx < columns.length; idx++)
-            {
+            for (int idx = 0; idx < columns.length; idx++) {
                 result.append("GEN_ID(");
-                result.append(getDelimitedIdentifier(getGeneratorName(table, columns[idx])));
+                result.append(getDelimitedIdentifier(getGeneratorName(table,
+                        columns[idx])));
                 result.append(", 0)");
             }
             result.append(" FROM RDB$DATABASE");
@@ -222,58 +221,54 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void processTableStructureChanges(Database currentModel, Database desiredModel, Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException
-    {
-        // TODO: Dropping of primary keys is currently not supported because we cannot
-        //       determine the pk constraint names and drop them in one go
-        //       (We could used a stored procedure if Interbase would allow them to use DDL)
-        //       This will be easier once named primary keys are supported
+    protected void processTableStructureChanges(Database currentModel,
+            Database desiredModel, Table sourceTable, Table targetTable,
+            Map parameters, List changes) throws IOException {
+        // TODO: Dropping of primary keys is currently not supported because we
+        // cannot
+        // determine the pk constraint names and drop them in one go
+        // (We could used a stored procedure if Interbase would allow them to
+        // use DDL)
+        // This will be easier once named primary keys are supported
         boolean pkColumnAdded = false;
 
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
-                AddColumnChange addColumnChange = (AddColumnChange)change;
+            if (change instanceof AddColumnChange) {
+                AddColumnChange addColumnChange = (AddColumnChange) change;
 
                 // TODO: we cannot add columns to the primary key this way
-                //       because we would have to drop the pk first and then
-                //       add a new one afterwards which is not supported yet
-                if (addColumnChange.getNewColumn().isPrimaryKey())
-                {
-                    pkColumnAdded = true;   
-                }
-                else
-                {
+                // because we would have to drop the pk first and then
+                // add a new one afterwards which is not supported yet
+                if (addColumnChange.getNewColumn().isPrimaryKey()) {
+                    pkColumnAdded = true;
+                } else {
                     processChange(currentModel, desiredModel, addColumnChange);
                     changeIt.remove();
                 }
-            }
-            else if (change instanceof RemoveColumnChange)
-            {
-                RemoveColumnChange removeColumnChange = (RemoveColumnChange)change;
+            } else if (change instanceof RemoveColumnChange) {
+                RemoveColumnChange removeColumnChange = (RemoveColumnChange) change;
 
                 // TODO: we cannot drop primary key columns this way
-                //       because we would have to drop the pk first and then
-                //       add a new one afterwards which is not supported yet
-                if (!removeColumnChange.getColumn().isPrimaryKey())
-                {
-                    processChange(currentModel, desiredModel, removeColumnChange);
+                // because we would have to drop the pk first and then
+                // add a new one afterwards which is not supported yet
+                if (!removeColumnChange.getColumn().isPrimaryKey()) {
+                    processChange(currentModel, desiredModel,
+                            removeColumnChange);
                     changeIt.remove();
                 }
             }
         }
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            // we can only add a primary key if all columns are present in the table
+            // we can only add a primary key if all columns are present in the
+            // table
             // i.e. none was added during this alteration
-            if ((change instanceof AddPrimaryKeyChange) && !pkColumnAdded)
-            {
-                processChange(currentModel, desiredModel, (AddPrimaryKeyChange)change);
+            if ((change instanceof AddPrimaryKeyChange) && !pkColumnAdded) {
+                processChange(currentModel, desiredModel,
+                        (AddPrimaryKeyChange) change);
                 changeIt.remove();
             }
         }
@@ -282,14 +277,15 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * Processes the addition of a column to a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database        currentModel,
-                                 Database        desiredModel,
-                                 AddColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            AddColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -297,18 +293,20 @@ public class InterbaseBuilder extends SqlBuilder
         writeColumn(change.getChangedTable(), change.getNewColumn());
         printEndOfStatement();
 
-        Table curTable = currentModel.findTable(change.getChangedTable().getName(), getPlatform().isDelimitedIdentifierModeOn());
+        Table curTable = currentModel.findTable(change.getChangedTable()
+                .getName(), getPlatform().isDelimitedIdentifierModeOn());
 
-        if (!change.isAtEnd())
-        {
+        if (!change.isAtEnd()) {
             Column prevColumn = change.getPreviousColumn();
 
-            if (prevColumn != null)
-            {
-                // we need the corresponding column object from the current table
-                prevColumn = curTable.findColumn(prevColumn.getName(), getPlatform().isDelimitedIdentifierModeOn());
+            if (prevColumn != null) {
+                // we need the corresponding column object from the current
+                // table
+                prevColumn = curTable.findColumn(prevColumn.getName(),
+                        getPlatform().isDelimitedIdentifierModeOn());
             }
-            // Even though Interbase can only add columns, we can move them later on
+            // Even though Interbase can only add columns, we can move them
+            // later on
             print("ALTER TABLE ");
             printlnIdentifier(getStructureObjectName(change.getChangedTable()));
             printIndent();
@@ -316,12 +314,13 @@ public class InterbaseBuilder extends SqlBuilder
             printIdentifier(getColumnName(change.getNewColumn()));
             print(" POSITION ");
             // column positions start at 1 in Interbase
-            print(prevColumn == null ? "1" : String.valueOf(curTable.getColumnIndex(prevColumn) + 2));
+            print(prevColumn == null ? "1" : String.valueOf(curTable
+                    .getColumnIndex(prevColumn) + 2));
             printEndOfStatement();
         }
-        if (change.getNewColumn().isAutoIncrement())
-        {
-            writeAutoIncrementCreateStmts(currentModel, curTable, change.getNewColumn());
+        if (change.getNewColumn().isAutoIncrement()) {
+            writeAutoIncrementCreateStmts(currentModel, curTable, change
+                    .getNewColumn());
         }
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
@@ -329,17 +328,18 @@ public class InterbaseBuilder extends SqlBuilder
     /**
      * Processes the removal of a column from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database           currentModel,
-                                 Database           desiredModel,
-                                 RemoveColumnChange change) throws IOException
-    {
-        if (change.getColumn().isAutoIncrement())
-        {
-            writeAutoIncrementDropStmts(change.getChangedTable(), change.getColumn());
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemoveColumnChange change) throws IOException {
+        if (change.getColumn().isAutoIncrement()) {
+            writeAutoIncrementDropStmts(change.getChangedTable(), change
+                    .getColumn());
         }
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));

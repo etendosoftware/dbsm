@@ -26,23 +26,22 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public abstract class TableChangeImplBase implements TableChange
-{
-	
-	public TableChangeImplBase()
-	{
-		
-	}
+public abstract class TableChangeImplBase implements TableChange {
+
+    public TableChangeImplBase() {
+
+    }
+
     /** The affected table. */
     protected Table _table;
 
     /**
      * Creates a new change object.
      * 
-     * @param table The table
+     * @param table
+     *            The table
      */
-    public TableChangeImplBase(Table table)
-    {
+    public TableChangeImplBase(Table table) {
         _table = table;
     }
 
@@ -51,8 +50,7 @@ public abstract class TableChangeImplBase implements TableChange
      * 
      * @return The table
      */
-    public Table getChangedTable()
-    {
+    public Table getChangedTable() {
         return _table;
     }
 }

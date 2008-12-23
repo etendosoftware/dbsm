@@ -28,8 +28,7 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class PrimaryKeyChange extends TableChangeImplBase
-{
+public class PrimaryKeyChange extends TableChangeImplBase {
     private String _newName;
     /** The columns making up the original primary key. */
     private Column[] _oldPrimaryKeyColumns;
@@ -39,68 +38,68 @@ public class PrimaryKeyChange extends TableChangeImplBase
     /**
      * Creates a new change object.
      * 
-     * @param table                The table whose primary key is to be changed
-     * @param oldPrimaryKeyColumns The columns making up the original primary key
-     * @param newPrimaryKeyColumns The columns making up the new primary key
+     * @param table
+     *            The table whose primary key is to be changed
+     * @param oldPrimaryKeyColumns
+     *            The columns making up the original primary key
+     * @param newPrimaryKeyColumns
+     *            The columns making up the new primary key
      */
-    public PrimaryKeyChange(Table table, String newName, Column[] oldPrimaryKeyColumns, Column[] newPrimaryKeyColumns)
-    {
+    public PrimaryKeyChange(Table table, String newName,
+            Column[] oldPrimaryKeyColumns, Column[] newPrimaryKeyColumns) {
         super(table);
         _newName = newName;
         _oldPrimaryKeyColumns = oldPrimaryKeyColumns;
         _newPrimaryKeyColumns = newPrimaryKeyColumns;
     }
-    
+
     public String getNewName() {
         return _newName;
     }
 
     /**
      * Returns the columns making up the original primary key.
-     *
+     * 
      * @return The columns
      */
-    public Column[] getOldPrimaryKeyColumns()
-    {
+    public Column[] getOldPrimaryKeyColumns() {
         return _oldPrimaryKeyColumns;
     }
 
     /**
      * Returns the columns making up the new primary key.
-     *
+     * 
      * @return The columns
      */
-    public Column[] getNewPrimaryKeyColumns()
-    {
+    public Column[] getNewPrimaryKeyColumns() {
         return _newPrimaryKeyColumns;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Table table = database.findTable(getChangedTable().getName(), caseSensitive);
-        
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
+
         table.setPrimaryKey(_newName);
 
-        for (int idx = 0; idx < _oldPrimaryKeyColumns.length; idx++)
-        {
-            Column column = table.findColumn(_oldPrimaryKeyColumns[idx].getName(), caseSensitive);
+        for (int idx = 0; idx < _oldPrimaryKeyColumns.length; idx++) {
+            Column column = table.findColumn(_oldPrimaryKeyColumns[idx]
+                    .getName(), caseSensitive);
 
             column.setPrimaryKey(false);
         }
-        for (int idx = 0; idx < _newPrimaryKeyColumns.length; idx++)
-        {
-            Column column = table.findColumn(_newPrimaryKeyColumns[idx].getName(), caseSensitive);
+        for (int idx = 0; idx < _newPrimaryKeyColumns.length; idx++) {
+            Column column = table.findColumn(_newPrimaryKeyColumns[idx]
+                    .getName(), caseSensitive);
 
             column.setPrimaryKey(true);
         }
-    }  
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "PrimaryKeyChange. Name: "+_newName;
-    } 
+    public String toString() {
+        return "PrimaryKeyChange. Name: " + _newName;
+    }
 }

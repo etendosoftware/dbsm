@@ -26,16 +26,14 @@ import org.apache.ddlutils.PlatformInfo;
  * 
  * @version $Revision: 231306 $
  */
-public class MySql50Platform extends MySqlPlatform
-{
+public class MySql50Platform extends MySqlPlatform {
     /** Database name of this platform. */
     public static final String DATABASENAME = "MySQL5";
 
     /**
      * Creates a new platform instance.
      */
-    public MySql50Platform()
-    {
+    public MySql50Platform() {
         super();
 
         PlatformInfo info = getPlatformInfo();
@@ -50,8 +48,7 @@ public class MySql50Platform extends MySqlPlatform
     /**
      * {@inheritDoc}
      */
-    public String getName()
-    {
+    public String getName() {
         return DATABASENAME;
     }
 }

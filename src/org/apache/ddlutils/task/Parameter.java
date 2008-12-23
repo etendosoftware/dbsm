@@ -25,15 +25,14 @@ import java.util.StringTokenizer;
 import org.apache.ddlutils.PlatformFactory;
 
 /**
- * Specifies a parameter for the creation of the database. These are usually platform specific.
- * A parameter consists of a name-value pair and an optional list of platforms for which the
- * parameter shall be used.
+ * Specifies a parameter for the creation of the database. These are usually
+ * platform specific. A parameter consists of a name-value pair and an optional
+ * list of platforms for which the parameter shall be used.
  * 
  * @version $Revision: 231306 $
  * @ant.type name="parameter"
  */
-public class Parameter
-{
+public class Parameter {
     /** The name. */
     private String _name;
     /** The value. */
@@ -43,86 +42,85 @@ public class Parameter
 
     /**
      * Returns the name.
-     *
+     * 
      * @return The name
      */
-    public String getName()
-    {
+    public String getName() {
         return _name;
     }
 
     /**
-     * Specifies the name of the parameter. See the database support documentation
-     * for details on the parameters supported by the individual platforms.
-     *
-     * @param name The name
+     * Specifies the name of the parameter. See the database support
+     * documentation for details on the parameters supported by the individual
+     * platforms.
+     * 
+     * @param name
+     *            The name
      * @ant.required
      */
-    public void setName(String name)
-    {
+    public void setName(String name) {
         _name = name;
     }
 
     /**
      * Returns the value.
-     *
+     * 
      * @return The value
      */
-    public String getValue()
-    {
+    public String getValue() {
         return _value;
     }
 
     /**
      * Specifies the parameter value.
-     *
-     * @param value The value
+     * 
+     * @param value
+     *            The value
      * @ant.not-required If none is given, <code>null</code> is used.
      */
-    public void setValue(String value)
-    {
+    public void setValue(String value) {
         _value = value;
     }
 
     /**
-     * Specifies the platforms - a comma-separated list of platform names - for which this parameter
-     * shall be used (see the <code>databaseType</code> attribute of the tasks for possible values).
-     * For every platform not in this list, the parameter is ignored.
+     * Specifies the platforms - a comma-separated list of platform names - for
+     * which this parameter shall be used (see the <code>databaseType</code>
+     * attribute of the tasks for possible values). For every platform not in
+     * this list, the parameter is ignored.
      * 
-     * @param platforms The platforms
-     * @ant.not-required If not specified then the parameter is processed for every platform.
+     * @param platforms
+     *            The platforms
+     * @ant.not-required If not specified then the parameter is processed for
+     *                   every platform.
      */
-    public void setPlatforms(String platforms)
-    {
+    public void setPlatforms(String platforms) {
         _platforms.clear();
-        if (platforms != null)
-        {
+        if (platforms != null) {
             StringTokenizer tokenizer = new StringTokenizer(platforms, ",");
 
-            while (tokenizer.hasMoreTokens())
-            {
+            while (tokenizer.hasMoreTokens()) {
                 String platform = tokenizer.nextToken().trim();
 
-                if (PlatformFactory.isPlatformSupported(platform))
-                {
+                if (PlatformFactory.isPlatformSupported(platform)) {
                     _platforms.add(platform.toLowerCase());
-                }
-                else
-                {
-                    throw new IllegalArgumentException("Platform "+platform+" is not supported");
+                } else {
+                    throw new IllegalArgumentException("Platform " + platform
+                            + " is not supported");
                 }
             }
         }
     }
 
     /**
-     * Determines whether this parameter is applicable for the indicated platform.
+     * Determines whether this parameter is applicable for the indicated
+     * platform.
      * 
-     * @param platformName The platform name
+     * @param platformName
+     *            The platform name
      * @return <code>true</code> if this parameter is defined for the platform
      */
-    public boolean isForPlatform(String platformName)
-    {
-        return _platforms.isEmpty() || _platforms.contains(platformName.toLowerCase());
+    public boolean isForPlatform(String platformName) {
+        return _platforms.isEmpty()
+                || _platforms.contains(platformName.toLowerCase());
     }
 }

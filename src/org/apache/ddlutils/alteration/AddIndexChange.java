@@ -29,54 +29,49 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class AddIndexChange extends TableChangeImplBase
-{
+public class AddIndexChange extends TableChangeImplBase {
     /** The new index. */
     private Index _newIndex;
 
     /**
      * Creates a new change object.
      * 
-     * @param table    The table to add the index to
-     * @param newIndex The new index
+     * @param table
+     *            The table to add the index to
+     * @param newIndex
+     *            The new index
      */
-    public AddIndexChange(Table table, Index newIndex)
-    {
+    public AddIndexChange(Table table, Index newIndex) {
         super(table);
         _newIndex = newIndex;
     }
 
     /**
      * Returns the new index.
-     *
+     * 
      * @return The new index
      */
-    public Index getNewIndex()
-    {
+    public Index getNewIndex() {
         return _newIndex;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
+    public void apply(Database database, boolean caseSensitive) {
         Index newIndex = null;
 
-        try
-        {
-            newIndex = (Index)_newIndex.clone();
-        }
-        catch (CloneNotSupportedException ex)
-        {
+        try {
+            newIndex = (Index) _newIndex.clone();
+        } catch (CloneNotSupportedException ex) {
             throw new DdlUtilsException(ex);
         }
-        database.findTable(getChangedTable().getName(), caseSensitive).addIndex(newIndex);
+        database.findTable(getChangedTable().getName(), caseSensitive)
+                .addIndex(newIndex);
     }
-    
+
     @Override
-	public String toString()
-    {
-    	return "AddIndexChange. Name: "+_newIndex.getName();
-    } 
+    public String toString() {
+        return "AddIndexChange. Name: " + _newIndex.getName();
+    }
 }

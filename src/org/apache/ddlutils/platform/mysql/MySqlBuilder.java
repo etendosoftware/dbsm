@@ -45,36 +45,34 @@ import org.apache.ddlutils.platform.SqlBuilder;
  * 
  * @version $Revision: 518498 $
  */
-public class MySqlBuilder extends SqlBuilder
-{
+public class MySqlBuilder extends SqlBuilder {
     /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public MySqlBuilder(Platform platform)
-    {
+    public MySqlBuilder(Platform platform) {
         super(platform);
         // we need to handle the backslash first otherwise the other
         // already escaped sequences would be affected
-        addEscapedCharSequence("\\",     "\\\\");
-        addEscapedCharSequence("\0",     "\\0");
-        addEscapedCharSequence("'",      "\\'");
-        addEscapedCharSequence("\"",     "\\\"");
-        addEscapedCharSequence("\b",     "\\b");
-        addEscapedCharSequence("\n",     "\\n");
-        addEscapedCharSequence("\r",     "\\r");
-        addEscapedCharSequence("\t",     "\\t");
+        addEscapedCharSequence("\\", "\\\\");
+        addEscapedCharSequence("\0", "\\0");
+        addEscapedCharSequence("'", "\\'");
+        addEscapedCharSequence("\"", "\\\"");
+        addEscapedCharSequence("\b", "\\b");
+        addEscapedCharSequence("\n", "\\n");
+        addEscapedCharSequence("\r", "\\r");
+        addEscapedCharSequence("\t", "\\t");
         addEscapedCharSequence("\u001A", "\\Z");
-        addEscapedCharSequence("%",      "\\%");
-        addEscapedCharSequence("_",      "\\_");
+        addEscapedCharSequence("%", "\\%");
+        addEscapedCharSequence("_", "\\_");
     }
 
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
-    { 
+    public void dropTable(Table table) throws IOException {
         print("DROP TABLE IF EXISTS ");
         printIdentifier(getStructureObjectName(table));
         printEndOfStatement();
@@ -83,32 +81,30 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
-    {
+    protected void writeColumnAutoIncrementStmt(Table table, Column column)
+            throws IOException {
         print("AUTO_INCREMENT");
     }
 
     /**
      * {@inheritDoc}
      */
-    protected boolean shouldGeneratePrimaryKeys(Column[] primaryKeyColumns)
-    {
+    protected boolean shouldGeneratePrimaryKeys(Column[] primaryKeyColumns) {
         // mySQL requires primary key indication for autoincrement key columns
-        // I'm not sure why the default skips the pk statement if all are identity
+        // I'm not sure why the default skips the pk statement if all are
+        // identity
         return true;
     }
 
     /**
-     * {@inheritDoc}
-     * Normally mysql will return the LAST_INSERT_ID as the column name for the inserted id.
-     * Since ddlutils expects the real column name of the field that is autoincrementing, the
-     * column has an alias of that column name.
+     * {@inheritDoc} Normally mysql will return the LAST_INSERT_ID as the column
+     * name for the inserted id. Since ddlutils expects the real column name of
+     * the field that is autoincrementing, the column has an alias of that
+     * column name.
      */
-    public String getSelectLastIdentityValues(Table table)
-    {
+    public String getSelectLastIdentityValues(Table table) {
         String autoIncrementKeyName = "";
-        if (table.getAutoIncrementColumns().length > 0)
-        {
+        if (table.getAutoIncrementColumns().length > 0) {
             autoIncrementKeyName = table.getAutoIncrementColumns()[0].getName();
         }
         return "SELECT LAST_INSERT_ID() " + autoIncrementKeyName;
@@ -117,25 +113,22 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeTableCreationStmtEnding(Table table, Map parameters) throws IOException
-    {
-        if (parameters != null)
-        {
+    protected void writeTableCreationStmtEnding(Table table, Map parameters)
+            throws IOException {
+        if (parameters != null) {
             print(" ");
-            // MySql supports additional table creation options which are appended
+            // MySql supports additional table creation options which are
+            // appended
             // at the end of the CREATE TABLE statement
-            for (Iterator it = parameters.entrySet().iterator(); it.hasNext();)
-            {
-                Map.Entry entry = (Map.Entry)it.next();
+            for (Iterator it = parameters.entrySet().iterator(); it.hasNext();) {
+                Map.Entry entry = (Map.Entry) it.next();
 
                 print(entry.getKey().toString());
-                if (entry.getValue() != null)
-                {
+                if (entry.getValue() != null) {
                     print("=");
                     print(entry.getValue().toString());
                 }
-                if (it.hasNext())
-                {
+                if (it.hasNext()) {
                     print(" ");
                 }
             }
@@ -146,123 +139,113 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey) throws IOException
-    {
+    protected void writeExternalForeignKeyDropStmt(Table table,
+            ForeignKey foreignKey) throws IOException {
         writeTableAlterStmt(table);
         print("DROP FOREIGN KEY ");
         printIdentifier(getForeignKeyName(table, foreignKey));
         printEndOfStatement();
 
-        if (foreignKey.isAutoIndexPresent())
-        {
+        if (foreignKey.isAutoIndexPresent()) {
             writeTableAlterStmt(table);
             print("DROP INDEX ");
             printIdentifier(getForeignKeyName(table, foreignKey));
             printEndOfStatement();
         }
-    }    
+    }
 
     /**
      * {@inheritDoc}
      */
     protected void processTableStructureChanges(Database currentModel,
-                                                Database desiredModel,
-                                                Table    sourceTable,
-                                                Table    targetTable,
-                                                Map      parameters,
-                                                List     changes) throws IOException
-    {
+            Database desiredModel, Table sourceTable, Table targetTable,
+            Map parameters, List changes) throws IOException {
         // in order to utilize the ALTER TABLE ADD COLUMN AFTER statement
         // we have to apply the add column changes in the correct order
         // thus we first gather all add column changes and then execute them
         ArrayList addColumnChanges = new ArrayList();
 
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
-                addColumnChanges.add((AddColumnChange)change);
+            if (change instanceof AddColumnChange) {
+                addColumnChanges.add((AddColumnChange) change);
                 changeIt.remove();
             }
         }
-        for (Iterator changeIt = addColumnChanges.iterator(); changeIt.hasNext();)
-        {
-            AddColumnChange addColumnChange = (AddColumnChange)changeIt.next();
+        for (Iterator changeIt = addColumnChanges.iterator(); changeIt
+                .hasNext();) {
+            AddColumnChange addColumnChange = (AddColumnChange) changeIt.next();
 
             processChange(currentModel, desiredModel, addColumnChange);
             changeIt.remove();
         }
 
         ListOrderedSet changedColumns = new ListOrderedSet();
-        
-        // we don't have to care about the order because the comparator will have ensured
-        // that a add primary key change comes after all necessary columns are present
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
 
-            if (change instanceof RemoveColumnChange)
-            {
-                processChange(currentModel, desiredModel, (RemoveColumnChange)change);
+        // we don't have to care about the order because the comparator will
+        // have ensured
+        // that a add primary key change comes after all necessary columns are
+        // present
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
+
+            if (change instanceof RemoveColumnChange) {
+                processChange(currentModel, desiredModel,
+                        (RemoveColumnChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof AddPrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (AddPrimaryKeyChange)change);
+            } else if (change instanceof AddPrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (AddPrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof PrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (PrimaryKeyChange)change);
+            } else if (change instanceof PrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (PrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof RemovePrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (RemovePrimaryKeyChange)change);
+            } else if (change instanceof RemovePrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (RemovePrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof ColumnChange)
-            {
-                // we gather all changed columns because we can use the ALTER TABLE MODIFY COLUMN
+            } else if (change instanceof ColumnChange) {
+                // we gather all changed columns because we can use the ALTER
+                // TABLE MODIFY COLUMN
                 // statement for them
-                changedColumns.add(((ColumnChange)change).getChangedColumn());
+                changedColumns.add(((ColumnChange) change).getChangedColumn());
                 changeIt.remove();
             }
         }
-        for (Iterator columnIt = changedColumns.iterator(); columnIt.hasNext();)
-        {
-            Column sourceColumn = (Column)columnIt.next();
-            Column targetColumn = targetTable.findColumn(sourceColumn.getName(), getPlatform().isDelimitedIdentifierModeOn());
+        for (Iterator columnIt = changedColumns.iterator(); columnIt.hasNext();) {
+            Column sourceColumn = (Column) columnIt.next();
+            Column targetColumn = targetTable.findColumn(
+                    sourceColumn.getName(), getPlatform()
+                            .isDelimitedIdentifierModeOn());
 
-            processColumnChange(sourceTable, targetTable, sourceColumn, targetColumn);
+            processColumnChange(sourceTable, targetTable, sourceColumn,
+                    targetColumn);
         }
     }
 
     /**
      * Processes the addition of a column to a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database        currentModel,
-                                 Database        desiredModel,
-                                 AddColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            AddColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
         print("ADD COLUMN ");
         writeColumn(change.getChangedTable(), change.getNewColumn());
-        if (change.getPreviousColumn() != null)
-        {
+        if (change.getPreviousColumn() != null) {
             print(" AFTER ");
             printIdentifier(getColumnName(change.getPreviousColumn()));
-        }
-        else
-        {
+        } else {
             print(" FIRST");
         }
         printEndOfStatement();
@@ -272,14 +255,15 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * Processes the removal of a column from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database           currentModel,
-                                 Database           desiredModel,
-                                 RemoveColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemoveColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -292,14 +276,15 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * Processes the removal of a primary key from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database               currentModel,
-                                 Database               desiredModel,
-                                 RemovePrimaryKeyChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemovePrimaryKeyChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -311,36 +296,39 @@ public class MySqlBuilder extends SqlBuilder
     /**
      * Processes the change of the primary key of a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database         currentModel,
-                                 Database         desiredModel,
-                                 PrimaryKeyChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            PrimaryKeyChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
         print("DROP PRIMARY KEY");
         printEndOfStatement();
-        writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getNewName(), change.getNewPrimaryKeyColumns());
+        writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change
+                .getNewName(), change.getNewPrimaryKeyColumns());
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
 
     /**
      * Processes a change to a column.
      * 
-     * @param sourceTable  The current table
-     * @param targetTable  The desired table
-     * @param sourceColumn The current column
-     * @param targetColumn The desired column
+     * @param sourceTable
+     *            The current table
+     * @param targetTable
+     *            The desired table
+     * @param sourceColumn
+     *            The current column
+     * @param targetColumn
+     *            The desired column
      */
-    protected void processColumnChange(Table  sourceTable,
-                                       Table  targetTable,
-                                       Column sourceColumn,
-                                       Column targetColumn) throws IOException
-    {
+    protected void processColumnChange(Table sourceTable, Table targetTable,
+            Column sourceColumn, Column targetColumn) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(sourceTable));
         printIndent();

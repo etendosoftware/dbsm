@@ -24,47 +24,42 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.View;
 
 public class AddViewChange implements ModelChange {
-    
+
     /** The new view. */
     private View _newView;
-    
+
     /**
      * Creates a new change object.
      * 
-     * @param newView The new view
+     * @param newView
+     *            The new view
      */
     public AddViewChange(View newView) {
         _newView = newView;
     }
 
     /**
-     * Returns the new view. 
+     * Returns the new view.
      * 
      * @return The new view
      */
-    public View getNewView()
-    {
+    public View getNewView() {
         return _newView;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        try
-        {
-            database.addView((View)_newView.clone());
-        }
-        catch (CloneNotSupportedException ex)
-        {
+    public void apply(Database database, boolean caseSensitive) {
+        try {
+            database.addView((View) _newView.clone());
+        } catch (CloneNotSupportedException ex) {
             throw new DdlUtilsException(ex);
         }
-    }     
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "AddViewChange. Name: "+_newView.getName();
-    }    
+    public String toString() {
+        return "AddViewChange. Name: " + _newView.getName();
+    }
 }

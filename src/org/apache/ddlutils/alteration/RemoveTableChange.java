@@ -27,31 +27,29 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class RemoveTableChange extends TableChangeImplBase
-{
+public class RemoveTableChange extends TableChangeImplBase {
     /**
      * Creates a new change object.
      * 
-     * @param table The table
+     * @param table
+     *            The table
      */
-    public RemoveTableChange(Table table)
-    {
+    public RemoveTableChange(Table table) {
         super(table);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
 
         database.removeTable(table);
-    }    
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemoveTableChange. Name: "+_table.getName();
+    public String toString() {
+        return "RemoveTableChange. Name: " + _table.getName();
     }
 }

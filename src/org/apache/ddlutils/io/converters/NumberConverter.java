@@ -26,78 +26,70 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.ddlutils.util.Jdbc3Utils;
 
 /**
- * Converts between the various number types (including boolean types) and {@link java.lang.String}.
+ * Converts between the various number types (including boolean types) and
+ * {@link java.lang.String}.
  * 
  * @version $Revision: 289996 $
  */
-public class NumberConverter implements SqlTypeConverter
-{
+public class NumberConverter implements SqlTypeConverter {
     /**
      * {@inheritDoc}
      */
-    public Object convertFromString(String textRep, int sqlTypeCode) throws ConversionException
-    {
-        if (textRep == null)
-        {
+    public Object convertFromString(String textRep, int sqlTypeCode)
+            throws ConversionException {
+        if (textRep == null) {
             return null;
-        }
-        else
-        {
-            Class  targetClass = null;
+        } else {
+            Class targetClass = null;
 
-            switch (sqlTypeCode)
-            {
-                case Types.BIGINT:
-                    targetClass = Long.class;
-                    break;
-                case Types.BIT:
+            switch (sqlTypeCode) {
+            case Types.BIGINT:
+                targetClass = Long.class;
+                break;
+            case Types.BIT:
+                targetClass = Boolean.class;
+                break;
+            case Types.DECIMAL:
+            case Types.NUMERIC:
+                targetClass = BigDecimal.class;
+                break;
+            case Types.DOUBLE:
+            case Types.FLOAT:
+                targetClass = Double.class;
+                break;
+            case Types.INTEGER:
+                targetClass = Integer.class;
+                break;
+            case Types.REAL:
+                targetClass = Float.class;
+                break;
+            case Types.SMALLINT:
+            case Types.TINYINT:
+                targetClass = Short.class;
+                break;
+            default:
+                if (Jdbc3Utils.supportsJava14JdbcTypes()
+                        && (sqlTypeCode == Jdbc3Utils
+                                .determineBooleanTypeCode())) {
                     targetClass = Boolean.class;
-                    break;
-                case Types.DECIMAL:
-                case Types.NUMERIC:
-                    targetClass = BigDecimal.class;
-                    break;
-                case Types.DOUBLE:
-                case Types.FLOAT:
-                    targetClass = Double.class;
-                    break;
-                case Types.INTEGER:
-                    targetClass = Integer.class;
-                    break;
-                case Types.REAL:
-                    targetClass = Float.class;
-                    break;
-                case Types.SMALLINT:
-                case Types.TINYINT:
-                    targetClass = Short.class;
-                    break;
-                default:
-                    if (Jdbc3Utils.supportsJava14JdbcTypes() &&
-                        (sqlTypeCode == Jdbc3Utils.determineBooleanTypeCode()))
-                    {
-                        targetClass = Boolean.class;
-                    }
-                    break;
+                }
+                break;
             }
-            return targetClass == null ? textRep : ConvertUtils.convert(textRep, targetClass);
+            return targetClass == null ? textRep : ConvertUtils.convert(
+                    textRep, targetClass);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public String convertToString(Object obj, int sqlTypeCode) throws ConversionException
-    {
-        if (obj == null)
-        {
+    public String convertToString(Object obj, int sqlTypeCode)
+            throws ConversionException {
+        if (obj == null) {
             return null;
-        }
-        else if (sqlTypeCode == Types.BIT)
-        {
-            return ((Boolean)obj).booleanValue() ? "1" : "0";
-        }
-        else
-        {
+        } else if (sqlTypeCode == Types.BIT) {
+            return ((Boolean) obj).booleanValue() ? "1" : "0";
+        } else {
             return obj.toString();
         }
     }

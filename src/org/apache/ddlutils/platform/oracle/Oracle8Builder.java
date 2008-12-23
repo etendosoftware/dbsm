@@ -55,39 +55,39 @@ import org.apache.oro.text.regex.Perl5Matcher;
 
 /**
  * The SQL Builder for Oracle.
- *
+ * 
  * @version $Revision: 517050 $
  */
-public class Oracle8Builder extends SqlBuilder
-{
-	/** The regular expression pattern for ISO dates, i.e. 'YYYY-MM-DD'. */
-	private Pattern _isoDatePattern;
-	/** The regular expression pattern for ISO times, i.e. 'HH:MI:SS'. */
-	private Pattern _isoTimePattern;
-	/** The regular expression pattern for ISO timestamps, i.e. 'YYYY-MM-DD HH:MI:SS.fffffffff'. */
-	private Pattern _isoTimestampPattern;
+public class Oracle8Builder extends SqlBuilder {
+    /** The regular expression pattern for ISO dates, i.e. 'YYYY-MM-DD'. */
+    private Pattern _isoDatePattern;
+    /** The regular expression pattern for ISO times, i.e. 'HH:MI:SS'. */
+    private Pattern _isoTimePattern;
+    /**
+     * The regular expression pattern for ISO timestamps, i.e. 'YYYY-MM-DD
+     * HH:MI:SS.fffffffff'.
+     */
+    private Pattern _isoTimestampPattern;
 
-	/**
+    /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public Oracle8Builder(Platform platform)
-    {
+    public Oracle8Builder(Platform platform) {
         super(platform);
         addEscapedCharSequence("'", "''");
 
         PatternCompiler compiler = new Perl5Compiler();
 
-    	try
-    	{
-            _isoDatePattern      = compiler.compile("\\d{4}\\-\\d{2}\\-\\d{2}");
-            _isoTimePattern      = compiler.compile("\\d{2}:\\d{2}:\\d{2}");
-            _isoTimestampPattern = compiler.compile("\\d{4}\\-\\d{2}\\-\\d{2} \\d{2}:\\d{2}:\\d{2}[\\.\\d{1,8}]?");
-        }
-    	catch (MalformedPatternException ex)
-        {
-        	throw new DdlUtilsException(ex);
+        try {
+            _isoDatePattern = compiler.compile("\\d{4}\\-\\d{2}\\-\\d{2}");
+            _isoTimePattern = compiler.compile("\\d{2}:\\d{2}:\\d{2}");
+            _isoTimestampPattern = compiler
+                    .compile("\\d{4}\\-\\d{2}\\-\\d{2} \\d{2}:\\d{2}:\\d{2}[\\.\\d{1,8}]?");
+        } catch (MalformedPatternException ex) {
+            throw new DdlUtilsException(ex);
         }
     }
 
@@ -95,75 +95,69 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	public void createTable(Database database, Table table, Map parameters) throws IOException
-    {
+    public void createTable(Database database, Table table, Map parameters)
+            throws IOException {
         // lets create any sequences
         Column[] columns = table.getAutoIncrementColumns();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             createAutoIncrementSequence(table, columns[idx]);
         }
 
         super.createTable(database, table, parameters);
 
         writeTableCommentsStmt(database, table);
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             createAutoIncrementTrigger(table, columns[idx]);
         }
-        
+
     }
 
-
     @Override
-	public void writeTableCommentsStmt(Database database, Table table) throws IOException
-    {
-        //Create comments for onCreateDefault
-        for (int idx = 0; idx < table.getColumnCount(); idx++)
-        {
+    public void writeTableCommentsStmt(Database database, Table table)
+            throws IOException {
+        // Create comments for onCreateDefault
+        for (int idx = 0; idx < table.getColumnCount(); idx++) {
             Column column = table.getColumn(idx);
             writeColumnCommentStmt(database, table, column);
         }
     }
-    
+
     @Override
-	public void writeColumnCommentStmt(Database database,Table table,Column column) throws IOException
-    {
-    	String comment="";
-        if(column.getOnCreateDefault()!=null && !column.getOnCreateDefault().equals(""))
-        {
-        	String oncreatedefaultp=column.getOnCreateDefault();
-        	String oncreatedefault="";
-        	int lengthoncreate=oncreatedefaultp.length();
-        	//Parse oncreatedefault
-        	for(int i=0;i<lengthoncreate;i++)
-        	{
-        		String tchar=oncreatedefaultp.substring(0,1);
-        		oncreatedefaultp=oncreatedefaultp.substring(1);
-        		if(tchar.equals("'"))
-        			oncreatedefault+="''";
-        		else
-        			oncreatedefault+=tchar;
-        	}
-        	comment+="--OBTG:ONCREATEDEFAULT:"+oncreatedefault+"--";
+    public void writeColumnCommentStmt(Database database, Table table,
+            Column column) throws IOException {
+        String comment = "";
+        if (column.getOnCreateDefault() != null
+                && !column.getOnCreateDefault().equals("")) {
+            String oncreatedefaultp = column.getOnCreateDefault();
+            String oncreatedefault = "";
+            int lengthoncreate = oncreatedefaultp.length();
+            // Parse oncreatedefault
+            for (int i = 0; i < lengthoncreate; i++) {
+                String tchar = oncreatedefaultp.substring(0, 1);
+                oncreatedefaultp = oncreatedefaultp.substring(1);
+                if (tchar.equals("'"))
+                    oncreatedefault += "''";
+                else
+                    oncreatedefault += tchar;
+            }
+            comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--";
         }
-        if(!comment.equals(""))
-        {
-        	println("COMMENT ON COLUMN "+table.getName()+"."+column.getName()+" IS '"+comment+"'");
-        	printEndOfStatement();
+        if (!comment.equals("")) {
+            println("COMMENT ON COLUMN " + table.getName() + "."
+                    + column.getName() + " IS '" + comment + "'");
+            printEndOfStatement();
         }
     }
+
     /**
      * {@inheritDoc}
      */
     @Override
-	public void dropTable(Table table) throws IOException
-    {
+    public void dropTable(Table table) throws IOException {
         Column[] columns = table.getAutoIncrementColumns();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             dropAutoIncrementTrigger(table, columns[idx]);
             dropAutoIncrementSequence(table, columns[idx]);
         }
@@ -173,18 +167,20 @@ public class Oracle8Builder extends SqlBuilder
         printIdentifier(getStructureObjectName(table));
         print(" CASCADE CONSTRAINTS");
         printEndOfStatement(getStructureObjectName(table));
-        
+
     }
 
     /**
-     * Creates the sequence necessary for the auto-increment of the given column.
+     * Creates the sequence necessary for the auto-increment of the given
+     * column.
      * 
-     * @param table  The table
-     * @param column The column
+     * @param table
+     *            The table
+     * @param column
+     *            The column
      */
-    protected void createAutoIncrementSequence(Table  table,
-                                               Column column) throws IOException
-    {
+    protected void createAutoIncrementSequence(Table table, Column column)
+            throws IOException {
         print("CREATE SEQUENCE ");
         printIdentifier(getConstraintName("seq", table, column.getName(), null));
         printEndOfStatement();
@@ -193,17 +189,18 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * Creates the trigger necessary for the auto-increment of the given column.
      * 
-     * @param table  The table
-     * @param column The column
+     * @param table
+     *            The table
+     * @param column
+     *            The column
      */
-    protected void createAutoIncrementTrigger(Table  table,
-                                              Column column) throws IOException
-    {
-        String columnName  = getColumnName(column);
-        String triggerName = getConstraintName("trg", table, column.getName(), null);
+    protected void createAutoIncrementTrigger(Table table, Column column)
+            throws IOException {
+        String columnName = getColumnName(column);
+        String triggerName = getConstraintName("trg", table, column.getName(),
+                null);
 
-        if (getPlatform().isScriptModeOn())
-        {
+        if (getPlatform().isScriptModeOn()) {
             // For the script, we output a more nicely formatted version
             print("CREATE OR REPLACE TRIGGER ");
             printlnIdentifier(triggerName);
@@ -214,7 +211,8 @@ public class Oracle8Builder extends SqlBuilder
             println(" IS NULL)");
             println("BEGIN");
             print("  SELECT ");
-            printIdentifier(getConstraintName("seq", table, column.getName(), null));
+            printIdentifier(getConstraintName("seq", table, column.getName(),
+                    null));
             print(".nextval INTO :new.");
             printIdentifier(columnName);
             print(" FROM dual");
@@ -223,12 +221,12 @@ public class Oracle8Builder extends SqlBuilder
             println(getPlatformInfo().getSqlCommandDelimiter());
             println("/");
             println();
-        }
-        else
-        {
-            // note that the BEGIN ... SELECT ... END; is all in one line and does
+        } else {
+            // note that the BEGIN ... SELECT ... END; is all in one line and
+            // does
             // not contain a semicolon except for the END-one
-            // this way, the tokenizer will not split the statement before the END
+            // this way, the tokenizer will not split the statement before the
+            // END
             print("CREATE OR REPLACE TRIGGER ");
             printIdentifier(triggerName);
             print(" BEFORE INSERT ON ");
@@ -237,14 +235,17 @@ public class Oracle8Builder extends SqlBuilder
             printIdentifier(columnName);
             println(" IS NULL)");
             print("BEGIN SELECT ");
-            printIdentifier(getConstraintName("seq", table, column.getName(), null));
+            printIdentifier(getConstraintName("seq", table, column.getName(),
+                    null));
             print(".nextval INTO :new.");
             printIdentifier(columnName);
             print(" FROM dual");
             print(getPlatformInfo().getSqlCommandDelimiter());
             print(" END");
-            // It is important that there is a semicolon at the end of the statement (or more
-            // precisely, at the end of the PL/SQL block), and thus we put two semicolons here
+            // It is important that there is a semicolon at the end of the
+            // statement (or more
+            // precisely, at the end of the PL/SQL block), and thus we put two
+            // semicolons here
             // because the tokenizer will remove the one at the end
             print(getPlatformInfo().getSqlCommandDelimiter());
             printEndOfStatement();
@@ -254,12 +255,13 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * Drops the sequence used for the auto-increment of the given column.
      * 
-     * @param table  The table
-     * @param column The column
+     * @param table
+     *            The table
+     * @param column
+     *            The column
      */
-    protected void dropAutoIncrementSequence(Table  table,
-                                             Column column) throws IOException
-    {
+    protected void dropAutoIncrementSequence(Table table, Column column)
+            throws IOException {
         print("DROP SEQUENCE ");
         printIdentifier(getConstraintName("seq", table, column.getName(), null));
         printEndOfStatement();
@@ -268,12 +270,13 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * Drops the trigger used for the auto-increment of the given column.
      * 
-     * @param table  The table
-     * @param column The column
+     * @param table
+     *            The table
+     * @param column
+     *            The column
      */
-    protected void dropAutoIncrementTrigger(Table  table,
-                                            Column column) throws IOException
-    {
+    protected void dropAutoIncrementTrigger(Table table, Column column)
+            throws IOException {
         print("DROP TRIGGER ");
         printIdentifier(getConstraintName("trg", table, column.getName(), null));
         printEndOfStatement();
@@ -283,8 +286,8 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	protected void createTemporaryTable(Database database, Table table, Map parameters) throws IOException
-    {
+    protected void createTemporaryTable(Database database, Table table,
+            Map parameters) throws IOException {
         createTable(database, table, parameters);
     }
 
@@ -292,8 +295,8 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	protected void dropTemporaryTable(Database database, Table table) throws IOException
-    {
+    protected void dropTemporaryTable(Database database, Table table)
+            throws IOException {
         dropTable(table);
     }
 
@@ -301,8 +304,7 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	public void dropExternalForeignKeys(Table table) throws IOException
-    {
+    public void dropExternalForeignKeys(Table table) throws IOException {
         // no need to as we drop the table with CASCASE CONSTRAINTS
     }
 
@@ -310,38 +312,35 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	public void writeExternalIndexDropStmt(Table table, Index index) throws IOException
-    {
-        // Index names in Oracle are unique to a schema and hence Oracle does not
+    public void writeExternalIndexDropStmt(Table table, Index index)
+            throws IOException {
+        // Index names in Oracle are unique to a schema and hence Oracle does
+        // not
         // use the ON <tablename> clause
         print("DROP INDEX ");
         printIdentifier(getConstraintObjectName(index));
         printEndOfStatement();
     }
 
-	/**
+    /**
      * {@inheritDoc}
      */
     @Override
-	protected String getDefaultValue(Object defaultValue, int typeCode) throws IOException
-    {
+    protected String getDefaultValue(Object defaultValue, int typeCode)
+            throws IOException {
         if (defaultValue == null) {
             return null;
-        } 
-        else
-        {
-            String  defaultValueStr = defaultValue.toString();
-            boolean shouldUseQuotes = !TypeMap.isNumericType(typeCode) && !defaultValueStr.startsWith("TO_DATE(");
-    
-            if (shouldUseQuotes)
-            {
-                // characters are only escaped when within a string literal 
+        } else {
+            String defaultValueStr = defaultValue.toString();
+            boolean shouldUseQuotes = !TypeMap.isNumericType(typeCode)
+                    && !defaultValueStr.startsWith("TO_DATE(");
+
+            if (shouldUseQuotes) {
+                // characters are only escaped when within a string literal
                 return getPlatformInfo().getValueQuoteToken()
-                    + escapeStringValue(defaultValueStr)
-                    + getPlatformInfo().getValueQuoteToken();
-            }
-            else
-            {
+                        + escapeStringValue(defaultValueStr)
+                        + getPlatformInfo().getValueQuoteToken();
+            } else {
                 return defaultValueStr;
             }
         }
@@ -351,35 +350,35 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	protected String getNativeDefaultValue(ValueObject column)
-    {
-        if ((column.getTypeCode() == Types.BIT) ||
-            (Jdbc3Utils.supportsJava14JdbcTypes() && (column.getTypeCode() == Jdbc3Utils.determineBooleanTypeCode())))
-        {
-            return getDefaultValueHelper().convert(column.getDefaultValue(), column.getTypeCode(), Types.SMALLINT).toString();
+    protected String getNativeDefaultValue(ValueObject column) {
+        if ((column.getTypeCode() == Types.BIT)
+                || (Jdbc3Utils.supportsJava14JdbcTypes() && (column
+                        .getTypeCode() == Jdbc3Utils.determineBooleanTypeCode()))) {
+            return getDefaultValueHelper().convert(column.getDefaultValue(),
+                    column.getTypeCode(), Types.SMALLINT).toString();
         }
-    	// Oracle does not accept ISO formats, so we have to convert an ISO spec if we find one
-    	// But these are the only formats that we make sure work, every other format has to be database-dependent
-    	// and thus the user has to ensure that it is correct
-        else if (column.getTypeCode() == Types.DATE)
-        {
-            if (new Perl5Matcher().matches(column.getDefaultValue(), _isoDatePattern))
-            {
-            	return "TO_DATE('"+column.getDefaultValue()+"', 'YYYY-MM-DD')";
+        // Oracle does not accept ISO formats, so we have to convert an ISO spec
+        // if we find one
+        // But these are the only formats that we make sure work, every other
+        // format has to be database-dependent
+        // and thus the user has to ensure that it is correct
+        else if (column.getTypeCode() == Types.DATE) {
+            if (new Perl5Matcher().matches(column.getDefaultValue(),
+                    _isoDatePattern)) {
+                return "TO_DATE('" + column.getDefaultValue()
+                        + "', 'YYYY-MM-DD')";
             }
-        }
-        else if (column.getTypeCode() == Types.TIME)
-        {
-            if (new Perl5Matcher().matches(column.getDefaultValue(), _isoTimePattern))
-            {
-            	return "TO_DATE('"+column.getDefaultValue()+"', 'HH24:MI:SS')";
+        } else if (column.getTypeCode() == Types.TIME) {
+            if (new Perl5Matcher().matches(column.getDefaultValue(),
+                    _isoTimePattern)) {
+                return "TO_DATE('" + column.getDefaultValue()
+                        + "', 'HH24:MI:SS')";
             }
-        }
-        else if (column.getTypeCode() == Types.TIMESTAMP)
-        {
-            if (new Perl5Matcher().matches(column.getDefaultValue(), _isoTimestampPattern))
-            {
-            	return "TO_DATE('"+column.getDefaultValue()+"', 'YYYY-MM-DD HH24:MI:SS')";
+        } else if (column.getTypeCode() == Types.TIMESTAMP) {
+            if (new Perl5Matcher().matches(column.getDefaultValue(),
+                    _isoTimestampPattern)) {
+                return "TO_DATE('" + column.getDefaultValue()
+                        + "', 'YYYY-MM-DD HH24:MI:SS')";
             }
         }
         return super.getNativeDefaultValue(column);
@@ -389,8 +388,8 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException
-    {
+    protected void writeColumnAutoIncrementStmt(Table table, Column column)
+            throws IOException {
         // we're using sequences instead
     }
 
@@ -398,151 +397,140 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	public String getSelectLastIdentityValues(Table table)
-    {
+    public String getSelectLastIdentityValues(Table table) {
         Column[] columns = table.getAutoIncrementColumns();
 
-        if (columns.length > 0)
-        {
+        if (columns.length > 0) {
             StringBuffer result = new StringBuffer();
 
             result.append("SELECT ");
-            for (int idx = 0; idx < columns.length; idx++)
-            {
-                if (idx > 0)
-                {
+            for (int idx = 0; idx < columns.length; idx++) {
+                if (idx > 0) {
                     result.append(",");
                 }
-                result.append(getDelimitedIdentifier(getConstraintName("seq", table, columns[idx].getName(), null)));
+                result.append(getDelimitedIdentifier(getConstraintName("seq",
+                        table, columns[idx].getName(), null)));
                 result.append(".currval");
             }
             result.append(" FROM dual");
             return result.toString();
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
 
-
     @Override
-	public boolean willBeRecreated(Table table, Vector<TableChange> changes)
-    {
-      boolean recreated=false;
-      for(int i=0;i<changes.size();i++)
-      {
-        TableChange currentChange=changes.get(i);
+    public boolean willBeRecreated(Table table, Vector<TableChange> changes) {
+        boolean recreated = false;
+        for (int i = 0; i < changes.size(); i++) {
+            TableChange currentChange = changes.get(i);
 
-        if (currentChange instanceof AddColumnChange)
-        {
-            AddColumnChange addColumnChange = (AddColumnChange)currentChange;
+            if (currentChange instanceof AddColumnChange) {
+                AddColumnChange addColumnChange = (AddColumnChange) currentChange;
 
-            // Oracle can only add not insert columns
-            // Also, we cannot add NOT NULL columns unless they have a default value
-            if (!addColumnChange.isAtEnd() || //<-We will always rebuild the table
-                (addColumnChange.getNewColumn().isRequired()))// && (addColumnChange.getNewColumn().getDefaultValue() == null)))
-            {
-              // we need to rebuild the full table
-              recreated=true;
-            }
+                // Oracle can only add not insert columns
+                // Also, we cannot add NOT NULL columns unless they have a
+                // default value
+                if (!addColumnChange.isAtEnd() || // <-We will always rebuild
+                                                  // the table
+                        (addColumnChange.getNewColumn().isRequired()))// &&
+                                                                      // (addColumnChange.getNewColumn().getDefaultValue()
+                                                                      // ==
+                                                                      // null)))
+                {
+                    // we need to rebuild the full table
+                    recreated = true;
+                }
+            } else if (!(currentChange instanceof RemovePrimaryKeyChange)
+                    && !(currentChange instanceof PrimaryKeyChange)
+                    && !(currentChange instanceof AddColumnChange)
+                    && !(currentChange instanceof RemoveColumnChange)
+                    && !(currentChange instanceof AddPrimaryKeyChange))
+                recreated = true;
         }
-        else if(!(currentChange instanceof RemovePrimaryKeyChange) && 
-            !(currentChange instanceof PrimaryKeyChange) &&
-            !(currentChange instanceof AddColumnChange) &&
-            !(currentChange instanceof RemoveColumnChange) &&
-            !(currentChange instanceof AddPrimaryKeyChange))
-          recreated=true;
-      }
-      return recreated;
+        return recreated;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-	protected void processTableStructureChanges(Database currentModel,
-                                                Database desiredModel,
-                                                Table    sourceTable,
-                                                Table    targetTable,
-                                                Map      parameters,
-                                                List     changes) throws IOException
-    {
-        // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat limited
+    protected void processTableStructureChanges(Database currentModel,
+            Database desiredModel, Table sourceTable, Table targetTable,
+            Map parameters, List changes) throws IOException {
+        // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
+        // limited
         // esp. if there is data in the table, so we don't use it
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
-                AddColumnChange addColumnChange = (AddColumnChange)change;
+            if (change instanceof AddColumnChange) {
+                AddColumnChange addColumnChange = (AddColumnChange) change;
 
                 // Oracle can only add not insert columns
-                // Also, we cannot add NOT NULL columns unless they have a default value
-                if (!addColumnChange.isAtEnd() || //<-We will always rebuild the table
-                    (addColumnChange.getNewColumn().isRequired()))// && (addColumnChange.getNewColumn().getDefaultValue() == null)))
+                // Also, we cannot add NOT NULL columns unless they have a
+                // default value
+                if (!addColumnChange.isAtEnd() || // <-We will always rebuild
+                                                  // the table
+                        (addColumnChange.getNewColumn().isRequired()))// &&
+                                                                      // (addColumnChange.getNewColumn().getDefaultValue()
+                                                                      // ==
+                                                                      // null)))
                 {
-                	// we need to rebuild the full table
+                    // we need to rebuild the full table
                     return;
                 }
             }
         }
 
         // First we drop primary keys as necessary
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof RemovePrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (RemovePrimaryKeyChange)change);
+            if (change instanceof RemovePrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (RemovePrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof PrimaryKeyChange)
-            {
-                PrimaryKeyChange       pkChange       = (PrimaryKeyChange)change;
-                RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(pkChange.getChangedTable(),
-                                                                                   pkChange.getOldPrimaryKeyColumns());
+            } else if (change instanceof PrimaryKeyChange) {
+                PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
+                RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
+                        pkChange.getChangedTable(), pkChange
+                                .getOldPrimaryKeyColumns());
 
                 processChange(currentModel, desiredModel, removePkChange);
             }
         }
 
         // Next we add/remove columns
-        // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat limited
+        // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
+        // limited
         // esp. if there is data in the table, so we don't use it
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
-                processChange(currentModel, desiredModel, (AddColumnChange)change);
+            if (change instanceof AddColumnChange) {
+                processChange(currentModel, desiredModel,
+                        (AddColumnChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof RemoveColumnChange)
-            {
-                processChange(currentModel, desiredModel, (RemoveColumnChange)change);
+            } else if (change instanceof RemoveColumnChange) {
+                processChange(currentModel, desiredModel,
+                        (RemoveColumnChange) change);
                 changeIt.remove();
             }
         }
         // Finally we add primary keys
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddPrimaryKeyChange)
-            {
-                processChange(currentModel, desiredModel, (AddPrimaryKeyChange)change);
+            if (change instanceof AddPrimaryKeyChange) {
+                processChange(currentModel, desiredModel,
+                        (AddPrimaryKeyChange) change);
                 changeIt.remove();
-            }
-            else if (change instanceof PrimaryKeyChange)
-            {
-                PrimaryKeyChange    pkChange    = (PrimaryKeyChange)change;
-                AddPrimaryKeyChange addPkChange = new AddPrimaryKeyChange(pkChange.getChangedTable(), 
-                                                                          pkChange.getNewName(),
-                                                                          pkChange.getNewPrimaryKeyColumns());
+            } else if (change instanceof PrimaryKeyChange) {
+                PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
+                AddPrimaryKeyChange addPkChange = new AddPrimaryKeyChange(
+                        pkChange.getChangedTable(), pkChange.getNewName(),
+                        pkChange.getNewPrimaryKeyColumns());
 
                 processChange(currentModel, desiredModel, addPkChange);
                 changeIt.remove();
@@ -553,48 +541,54 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * Processes the addition of a column to a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database        currentModel,
-                                 Database        desiredModel,
-                                 AddColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            AddColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
         print("ADD ");
         writeColumn(change.getChangedTable(), change.getNewColumn());
         printEndOfStatement();
-        if (change.getNewColumn().isAutoIncrement())
-        {
-            createAutoIncrementSequence(change.getChangedTable(), change.getNewColumn());
-            createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
+        if (change.getNewColumn().isAutoIncrement()) {
+            createAutoIncrementSequence(change.getChangedTable(), change
+                    .getNewColumn());
+            createAutoIncrementTrigger(change.getChangedTable(), change
+                    .getNewColumn());
         }
-        /*if(change.getNewColumn().getOnCreateDefault()!=null)
-        {
-        	executeOnCreateDefault(change.getChangedTable(), change.getChangedTable(), change.getNewColumn());
-        	writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
-        }*/
+        /*
+         * if(change.getNewColumn().getOnCreateDefault()!=null) {
+         * executeOnCreateDefault(change.getChangedTable(),
+         * change.getChangedTable(), change.getNewColumn());
+         * writeColumnCommentStmt(currentModel, change.getChangedTable(),
+         * change.getNewColumn()); }
+         */
         change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     }
 
     /**
      * Processes the removal of a column from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database           currentModel,
-                                 Database           desiredModel,
-                                 RemoveColumnChange change) throws IOException
-    {
-        if (change.getColumn().isAutoIncrement())
-        {
-            dropAutoIncrementTrigger(change.getChangedTable(), change.getColumn());
-            dropAutoIncrementSequence(change.getChangedTable(), change.getColumn());
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemoveColumnChange change) throws IOException {
+        if (change.getColumn().isAutoIncrement()) {
+            dropAutoIncrementTrigger(change.getChangedTable(), change
+                    .getColumn());
+            dropAutoIncrementSequence(change.getChangedTable(), change
+                    .getColumn());
         }
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
@@ -608,14 +602,15 @@ public class Oracle8Builder extends SqlBuilder
     /**
      * Processes the removal of a primary key from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database               currentModel,
-                                 Database               desiredModel,
-                                 RemovePrimaryKeyChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemovePrimaryKeyChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
@@ -628,8 +623,8 @@ public class Oracle8Builder extends SqlBuilder
      * {@inheritDoc}
      */
     @Override
-	public void writeExternalUniqueDropStmt(Table table, Unique unique) throws IOException
-    {
+    public void writeExternalUniqueDropStmt(Table table, Unique unique)
+            throws IOException {
         print("ALTER TABLE ");
         printIdentifier(getStructureObjectName(table));
         print(" DROP CONSTRAINT ");
@@ -637,83 +632,86 @@ public class Oracle8Builder extends SqlBuilder
         print(" DROP INDEX ");
         printEndOfStatement();
     }
+
     /**
      * {@inheritDoc}
      */
     @Override
-	protected void writeForeignKeyOnUpdateOption(ForeignKey key) throws IOException {
+    protected void writeForeignKeyOnUpdateOption(ForeignKey key)
+            throws IOException {
         // Not supported by Oracle
     }
-    
+
     /**
      * {@inheritDoc}
-     */     
+     */
     @Override
-	protected void writeForeignKeyOnDeleteOption(ForeignKey key) throws IOException {
-        
+    protected void writeForeignKeyOnDeleteOption(ForeignKey key)
+            throws IOException {
+
         if (key.getOnDeleteCode() == DatabaseMetaData.importedKeyCascade) {
             print(" ON DELETE CASCADE");
         } else if (key.getOnDeleteCode() == DatabaseMetaData.importedKeySetNull) {
             print(" ON DELETE SET NULL");
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-	protected String getFunctionEndBody() {
+    protected String getFunctionEndBody() {
         return ";";
     }
-    
+
     @Override
-	protected void writeCreateViewStatement(View view) throws IOException {  
-        
+    protected void writeCreateViewStatement(View view) throws IOException {
+
         print("CREATE OR REPLACE FORCE VIEW ");
         printIdentifier(getStructureObjectName(view));
         print(" AS ");
-        print(getSQLTranslation().exec(view.getStatement()));        
+        print(getSQLTranslation().exec(view.getStatement()));
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-	protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
+    protected String getNativeFunction(String neutralFunction, int typeCode)
+            throws IOException {
         switch (typeCode) {
-            case Types.TINYINT:
-            case Types.SMALLINT:
-            case Types.INTEGER:
-            case Types.BIGINT:
-            case Types.DECIMAL:
-            case Types.NUMERIC:
-            case Types.REAL:
-            case Types.DOUBLE:
-            case Types.FLOAT:
+        case Types.TINYINT:
+        case Types.SMALLINT:
+        case Types.INTEGER:
+        case Types.BIGINT:
+        case Types.DECIMAL:
+        case Types.NUMERIC:
+        case Types.REAL:
+        case Types.DOUBLE:
+        case Types.FLOAT:
+            return neutralFunction;
+        case Types.DATE:
+        case Types.TIME:
+        case Types.TIMESTAMP:
+            if ("SYSDATE".equals(neutralFunction.toUpperCase())) {
+                return "SYSDATE";
+            } else {
                 return neutralFunction;
-            case Types.DATE:
-            case Types.TIME:
-            case Types.TIMESTAMP:
-                if ("SYSDATE".equals(neutralFunction.toUpperCase())) {
-                    return "SYSDATE";
-                } else {
-                    return neutralFunction;
-                }
-            case Types.BIT:
-            default:
-                return neutralFunction;
+            }
+        case Types.BIT:
+        default:
+            return neutralFunction;
         }
-    }    
-    
+    }
 
     @Override
-	public void printColumnSizeChange(Database database, ColumnSizeChange change) throws IOException
-    {
-    	Table table=database.findTable(change.getTablename());
-    	Column column=table.findColumn(change.getColumnname());
-    	column.setSize(Integer.toString(change.getNewSize()));
-    	print("ALTER TABLE "+table.getName()+" MODIFY ");
-    	writeColumn(table, column);
-    	printEndOfStatement();
+    public void printColumnSizeChange(Database database, ColumnSizeChange change)
+            throws IOException {
+        Table table = database.findTable(change.getTablename());
+        Column column = table.findColumn(change.getColumnname());
+        column.setSize(Integer.toString(change.getNewSize()));
+        print("ALTER TABLE " + table.getName() + " MODIFY ");
+        writeColumn(table, column);
+        printEndOfStatement();
     }
 }

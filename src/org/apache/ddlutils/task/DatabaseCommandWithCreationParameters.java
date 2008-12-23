@@ -32,46 +32,46 @@ import org.apache.ddlutils.platform.CreationParameters;
  * @version $Revision: 289996 $
  * @ant.type ignore="true"
  */
-public abstract class DatabaseCommandWithCreationParameters extends DatabaseCommand
-{
+public abstract class DatabaseCommandWithCreationParameters extends
+        DatabaseCommand {
     /** The additional creation parameters. */
     private ArrayList _parameters = new ArrayList();
 
     /**
      * Adds a parameter which is a name-value pair.
      * 
-     * @param param The parameter
+     * @param param
+     *            The parameter
      */
-    public void addConfiguredParameter(TableSpecificParameter param)
-    {
+    public void addConfiguredParameter(TableSpecificParameter param) {
         _parameters.add(param);
     }
 
     /**
      * Filters the parameters for the given model and platform.
      * 
-     * @param model           The database model
-     * @param platformName    The name of the platform
-     * @param isCaseSensitive Whether case is relevant when comparing names of tables
+     * @param model
+     *            The database model
+     * @param platformName
+     *            The name of the platform
+     * @param isCaseSensitive
+     *            Whether case is relevant when comparing names of tables
      * @return The filtered parameters
      */
-    protected CreationParameters getFilteredParameters(Database model, String platformName, boolean isCaseSensitive)
-    {
+    protected CreationParameters getFilteredParameters(Database model,
+            String platformName, boolean isCaseSensitive) {
         CreationParameters parameters = new CreationParameters();
 
-        for (Iterator it = _parameters.iterator(); it.hasNext();)
-        {
-            TableSpecificParameter param = (TableSpecificParameter)it.next();
+        for (Iterator it = _parameters.iterator(); it.hasNext();) {
+            TableSpecificParameter param = (TableSpecificParameter) it.next();
 
-            if (param.isForPlatform(platformName))
-            {
-                for (int idx = 0; idx < model.getTableCount(); idx++)
-                {
+            if (param.isForPlatform(platformName)) {
+                for (int idx = 0; idx < model.getTableCount(); idx++) {
                     Table table = model.getTable(idx);
 
-                    if (param.isForTable(table, isCaseSensitive))
-                    {
-                        parameters.addParameter(table, param.getName(), param.getValue());
+                    if (param.isForTable(table, isCaseSensitive)) {
+                        parameters.addParameter(table, param.getName(), param
+                                .getValue());
                     }
                 }
             }

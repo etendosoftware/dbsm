@@ -39,15 +39,14 @@ import org.apache.ddlutils.platform.SqlBuilder;
  * 
  * @version $Revision: 518485 $
  */
-public class HsqlDbBuilder extends SqlBuilder
-{
+public class HsqlDbBuilder extends SqlBuilder {
     /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public HsqlDbBuilder(Platform platform)
-    {
+    public HsqlDbBuilder(Platform platform) {
         super(platform);
         addEscapedCharSequence("'", "''");
     }
@@ -55,8 +54,7 @@ public class HsqlDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
-    { 
+    public void dropTable(Table table) throws IOException {
         print("DROP TABLE ");
         printIdentifier(getStructureObjectName(table));
         print(" IF EXISTS");
@@ -66,8 +64,7 @@ public class HsqlDbBuilder extends SqlBuilder
     /**
      * {@inheritDoc}
      */
-    public String getSelectLastIdentityValues(Table table) 
-    {
+    public String getSelectLastIdentityValues(Table table) {
         return "CALL IDENTITY()";
     }
 
@@ -75,20 +72,14 @@ public class HsqlDbBuilder extends SqlBuilder
      * {@inheritDoc}
      */
     protected void processTableStructureChanges(Database currentModel,
-                                                Database desiredModel,
-                                                Table    sourceTable,
-                                                Table    targetTable,
-                                                Map      parameters,
-                                                List     changes) throws IOException
-    {
+            Database desiredModel, Table sourceTable, Table targetTable,
+            Map parameters, List changes) throws IOException {
         // HsqlDb can only drop columns that are not part of a primary key
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if ((change instanceof RemoveColumnChange) && 
-                ((RemoveColumnChange)change).getColumn().isPrimaryKey())
-            {
+            if ((change instanceof RemoveColumnChange)
+                    && ((RemoveColumnChange) change).getColumn().isPrimaryKey()) {
                 return;
             }
         }
@@ -100,31 +91,28 @@ public class HsqlDbBuilder extends SqlBuilder
         // iterate backwards
         ArrayList addColumnChanges = new ArrayList();
 
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof AddColumnChange)
-            {
+            if (change instanceof AddColumnChange) {
                 addColumnChanges.add(change);
                 changeIt.remove();
             }
         }
-        for (ListIterator changeIt = addColumnChanges.listIterator(addColumnChanges.size()); changeIt.hasPrevious();)
-        {
-            AddColumnChange addColumnChange = (AddColumnChange)changeIt.previous();
+        for (ListIterator changeIt = addColumnChanges
+                .listIterator(addColumnChanges.size()); changeIt.hasPrevious();) {
+            AddColumnChange addColumnChange = (AddColumnChange) changeIt
+                    .previous();
 
             processChange(currentModel, desiredModel, addColumnChange);
             changeIt.remove();
         }
 
-        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();)
-        {
-            TableChange change = (TableChange)changeIt.next();
+        for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+            TableChange change = (TableChange) changeIt.next();
 
-            if (change instanceof RemoveColumnChange) 
-            {
-                RemoveColumnChange removeColumnChange = (RemoveColumnChange)change;
+            if (change instanceof RemoveColumnChange) {
+                RemoveColumnChange removeColumnChange = (RemoveColumnChange) change;
 
                 processChange(currentModel, desiredModel, removeColumnChange);
                 changeIt.remove();
@@ -135,21 +123,21 @@ public class HsqlDbBuilder extends SqlBuilder
     /**
      * Processes the addition of a column to a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database        currentModel,
-                                 Database        desiredModel,
-                                 AddColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            AddColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();
         print("ADD COLUMN ");
         writeColumn(change.getChangedTable(), change.getNewColumn());
-        if (change.getNextColumn() != null)
-        {
+        if (change.getNextColumn() != null) {
             print(" BEFORE ");
             printIdentifier(getColumnName(change.getNextColumn()));
         }
@@ -160,14 +148,15 @@ public class HsqlDbBuilder extends SqlBuilder
     /**
      * Processes the removal of a column from a table.
      * 
-     * @param currentModel The current database schema
-     * @param desiredModel The desired database schema
-     * @param change       The change object
+     * @param currentModel
+     *            The current database schema
+     * @param desiredModel
+     *            The desired database schema
+     * @param change
+     *            The change object
      */
-    protected void processChange(Database           currentModel,
-                                 Database           desiredModel,
-                                 RemoveColumnChange change) throws IOException
-    {
+    protected void processChange(Database currentModel, Database desiredModel,
+            RemoveColumnChange change) throws IOException {
         print("ALTER TABLE ");
         printlnIdentifier(getStructureObjectName(change.getChangedTable()));
         printIndent();

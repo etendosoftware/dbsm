@@ -33,44 +33,49 @@ import org.apache.ddlutils.platform.PlatformImplBase;
  * 
  * @version $Revision: 231306 $
  */
-public class HsqlDbPlatform extends PlatformImplBase
-{
+public class HsqlDbPlatform extends PlatformImplBase {
     /** Database name of this platform. */
-    public static final String DATABASENAME     = "HsqlDb";
+    public static final String DATABASENAME = "HsqlDb";
     /** The standard Hsqldb jdbc driver. */
-    public static final String JDBC_DRIVER      = "org.hsqldb.jdbcDriver";
+    public static final String JDBC_DRIVER = "org.hsqldb.jdbcDriver";
     /** The subprotocol used by the standard Hsqldb driver. */
     public static final String JDBC_SUBPROTOCOL = "hsqldb";
 
     /**
      * Creates a new instance of the Hsqldb platform.
      */
-    public HsqlDbPlatform()
-    {
+    public HsqlDbPlatform() {
         PlatformInfo info = getPlatformInfo();
 
         info.setNonPKIdentityColumnsSupported(false);
         info.setIdentityOverrideAllowed(false);
         info.setSystemForeignKeyIndicesAlwaysNonUnique(true);
 
-        info.addNativeTypeMapping(Types.ARRAY,       "LONGVARBINARY", Types.LONGVARBINARY);
-        info.addNativeTypeMapping(Types.BLOB,        "LONGVARBINARY", Types.LONGVARBINARY);
-        info.addNativeTypeMapping(Types.CLOB,        "LONGVARCHAR",   Types.LONGVARCHAR);
-        info.addNativeTypeMapping(Types.DISTINCT,    "LONGVARBINARY", Types.LONGVARBINARY);
-        info.addNativeTypeMapping(Types.FLOAT,       "DOUBLE",        Types.DOUBLE);
+        info.addNativeTypeMapping(Types.ARRAY, "LONGVARBINARY",
+                Types.LONGVARBINARY);
+        info.addNativeTypeMapping(Types.BLOB, "LONGVARBINARY",
+                Types.LONGVARBINARY);
+        info.addNativeTypeMapping(Types.CLOB, "LONGVARCHAR", Types.LONGVARCHAR);
+        info.addNativeTypeMapping(Types.DISTINCT, "LONGVARBINARY",
+                Types.LONGVARBINARY);
+        info.addNativeTypeMapping(Types.FLOAT, "DOUBLE", Types.DOUBLE);
         info.addNativeTypeMapping(Types.JAVA_OBJECT, "OBJECT");
-        info.addNativeTypeMapping(Types.NULL,        "LONGVARBINARY", Types.LONGVARBINARY);
-        info.addNativeTypeMapping(Types.REF,         "LONGVARBINARY", Types.LONGVARBINARY);
-        info.addNativeTypeMapping(Types.STRUCT,      "LONGVARBINARY", Types.LONGVARBINARY);
-        // JDBC's TINYINT requires a value range of -255 to 255, but HsqlDb's is only -128 to 127
-        info.addNativeTypeMapping(Types.TINYINT,     "SMALLINT",      Types.SMALLINT);
+        info.addNativeTypeMapping(Types.NULL, "LONGVARBINARY",
+                Types.LONGVARBINARY);
+        info.addNativeTypeMapping(Types.REF, "LONGVARBINARY",
+                Types.LONGVARBINARY);
+        info.addNativeTypeMapping(Types.STRUCT, "LONGVARBINARY",
+                Types.LONGVARBINARY);
+        // JDBC's TINYINT requires a value range of -255 to 255, but HsqlDb's is
+        // only -128 to 127
+        info.addNativeTypeMapping(Types.TINYINT, "SMALLINT", Types.SMALLINT);
 
-        info.addNativeTypeMapping("BIT",      "BOOLEAN",       "BOOLEAN");
+        info.addNativeTypeMapping("BIT", "BOOLEAN", "BOOLEAN");
         info.addNativeTypeMapping("DATALINK", "LONGVARBINARY", "LONGVARBINARY");
 
-        info.setDefaultSize(Types.CHAR,      Integer.MAX_VALUE);
-        info.setDefaultSize(Types.VARCHAR,   Integer.MAX_VALUE);
-        info.setDefaultSize(Types.BINARY,    Integer.MAX_VALUE);
+        info.setDefaultSize(Types.CHAR, Integer.MAX_VALUE);
+        info.setDefaultSize(Types.VARCHAR, Integer.MAX_VALUE);
+        info.setDefaultSize(Types.BINARY, Integer.MAX_VALUE);
         info.setDefaultSize(Types.VARBINARY, Integer.MAX_VALUE);
 
         setSqlBuilder(new HsqlDbBuilder(this));
@@ -80,30 +85,23 @@ public class HsqlDbPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public String getName()
-    {
+    public String getName() {
         return DATABASENAME;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void shutdownDatabase(Connection connection)
-    {
+    public void shutdownDatabase(Connection connection) {
         Statement stmt = null;
 
-        try
-        {
+        try {
             stmt = connection.createStatement();
             stmt.executeUpdate("SHUTDOWN");
-        }
-        catch (SQLException ex)
-        {
+        } catch (SQLException ex) {
             throw new DdlUtilsException(ex);
-        }
-        finally
-        {
-            closeStatement(stmt);    
+        } finally {
+            closeStatement(stmt);
         }
     }
 }

@@ -35,111 +35,109 @@ import org.apache.ddlutils.model.Table;
 
 /**
  * Class that provides utility stuff for cpmaring data in databases.
- *
+ * 
  * @version $Revision: 264616 $
  */
-public class DatabaseTestHelper extends Assert
-{
+public class DatabaseTestHelper extends Assert {
     /** The log for this class. */
     private final Log _log = LogFactory.getLog(DatabaseTestHelper.class);
 
     /**
-     * Asserts that the data in the tables described by the given model is the same in the
-     * database accessed by the second platform as is in the database accessed by the first platform.
-     * Note that it is not tested whether the second database has more data.<br/>
-     * All differences will be printed via logging in DEBUG level. 
+     * Asserts that the data in the tables described by the given model is the
+     * same in the database accessed by the second platform as is in the
+     * database accessed by the first platform. Note that it is not tested
+     * whether the second database has more data.<br/>
+     * All differences will be printed via logging in DEBUG level.
      * 
-     * @param model            The database model to check
-     * @param origDbPlatform   The first platform
-     * @param testedDbPlatform The second platform
+     * @param model
+     *            The database model to check
+     * @param origDbPlatform
+     *            The first platform
+     * @param testedDbPlatform
+     *            The second platform
      */
-    public void assertHasSameData(Database model, Platform origDbPlatform, Platform testedDbPlatform)
-    {
+    public void assertHasSameData(Database model, Platform origDbPlatform,
+            Platform testedDbPlatform) {
         assertHasSameData(null, model, origDbPlatform, testedDbPlatform);
     }
 
     /**
-     * Asserts that the data in the tables described by the given model is the same in the
-     * database accessed by the second platform as is in the database accessed by the first platform.
-     * Note that it is not tested whether the second database has more data.<br/>
+     * Asserts that the data in the tables described by the given model is the
+     * same in the database accessed by the second platform as is in the
+     * database accessed by the first platform. Note that it is not tested
+     * whether the second database has more data.<br/>
      * All differences will be printed via logging in DEBUG level.
      * 
-     * @param failureMsg        The failure message to issue if the data is not the same
-     * @param model             The database model to check
-     * @param origDbPlatform    The first platform
-     * @param testedDbPlatform  The second platform
+     * @param failureMsg
+     *            The failure message to issue if the data is not the same
+     * @param model
+     *            The database model to check
+     * @param origDbPlatform
+     *            The first platform
+     * @param testedDbPlatform
+     *            The second platform
      */
-    public void assertHasSameData(String failureMsg, Database model, Platform origDbPlatform, Platform testedDbPlatform)
-    {
+    public void assertHasSameData(String failureMsg, Database model,
+            Platform origDbPlatform, Platform testedDbPlatform) {
         boolean hasError = false;
 
-        for (int idx = 0; idx < model.getTableCount(); idx++)
-        {
-            Table    table  = model.getTable(idx);
+        for (int idx = 0; idx < model.getTableCount(); idx++) {
+            Table table = model.getTable(idx);
             Column[] pkCols = table.getPrimaryKeyColumns();
 
-            for (Iterator it = origDbPlatform.query(model, buildQueryString(origDbPlatform, table, null, null), new Table[] { table }); it.hasNext();)
-            {
-                DynaBean   obj    = (DynaBean)it.next();
-                Collection result = testedDbPlatform.fetch(model, buildQueryString(origDbPlatform, table, pkCols, obj), new Table[] { table });
+            for (Iterator it = origDbPlatform.query(model, buildQueryString(
+                    origDbPlatform, table, null, null), new Table[] { table }); it
+                    .hasNext();) {
+                DynaBean obj = (DynaBean) it.next();
+                Collection result = testedDbPlatform.fetch(model,
+                        buildQueryString(origDbPlatform, table, pkCols, obj),
+                        new Table[] { table });
 
-                if (result.isEmpty())
-                {
-                    if (_log.isDebugEnabled())
-                    {
+                if (result.isEmpty()) {
+                    if (_log.isDebugEnabled()) {
                         hasError = true;
-                        _log.debug("Row "+obj.toString()+" is not present in second database");
-                    }
-                    else
-                    {
+                        _log.debug("Row " + obj.toString()
+                                + " is not present in second database");
+                    } else {
                         throw new AssertionFailedError(failureMsg);
                     }
-                }
-                else if (result.size() > 1)
-                {
-                    if (_log.isDebugEnabled())
-                    {
+                } else if (result.size() > 1) {
+                    if (_log.isDebugEnabled()) {
                         hasError = true;
 
                         StringBuffer debugMsg = new StringBuffer();
 
                         debugMsg.append("Row ");
                         debugMsg.append(obj.toString());
-                        debugMsg.append(" is present more than once in the second database:\n");
-                        for (Iterator resultIt = result.iterator(); resultIt.hasNext();)
-                        {
+                        debugMsg
+                                .append(" is present more than once in the second database:\n");
+                        for (Iterator resultIt = result.iterator(); resultIt
+                                .hasNext();) {
                             debugMsg.append("  ");
                             debugMsg.append(resultIt.next().toString());
                         }
                         _log.debug(debugMsg.toString());
-                    }
-                    else
-                    {
+                    } else {
                         throw new AssertionFailedError(failureMsg);
                     }
-                }
-                else
-                {
-                    DynaBean otherObj = (DynaBean)result.iterator().next();
+                } else {
+                    DynaBean otherObj = (DynaBean) result.iterator().next();
 
-                    if (!obj.equals(otherObj))
-                    {
-                        if (_log.isDebugEnabled())
-                        {
+                    if (!obj.equals(otherObj)) {
+                        if (_log.isDebugEnabled()) {
                             hasError = true;
-    
-                            _log.debug("Row "+obj.toString()+" is different in the second database: "+otherObj.toString());
-                        }
-                        else
-                        {
+
+                            _log.debug("Row " + obj.toString()
+                                    + " is different in the second database: "
+                                    + otherObj.toString());
+                        } else {
                             throw new AssertionFailedError(failureMsg);
                         }
                     }
                 }
             }
         }
-        if (hasError)
-        {
+        if (hasError) {
             throw new AssertionFailedError(failureMsg);
         }
     }
@@ -147,61 +145,58 @@ public class DatabaseTestHelper extends Assert
     /**
      * Helper method for build a SELECT statement.
      * 
-     * @param targetPlatform The platform for the queried database
-     * @param table          The queried table
-     * @param whereCols      The optional columns that make up the WHERE clause
-     * @param whereValues    The optional column value that make up the WHERE clause
+     * @param targetPlatform
+     *            The platform for the queried database
+     * @param table
+     *            The queried table
+     * @param whereCols
+     *            The optional columns that make up the WHERE clause
+     * @param whereValues
+     *            The optional column value that make up the WHERE clause
      * @return The query string
      */
-    private String buildQueryString(Platform targetPlatform, Table table, Column[] whereCols, DynaBean whereValues)
-    {
+    private String buildQueryString(Platform targetPlatform, Table table,
+            Column[] whereCols, DynaBean whereValues) {
         StringBuffer result = new StringBuffer();
 
         result.append("SELECT * FROM ");
-        if (targetPlatform.isDelimitedIdentifierModeOn())
-        {
+        if (targetPlatform.isDelimitedIdentifierModeOn()) {
             result.append(targetPlatform.getPlatformInfo().getDelimiterToken());
         }
         result.append(table.getName());
-        if (targetPlatform.isDelimitedIdentifierModeOn())
-        {
+        if (targetPlatform.isDelimitedIdentifierModeOn()) {
             result.append(targetPlatform.getPlatformInfo().getDelimiterToken());
         }
-        if ((whereCols != null) && (whereCols.length > 0))
-        {
+        if ((whereCols != null) && (whereCols.length > 0)) {
             result.append(" WHERE ");
-            for (int idx = 0; idx < whereCols.length; idx++)
-            {
-                Object value = (whereValues == null ? null : whereValues.get(whereCols[idx].getName()));
+            for (int idx = 0; idx < whereCols.length; idx++) {
+                Object value = (whereValues == null ? null : whereValues
+                        .get(whereCols[idx].getName()));
 
-                if (idx > 0)
-                {
+                if (idx > 0) {
                     result.append(" AND ");
                 }
-                if (targetPlatform.isDelimitedIdentifierModeOn())
-                {
-                    result.append(targetPlatform.getPlatformInfo().getDelimiterToken());
+                if (targetPlatform.isDelimitedIdentifierModeOn()) {
+                    result.append(targetPlatform.getPlatformInfo()
+                            .getDelimiterToken());
                 }
                 result.append(whereCols[idx].getName());
-                if (targetPlatform.isDelimitedIdentifierModeOn())
-                {
-                    result.append(targetPlatform.getPlatformInfo().getDelimiterToken());
+                if (targetPlatform.isDelimitedIdentifierModeOn()) {
+                    result.append(targetPlatform.getPlatformInfo()
+                            .getDelimiterToken());
                 }
                 result.append(" = ");
-                if (value == null)
-                {
+                if (value == null) {
                     result.append("NULL");
-                }
-                else
-                {
-                    if (!whereCols[idx].isOfNumericType())
-                    {
-                        result.append(targetPlatform.getPlatformInfo().getValueQuoteToken());
+                } else {
+                    if (!whereCols[idx].isOfNumericType()) {
+                        result.append(targetPlatform.getPlatformInfo()
+                                .getValueQuoteToken());
                     }
                     result.append(value.toString());
-                    if (!whereCols[idx].isOfNumericType())
-                    {
-                        result.append(targetPlatform.getPlatformInfo().getValueQuoteToken());
+                    if (!whereCols[idx].isOfNumericType()) {
+                        result.append(targetPlatform.getPlatformInfo()
+                                .getValueQuoteToken());
                     }
                 }
             }

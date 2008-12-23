@@ -22,12 +22,12 @@ package org.apache.ddlutils.io;
 import org.apache.commons.beanutils.DynaBean;
 
 /**
- * Marks classes that can receive dyna beans read by the {@link org.apache.ddlutils.io.DataReader}.
+ * Marks classes that can receive dyna beans read by the
+ * {@link org.apache.ddlutils.io.DataReader}.
  * 
  * @version $Revision: 289996 $
  */
-public interface DataSink
-{
+public interface DataSink {
     /**
      * Notifies the sink that beans will be added.
      */
@@ -36,7 +36,8 @@ public interface DataSink
     /**
      * Adds a dyna bean.
      * 
-     * @param bean The dyna bean to add
+     * @param bean
+     *            The dyna bean to add
      */
     public void addBean(DynaBean bean) throws DataSinkException;
 

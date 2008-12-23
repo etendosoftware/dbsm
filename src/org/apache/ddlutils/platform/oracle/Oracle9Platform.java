@@ -23,28 +23,25 @@ import java.sql.Types;
 
 /**
  * The platform for Oracle 9.
- *
+ * 
  * @version $Revision: 231306 $
  */
-public class Oracle9Platform extends Oracle8Platform
-{
+public class Oracle9Platform extends Oracle8Platform {
     /** Database name of this platform. */
     public static final String DATABASENAME = "Oracle9";
 
     /**
      * Creates a new platform instance.
      */
-    public Oracle9Platform()
-    {
+    public Oracle9Platform() {
         super();
-//        getPlatformInfo().addNativeTypeMapping(Types.TIMESTAMP, "TIMESTAMP");
+        // getPlatformInfo().addNativeTypeMapping(Types.TIMESTAMP, "TIMESTAMP");
     }
 
     /**
      * {@inheritDoc}
      */
-    public String getName()
-    {
+    public String getName() {
         return DATABASENAME;
     }
 }

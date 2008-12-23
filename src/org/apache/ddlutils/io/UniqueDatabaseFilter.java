@@ -12,21 +12,21 @@ package org.apache.ddlutils.io;
 import org.apache.ddlutils.model.Database;
 
 /**
- *
+ * 
  * The class UniqueDatabaseFilter implements DatabaseFilter
  * 
  * Defines a filter for database with a unique table
- *
+ * 
  * @author adrian
  */
 public class UniqueDatabaseFilter implements DatabaseFilter {
-    
+
     private DatabaseFilter _databasefilter;
     private String _tablename;
-    
+
     /**
      * 
-     * Creates a new instance of UniqueDatabaseFilter 
+     * Creates a new instance of UniqueDatabaseFilter
      * 
      * @param databasefilter
      * @param tablename
@@ -35,15 +35,16 @@ public class UniqueDatabaseFilter implements DatabaseFilter {
         _databasefilter = databasefilter;
         _tablename = tablename;
     }
-    
+
     /**
      * Returns a String array with only one table
+     * 
      * @return A String array wiht only one String
      */
     public String[] getTableNames() {
-        return new String[] {_tablename};
-    }    
-    
+        return new String[] { _tablename };
+    }
+
     /**
      * Returns the WHERE clause that filters the table
      * 
@@ -55,5 +56,5 @@ public class UniqueDatabaseFilter implements DatabaseFilter {
         } else {
             return FILTER_NODATA;
         }
-    }        
+    }
 }

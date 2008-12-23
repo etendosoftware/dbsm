@@ -31,28 +31,27 @@ import org.apache.ddlutils.util.ExtTypes;
 import org.apache.ddlutils.util.Jdbc3Utils;
 
 /**
- *
- * @author adrianromero
- * Created on 16 de julio de 2007, 12:31
- *
+ * 
+ * @author adrianromero Created on 16 de julio de 2007, 12:31
+ * 
  */
 public class Parameter extends ValueObject implements Cloneable {
-    
+
     public final static int MODE_NONE = 0;
     public final static int MODE_IN = 1;
     public final static int MODE_OUT = 2;
-    
+
     /** The name of the view, may be <code>null</code>. */
     private String _name;
     /** The parameter mode. */
     private int _modeCode;
-    
+
     /** Creates a new instance of Parameter */
     public Parameter() {
         _name = null;
         _modeCode = MODE_NONE;
     }
-    
+
     /**
      * Returns the name of this constraint check.
      * 
@@ -65,12 +64,13 @@ public class Parameter extends ValueObject implements Cloneable {
     /**
      * Sets the name of this constraint check.
      * 
-     * @param name The name
+     * @param name
+     *            The name
      */
     public void setName(String name) {
         _name = name.toLowerCase();
-    }    
-    
+    }
+
     /**
      * Returns the mode of this parameter.
      * 
@@ -83,34 +83,36 @@ public class Parameter extends ValueObject implements Cloneable {
     /**
      * Sets the mode of this parameter.
      * 
-     * @param mode The mode
+     * @param mode
+     *            The mode
      */
     public void setModeCode(int modeCode) {
         _modeCode = modeCode;
     }
-    
+
     /**
      * Returns the mode of this parameter.
      * 
      * @return The mode
      */
     public String getMode() {
-        
+
         switch (_modeCode) {
         case MODE_IN:
             return "in";
         case MODE_OUT:
             return "out";
         case MODE_NONE:
-        default: 
-            return "";     
+        default:
+            return "";
         }
     }
 
     /**
      * Sets the mode of this parameter.
      * 
-     * @param mode The mode
+     * @param mode
+     *            The mode
      */
     public void setMode(String mode) {
         if ("in".equals(mode)) {
@@ -121,72 +123,72 @@ public class Parameter extends ValueObject implements Cloneable {
             _modeCode = MODE_NONE;
         }
     }
-           
+
     /**
      * {@inheritDoc}
      */
     public Object clone() throws CloneNotSupportedException {
-        Parameter result = (Parameter)super.clone();
+        Parameter result = (Parameter) super.clone();
 
         result._name = _name;
         result._modeCode = _modeCode;
 
         return result;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof Parameter) {
-            Parameter other = (Parameter)obj;
-            
+            Parameter other = (Parameter) obj;
+
             int typeCode2 = _typeCode;
 
             int othertypeCode2 = other._typeCode;
-            
-            int modeCode2 = _modeCode == MODE_NONE ? MODE_IN : _modeCode;
-            int otherModeCode2 = other._modeCode == MODE_NONE ? MODE_IN : other._modeCode;
-            
-            String _defaultValueT=null;
-            String _otherDefaultValueT=null;
 
-        	if(_defaultValue!=null)
-        	{
-        		_defaultValueT=_defaultValue;
-        		/*if(_defaultValueT.charAt(_defaultValueT.length()-1)=='\n')
-        			_defaultValueT=_defaultValueT.substring(0,_defaultValueT.length()-1);*/
-        	}
-        	if(other._defaultValue!=null)
-        	{
-        		_otherDefaultValueT=other._defaultValue;
-        		/*if(_otherDefaultValueT.charAt(_otherDefaultValueT.length()-1)=='\n')
-        			_otherDefaultValueT=_otherDefaultValueT.substring(0,_otherDefaultValueT.length()-1);*/
-        	}
-            
-            return new EqualsBuilder()
-                .append(_name.toLowerCase(), other._name.toLowerCase())
-                .append(typeCode2, othertypeCode2)
-                .append(modeCode2, otherModeCode2)
-                .append(_defaultValueT, _otherDefaultValueT)
-                .isEquals();
+            int modeCode2 = _modeCode == MODE_NONE ? MODE_IN : _modeCode;
+            int otherModeCode2 = other._modeCode == MODE_NONE ? MODE_IN
+                    : other._modeCode;
+
+            String _defaultValueT = null;
+            String _otherDefaultValueT = null;
+
+            if (_defaultValue != null) {
+                _defaultValueT = _defaultValue;
+                /*
+                 * if(_defaultValueT.charAt(_defaultValueT.length()-1)=='\n')
+                 * _defaultValueT
+                 * =_defaultValueT.substring(0,_defaultValueT.length()-1);
+                 */
+            }
+            if (other._defaultValue != null) {
+                _otherDefaultValueT = other._defaultValue;
+                /*
+                 * if(_otherDefaultValueT.charAt(_otherDefaultValueT.length()-1)==
+                 * '\n')_otherDefaultValueT=_otherDefaultValueT.substring(0,
+                 * _otherDefaultValueT.length()-1);
+                 */
+            }
+
+            return new EqualsBuilder().append(_name.toLowerCase(),
+                    other._name.toLowerCase())
+                    .append(typeCode2, othertypeCode2).append(modeCode2,
+                            otherModeCode2).append(_defaultValueT,
+                            _otherDefaultValueT).isEquals();
         } else {
             return false;
         }
-    }    
-    
+    }
+
     /**
      * {@inheritDoc}
      */
     public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-            .append(_name)
-            .append(_typeCode)
-            .append(_modeCode)
-            .append(_defaultValue)
-            .toHashCode();
-    }   
-    
+        return new HashCodeBuilder(17, 37).append(_name).append(_typeCode)
+                .append(_modeCode).append(_defaultValue).toHashCode();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -204,5 +206,5 @@ public class Parameter extends ValueObject implements Cloneable {
         result.append("]");
 
         return result.toString();
-    }    
+    }
 }

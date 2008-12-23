@@ -33,18 +33,17 @@ import org.apache.ddlutils.platform.JdbcModelReader;
 
 /**
  * Reads a database model from a MySql database.
- *
+ * 
  * @version $Revision: $
  */
-public class MySqlModelReader extends JdbcModelReader
-{
+public class MySqlModelReader extends JdbcModelReader {
     /**
      * Creates a new model reader for MySql databases.
      * 
-     * @param platform The platform that this model reader belongs to
+     * @param platform
+     *            The platform that this model reader belongs to
      */
-    public MySqlModelReader(Platform platform)
-    {
+    public MySqlModelReader(Platform platform) {
         super(platform);
         setDefaultCatalogPattern(null);
         setDefaultSchemaPattern(null);
@@ -54,17 +53,19 @@ public class MySqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
-    {
-        // TODO This needs some more work, since table names can be case sensitive or lowercase
-        //      depending on the platform (really cute).
-        //      See http://dev.mysql.com/doc/refman/4.1/en/name-case-sensitivity.html for more info.
+    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values)
+            throws SQLException {
+        // TODO This needs some more work, since table names can be case
+        // sensitive or lowercase
+        // depending on the platform (really cute).
+        // See http://dev.mysql.com/doc/refman/4.1/en/name-case-sensitivity.html
+        // for more info.
 
         Table table = super.readTable(metaData, values);
 
-        if (table != null)
-        {
-            determineAutoIncrementFromResultSetMetaData(table, table.getPrimaryKeyColumns());
+        if (table != null) {
+            determineAutoIncrementFromResultSetMetaData(table, table
+                    .getPrimaryKeyColumns());
         }
         return table;
     }
@@ -72,15 +73,15 @@ public class MySqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException
-    {
+    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values)
+            throws SQLException {
         Column column = super.readColumn(metaData, values);
 
-        // MySQL converts illegal date/time/timestamp values to "0000-00-00 00:00:00", but this
+        // MySQL converts illegal date/time/timestamp values to
+        // "0000-00-00 00:00:00", but this
         // is an illegal ISO value, so we replace it with NULL
-        if ((column.getTypeCode() == Types.TIMESTAMP) && 
-            "0000-00-00 00:00:00".equals(column.getDefaultValue()))
-        {
+        if ((column.getTypeCode() == Types.TIMESTAMP)
+                && "0000-00-00 00:00:00".equals(column.getDefaultValue())) {
             column.setDefaultValue(null);
         }
         return column;
@@ -89,8 +90,8 @@ public class MySqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected boolean isInternalPrimaryKeyIndex(DatabaseMetaDataWrapper metaData, Table table, Index index)
-    {
+    protected boolean isInternalPrimaryKeyIndex(
+            DatabaseMetaDataWrapper metaData, Table table, Index index) {
         // MySql defines a unique index "PRIMARY" for primary keys
         return "PRIMARY".equals(index.getName());
     }
@@ -98,9 +99,11 @@ public class MySqlModelReader extends JdbcModelReader
     /**
      * {@inheritDoc}
      */
-    protected boolean isInternalForeignKeyIndex(DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk, Index index)
-    {
+    protected boolean isInternalForeignKeyIndex(
+            DatabaseMetaDataWrapper metaData, Table table, ForeignKey fk,
+            Index index) {
         // MySql defines a non-unique index of the same name as the fk
-        return getPlatform().getSqlBuilder().getForeignKeyName(table, fk).equals(index.getName());
+        return getPlatform().getSqlBuilder().getForeignKeyName(table, fk)
+                .equals(index.getName());
     }
 }

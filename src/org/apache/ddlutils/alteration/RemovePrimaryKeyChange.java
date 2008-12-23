@@ -28,53 +28,51 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class RemovePrimaryKeyChange extends TableChangeImplBase
-{
+public class RemovePrimaryKeyChange extends TableChangeImplBase {
     /** The columns making up the primary key. */
     private Column[] _primaryKeyColumns;
 
     /**
      * Creates a new change object.
      * 
-     * @param table             The table to remove the primary key from
-     * @param primaryKeyColumns The columns making up the primary key
+     * @param table
+     *            The table to remove the primary key from
+     * @param primaryKeyColumns
+     *            The columns making up the primary key
      */
-    public RemovePrimaryKeyChange(Table table, Column[] primaryKeyColumns)
-    {
+    public RemovePrimaryKeyChange(Table table, Column[] primaryKeyColumns) {
         super(table);
         _primaryKeyColumns = primaryKeyColumns;
     }
 
     /**
      * Returns the primary key columns making up the primary key.
-     *
+     * 
      * @return The primary key columns
      */
-    public Column[] getPrimaryKeyColumns()
-    {
+    public Column[] getPrimaryKeyColumns() {
         return _primaryKeyColumns;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
 
         table.setPrimaryKey(getChangedTable().getPrimaryKey());
 
-        for (int idx = 0; idx < _primaryKeyColumns.length; idx++)
-        {
-            Column column = table.findColumn(_primaryKeyColumns[idx].getName(), caseSensitive);
+        for (int idx = 0; idx < _primaryKeyColumns.length; idx++) {
+            Column column = table.findColumn(_primaryKeyColumns[idx].getName(),
+                    caseSensitive);
 
             column.setPrimaryKey(false);
         }
-    }    
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemovePrimaryKeyChange. Table: "+_table.getName();
+    public String toString() {
+        return "RemovePrimaryKeyChange. Table: " + _table.getName();
     }
 }

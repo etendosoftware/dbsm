@@ -27,19 +27,21 @@ import org.apache.ddlutils.model.Table;
 
 /**
  * Reads data XML into dyna beans matching a specified database model. Note that
- * the data sink won't be started or ended by the data reader, this has to be done
- * in the code that uses the data reader. 
+ * the data sink won't be started or ended by the data reader, this has to be
+ * done in the code that uses the data reader.
  * 
  * @version $Revision: 289996 $
  */
-public class DataReader extends Digester
-{
+public class DataReader extends Digester {
     /** The database model. */
     private Database _model;
     /** The object to receive the read beans. */
     private DataSink _sink;
-    /** Specifies whether the (lazy) configuration of the digester still needs to be performed. */
-    private boolean  _needsConfiguration = true;
+    /**
+     * Specifies whether the (lazy) configuration of the digester still needs to
+     * be performed.
+     */
+    private boolean _needsConfiguration = true;
     /** The converters. */
     private ConverterConfiguration _converterConf = new ConverterConfiguration();
     /** Whether to be case sensitive or not. */
@@ -50,87 +52,78 @@ public class DataReader extends Digester
      * 
      * @return The converter configuration
      */
-    public ConverterConfiguration getConverterConfiguration()
-    {
+    public ConverterConfiguration getConverterConfiguration() {
         return _converterConf;
     }
 
     /**
      * Returns the database model.
-     *
+     * 
      * @return The model
      */
-    public Database getModel()
-    {
+    public Database getModel() {
         return _model;
     }
 
     /**
      * Sets the database model.
-     *
-     * @param model The model
+     * 
+     * @param model
+     *            The model
      */
-    public void setModel(Database model)
-    {
-        _model              = model;
+    public void setModel(Database model) {
+        _model = model;
         _needsConfiguration = true;
     }
 
     /**
      * Returns the data sink.
-     *
+     * 
      * @return The sink
      */
-    public DataSink getSink()
-    {
+    public DataSink getSink() {
         return _sink;
     }
 
     /**
      * Sets the data sink.
-     *
-     * @param sink The sink
+     * 
+     * @param sink
+     *            The sink
      */
-    public void setSink(DataSink sink)
-    {
-        _sink               = sink;
+    public void setSink(DataSink sink) {
+        _sink = sink;
         _needsConfiguration = true;
     }
 
     /**
      * Determines whether this rules object matches case sensitively.
-     *
+     * 
      * @return <code>true</code> if the case of the pattern matters
      */
-    public boolean isCaseSensitive()
-    {
+    public boolean isCaseSensitive() {
         return _caseSensitive;
     }
 
-
     /**
      * Specifies whether this rules object shall match case sensitively.
-     *
-     * @param beCaseSensitive <code>true</code> if the case of the pattern shall matter
+     * 
+     * @param beCaseSensitive
+     *            <code>true</code> if the case of the pattern shall matter
      */
-    public void setCaseSensitive(boolean beCaseSensitive)
-    {
+    public void setCaseSensitive(boolean beCaseSensitive) {
         _caseSensitive = beCaseSensitive;
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void configure()
-    {
-        if (_needsConfiguration)
-        {
-            if (_model == null)
-            {
+    protected void configure() {
+        if (_needsConfiguration) {
+            if (_model == null) {
                 throw new NullPointerException("No database model specified");
             }
-            if (_sink == null)
-            {
+            if (_sink == null) {
                 throw new NullPointerException("No data sink model specified");
             }
 
@@ -138,20 +131,23 @@ public class DataReader extends Digester
 
             rules.setCaseSensitive(isCaseSensitive());
             setRules(rules);
-            for (int tableIdx = 0; tableIdx < _model.getTableCount(); tableIdx++)
-            {
-                // TODO: For now we hardcode the root as 'data' but ultimately we should wildcard it ('?')
-                Table  table = _model.getTable(tableIdx);
-                String path  = "data/"+table.getName();
-    
+            for (int tableIdx = 0; tableIdx < _model.getTableCount(); tableIdx++) {
+                // TODO: For now we hardcode the root as 'data' but ultimately
+                // we should wildcard it ('?')
+                Table table = _model.getTable(tableIdx);
+                String path = "data/" + table.getName();
+
                 addRule(path, new DynaSqlCreateRule(_model, table, _sink));
-                for (int columnIdx = 0; columnIdx < table.getColumnCount(); columnIdx++)
-                {
-                    Column           column    = (Column)table.getColumn(columnIdx);
-                    SqlTypeConverter converter = _converterConf.getRegisteredConverter(table, column);
-    
-                    addRule(path, new SetColumnPropertyRule(column, converter, isCaseSensitive()));
-                    addRule(path + "/" + column.getName(), new SetColumnPropertyFromSubElementRule(column, converter));
+                for (int columnIdx = 0; columnIdx < table.getColumnCount(); columnIdx++) {
+                    Column column = (Column) table.getColumn(columnIdx);
+                    SqlTypeConverter converter = _converterConf
+                            .getRegisteredConverter(table, column);
+
+                    addRule(path, new SetColumnPropertyRule(column, converter,
+                            isCaseSensitive()));
+                    addRule(path + "/" + column.getName(),
+                            new SetColumnPropertyFromSubElementRule(column,
+                                    converter));
                 }
             }
             _needsConfiguration = false;

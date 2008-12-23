@@ -29,46 +29,45 @@ import org.apache.ddlutils.model.Table;
  * @version $Revision: $
  */
 public class RemoveCheckChange extends TableChangeImplBase {
-    
+
     /** The check to be removed. */
     private Check _check;
 
     /**
      * Creates a new change object.
      * 
-     * @param table The table to remove the check from
-     * @param index The check
+     * @param table
+     *            The table to remove the check from
+     * @param index
+     *            The check
      */
-    public RemoveCheckChange(Table table, Check check)
-    {
+    public RemoveCheckChange(Table table, Check check) {
         super(table);
         _check = check;
     }
 
     /**
      * Returns the check.
-     *
+     * 
      * @return The check
      */
-    public Check getCheck()
-    {
+    public Check getCheck() {
         return _check;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
         Check check = table.findCheck(_check.getName(), caseSensitive);
 
         table.removeCheck(check);
-    }    
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemoveCheckChange. Name: "+_check.getName();
-    } 
+    public String toString() {
+        return "RemoveCheckChange. Name: " + _check.getName();
+    }
 }

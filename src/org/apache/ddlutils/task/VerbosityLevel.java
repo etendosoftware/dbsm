@@ -29,32 +29,32 @@ import org.apache.tools.ant.types.EnumeratedAttribute;
  */
 public class VerbosityLevel extends EnumeratedAttribute {
     /** The possible levels. */
-    private static final String[] LEVELS = { Level.FATAL.toString().toUpperCase(),
-                                             Level.ERROR.toString().toUpperCase(),
-                                             Level.WARN.toString().toUpperCase(),
-                                             Level.INFO.toString().toUpperCase(),
-                                             Level.DEBUG.toString().toUpperCase(),
-                                             Level.FATAL.toString().toLowerCase(),
-                                             Level.ERROR.toString().toLowerCase(),
-                                             Level.WARN.toString().toLowerCase(),
-                                             Level.INFO.toString().toLowerCase(),
-                                             Level.DEBUG.toString().toLowerCase() };
+    private static final String[] LEVELS = {
+            Level.FATAL.toString().toUpperCase(),
+            Level.ERROR.toString().toUpperCase(),
+            Level.WARN.toString().toUpperCase(),
+            Level.INFO.toString().toUpperCase(),
+            Level.DEBUG.toString().toUpperCase(),
+            Level.FATAL.toString().toLowerCase(),
+            Level.ERROR.toString().toLowerCase(),
+            Level.WARN.toString().toLowerCase(),
+            Level.INFO.toString().toLowerCase(),
+            Level.DEBUG.toString().toLowerCase() };
 
     /**
      * Creates an uninitialized verbosity level object.
      */
-    public VerbosityLevel()
-    {
+    public VerbosityLevel() {
         super();
     }
 
     /**
      * Creates an initialized verbosity level object.
      * 
-     * @param level The level
+     * @param level
+     *            The level
      */
-    public VerbosityLevel(String level)
-    {
+    public VerbosityLevel(String level) {
         super();
         setValue(level);
     }
@@ -71,8 +71,7 @@ public class VerbosityLevel extends EnumeratedAttribute {
      * 
      * @return <code>true</code> if this is the DEBUG level
      */
-    public boolean isDebug()
-    {
+    public boolean isDebug() {
         return Level.DEBUG.toString().equalsIgnoreCase(getValue());
     }
 }

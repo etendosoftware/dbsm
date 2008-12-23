@@ -31,32 +31,33 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class ColumnOrderChange extends TableChangeImplBase
-{
+public class ColumnOrderChange extends TableChangeImplBase {
     /** The map containing the new positions keyed by the source columns. */
     private Map _newPositions;
 
     /**
      * Creates a new change object.
      * 
-     * @param table        The table whose primary key is to be changed
-     * @param newPositions The map containing the new positions keyed by the source columns
+     * @param table
+     *            The table whose primary key is to be changed
+     * @param newPositions
+     *            The map containing the new positions keyed by the source
+     *            columns
      */
-    public ColumnOrderChange(Table table, Map newPositions)
-    {
+    public ColumnOrderChange(Table table, Map newPositions) {
         super(table);
         _newPositions = newPositions;
     }
 
     /**
      * Returns the new position of the given source column.
-     *
-     * @param sourceColumn The column
+     * 
+     * @param sourceColumn
+     *            The column
      * @return The new position or -1 if no position is marked for the column
      */
-    public int getNewPosition(Column sourceColumn)
-    {
-        Integer newPos = (Integer)_newPositions.get(sourceColumn);
+    public int getNewPosition(Column sourceColumn) {
+        Integer newPos = (Integer) _newPositions.get(sourceColumn);
 
         return newPos == null ? -1 : newPos.intValue();
     }
@@ -64,28 +65,25 @@ public class ColumnOrderChange extends TableChangeImplBase
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Table     table      = database.findTable(getChangedTable().getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
         ArrayList newColumns = new ArrayList(table.getColumnCount());
 
-        for (int idx = 0; idx < table.getColumnCount(); idx++)
-        {
+        for (int idx = 0; idx < table.getColumnCount(); idx++) {
             Column column = table.getColumn(idx);
-            int    newPos = getNewPosition(column);
+            int newPos = getNewPosition(column);
 
             newColumns.set(newPos < 0 ? idx : newPos, column);
         }
-        for (int idx = 0; idx < table.getColumnCount(); idx++)
-        {
+        for (int idx = 0; idx < table.getColumnCount(); idx++) {
             table.removeColumn(idx);
         }
         table.addColumns(newColumns);
-    }  
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "ColumnOrderChange. Table: "+_table.getName();
-    } 
+    public String toString() {
+        return "ColumnOrderChange. Table: " + _table.getName();
+    }
 }

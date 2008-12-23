@@ -35,41 +35,39 @@ import org.apache.ddlutils.platform.PlatformImplBase;
  * 
  * @version $Revision: 231306 $
  */
-public class MckoiPlatform extends PlatformImplBase
-{
+public class MckoiPlatform extends PlatformImplBase {
     /** Database name of this platform. */
-    public static final String DATABASENAME     = "McKoi";
+    public static final String DATABASENAME = "McKoi";
     /** The standard McKoi jdbc driver. */
-    public static final String JDBC_DRIVER      = "com.mckoi.JDBCDriver";
+    public static final String JDBC_DRIVER = "com.mckoi.JDBCDriver";
     /** The subprotocol used by the standard McKoi driver. */
     public static final String JDBC_SUBPROTOCOL = "mckoi";
 
     /**
      * Creates a new platform instance.
      */
-    public MckoiPlatform()
-    {
+    public MckoiPlatform() {
         PlatformInfo info = getPlatformInfo();
 
         info.setIndicesSupported(false);
         info.setIndicesEmbedded(true);
         info.setAutoCommitModeForLastIdentityValueReading(false);
 
-        info.addNativeTypeMapping(Types.ARRAY,    "BLOB",   Types.BLOB);
-        info.addNativeTypeMapping(Types.DISTINCT, "BLOB",   Types.BLOB);
-        info.addNativeTypeMapping(Types.FLOAT,    "DOUBLE", Types.DOUBLE);
-        info.addNativeTypeMapping(Types.NULL,     "BLOB",   Types.BLOB);
-        info.addNativeTypeMapping(Types.OTHER,    "BLOB",   Types.BLOB);
-        info.addNativeTypeMapping(Types.REF,      "BLOB",   Types.BLOB);
-        info.addNativeTypeMapping(Types.STRUCT,   "BLOB",   Types.BLOB);
-        info.addNativeTypeMapping("BIT",      "BOOLEAN", "BOOLEAN");
-        info.addNativeTypeMapping("DATALINK", "BLOB",    "BLOB");
+        info.addNativeTypeMapping(Types.ARRAY, "BLOB", Types.BLOB);
+        info.addNativeTypeMapping(Types.DISTINCT, "BLOB", Types.BLOB);
+        info.addNativeTypeMapping(Types.FLOAT, "DOUBLE", Types.DOUBLE);
+        info.addNativeTypeMapping(Types.NULL, "BLOB", Types.BLOB);
+        info.addNativeTypeMapping(Types.OTHER, "BLOB", Types.BLOB);
+        info.addNativeTypeMapping(Types.REF, "BLOB", Types.BLOB);
+        info.addNativeTypeMapping(Types.STRUCT, "BLOB", Types.BLOB);
+        info.addNativeTypeMapping("BIT", "BOOLEAN", "BOOLEAN");
+        info.addNativeTypeMapping("DATALINK", "BLOB", "BLOB");
 
-        info.setDefaultSize(Types.CHAR,      1024);
-        info.setDefaultSize(Types.VARCHAR,   1024);
-        info.setDefaultSize(Types.BINARY,    1024);
+        info.setDefaultSize(Types.CHAR, 1024);
+        info.setDefaultSize(Types.VARCHAR, 1024);
+        info.setDefaultSize(Types.BINARY, 1024);
         info.setDefaultSize(Types.VARBINARY, 1024);
-        
+
         setSqlBuilder(new MckoiBuilder(this));
         setModelReader(new MckoiModelReader(this));
     }
@@ -77,76 +75,71 @@ public class MckoiPlatform extends PlatformImplBase
     /**
      * {@inheritDoc}
      */
-    public String getName()
-    {
+    public String getName() {
         return DATABASENAME;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void createDatabase(String jdbcDriverClassName, String connectionUrl, String username, String password, Map parameters) throws DatabaseOperationException, UnsupportedOperationException
-    {
-        // For McKoi, you create databases by simply appending "?create=true" to the connection url
-        if (JDBC_DRIVER.equals(jdbcDriverClassName))
-        {
+    public void createDatabase(String jdbcDriverClassName,
+            String connectionUrl, String username, String password,
+            Map parameters) throws DatabaseOperationException,
+            UnsupportedOperationException {
+        // For McKoi, you create databases by simply appending "?create=true" to
+        // the connection url
+        if (JDBC_DRIVER.equals(jdbcDriverClassName)) {
             StringBuffer creationUrl = new StringBuffer();
-            Connection   connection  = null;
+            Connection connection = null;
 
             creationUrl.append(connectionUrl);
-            // TODO: It might be safer to parse the URN and check whethere there is already a parameter there
-            //       (in which case e'd have to use '&' instead)
+            // TODO: It might be safer to parse the URN and check whethere there
+            // is already a parameter there
+            // (in which case e'd have to use '&' instead)
             creationUrl.append("?create=true");
-            if ((parameters != null) && !parameters.isEmpty())
-            {
-                for (Iterator it = parameters.entrySet().iterator(); it.hasNext();)
-                {
-                    Map.Entry entry = (Map.Entry)it.next();
+            if ((parameters != null) && !parameters.isEmpty()) {
+                for (Iterator it = parameters.entrySet().iterator(); it
+                        .hasNext();) {
+                    Map.Entry entry = (Map.Entry) it.next();
 
-                    // no need to specify create twice (and create=false wouldn't help anyway)
-                    if (!"create".equalsIgnoreCase(entry.getKey().toString()))
-                    {
+                    // no need to specify create twice (and create=false
+                    // wouldn't help anyway)
+                    if (!"create".equalsIgnoreCase(entry.getKey().toString())) {
                         creationUrl.append("&");
                         creationUrl.append(entry.getKey().toString());
                         creationUrl.append("=");
-                        if (entry.getValue() != null)
-                        {
+                        if (entry.getValue() != null) {
                             creationUrl.append(entry.getValue().toString());
                         }
                     }
                 }
             }
-            if (getLog().isDebugEnabled())
-            {
-                getLog().debug("About to create database using this URL: "+creationUrl.toString());
+            if (getLog().isDebugEnabled()) {
+                getLog().debug(
+                        "About to create database using this URL: "
+                                + creationUrl.toString());
             }
-            try
-            {
+            try {
                 Class.forName(jdbcDriverClassName);
 
-                connection = DriverManager.getConnection(creationUrl.toString(), username, password);
+                connection = DriverManager.getConnection(
+                        creationUrl.toString(), username, password);
                 logWarnings(connection);
-            }
-            catch (Exception ex)
-            {
-                throw new DatabaseOperationException("Error while trying to create a database", ex);
-            }
-            finally
-            {
-                if (connection != null)
-                {
-                    try
-                    {
+            } catch (Exception ex) {
+                throw new DatabaseOperationException(
+                        "Error while trying to create a database", ex);
+            } finally {
+                if (connection != null) {
+                    try {
                         connection.close();
+                    } catch (SQLException ex) {
                     }
-                    catch (SQLException ex)
-                    {}
                 }
             }
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Unable to create a Derby database via the driver "+jdbcDriverClassName);
+        } else {
+            throw new UnsupportedOperationException(
+                    "Unable to create a Derby database via the driver "
+                            + jdbcDriverClassName);
         }
     }
 }

@@ -27,43 +27,42 @@ import org.apache.ddlutils.model.Function;
  * 
  * @version $Revision: $
  */
-public class RemoveFunctionChange implements ModelChange{
-    
+public class RemoveFunctionChange implements ModelChange {
+
     /** The function. */
     private Function _function;
-    
+
     /**
      * Creates a remove change object.
      * 
-     * @param function The function
+     * @param function
+     *            The function
      */
     public RemoveFunctionChange(Function function) {
         _function = function;
     }
 
     /**
-     * Returns the function. 
+     * Returns the function.
      * 
      * @return The function
      */
-    public Function getFunction()
-    {
+    public Function getFunction() {
         return _function;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Function function = database.findFunction(_function.getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Function function = database.findFunction(_function.getName(),
+                caseSensitive);
 
         database.removeFunction(function);
-    }        
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemoveFunctionChange. Name: "+_function.getName();
+    public String toString() {
+        return "RemoveFunctionChange. Name: " + _function.getName();
     }
 }

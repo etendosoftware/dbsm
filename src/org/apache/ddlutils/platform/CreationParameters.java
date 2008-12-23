@@ -32,29 +32,26 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: 331006 $
  */
-public class CreationParameters
-{
+public class CreationParameters {
     /** The parameter maps keyed by the tables. */
     private Map _parametersPerTable = new HashMap();
 
     /**
      * Returns the parameters for the given table.
      * 
-     * @param table The table
+     * @param table
+     *            The table
      * @return The parameters
      */
-    public Map getParametersFor(Table table)
-    {
-        ListOrderedMap result       = new ListOrderedMap();
-        Map            globalParams = (Map)_parametersPerTable.get(null);
-        Map            tableParams  = (Map)_parametersPerTable.get(table);
+    public Map getParametersFor(Table table) {
+        ListOrderedMap result = new ListOrderedMap();
+        Map globalParams = (Map) _parametersPerTable.get(null);
+        Map tableParams = (Map) _parametersPerTable.get(table);
 
-        if (globalParams != null)
-        {
+        if (globalParams != null) {
             result.putAll(globalParams);
         }
-        if (tableParams != null)
-        {
+        if (tableParams != null) {
             result.putAll(tableParams);
         }
         return result;
@@ -63,16 +60,18 @@ public class CreationParameters
     /**
      * Adds a parameter.
      * 
-     * @param table      The table; if <code>null</code> then the parameter is for all tables
-     * @param paramName  The name of the parameter
-     * @param paramValue The value of the parameter
+     * @param table
+     *            The table; if <code>null</code> then the parameter is for all
+     *            tables
+     * @param paramName
+     *            The name of the parameter
+     * @param paramValue
+     *            The value of the parameter
      */
-    public void addParameter(Table table, String paramName, String paramValue)
-    {
-        Map params = (Map)_parametersPerTable.get(table);
+    public void addParameter(Table table, String paramName, String paramValue) {
+        Map params = (Map) _parametersPerTable.get(table);
 
-        if (params == null)
-        {
+        if (params == null) {
             // we're using a list orderered map to retain the order
             params = new ListOrderedMap();
             _parametersPerTable.put(table, params);

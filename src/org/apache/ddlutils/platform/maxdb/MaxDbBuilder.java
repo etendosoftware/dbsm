@@ -33,25 +33,24 @@ import org.apache.ddlutils.platform.sapdb.SapDbBuilder;
  * 
  * @version $Revision: $
  */
-public class MaxDbBuilder extends SapDbBuilder
-{
+public class MaxDbBuilder extends SapDbBuilder {
     /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public MaxDbBuilder(Platform platform)
-    {
+    public MaxDbBuilder(Platform platform) {
         super(platform);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalPrimaryKeysCreateStmt(Table table, Column[] primaryKeyColumns) throws IOException
-    {
-        if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns))
-        {
+    protected void writeExternalPrimaryKeysCreateStmt(Table table,
+            Column[] primaryKeyColumns) throws IOException {
+        if ((primaryKeyColumns.length > 0)
+                && shouldGeneratePrimaryKeys(primaryKeyColumns)) {
             print("ALTER TABLE ");
             printlnIdentifier(getStructureObjectName(table));
             printIndent();
@@ -66,14 +65,11 @@ public class MaxDbBuilder extends SapDbBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key) throws IOException
-    {
-        if (key.getForeignTableName() == null)
-        {
+    protected void writeExternalForeignKeyCreateStmt(Database database,
+            Table table, ForeignKey key) throws IOException {
+        if (key.getForeignTableName() == null) {
             _log.warn("Foreign key table is null for key " + key);
-        }
-        else
-        {
+        } else {
             writeTableAlterStmt(table);
 
             print("ADD CONSTRAINT ");
@@ -81,7 +77,8 @@ public class MaxDbBuilder extends SapDbBuilder
             print(" FOREIGN KEY (");
             writeLocalReferences(key);
             print(") REFERENCES ");
-            printIdentifier(getStructureObjectName(database.findTable(key.getForeignTableName())));
+            printIdentifier(getStructureObjectName(database.findTable(key
+                    .getForeignTableName())));
             print(" (");
             writeForeignReferences(key);
             print(")");
@@ -92,8 +89,8 @@ public class MaxDbBuilder extends SapDbBuilder
     /**
      * {@inheritDoc}
      */
-    protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey) throws IOException
-    {
+    protected void writeExternalForeignKeyDropStmt(Table table,
+            ForeignKey foreignKey) throws IOException {
         writeTableAlterStmt(table);
         print("DROP CONSTRAINT ");
         printIdentifier(getForeignKeyName(table, foreignKey));

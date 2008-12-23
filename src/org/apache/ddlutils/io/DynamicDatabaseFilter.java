@@ -13,9 +13,10 @@ import org.apache.ddlutils.model.Database;
 
 /**
  * A dinamic database filter
+ * 
  * @author adrian
  */
 public interface DynamicDatabaseFilter extends DatabaseFilter {
-    
-    public void init(Database database);    
+
+    public void init(Database database);
 }

@@ -24,47 +24,42 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Sequence;
 
 public class AddSequenceChange implements ModelChange {
-    
+
     /** The new sequence. */
     private Sequence _newSequence;
-    
+
     /**
      * Creates a new change object.
      * 
-     * @param newSequence The new sequence
+     * @param newSequence
+     *            The new sequence
      */
     public AddSequenceChange(Sequence newSequence) {
         _newSequence = newSequence;
     }
 
     /**
-     * Returns the new sequence. 
+     * Returns the new sequence.
      * 
      * @return The new sequence
      */
-    public Sequence getNewSequence()
-    {
+    public Sequence getNewSequence() {
         return _newSequence;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        try
-        {
-            database.addSequence((Sequence)_newSequence.clone());
-        }
-        catch (CloneNotSupportedException ex)
-        {
+    public void apply(Database database, boolean caseSensitive) {
+        try {
+            database.addSequence((Sequence) _newSequence.clone());
+        } catch (CloneNotSupportedException ex) {
             throw new DdlUtilsException(ex);
         }
-    }    
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "AddSequenceChange. Name: "+_newSequence.getName();
-    } 
+    public String toString() {
+        return "AddSequenceChange. Name: " + _newSequence.getName();
+    }
 }

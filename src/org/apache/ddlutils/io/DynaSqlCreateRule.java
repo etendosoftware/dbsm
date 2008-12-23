@@ -30,39 +30,42 @@ import org.xml.sax.Attributes;
  * 
  * @version $Revision: 289996 $
  */
-public class DynaSqlCreateRule extends Rule
-{
+public class DynaSqlCreateRule extends Rule {
     /** The database model for which we'l be creating beans. */
     private Database _model;
     /** The table that we're creating instances for. */
-    private Table    _table;
+    private Table _table;
     /** The object that will receive the read beans. */
     private DataSink _receiver;
 
     /**
      * Creates a new creation rule that creates dyna bean instances.
      * 
-     * @param model    The database model that we're operating on
-     * @param table    The table that we're creating instances for
-     * @param receiver The object that will receive the read beans
+     * @param model
+     *            The database model that we're operating on
+     * @param table
+     *            The table that we're creating instances for
+     * @param receiver
+     *            The object that will receive the read beans
      */
-    public DynaSqlCreateRule(Database model, Table table, DataSink receiver)
-    {
-        _model    = model;
-        _table    = table;
+    public DynaSqlCreateRule(Database model, Table table, DataSink receiver) {
+        _model = model;
+        _table = table;
         _receiver = receiver;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void begin(String namespace, String name, Attributes attributes) throws Exception
-    {
+    public void begin(String namespace, String name, Attributes attributes)
+            throws Exception {
         Object instance = _model.createDynaBeanFor(_table);
 
-        if (digester.getLogger().isDebugEnabled())
-        {
-            digester.getLogger().debug("[DynaSqlCreateRule]{" + digester.getMatch() + "} New dyna bean '" + _table.getName() + "' created");
+        if (digester.getLogger().isDebugEnabled()) {
+            digester.getLogger().debug(
+                    "[DynaSqlCreateRule]{" + digester.getMatch()
+                            + "} New dyna bean '" + _table.getName()
+                            + "' created");
         }
         digester.push(instance);
     }
@@ -70,13 +73,13 @@ public class DynaSqlCreateRule extends Rule
     /**
      * {@inheritDoc}
      */
-    public void end(String namespace, String name) throws Exception
-    {
-        DynaBean top = (DynaBean)digester.pop();
+    public void end(String namespace, String name) throws Exception {
+        DynaBean top = (DynaBean) digester.pop();
 
-        if (digester.getLogger().isDebugEnabled())
-        {
-            digester.getLogger().debug("[DynaSqlCreateRule]{" + digester.getMatch() + "} Pop " + top.getDynaClass().getName());
+        if (digester.getLogger().isDebugEnabled()) {
+            digester.getLogger().debug(
+                    "[DynaSqlCreateRule]{" + digester.getMatch() + "} Pop "
+                            + top.getDynaClass().getName());
         }
         _receiver.addBean(top);
     }

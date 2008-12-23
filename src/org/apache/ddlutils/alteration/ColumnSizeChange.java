@@ -28,109 +28,109 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class ColumnSizeChange extends TableChangeImplBase implements ColumnChange {
-	/** The column. */
-	private Column _column;
-	/** The new size. */
-	private int _newSize;
-	/** The new scale. */
-	private Integer _newScale;
-	private String _tablename;
-	private String _columnname;
+public class ColumnSizeChange extends TableChangeImplBase implements
+        ColumnChange {
+    /** The column. */
+    private Column _column;
+    /** The new size. */
+    private int _newSize;
+    /** The new scale. */
+    private Integer _newScale;
+    private String _tablename;
+    private String _columnname;
 
-	/**
-	 * Creates a new change object.
-	 * 
-	 * @param table
-	 *            The table of the column
-	 * @param column
-	 *            The column
-	 * @param newSize
-	 *            The new size
-	 * @param newScale
-	 *            The new scale
-	 */
-	
-	public ColumnSizeChange()
-	{
-		
-	}
-	public ColumnSizeChange(Table table, Column column, int newSize, Integer newScale) {
-		super(table);
-		_column = column;
-		_newSize = newSize;
-		_newScale = newScale;
-		_columnname = column.getName();
-		_tablename = table.getName();
-	}
+    /**
+     * Creates a new change object.
+     * 
+     * @param table
+     *            The table of the column
+     * @param column
+     *            The column
+     * @param newSize
+     *            The new size
+     * @param newScale
+     *            The new scale
+     */
 
-	/**
-	 * Returns the column.
-	 * 
-	 * @return The column
-	 */
-	public Column getChangedColumn() {
-		return _column;
-	}
+    public ColumnSizeChange() {
 
-	/**
-	 * Returns the new size of the column.
-	 * 
-	 * @return The new size
-	 */
-	public int getNewSize() {
-		return _newSize;
-	}
+    }
 
-	/**
-	 * Returns the new scale of the column.
-	 * 
-	 * @return The new scale
-	 */
-	public Integer getNewScale() {
-		return _newScale;
-	}
+    public ColumnSizeChange(Table table, Column column, int newSize,
+            Integer newScale) {
+        super(table);
+        _column = column;
+        _newSize = newSize;
+        _newScale = newScale;
+        _columnname = column.getName();
+        _tablename = table.getName();
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void apply(Database database, boolean caseSensitive) {
-		Table table = database.findTable(getChangedTable().getName(), caseSensitive);
-		Column column = table.findColumn(_column.getName(), caseSensitive);
+    /**
+     * Returns the column.
+     * 
+     * @return The column
+     */
+    public Column getChangedColumn() {
+        return _column;
+    }
 
-		column.setSizeAndScale(_newSize, _newScale);
-	}
+    /**
+     * Returns the new size of the column.
+     * 
+     * @return The new size
+     */
+    public int getNewSize() {
+        return _newSize;
+    }
 
-	public String getTablename() {
-		return _tablename;
-	}
+    /**
+     * Returns the new scale of the column.
+     * 
+     * @return The new scale
+     */
+    public Integer getNewScale() {
+        return _newScale;
+    }
 
-	public void setTablename(String tablename) {
-		_tablename = tablename;
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
+        Column column = table.findColumn(_column.getName(), caseSensitive);
 
-	public String getColumnname() {
-		return _columnname;
-	}
+        column.setSizeAndScale(_newSize, _newScale);
+    }
 
-	public void setColumnname(String columnname) {
-		_columnname = columnname;
-	}
-	
-	public void setNewSize(int newSize)
-	{
-		_newSize=newSize;
-	}
-	
-	public void setNewScale(String newScale)
-	{
-		_newScale=new Integer(newScale);
-	}  
-    
+    public String getTablename() {
+        return _tablename;
+    }
+
+    public void setTablename(String tablename) {
+        _tablename = tablename;
+    }
+
+    public String getColumnname() {
+        return _columnname;
+    }
+
+    public void setColumnname(String columnname) {
+        _columnname = columnname;
+    }
+
+    public void setNewSize(int newSize) {
+        _newSize = newSize;
+    }
+
+    public void setNewScale(String newScale) {
+        _newScale = new Integer(newScale);
+    }
+
     @Override
-	public String toString()
-    {
-    	return "ColumnSizeChange. Column: "+_column.getName();
-    } 
+    public String toString() {
+        return "ColumnSizeChange. Column: " + _column.getName();
+    }
 
 }

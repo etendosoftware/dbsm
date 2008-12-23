@@ -24,49 +24,46 @@ import org.apache.commons.digester.Rule;
 import org.apache.commons.digester.RulesBase;
 
 /**
- * An extended rules implementation that is able to match case-insensitively. Per default,
- * the rules are matches disregarding the case.
+ * An extended rules implementation that is able to match case-insensitively.
+ * Per default, the rules are matches disregarding the case.
  * 
  * @version $Revision: 289996 $
  */
-public class DigesterRules extends RulesBase
-{
+public class DigesterRules extends RulesBase {
     /** Whether to be case sensitive or not. */
     private boolean _caseSensitive = false;
 
     /**
      * Determines whether this rules object matches case sensitively.
-     *
+     * 
      * @return <code>true</code> if the case of the pattern matters
      */
-    public boolean isCaseSensitive()
-    {
+    public boolean isCaseSensitive() {
         return _caseSensitive;
     }
 
     /**
      * Specifies whether this rules object shall match case sensitively.
-     *
-     * @param beCaseSensitive <code>true</code> if the case of the pattern shall matter
+     * 
+     * @param beCaseSensitive
+     *            <code>true</code> if the case of the pattern shall matter
      */
-    public void setCaseSensitive(boolean beCaseSensitive)
-    {
+    public void setCaseSensitive(boolean beCaseSensitive) {
         _caseSensitive = beCaseSensitive;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void add(String pattern, Rule rule)
-    {
+    public void add(String pattern, Rule rule) {
         super.add(_caseSensitive ? pattern : pattern.toLowerCase(), rule);
     }
 
     /**
      * {@inheritDoc}
      */
-    protected List lookup(String namespaceURI, String pattern)
-    {
-        return super.lookup(namespaceURI, _caseSensitive ? pattern : pattern.toLowerCase());
+    protected List lookup(String namespaceURI, String pattern) {
+        return super.lookup(namespaceURI, _caseSensitive ? pattern : pattern
+                .toLowerCase());
     }
 }

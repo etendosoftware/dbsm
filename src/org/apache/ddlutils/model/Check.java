@@ -28,27 +28,28 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * @version $Revision$
  */
 public class Check implements ConstraintObject, Cloneable {
-    
+
     /** The name of the constraint check, may be <code>null</code>. */
     private String _name;
     /** The condition of the constraint check. */
     private String _condition;
-    
+
     /** Creates a new check constraint object that has no name. */
     public Check() {
         this(null);
     }
-    
+
     /**
      * Creates a new check constraint object.
      * 
-     * @param name The name of the check constraint
+     * @param name
+     *            The name of the check constraint
      */
     public Check(String name) {
         _name = name;
         _condition = null;
-    }    
-    
+    }
+
     /**
      * Returns the name of this constraint check.
      * 
@@ -61,12 +62,13 @@ public class Check implements ConstraintObject, Cloneable {
     /**
      * Sets the name of this constraint check.
      * 
-     * @param name The name
+     * @param name
+     *            The name
      */
     public void setName(String name) {
         _name = name;
     }
-    
+
     /**
      * Returns the condition of this constraint check.
      * 
@@ -79,14 +81,15 @@ public class Check implements ConstraintObject, Cloneable {
     /**
      * Sets the condition of this constraint check.
      * 
-     * @param condition The condition
+     * @param condition
+     *            The condition
      */
     public void setCondition(String condition) {
         if (condition != null) {
             _condition = condition;
         }
-    }   
-    
+    }
+
     /**
      * Returns the condition of this constraint check.
      * 
@@ -95,24 +98,25 @@ public class Check implements ConstraintObject, Cloneable {
     public String getConditionattr() {
         return null;
     }
-    
+
     /**
      * Sets the condition of this constraint check.
      * 
-     * @param condition The condition
+     * @param condition
+     *            The condition
      */
     public void setConditionattr(String condition) {
         if (condition != null) {
             _condition = condition;
         }
-    } 
-    
+    }
+
     /**
      * {@inheritDoc}
      */
     public Object clone() throws CloneNotSupportedException {
-        
-        Check result = (Check)super.clone();
+
+        Check result = (Check) super.clone();
 
         result._name = _name;
         result._condition = _condition;
@@ -124,41 +128,40 @@ public class Check implements ConstraintObject, Cloneable {
      * {@inheritDoc}
      */
     public boolean equals(Object obj) {
-        
+
         if (obj instanceof Check) {
-            Check otherCC = (Check)obj;
+            Check otherCC = (Check) obj;
 
             // Note that this compares case sensitive
-            return new EqualsBuilder()
-                .append(_name, otherCC._name)
-                .append(_condition.toUpperCase(), otherCC._condition.toUpperCase())
-                .isEquals();
+            return new EqualsBuilder().append(_name, otherCC._name).append(
+                    _condition.toUpperCase(), otherCC._condition.toUpperCase())
+                    .isEquals();
         } else {
             return false;
         }
     }
-    
+
     /**
-     * Compares this check to the given one while ignoring the case of identifiers.
+     * Compares this check to the given one while ignoring the case of
+     * identifiers.
      * 
-     * @param otherCheck The other check
-     * @return <code>true</code> if this check is equal (ignoring case) to the given one
+     * @param otherCheck
+     *            The other check
+     * @return <code>true</code> if this check is equal (ignoring case) to the
+     *         given one
      */
-    public boolean equalsIgnoreCase(Check otherCheck)
-    {
-        return UtilsCompare.equalsIgnoreCase(_name, otherCheck._name) &&
-                new EqualsBuilder()
-                        .append(_condition.toUpperCase(), otherCheck._condition.toUpperCase())
-                        .isEquals();
+    public boolean equalsIgnoreCase(Check otherCheck) {
+        return UtilsCompare.equalsIgnoreCase(_name, otherCheck._name)
+                && new EqualsBuilder().append(_condition.toUpperCase(),
+                        otherCheck._condition.toUpperCase()).isEquals();
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(_name)
-                                          .append(_condition.toUpperCase())
-                                          .toHashCode();
+        return new HashCodeBuilder(17, 37).append(_name).append(
+                _condition.toUpperCase()).toHashCode();
     }
 
     /**
@@ -179,9 +182,9 @@ public class Check implements ConstraintObject, Cloneable {
 
         return result.toString();
     }
-    
+
     public String toVerboseString() {
         return toString();
     }
-    
+
 }

@@ -47,341 +47,357 @@ import org.openbravo.service.db.DataSetService;
  */
 public class ExportConfigScript extends DalInitializingTask {
 
-	private String driver;
-	private String url;
-	private String user;
-	private String password;
-	private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+    private String driver;
+    private String url;
+    private String user;
+    private String password;
+    private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
-	private File prescript = null;
-	private File postscript = null;
+    private File prescript = null;
+    private File postscript = null;
 
-	private File model = null;
-	private String coreData = null;
-	private File moduledir;
-	private String filter = "org.apache.ddlutils.io.AllDatabaseFilter";
+    private File model = null;
+    private String coreData = null;
+    private File moduledir;
+    private String filter = "org.apache.ddlutils.io.AllDatabaseFilter";
 
-	private File output;
-	private String encoding = "UTF-8";
+    private File output;
+    private String encoding = "UTF-8";
 
-	protected Log _log;
-	private VerbosityLevel _verbosity = null;
-	private String codeRevision;
-	private String industryTemplate;
+    protected Log _log;
+    private VerbosityLevel _verbosity = null;
+    private String codeRevision;
+    private String industryTemplate;
 
-	/** Creates a new instance of WriteDataXML */
-	public ExportConfigScript() {
-	}
+    /** Creates a new instance of WriteDataXML */
+    public ExportConfigScript() {
+    }
 
-	/**
-	 * Initializes the logging.
-	 */
-	private void initLogging() {
-		// For Ant, we're forcing DdlUtils to do logging via log4j to the
-		// console
-		Properties props = new Properties();
-		String level = (_verbosity == null ? Level.INFO.toString() : _verbosity.getValue()).toUpperCase();
+    /**
+     * Initializes the logging.
+     */
+    private void initLogging() {
+        // For Ant, we're forcing DdlUtils to do logging via log4j to the
+        // console
+        Properties props = new Properties();
+        String level = (_verbosity == null ? Level.INFO.toString() : _verbosity
+                .getValue()).toUpperCase();
 
-		props.setProperty("log4j.rootCategory", level + ",A");
-		props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
-		props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-		props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-		// we don't want debug logging from Digester/Betwixt
-		props.setProperty("log4j.logger.org.apache.commons", "WARN");
+        props.setProperty("log4j.rootCategory", level + ",A");
+        props.setProperty("log4j.appender.A",
+                "org.apache.log4j.ConsoleAppender");
+        props.setProperty("log4j.appender.A.layout",
+                "org.apache.log4j.PatternLayout");
+        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
+        // we don't want debug logging from Digester/Betwixt
+        props.setProperty("log4j.logger.org.apache.commons", "WARN");
 
-		LogManager.resetConfiguration();
-		PropertyConfigurator.configure(props);
+        LogManager.resetConfiguration();
+        PropertyConfigurator.configure(props);
 
-		_log = LogFactory.getLog(getClass());
-	}
+        _log = LogFactory.getLog(getClass());
+    }
 
-	@Override
-	public void doExecute() {
+    @Override
+    public void doExecute() {
 
-		if (industryTemplate == null) {
-			throw new BuildException("No industry template was specified.");
-		}
+        if (industryTemplate == null) {
+            throw new BuildException("No industry template was specified.");
+        }
 
-		initLogging();
+        initLogging();
 
-		DataSetService datasetService = DataSetService.getInstance();
+        DataSetService datasetService = DataSetService.getInstance();
 
-		BasicDataSource ds = new BasicDataSource();
-		ds.setDriverClassName(getDriver());
-		ds.setUrl(getUrl());
-		ds.setUsername(getUser());
-		ds.setPassword(getPassword());
+        BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName(getDriver());
+        ds.setUrl(getUrl());
+        ds.setUsername(getUser());
+        ds.setPassword(getPassword());
 
-		Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-		DBSMOBUtil util = DBSMOBUtil.getInstance();
-		util.getModules(platform, excludeobjects);
-		
-		String indTemp=util.getNameOfActiveIndustryTemplate();
-		if(indTemp==null)
-		{
-			_log.info("ERROR: There is no industry template set as development.");
-			System.exit(1);
-		}
-		industryTemplate=indTemp;
-		
-		//util.getModulesForIndustryTemplate(industryTemplate, new Vector<String>());
-		_log.info("Loading model from XML files");
-		Vector<File> dirs = new Vector<File>();
-		dirs.add(model);
+        Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+        DBSMOBUtil util = DBSMOBUtil.getInstance();
+        util.getModules(platform, excludeobjects);
 
-		for (int j = 0; j < util.getModuleCount(); j++) {
-			if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-				File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/model/");
-				System.out.println(dirF.getAbsolutePath());
-				if (dirF.exists()) {
-					dirs.add(dirF);
-				}
-			}
-		}
-		File[] fileArray = new File[dirs.size()];
-		for (int i = 0; i < dirs.size(); i++) {
-			_log.info("Loading model for module. Path: " + dirs.get(i).getAbsolutePath());
-			fileArray[i] = dirs.get(i);
-		}
-		Database xmlModel = DatabaseUtils.readDatabase(fileArray);
+        String indTemp = util.getNameOfActiveIndustryTemplate();
+        if (indTemp == null) {
+            _log
+                    .info("ERROR: There is no industry template set as development.");
+            System.exit(1);
+        }
+        industryTemplate = indTemp;
 
-		_log.info("Loading original data from XML files");
+        // util.getModulesForIndustryTemplate(industryTemplate, new
+        // Vector<String>());
+        _log.info("Loading model from XML files");
+        Vector<File> dirs = new Vector<File>();
+        dirs.add(model);
 
-		DatabaseDataIO dbdio = new DatabaseDataIO();
-		dbdio.setEnsureFKOrder(false);
-		dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), xmlModel));
+        for (int j = 0; j < util.getModuleCount(); j++) {
+            if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
+                File dirF = new File(moduledir, util.getModule(j).dir
+                        + "/src-db/database/model/");
+                System.out.println(dirF.getAbsolutePath());
+                if (dirF.exists()) {
+                    dirs.add(dirF);
+                }
+            }
+        }
+        File[] fileArray = new File[dirs.size()];
+        for (int i = 0; i < dirs.size(); i++) {
+            _log.info("Loading model for module. Path: "
+                    + dirs.get(i).getAbsolutePath());
+            fileArray[i] = dirs.get(i);
+        }
+        Database xmlModel = DatabaseUtils.readDatabase(fileArray);
 
-		DataReader dataReader = dbdio.getConfiguredCompareDataReader(xmlModel);
+        _log.info("Loading original data from XML files");
 
-		Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(getCoreData());
+        DatabaseDataIO dbdio = new DatabaseDataIO();
+        dbdio.setEnsureFKOrder(false);
+        dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
+                getFilter(), xmlModel));
 
-		for (int j = 0; j < util.getModuleCount(); j++) {
-			if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-				File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/sourcedata/");
-				System.out.println(dirF.getAbsolutePath());
-				if (dirF.exists()) {
-					dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
-				}
-			}
-		}
+        DataReader dataReader = dbdio.getConfiguredCompareDataReader(xmlModel);
 
-		DatabaseData databaseOrgData = new DatabaseData(xmlModel);
-		for (int i = 0; i < dataFiles.size(); i++) {
-			// _log.info("Loading data for module. Path:
-			// "+dataFiles.get(i).getAbsolutePath());
-			try {
-				dataReader.getSink().start();
-				String tablename = dataFiles.get(i).getName().substring(0, dataFiles.get(i).getName().length() - 4);
-				Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink()).getVector();
-				dataReader.parse(dataFiles.get(i));
-				databaseOrgData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
-				dataReader.getSink().end();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+        Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(getCoreData());
 
-		_log.info("Loading complete model from current database");
-		Database currentdb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+        for (int j = 0; j < util.getModuleCount(); j++) {
+            if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
+                File dirF = new File(moduledir, util.getModule(j).dir
+                        + "/src-db/database/sourcedata/");
+                System.out.println(dirF.getAbsolutePath());
+                if (dirF.exists()) {
+                    dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF
+                            .getAbsolutePath()));
+                }
+            }
+        }
 
-		_log.info("Creating submodels for modules");
+        DatabaseData databaseOrgData = new DatabaseData(xmlModel);
+        for (int i = 0; i < dataFiles.size(); i++) {
+            // _log.info("Loading data for module. Path:
+            // "+dataFiles.get(i).getAbsolutePath());
+            try {
+                dataReader.getSink().start();
+                String tablename = dataFiles.get(i).getName().substring(0,
+                        dataFiles.get(i).getName().length() - 4);
+                Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader
+                        .getSink()).getVector();
+                dataReader.parse(dataFiles.get(i));
+                databaseOrgData.insertDynaBeansFromVector(tablename,
+                        vectorDynaBeans);
+                dataReader.getSink().end();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
-		Database databaseModel = null;
-		for (int i = 0; i < util.getModuleCount(); i++) {
-			_log.info("Creating submodel for module: " + util.getModule(i).name);
-			Database dbI = null;
-			try {
-				dbI = (Database) currentdb.clone();
-			}
-			catch (Exception e) {
-				System.out.println("Error while cloning the database model" + e.getMessage());
-				e.printStackTrace();
-				return;
-			}
-			dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
-			if (databaseModel == null)
-				databaseModel = dbI;
-			else
-				databaseModel.mergeWith(dbI);
-		}
+        _log.info("Loading complete model from current database");
+        Database currentdb = platform.loadModelFromDatabase(DatabaseUtils
+                .getExcludeFilter(excludeobjects));
 
-		_log.info("Comparing models...");
-		Vector<String> modIds = new Vector<String>();
-		for (int i = 0; i < util.getModuleCount(); i++) {
-			String mod = util.getModule(i).idMod;
-			_log.info("Module added to comparison: " + mod);
-			modIds.add(mod);
-		}
-		DataComparator dataComparator = new DataComparator(platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-		dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), currentdb));
-		dataComparator.compareUsingDAL(xmlModel, databaseModel, platform, databaseOrgData, "ADCS", null);
-		Vector<Change> dataChanges = new Vector<Change>();
-		dataChanges.addAll(dataComparator.getChanges());
-		Vector<Change> finalChanges = new Vector<Change>();
-		Vector<Change> comparatorChanges = new Vector<Change>();
-		comparatorChanges.addAll(dataComparator.getModelChangesList());
-		for (Object change : dataComparator.getModelChangesList())
-			if (change instanceof ColumnSizeChange)
-			{
-				finalChanges.add((ColumnSizeChange) change);
-				comparatorChanges.remove(change);
-			}
-		
-		for(Change change: dataComparator.getChanges())
-			if(change instanceof ColumnDataChange)
-			{
-				finalChanges.add((change));
-				dataChanges.remove(change);
-			}
+        _log.info("Creating submodels for modules");
 
-		comparatorChanges.addAll(dataChanges);
-		
-		DatabaseIO dbIO = new DatabaseIO();
+        Database databaseModel = null;
+        for (int i = 0; i < util.getModuleCount(); i++) {
+            _log
+                    .info("Creating submodel for module: "
+                            + util.getModule(i).name);
+            Database dbI = null;
+            try {
+                dbI = (Database) currentdb.clone();
+            } catch (Exception e) {
+                System.out.println("Error while cloning the database model"
+                        + e.getMessage());
+                e.printStackTrace();
+                return;
+            }
+            dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
+            if (databaseModel == null)
+                databaseModel = dbI;
+            else
+                databaseModel.mergeWith(dbI);
+        }
 
-		File configFile = new File(moduledir, industryTemplate + "/src-db/database/configScript.xml");
-		File folder = new File(configFile.getParent());
+        _log.info("Comparing models...");
+        Vector<String> modIds = new Vector<String>();
+        for (int i = 0; i < util.getModuleCount(); i++) {
+            String mod = util.getModule(i).idMod;
+            _log.info("Module added to comparison: " + mod);
+            modIds.add(mod);
+        }
+        DataComparator dataComparator = new DataComparator(platform
+                .getSqlBuilder().getPlatformInfo(), platform
+                .isDelimitedIdentifierModeOn());
+        dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
+                getFilter(), currentdb));
+        dataComparator.compareUsingDAL(xmlModel, databaseModel, platform,
+                databaseOrgData, "ADCS", null);
+        Vector<Change> dataChanges = new Vector<Change>();
+        dataChanges.addAll(dataComparator.getChanges());
+        Vector<Change> finalChanges = new Vector<Change>();
+        Vector<Change> comparatorChanges = new Vector<Change>();
+        comparatorChanges.addAll(dataComparator.getModelChangesList());
+        for (Object change : dataComparator.getModelChangesList())
+            if (change instanceof ColumnSizeChange) {
+                finalChanges.add((ColumnSizeChange) change);
+                comparatorChanges.remove(change);
+            }
 
-		folder.mkdirs();
-		dbIO.write(configFile, finalChanges);
-		
-		_log.info("Changes that couldn't be exported to the config script:");
-		_log.info("*******************************************************");
-		for(Change c:comparatorChanges)
-		{
-			_log.info(c);
-		}
-	}
+        for (Change change : dataComparator.getChanges())
+            if (change instanceof ColumnDataChange) {
+                finalChanges.add((change));
+                dataChanges.remove(change);
+            }
 
-	public String getDriver() {
-		return driver;
-	}
+        comparatorChanges.addAll(dataChanges);
 
-	public void setDriver(String driver) {
-		this.driver = driver;
-	}
+        DatabaseIO dbIO = new DatabaseIO();
 
-	public String getUrl() {
-		return url;
-	}
+        File configFile = new File(moduledir, industryTemplate
+                + "/src-db/database/configScript.xml");
+        File folder = new File(configFile.getParent());
 
-	public void setUrl(String url) {
-		this.url = url;
-	}
+        folder.mkdirs();
+        dbIO.write(configFile, finalChanges);
 
-	public String getUser() {
-		return user;
-	}
+        _log.info("Changes that couldn't be exported to the config script:");
+        _log.info("*******************************************************");
+        for (Change c : comparatorChanges) {
+            _log.info(c);
+        }
+    }
 
-	public void setUser(String user) {
-		this.user = user;
-	}
+    public String getDriver() {
+        return driver;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public void setDriver(String driver) {
+        this.driver = driver;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public String getUrl() {
+        return url;
+    }
 
-	public String getExcludeobjects() {
-		return excludeobjects;
-	}
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
-	public void setExcludeobjects(String excludeobjects) {
-		this.excludeobjects = excludeobjects;
-	}
+    public String getUser() {
+        return user;
+    }
 
-	public File getModel() {
-		return model;
-	}
+    public void setUser(String user) {
+        this.user = user;
+    }
 
-	public void setModel(File model) {
-		this.model = model;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public void setFilter(String filter) {
-		this.filter = filter;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public String getFilter() {
-		return filter;
-	}
+    public String getExcludeobjects() {
+        return excludeobjects;
+    }
 
-	public File getOutput() {
-		return output;
-	}
+    public void setExcludeobjects(String excludeobjects) {
+        this.excludeobjects = excludeobjects;
+    }
 
-	public void setOutput(File output) {
-		this.output = output;
-	}
+    public File getModel() {
+        return model;
+    }
 
-	public String getEncoding() {
-		return encoding;
-	}
+    public void setModel(File model) {
+        this.model = model;
+    }
 
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
-	}
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
 
-	public File getPrescript() {
-		return prescript;
-	}
+    public String getFilter() {
+        return filter;
+    }
 
-	public void setPrescript(File prescript) {
-		this.prescript = prescript;
-	}
+    public File getOutput() {
+        return output;
+    }
 
-	public File getPostscript() {
-		return postscript;
-	}
+    public void setOutput(File output) {
+        this.output = output;
+    }
 
-	public void setPostscript(File postscript) {
-		this.postscript = postscript;
-	}
+    public String getEncoding() {
+        return encoding;
+    }
 
-	/**
-	 * Specifies the verbosity of the task's debug output.
-	 * 
-	 * @param level
-	 *            The verbosity level
-	 * @ant.not-required Default is <code>INFO</code>.
-	 */
-	public void setVerbosity(VerbosityLevel level) {
-		_verbosity = level;
-	}
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
 
-	public String getCodeRevision() {
-		return codeRevision;
-	}
+    public File getPrescript() {
+        return prescript;
+    }
 
-	public void setCodeRevision(String rev) {
-		codeRevision = rev;
-	}
+    public void setPrescript(File prescript) {
+        this.prescript = prescript;
+    }
 
-	public File getModuledir() {
-		return moduledir;
-	}
+    public File getPostscript() {
+        return postscript;
+    }
 
-	public void setModuledir(File moduledir) {
-		this.moduledir = moduledir;
-	}
+    public void setPostscript(File postscript) {
+        this.postscript = postscript;
+    }
 
-	public String getCoreData() {
-		return coreData;
-	}
+    /**
+     * Specifies the verbosity of the task's debug output.
+     * 
+     * @param level
+     *            The verbosity level
+     * @ant.not-required Default is <code>INFO</code>.
+     */
+    public void setVerbosity(VerbosityLevel level) {
+        _verbosity = level;
+    }
 
-	public void setCoreData(String coreData) {
-		this.coreData = coreData;
-	}
+    public String getCodeRevision() {
+        return codeRevision;
+    }
 
-	public String getIndustryTemplate() {
-		return industryTemplate;
-	}
+    public void setCodeRevision(String rev) {
+        codeRevision = rev;
+    }
 
-	public void setIndustryTemplate(String industryTemplate) {
-		this.industryTemplate = industryTemplate;
-	}
+    public File getModuledir() {
+        return moduledir;
+    }
+
+    public void setModuledir(File moduledir) {
+        this.moduledir = moduledir;
+    }
+
+    public String getCoreData() {
+        return coreData;
+    }
+
+    public void setCoreData(String coreData) {
+        this.coreData = coreData;
+    }
+
+    public String getIndustryTemplate() {
+        return industryTemplate;
+    }
+
+    public void setIndustryTemplate(String industryTemplate) {
+        this.industryTemplate = industryTemplate;
+    }
 
 }

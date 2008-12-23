@@ -20,34 +20,34 @@ package org.apache.ddlutils.util;
  */
 
 /**
- * A statement tokenizer for SQL strings that splits only at delimiters that
- * are at the end of a line or the end of the SQL (row mode).  
+ * A statement tokenizer for SQL strings that splits only at delimiters that are
+ * at the end of a line or the end of the SQL (row mode).
  * 
- * TODO: Add awareness of strings, so that semicolons within strings are not parsed
+ * TODO: Add awareness of strings, so that semicolons within strings are not
+ * parsed
  * 
  * @version $Revision: $
  */
-public class SqlTokenizer
-{
+public class SqlTokenizer {
     /** The SQL to tokenize. */
-    private String  _sql;
+    private String _sql;
     /** The index of the last character in the string. */
-    private int     _lastCharIdx;
+    private int _lastCharIdx;
     /** The last delimiter position in the string. */
-    private int     _lastDelimiterPos = -1;
+    private int _lastDelimiterPos = -1;
     /** The next delimiter position in the string. */
-    private int     _nextDelimiterPos = -1;
+    private int _nextDelimiterPos = -1;
     /** Whether there are no more tokens. */
     private boolean _finished = false;
 
     /**
      * Creates a new sql tokenizer.
      * 
-     * @param sql The sql text
+     * @param sql
+     *            The sql text
      */
-    public SqlTokenizer(String sql)
-    {
-        _sql         = sql;
+    public SqlTokenizer(String sql) {
+        _sql = sql;
         _lastCharIdx = sql.length() - 1;
     }
 
@@ -57,12 +57,13 @@ public class SqlTokenizer
      * @return <code>true</code> if there are more statements
      */
     public boolean hasMoreStatements() {
-        
+
         if (_finished) {
             return false;
         } else {
             if (_nextDelimiterPos <= _lastDelimiterPos) {
-                _nextDelimiterPos = _sql.indexOf("/-- END", _lastDelimiterPos + 1);
+                _nextDelimiterPos = _sql.indexOf("/-- END",
+                        _lastDelimiterPos + 1);
             }
             return _nextDelimiterPos >= 0;
         }
@@ -74,7 +75,7 @@ public class SqlTokenizer
      * @return The statement
      */
     public String getNextStatement() {
-        
+
         String result = null;
 
         if (hasMoreStatements()) {

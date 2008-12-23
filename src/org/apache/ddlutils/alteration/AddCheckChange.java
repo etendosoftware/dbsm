@@ -25,54 +25,49 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 
 public class AddCheckChange extends TableChangeImplBase {
-    
+
     /** The new check. */
     private Check _newCheck;
 
     /**
      * Creates a new change object.
      * 
-     * @param table         The table to add the check to
-     * @param newCheck      The new check
+     * @param table
+     *            The table to add the check to
+     * @param newCheck
+     *            The new check
      */
-    public AddCheckChange(Table table, Check newCheck)
-    {
+    public AddCheckChange(Table table, Check newCheck) {
         super(table);
         _newCheck = newCheck;
     }
 
     /**
      * Returns the new check.
-     *
+     * 
      * @return The new check
      */
-    public Check getNewCheck()
-    {
+    public Check getNewCheck() {
         return _newCheck;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
+    public void apply(Database database, boolean caseSensitive) {
         Check newCheck = null;
 
-        try
-        {
-            newCheck = (Check)_newCheck.clone();
-        }
-        catch (CloneNotSupportedException ex)
-        {
+        try {
+            newCheck = (Check) _newCheck.clone();
+        } catch (CloneNotSupportedException ex) {
             throw new DdlUtilsException(ex);
         }
         database.findTable(getChangedTable().getName()).addCheck(newCheck);
     }
-    
+
     @Override
-	public String toString()
-    {
-    	return "AddCheckChange. Name: "+_newCheck.getName();
+    public String toString() {
+        return "AddCheckChange. Name: " + _newCheck.getName();
     }
-    
+
 }

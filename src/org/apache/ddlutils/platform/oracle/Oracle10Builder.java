@@ -30,29 +30,27 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class Oracle10Builder extends Oracle8Builder
-{
+public class Oracle10Builder extends Oracle8Builder {
     /**
      * Creates a new builder instance.
      * 
-     * @param platform The plaftform this builder belongs to
+     * @param platform
+     *            The plaftform this builder belongs to
      */
-    public Oracle10Builder(Platform platform)
-    {
+    public Oracle10Builder(Platform platform) {
         super(platform);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void dropTable(Table table) throws IOException
-    {
-    	// The only difference to the Oracle 8/9 variant is the purge which prevents the
-    	// table from being moved to the recycle bin (which is new in Oracle 10)
+    public void dropTable(Table table) throws IOException {
+        // The only difference to the Oracle 8/9 variant is the purge which
+        // prevents the
+        // table from being moved to the recycle bin (which is new in Oracle 10)
         Column[] columns = table.getAutoIncrementColumns();
 
-        for (int idx = 0; idx < columns.length; idx++)
-        {
+        for (int idx = 0; idx < columns.length; idx++) {
             dropAutoIncrementTrigger(table, columns[idx]);
             dropAutoIncrementSequence(table, columns[idx]);
         }

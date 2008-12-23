@@ -26,8 +26,7 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public interface TableChange extends ModelChange
-{
+public interface TableChange extends ModelChange {
     /**
      * Returns the affected table from the original model.
      * 

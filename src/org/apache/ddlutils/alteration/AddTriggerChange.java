@@ -1,4 +1,4 @@
- package org.apache.ddlutils.alteration;
+package org.apache.ddlutils.alteration;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,47 +24,42 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Trigger;
 
 public class AddTriggerChange implements ModelChange {
-    
+
     /** The new trigger. */
-    private Trigger _newTrigger;    
-    
+    private Trigger _newTrigger;
+
     /**
      * Creates a new change object.
      * 
-     * @param newTrigger The new trigger
+     * @param newTrigger
+     *            The new trigger
      */
     public AddTriggerChange(Trigger newTrigger) {
         _newTrigger = newTrigger;
     }
 
     /**
-     * Returns the new trigger. 
+     * Returns the new trigger.
      * 
      * @return The new trigger
      */
-    public Trigger getNewTrigger()
-    {
+    public Trigger getNewTrigger() {
         return _newTrigger;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        try
-        {
-            database.addTrigger((Trigger)_newTrigger.clone());
-        }
-        catch (CloneNotSupportedException ex)
-        {
+    public void apply(Database database, boolean caseSensitive) {
+        try {
+            database.addTrigger((Trigger) _newTrigger.clone());
+        } catch (CloneNotSupportedException ex) {
             throw new DdlUtilsException(ex);
         }
-    }          
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "AddTriggerChange. Name: "+_newTrigger.getName();
-    }   
+    public String toString() {
+        return "AddTriggerChange. Name: " + _newTrigger.getName();
+    }
 }

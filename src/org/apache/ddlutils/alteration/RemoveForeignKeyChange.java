@@ -30,46 +30,44 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class RemoveForeignKeyChange extends TableChangeImplBase
-{
+public class RemoveForeignKeyChange extends TableChangeImplBase {
     /** The foreign key. */
     private ForeignKey _foreignKey;
 
     /**
      * Creates a new change object.
      * 
-     * @param table      The table to remove the foreign key from
-     * @param foreignKey The foreign key
+     * @param table
+     *            The table to remove the foreign key from
+     * @param foreignKey
+     *            The foreign key
      */
-    public RemoveForeignKeyChange(Table table, ForeignKey foreignKey)
-    {
+    public RemoveForeignKeyChange(Table table, ForeignKey foreignKey) {
         super(table);
         _foreignKey = foreignKey;
     }
 
     /**
      * Returns the foreign key to be removed.
-     *
+     * 
      * @return The foreign key
      */
-    public ForeignKey getForeignKey()
-    {
+    public ForeignKey getForeignKey() {
         return _foreignKey;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void apply(Database database, boolean caseSensitive)
-    {
-        Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    public void apply(Database database, boolean caseSensitive) {
+        Table table = database.findTable(getChangedTable().getName(),
+                caseSensitive);
 
         table.removeForeignKey(_foreignKey);
-    }    
-    
+    }
+
     @Override
-	public String toString()
-    {
-    	return "RemoveForeignKeyChange. Name: "+_foreignKey.getName();
+    public String toString() {
+        return "RemoveForeignKeyChange. Name: " + _foreignKey.getName();
     }
 }

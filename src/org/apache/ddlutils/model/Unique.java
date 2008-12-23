@@ -29,64 +29,56 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * 
  * @version $Revision: $
  */
-public class Unique implements ConstraintObject, Cloneable, Serializable
-{
+public class Unique implements ConstraintObject, Cloneable, Serializable {
     /** The name of the unique. */
-    protected String    _name;
+    protected String _name;
     /** The columns making up the unique. */
     protected ArrayList _columns = new ArrayList();
 
     /**
      * {@inheritDoc}
      */
-    public String getName()
-    {
+    public String getName() {
         return _name;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setName(String name)
-    {
+    public void setName(String name) {
         _name = name;
     }
 
     /**
      * {@inheritDoc}
      */
-    public int getColumnCount()
-    {
+    public int getColumnCount() {
         return _columns.size();
     }
 
     /**
      * {@inheritDoc}
      */
-    public IndexColumn getColumn(int idx)
-    {
-        return (IndexColumn)_columns.get(idx);
+    public IndexColumn getColumn(int idx) {
+        return (IndexColumn) _columns.get(idx);
     }
 
     /**
      * {@inheritDoc}
      */
-    public IndexColumn[] getColumns()
-    {
-        return (IndexColumn[])_columns.toArray(new IndexColumn[_columns.size()]);
+    public IndexColumn[] getColumns() {
+        return (IndexColumn[]) _columns
+                .toArray(new IndexColumn[_columns.size()]);
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean hasColumn(Column column)
-    {
-        for (int idx = 0; idx < _columns.size(); idx++)
-        {
+    public boolean hasColumn(Column column) {
+        for (int idx = 0; idx < _columns.size(); idx++) {
             IndexColumn curColumn = getColumn(idx);
 
-            if (column.equals(curColumn.getColumn()))
-            {
+            if (column.equals(curColumn.getColumn())) {
                 return true;
             }
         }
@@ -96,16 +88,13 @@ public class Unique implements ConstraintObject, Cloneable, Serializable
     /**
      * {@inheritDoc}
      */
-    public void addColumn(IndexColumn column)
-    {
-        if (column != null)
-        {
-            for (int idx = 0; idx < _columns.size(); idx++)
-            {
+    public void addColumn(IndexColumn column) {
+        if (column != null) {
+            for (int idx = 0; idx < _columns.size(); idx++) {
                 IndexColumn curColumn = getColumn(idx);
 
-                if (curColumn.getOrdinalPosition() > column.getOrdinalPosition())
-                {
+                if (curColumn.getOrdinalPosition() > column
+                        .getOrdinalPosition()) {
                     _columns.add(idx, column);
                     return;
                 }
@@ -117,55 +106,45 @@ public class Unique implements ConstraintObject, Cloneable, Serializable
     /**
      * {@inheritDoc}
      */
-    public void removeColumn(IndexColumn column)
-    {
+    public void removeColumn(IndexColumn column) {
         _columns.remove(column);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void removeColumn(int idx)
-    {
+    public void removeColumn(int idx) {
         _columns.remove(idx);
     }
-    
+
     /**
      * {@inheritDoc}
      */
-    public boolean equals(Object obj)
-    {
-        if (obj instanceof Unique)
-        {
-            Unique other = (Unique)obj;
+    public boolean equals(Object obj) {
+        if (obj instanceof Unique) {
+            Unique other = (Unique) obj;
 
-            return new EqualsBuilder().append(_name,    other._name)
-                                      .append(_columns, other._columns)
-                                      .isEquals();
-        }
-        else
-        {
+            return new EqualsBuilder().append(_name, other._name).append(
+                    _columns, other._columns).isEquals();
+        } else {
             return false;
         }
     }
-    
-    public boolean equalsIgnoreCase(Unique other)
-    {
-        if (other instanceof Unique)
-        {
-            Unique otherIndex = (Unique)other;
 
-            boolean checkName = (_name != null) && (_name.length() > 0) &&
-                                (otherIndex._name != null) && (otherIndex._name.length() > 0);
+    public boolean equalsIgnoreCase(Unique other) {
+        if (other instanceof Unique) {
+            Unique otherIndex = (Unique) other;
 
-            if ((!checkName || _name.equalsIgnoreCase(otherIndex._name)) &&
-                (getColumnCount() == otherIndex.getColumnCount()))
-            {
-                
-                for (int idx = 0; idx < getColumnCount(); idx++)
-                {
-                    if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx)))
-                    {
+            boolean checkName = (_name != null) && (_name.length() > 0)
+                    && (otherIndex._name != null)
+                    && (otherIndex._name.length() > 0);
+
+            if ((!checkName || _name.equalsIgnoreCase(otherIndex._name))
+                    && (getColumnCount() == otherIndex.getColumnCount())) {
+
+                for (int idx = 0; idx < getColumnCount(); idx++) {
+                    if (!getColumn(idx).equalsIgnoreCase(
+                            otherIndex.getColumn(idx))) {
                         return false;
                     }
                 }
@@ -174,21 +153,19 @@ public class Unique implements ConstraintObject, Cloneable, Serializable
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
-    public int hashCode()
-    {
-        return new HashCodeBuilder(17, 37).append(_name)
-                                          .append(_columns)
-                                          .toHashCode();
-    }    
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).append(_name).append(_columns)
+                .toHashCode();
+    }
+
     /**
      * {@inheritDoc}
      */
-    public String toString()
-    {
+    public String toString() {
         StringBuffer result = new StringBuffer();
 
         result.append("Unique [name=");
@@ -199,37 +176,33 @@ public class Unique implements ConstraintObject, Cloneable, Serializable
 
         return result.toString();
     }
-    
+
     /**
      * {@inheritDoc}
      */
-    public String toVerboseString()
-    {
+    public String toVerboseString() {
         StringBuffer result = new StringBuffer();
 
         result.append("Unique [name=");
         result.append(getName());
         result.append("] columns:");
-        for (int idx = 0; idx < getColumnCount(); idx++)
-        {
+        for (int idx = 0; idx < getColumnCount(); idx++) {
             result.append(" ");
             result.append(getColumn(idx).toString());
         }
 
         return result.toString();
     }
-    
+
     /**
      * {@inheritDoc}
      */
-    public Object clone() throws CloneNotSupportedException
-    {
+    public Object clone() throws CloneNotSupportedException {
         Unique result = new Unique();
 
-        result._name    = _name;
-        result._columns = (ArrayList)_columns.clone();
+        result._name = _name;
+        result._columns = (ArrayList) _columns.clone();
 
         return result;
     }
 }
-

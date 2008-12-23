@@ -25,22 +25,22 @@ package org.apache.ddlutils.model;
  * @version $Revision$
  */
 public class UtilsCompare {
-    
+
     /** Creates a new instance of IgnoreCaseUtils */
     public UtilsCompare() {
     }
-    
+
     public static boolean equalsIgnoreCase(String s1, String s2) {
-        
+
         return !(s1 != null && s1.length() > 0 && s2 != null && s2.length() > 0)
-               || s1.equalsIgnoreCase(s2);
+                || s1.equalsIgnoreCase(s2);
 
     }
-    
+
     public static boolean equals(String s1, String s2) {
-        
+
         return !(s1 != null && s1.length() > 0 && s2 != null && s2.length() > 0)
-               || s1.equals(s2);
+                || s1.equals(s2);
 
     }
 }
