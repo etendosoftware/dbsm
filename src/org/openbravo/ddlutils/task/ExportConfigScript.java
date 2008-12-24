@@ -213,11 +213,18 @@ public class ExportConfigScript extends DalInitializingTask {
                 e.printStackTrace();
                 return;
             }
-            dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
-            if (databaseModel == null)
-                databaseModel = dbI;
-            else
-                databaseModel.mergeWith(dbI);
+            try
+            {
+              dbI.applyNamingConventionFilter(util.getModule(i).filter);
+              if (databaseModel == null)
+                  databaseModel = dbI;
+              else
+                  databaseModel.mergeWith(dbI);
+            }
+            catch(Exception e)
+            {
+              e.printStackTrace();
+            }
         }
 
         _log.info("Comparing models...");
