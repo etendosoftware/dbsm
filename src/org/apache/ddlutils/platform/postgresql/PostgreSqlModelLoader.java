@@ -440,10 +440,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
         if (_filter.getExcludedViews().length == 0) {
             sql = "SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views "
-                    + "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_' ";
+                    + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND viewname !~ '^pg_' ";
         } else {
             sql = "SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views "
-                    + "WHERE schemaname NOT IN ('pg_catalog', 'information_schema') AND viewname !~ '^pg_'"
+                    + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND viewname !~ '^pg_'"
                     + "AND upper(viewname) NOT IN ("
                     + getListObjects(_filter.getExcludedViews()) + ")";
         }
