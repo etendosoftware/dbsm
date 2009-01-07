@@ -14,15 +14,15 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.util.Properties;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.task.VerbosityLevel;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Task;
 
 /**
  * 

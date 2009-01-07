@@ -13,13 +13,10 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
-import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
@@ -27,13 +24,8 @@ import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.task.VerbosityLevel;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.Task;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 
@@ -41,12 +33,8 @@ import org.openbravo.ddlutils.util.ModuleRow;
  * 
  * @author adrian
  */
-public class ImportDataXML extends Task {
+public class ImportDataXML extends BaseDatabaseTask {
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
     private File prescript = null;
@@ -59,80 +47,52 @@ public class ImportDataXML extends Task {
     private String input;
     private String encoding = "UTF-8";
 
-    protected Log _log;
-    private VerbosityLevel _verbosity = null;
-
     /** Creates a new instance of ReadDataXML */
     public ImportDataXML() {
         super();
     }
 
-    /**
-     * Initializes the logging.
-     */
-    private void initLogging() {
-        // For Ant, we're forcing DdlUtils to do logging via log4j to the
-        // console
-        Properties props = new Properties();
-        String level = (_verbosity == null ? Level.INFO.toString() : _verbosity
-                .getValue()).toUpperCase();
-
-        props.setProperty("log4j.rootCategory", level + ",A");
-        props.setProperty("log4j.appender.A",
-                "org.apache.log4j.ConsoleAppender");
-        props.setProperty("log4j.appender.A.layout",
-                "org.apache.log4j.PatternLayout");
-        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-        // we don't want debug logging from Digester/Betwixt
-        props.setProperty("log4j.logger.org.apache.commons", "WARN");
-
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(props);
-
-        _log = LogFactory.getLog(getClass());
-    }
-
     @Override
-    public void execute() {
+    public void doExecute() {
 
-        initLogging();
-
-        BasicDataSource ds = new BasicDataSource();
+        final BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
         ds.setUrl(getUrl());
         ds.setUsername(getUser());
         ds.setPassword(getPassword());
 
-        Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
 
-        String filters = getFilter();
-        StringTokenizer strTokFil = new StringTokenizer(filters, ",");
-        String folders = getInput();
-        StringTokenizer strTokFol = new StringTokenizer(folders, ",");
+        final String filters = getFilter();
+        final StringTokenizer strTokFil = new StringTokenizer(filters, ",");
+        final String folders = getInput();
+        final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
 
-        Vector<File> files = new Vector<File>();
+        final Vector<File> files = new Vector<File>();
 
         while (strTokFol.hasMoreElements()) {
             if (basedir == null) {
-                _log
-                        .info("Basedir not specified, will insert just Core data files.");
-                String folder = strTokFol.nextToken();
-                File[] fileArray = DatabaseUtils
-                        .readFileArray(new File(folder));
+                getLog()
+                        .info(
+                                "Basedir not specified, will insert just Core data files.");
+                final String folder = strTokFol.nextToken();
+                final File[] fileArray = DatabaseUtils.readFileArray(new File(
+                        folder));
                 for (int i = 0; i < fileArray.length; i++)
                     files.add(fileArray[i]);
             } else {
-                String token = strTokFol.nextToken();
-                DirectoryScanner dirScanner = new DirectoryScanner();
+                final String token = strTokFol.nextToken();
+                final DirectoryScanner dirScanner = new DirectoryScanner();
                 dirScanner.setBasedir(new File(basedir));
-                String[] dirFilterA = { token };
+                final String[] dirFilterA = { token };
                 dirScanner.setIncludes(dirFilterA);
                 dirScanner.scan();
-                String[] incDirs = dirScanner.getIncludedDirectories();
+                final String[] incDirs = dirScanner.getIncludedDirectories();
                 for (int j = 0; j < incDirs.length; j++) {
-                    File dirFolder = new File(basedir, incDirs[j] + "/");
-                    File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+                    final File dirFolder = new File(basedir, incDirs[j] + "/");
+                    final File[] fileArray = DatabaseUtils
+                            .readFileArray(dirFolder);
                     for (int i = 0; i < fileArray.length; i++) {
                         files.add(fileArray[i]);
                     }
@@ -144,10 +104,10 @@ public class ImportDataXML extends Task {
             // execute the pre-script
             if (getPrescript() == null) {
                 // try to execute the default prescript
-                File fpre = new File(getInput(), "prescript-"
+                final File fpre = new File(getInput(), "prescript-"
                         + platform.getName() + ".sql");
                 if (fpre.exists()) {
-                    _log.info("Executing default prescript");
+                    getLog().info("Executing default prescript");
                     platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
                 }
             } else {
@@ -161,33 +121,33 @@ public class ImportDataXML extends Task {
                         .getExcludeFilter(excludeobjects));
                 if (originaldb == null) {
                     originaldb = new Database();
-                    _log.info("Model considered empty.");
+                    getLog().info("Model considered empty.");
                 } else {
-                    _log.info("Model loaded from database.");
+                    getLog().info("Model loaded from database.");
                 }
             } else {
                 // Load the model from the file
                 originaldb = DatabaseUtils.readDatabase(getModel());
-                _log.info("Model loaded from file.");
+                getLog().info("Model loaded from file.");
             }
-            DatabaseDataIO dbdio = new DatabaseDataIO();
+            final DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
             DataReader dataReader = null;
             while (strTokFil.hasMoreElements()) {
-                String filter = strTokFil.nextToken();
+                final String filter = strTokFil.nextToken();
                 if (filter != null && !filter.equals("")) {
                     dbdio.setDatabaseFilter(DatabaseUtils
                             .getDynamicDatabaseFilter(filter, originaldb));
                     dataReader = dbdio.getConfiguredDataReader(platform,
                             originaldb);
                     dataReader.getSink().start(); // we do this to delete data
-                                                  // from tables in each of the
-                                                  // filters
+                    // from tables in each of the
+                    // filters
                 }
             }
             for (int i = 0; i < files.size(); i++) {
-                _log.debug("Importing data from file: "
-                        + files.get(i).getName());
+                getLog().debug(
+                        "Importing data from file: " + files.get(i).getName());
                 dbdio.writeDataToDatabase(dataReader, files.get(i));
             }
 
@@ -196,10 +156,10 @@ public class ImportDataXML extends Task {
             // execute the post-script
             if (getPostscript() == null) {
                 // try to execute the default prescript
-                File fpost = new File(getInput(), "postscript-"
+                final File fpost = new File(getInput(), "postscript-"
                         + platform.getName() + ".sql");
                 if (fpost.exists()) {
-                    _log.info("Executing default postscript");
+                    getLog().info("Executing default postscript");
                     platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
                 }
             } else {
@@ -207,66 +167,35 @@ public class ImportDataXML extends Task {
                         true);
             }
 
-            DBSMOBUtil util = DBSMOBUtil.getInstance();
+            final DBSMOBUtil util = DBSMOBUtil.getInstance();
             util.getModules(platform,
                     "org.apache.ddlutils.platform.ExcludeFilter");
             util.generateIndustryTemplateTree();
             for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
-                ModuleRow temp = util.getIndustryTemplateId(i);
-                File f = new File(basedir, "modules/" + temp.dir
+                final ModuleRow temp = util.getIndustryTemplateId(i);
+                final File f = new File(basedir, "modules/" + temp.dir
                         + "/src-db/database/configScript.xml");
-                _log.info("Loading config script for module " + temp.name
-                        + ". Path: " + f.getAbsolutePath());
+                getLog().info(
+                        "Loading config script for module " + temp.name
+                                + ". Path: " + f.getAbsolutePath());
                 if (f.exists()) {
-                    DatabaseIO dbIO = new DatabaseIO();
-                    Vector<Change> changesConfigScript = dbIO.readChanges(f);
+                    final DatabaseIO dbIO = new DatabaseIO();
+                    final Vector<Change> changesConfigScript = dbIO
+                            .readChanges(f);
                     platform.applyConfigScript(originaldb, changesConfigScript);
                 } else {
-                    _log
-                            .error("Error. We couldn't find configuration script for template "
-                                    + temp.name
-                                    + ". Path: "
+                    getLog().error(
+                            "Error. We couldn't find configuration script for template "
+                                    + temp.name + ". Path: "
                                     + f.getAbsolutePath());
                 }
             }
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // log(e.getLocalizedMessage());
             throw new BuildException(e);
         }
 
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getExcludeobjects() {
@@ -323,17 +252,6 @@ public class ImportDataXML extends Task {
 
     public void setPostscript(File postscript) {
         this.postscript = postscript;
-    }
-
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        _verbosity = level;
     }
 
     public String getBasedir() {

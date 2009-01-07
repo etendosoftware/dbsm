@@ -28,13 +28,8 @@ import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
-import org.apache.ddlutils.task.VerbosityLevel;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.openbravo.dal.core.DalInitializingTask;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
@@ -43,12 +38,8 @@ import org.openbravo.ddlutils.util.ModuleRow;
  * 
  * @author adrian
  */
-public class AlterDatabaseDataMod extends DalInitializingTask {
+public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
     private File prescript = null;
@@ -63,9 +54,6 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
     private boolean failonerror = false;
 
     private String object = null;
-
-    protected Logger _log;
-    private VerbosityLevel _verbosity = null;
     private String baseConfig;
     private String basedir;
     private String dirFilter;
@@ -80,37 +68,16 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
         super();
     }
 
-    /**
-     * Initializes the logging.
-     */
-    private void initLogging() {
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(getBaseConfig() + "/log4j.lcf");
-
-        _log = Logger.getLogger(getClass());
-        // Note that it is also possible to log through the getProject().log
-        // methods, disabled for now
-        //
-        // final DefaultLogger dl = new DefaultLogger();
-        // dl
-        // .setErrorPrintStream(new PrintStream(OBLogAppender
-        // .getOutputStream()));
-        // dl
-        // .setOutputPrintStream(new PrintStream(OBLogAppender
-        // .getOutputStream()));
-        // dl.setMessageOutputLevel(Project.MSG_INFO);
-        // getProject().addBuildListener(dl);
-    }
-
     @Override
     public void doExecute() {
 
-        initLogging();
-        _log.info("Database connection: " + getUrl() + ". User: " + getUser());
+        getLog().info(
+                "Database connection: " + getUrl() + ". User: " + getUser());
 
         if (module == null || module.equals("")) {
-            _log
-                    .error("This task requires a module name to be passed as parameter. Example: ant update.database.mod -Dmodule=modulename");
+            getLog()
+                    .error(
+                            "This task requires a module name to be passed as parameter. Example: ant update.database.mod -Dmodule=modulename");
             throw new BuildException("No module name provided.");
         }
         final BasicDataSource ds = new BasicDataSource();
@@ -122,11 +89,12 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
         final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
 
-        _log.info("Creating submodel for application dictionary");
+        getLog().info("Creating submodel for application dictionary");
         Database dbXML = null;
         if (basedir == null) {
-            _log
-                    .info("Basedir for additional files not specified. Updating database with just Core.");
+            getLog()
+                    .info(
+                            "Basedir for additional files not specified. Updating database with just Core.");
             dbXML = DatabaseUtils.readDatabase(getModel());
         } else {
             final Vector<File> dirs = new Vector<File>();
@@ -142,8 +110,9 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
                 if (dirF.exists())
                     dirs.add(dirF);
                 else
-                    _log.warn("Directory " + dirF.getAbsolutePath()
-                            + " doesn't exist.");
+                    getLog().warn(
+                            "Directory " + dirF.getAbsolutePath()
+                                    + " doesn't exist.");
             }
             final File[] fileArray = new File[dirs.size()];
             for (int i = 0; i < dirs.size(); i++) {
@@ -172,20 +141,21 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
         final DBSMOBUtil util = DBSMOBUtil.getInstance();
         util.getModules(platform, excludeobjects);
         if (module.toUpperCase().contains("CORE") || module.equals("%")) {
-            _log
-                    .info("You've either specified a list that contains Core, or module specified is %. Complete update.database will be performed.");
+            getLog()
+                    .info(
+                            "You've either specified a list that contains Core, or module specified is %. Complete update.database will be performed.");
             final AlterDatabaseDataAll ada = new AlterDatabaseDataAll();
-            ada.setDriver(driver);
-            ada.setUrl(url);
-            ada.setUser(user);
-            ada.setPassword(password);
+            ada.setDriver(getDriver());
+            ada.setUrl(getUrl());
+            ada.setUser(getUser());
+            ada.setPassword(getPassword());
             ada.setExcludeobjects(excludeobjects);
             ada.setModel(model);
             ada.setFilter(filter);
             ada.setInput(input);
             ada.setObject(object);
             ada.setFailonerror(failonerror);
-            ada.setVerbosity(_verbosity);
+            ada.setVerbosity(getVerbosity());
             ada.setBasedir(basedir);
             ada.setDirFilter(dirFilter);
             ada.setDatadir(datadir);
@@ -198,7 +168,7 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
         final StringTokenizer st = new StringTokenizer(module, ",");
         while (st.hasMoreElements()) {
             final String modName = st.nextToken().trim();
-            _log.info("Updating module: " + modName);
+            getLog().info("Updating module: " + modName);
             final ModuleRow row = util.getRowFromDir(modName);
             moduleRows.add(row);
             if (row == null)
@@ -207,14 +177,15 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
             Database originaldb = null;
             try {
                 if (row.prefixes.size() == 0) {
-                    _log
-                            .info("Module doesn't have dbprefix. We will not update database model.");
+                    getLog()
+                            .info(
+                                    "Module doesn't have dbprefix. We will not update database model.");
                 } else {
-                    _log.info("Loading submodel from database...");
+                    getLog().info("Loading submodel from database...");
                     originaldb = platform.loadModelFromDatabase(row.filter,
                             row.prefixes.get(0), true, row.idMod);
                     originaldb.moveModifiedToTables();
-                    _log.info("Submodel loaded");
+                    getLog().info("Submodel loaded");
                 }
 
                 final Database db = (Database) dbXML.clone();
@@ -227,7 +198,7 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
                 dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
                         getFilter(), dbAD));
 
-                _log.info("Loading data from XML files");
+                getLog().info("Loading data from XML files");
                 final Vector<File> files = new Vector<File>();
                 final File fsourcedata = new File(basedir, "/" + row.dir
                         + "/src-db/database/sourcedata/");
@@ -262,16 +233,16 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
                                 .isDelimitedIdentifierModeOn());
                 dataComparator.compareUsingDALToUpdate(dbAD, platform,
                         databaseOrgData, "AD", row.idMod);
-                _log.info("Data changes we will perform: ");
+                getLog().info("Data changes we will perform: ");
                 for (final Change change : dataComparator.getChanges())
-                    _log.info(change);
-                _log.info("Comparing databases to find data differences");
+                    getLog().info(change);
+                getLog().info("Comparing databases to find data differences");
                 dataChanges.add(dataComparator.getChanges());
                 moduleModels.add(db);
                 moduleOldModels.add(olddb);
                 OBDal.getInstance().commitAndClose();
 
-                _log.info("Updating database model...");
+                getLog().info("Updating database model...");
 
                 if (row.prefixes.size() > 0)
                     platform.alterTables(originaldb, db, !isFailonerror());
@@ -281,7 +252,7 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
                  * platform.getSqlBuilder().alterDatabase(originaldb, db, null);
                  * System.out.println(sw.toString());
                  */
-                _log.info("Model update complete.");
+                getLog().info("Model update complete.");
 
             } catch (final Exception e) {
                 // log(e.getLocalizedMessage());
@@ -290,60 +261,30 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
             }
         }
 
-        _log.info("Updating database data...");
+        getLog().info("Updating database data...");
 
-        _log.info("Disabling foreign keys");
+        getLog().info("Disabling foreign keys");
         final Connection connection = platform.borrowConnection();
         platform.disableAllFK(connection, dbAD, !isFailonerror());
-        _log.info("Disabling triggers");
+        getLog().info("Disabling triggers");
         platform.disableAllTriggers(connection, dbAD, !isFailonerror());
         for (int i = 0; i < dataChanges.size(); i++) {
-            _log.info("Updating database data for module "
-                    + moduleRows.get(i).name);
+            getLog().info(
+                    "Updating database data for module "
+                            + moduleRows.get(i).name);
             platform.alterData(connection, dbAD, dataChanges.get(i));
-            _log.info("Removing invalid rows.");
+            getLog().info("Removing invalid rows.");
             platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
-            _log
-                    .info("Executing update final script (NOT NULLs and dropping temporal tables");
+            getLog()
+                    .info(
+                            "Executing update final script (NOT NULLs and dropping temporal tables");
             platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels
                     .get(i), !isFailonerror());
         }
-        _log.info("Enabling Foreign Keys and Triggers");
+        getLog().info("Enabling Foreign Keys and Triggers");
         platform.enableAllFK(connection, dbAD, !isFailonerror());
         platform.enableAllTriggers(connection, dbAD, !isFailonerror());
 
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getExcludeobjects() {
@@ -445,17 +386,6 @@ public class AlterDatabaseDataMod extends DalInitializingTask {
 
     public String getObject() {
         return object;
-    }
-
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        _verbosity = level;
     }
 
     public String getDatadir() {

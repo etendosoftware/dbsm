@@ -16,34 +16,22 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Properties;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.task.VerbosityLevel;
 
 /**
  * 
  * @author adrian
  */
-public class AlterXML2SQL extends Task {
+public class AlterXML2SQL extends BaseDatabaseTask {
 
     private String platform = null;
     private File originalmodel = null;
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
     private File model;
@@ -51,47 +39,18 @@ public class AlterXML2SQL extends Task {
 
     private String object = null;
 
-    protected Log _log;
-    private VerbosityLevel _verbosity = null;
-
     /** Creates a new instance of ExecuteXML2SQL */
     public AlterXML2SQL() {
     }
 
-    /**
-     * Initializes the logging.
-     */
-    private void initLogging() {
-        // For Ant, we're forcing DdlUtils to do logging via log4j to the
-        // console
-        Properties props = new Properties();
-        String level = (_verbosity == null ? Level.INFO.toString() : _verbosity
-                .getValue()).toUpperCase();
-
-        props.setProperty("log4j.rootCategory", level + ",A");
-        props.setProperty("log4j.appender.A",
-                "org.apache.log4j.ConsoleAppender");
-        props.setProperty("log4j.appender.A.layout",
-                "org.apache.log4j.PatternLayout");
-        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-        // we don't want debug logging from Digester/Betwixt
-        props.setProperty("log4j.logger.org.apache.commons", "WARN");
-
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(props);
-
-        _log = LogFactory.getLog(getClass());
-    }
-
-    public void execute() {
-
-        initLogging();
+    @Override
+    public void doExecute() {
 
         Platform pl;
         Database originaldb;
 
         if (platform == null || originalmodel == null) {
-            BasicDataSource ds = new BasicDataSource();
+            final BasicDataSource ds = new BasicDataSource();
             ds.setDriverClassName(getDriver());
             ds.setUrl(getUrl());
             ds.setUsername(getUser());
@@ -99,7 +58,7 @@ public class AlterXML2SQL extends Task {
 
             pl = PlatformFactory.createNewPlatformInstance(ds);
             // platform.setDelimitedIdentifierModeOn(true);
-            _log.info("Using database platform.");
+            getLog().info("Using database platform.");
 
             try {
 
@@ -108,25 +67,25 @@ public class AlterXML2SQL extends Task {
                             .getExcludeFilter(excludeobjects));
                     if (originaldb == null) {
                         originaldb = new Database();
-                        _log.info("Original model considered empty.");
+                        getLog().info("Original model considered empty.");
                     } else {
-                        _log.info("Original model loaded from database.");
+                        getLog().info("Original model loaded from database.");
                     }
                 } else {
                     // Load the model from the file
                     originaldb = DatabaseUtils.readDatabase(getModel());
-                    _log.info("Original model loaded from file.");
+                    getLog().info("Original model loaded from file.");
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 // log(e.getLocalizedMessage());
                 throw new BuildException(e);
             }
         } else {
             pl = PlatformFactory.createNewPlatformInstance(platform);
-            _log.info("Using platform : " + platform);
+            getLog().info("Using platform : " + platform);
 
             originaldb = DatabaseUtils.readDatabase(originalmodel);
-            _log.info("Original model loaded from file.");
+            getLog().info("Original model loaded from file.");
         }
 
         try {
@@ -134,59 +93,27 @@ public class AlterXML2SQL extends Task {
             Database db = DatabaseUtils.readDatabase(model);
 
             // Write update script
-            _log.info("Writing update script");
+            getLog().info("Writing update script");
             // crop database if needed
             if (object != null) {
                 db = DatabaseUtils.cropDatabase(originaldb, db, object);
-                _log.info("for database object " + object);
+                getLog().info("for database object " + object);
             } else {
-                _log.info("for the complete database");
+                getLog().info("for the complete database");
             }
 
-            Writer w = new FileWriter(output);
+            final Writer w = new FileWriter(output);
             pl.getSqlBuilder().setWriter(w);
             pl.getSqlBuilder().alterDatabase(originaldb, db, null);
             pl.getSqlBuilder().alterDatabasePostScript(originaldb, db, null);
             w.close();
 
-            _log.info("Database script created in : " + output.getPath());
+            getLog().info("Database script created in : " + output.getPath());
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             // log(e.getLocalizedMessage());
             throw new BuildException(e);
         }
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getExcludeobjects() {
@@ -241,16 +168,4 @@ public class AlterXML2SQL extends Task {
     public String getObject() {
         return object;
     }
-
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        _verbosity = level;
-    }
-
 }

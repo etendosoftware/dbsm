@@ -4,13 +4,10 @@ import java.io.File;
 import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.AddFunctionChange;
@@ -31,24 +28,16 @@ import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.task.VerbosityLevel;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.tools.ant.Task;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 
-public class AlterCustomizedDatabaseData extends Task {
+public class AlterCustomizedDatabaseData extends BaseDatabaseTask {
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
+    private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+
     private File model;
     private File orgModel;
     private String data;
     private String orgData;
-    private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
     private File prescript = null;
     private File postscript = null;
@@ -60,51 +49,21 @@ public class AlterCustomizedDatabaseData extends Task {
 
     private String object = null;
 
-    protected Log _log;
-    private VerbosityLevel _verbosity = null;
-
-    /**
-     * Initializes the logging.
-     */
-    private void initLogging() {
-        // For Ant, we're forcing DdlUtils to do logging via log4j to the
-        // console
-        Properties props = new Properties();
-        String level = (_verbosity == null ? Level.INFO.toString() : _verbosity
-                .getValue()).toUpperCase();
-
-        props.setProperty("log4j.rootCategory", level + ",A");
-        props.setProperty("log4j.appender.A",
-                "org.apache.log4j.ConsoleAppender");
-        props.setProperty("log4j.appender.A.layout",
-                "org.apache.log4j.PatternLayout");
-        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-        // we don't want debug logging from Digester/Betwixt
-        props.setProperty("log4j.logger.org.apache.commons", "WARN");
-
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(props);
-
-        _log = LogFactory.getLog(getClass());
-    }
-
     @Override
-    public void execute() {
+    public void doExecute() {
 
-        initLogging();
-
-        BasicDataSource ds = new BasicDataSource();
+        final BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
         ds.setUrl(getUrl());
         ds.setUsername(getUser());
         ds.setPassword(getPassword());
 
-        Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
 
-        _log.info("Loading original model from XML files");
-        Database originaldb = DatabaseUtils.readDatabase(getOrgModel());
+        getLog().info("Loading original model from XML files");
+        final Database originaldb = DatabaseUtils.readDatabase(getOrgModel());
 
-        DatabaseDataIO dbdio = new DatabaseDataIO();
+        final DatabaseDataIO dbdio = new DatabaseDataIO();
         dbdio.setEnsureFKOrder(false);
         dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
                 getFilter(), originaldb));
@@ -112,41 +71,41 @@ public class AlterCustomizedDatabaseData extends Task {
         DataReader dataReader = dbdio
                 .getConfiguredCompareDataReader(originaldb);
 
-        Vector<File> files = DBSMOBUtil.loadFilesFromFolder(getOrgData());
+        final Vector<File> files = DBSMOBUtil.loadFilesFromFolder(getOrgData());
 
-        _log.info("Loading original data from XML files");
-        DatabaseData databaseOrgData = new DatabaseData(originaldb);
+        getLog().info("Loading original data from XML files");
+        final DatabaseData databaseOrgData = new DatabaseData(originaldb);
         for (int i = 0; i < files.size(); i++) {
             try {
                 dataReader.getSink().start();
-                String tablename = files.get(i).getName().substring(0,
+                final String tablename = files.get(i).getName().substring(0,
                         files.get(i).getName().length() - 4);
-                Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader
+                final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader
                         .getSink()).getVector();
                 dataReader.parse(files.get(i));
                 databaseOrgData.insertDynaBeansFromVector(tablename,
                         vectorDynaBeans);
                 dataReader.getSink().end();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 System.out.println(e.getLocalizedMessage());
             }
         }
 
-        _log.info("Loading model from current database");
-        Database currentdb = platform.loadModelFromDatabase(DatabaseUtils
+        getLog().info("Loading model from current database");
+        final Database currentdb = platform.loadModelFromDatabase(DatabaseUtils
                 .getExcludeFilter(excludeobjects));
 
         Database currentcloneddb = null;
 
         try {
             currentcloneddb = (Database) currentdb.clone();
-        } catch (Exception e) {
-            _log.info("Model not cloned: " + e.getMessage());
+        } catch (final Exception e) {
+            getLog().info("Model not cloned: " + e.getMessage());
             currentcloneddb = currentdb;
         }
 
-        _log.info("Finding customizations made to the database");
-        DataComparator dataComparator = new DataComparator(platform
+        getLog().info("Finding customizations made to the database");
+        final DataComparator dataComparator = new DataComparator(platform
                 .getSqlBuilder().getPlatformInfo(), platform
                 .isDelimitedIdentifierModeOn());
         dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
@@ -154,50 +113,51 @@ public class AlterCustomizedDatabaseData extends Task {
         dataComparator
                 .compare(originaldb, currentdb, platform, databaseOrgData);
 
-        Vector<Change> dataCustomization = dataComparator.getChanges();
+        final Vector<Change> dataCustomization = dataComparator.getChanges();
         for (int i = 0; i < dataCustomization.size(); i++)
             System.out.println(dataCustomization.get(i));
         System.out.println("=======================");
 
-        _log.info("Loading new version model from XML files");
+        getLog().info("Loading new version model from XML files");
 
-        Database newDb = DatabaseUtils.readDatabase(getModel());
+        final Database newDb = DatabaseUtils.readDatabase(getModel());
 
-        DatabaseDataIO dbdioNew = new DatabaseDataIO();
+        final DatabaseDataIO dbdioNew = new DatabaseDataIO();
         dbdioNew.setEnsureFKOrder(false);
         dbdioNew.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
                 getFilter(), newDb));
 
-        DataReader dataReaderNew = dbdio.getConfiguredCompareDataReader(newDb);
+        final DataReader dataReaderNew = dbdio
+                .getConfiguredCompareDataReader(newDb);
 
-        Vector<File> filesNew = DBSMOBUtil.loadFilesFromFolder(getData());
+        final Vector<File> filesNew = DBSMOBUtil.loadFilesFromFolder(getData());
 
-        _log.info("Loading new version data from XML files");
-        DatabaseData databaseNewData = new DatabaseData(newDb);
+        getLog().info("Loading new version data from XML files");
+        final DatabaseData databaseNewData = new DatabaseData(newDb);
         for (int i = 0; i < filesNew.size(); i++) {
             try {
                 dataReaderNew.getSink().start();
-                String tablename = filesNew.get(i).getName().substring(0,
+                final String tablename = filesNew.get(i).getName().substring(0,
                         filesNew.get(i).getName().length() - 4);
-                Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReaderNew
+                final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReaderNew
                         .getSink()).getVector();
                 dataReaderNew.parse(filesNew.get(i));
                 databaseNewData.insertDynaBeansFromVector(tablename,
                         vectorDynaBeans);
                 dataReaderNew.getSink().end();
 
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 System.out.println(e.getLocalizedMessage());
             }
         }
 
-        _log.info("Filtering customizations");
+        getLog().info("Filtering customizations");
 
-        List modelChanges = dataComparator.getModelChangesList();
+        final List modelChanges = dataComparator.getModelChangesList();
         for (int i = 0; i < modelChanges.size(); i++) {
             if (modelChanges.get(i) instanceof RemoveTriggerChange) {
                 boolean cont = false;
-                RemoveTriggerChange removeTrigger = (RemoveTriggerChange) modelChanges
+                final RemoveTriggerChange removeTrigger = (RemoveTriggerChange) modelChanges
                         .get(i);
                 for (int j = 0; !cont && j < modelChanges.size(); j++) {
 
@@ -207,7 +167,7 @@ public class AlterCustomizedDatabaseData extends Task {
                                             ((AddTriggerChange) modelChanges
                                                     .get(j)).getNewTrigger()
                                                     .getName())) {
-                        AddTriggerChange addTrigger = (AddTriggerChange) modelChanges
+                        final AddTriggerChange addTrigger = (AddTriggerChange) modelChanges
                                 .get(j);
                         modelChanges.remove(addTrigger);
                         modelChanges.remove(removeTrigger);
@@ -218,7 +178,7 @@ public class AlterCustomizedDatabaseData extends Task {
                 }
             } else if (modelChanges.get(i) instanceof RemoveFunctionChange) {
                 boolean cont = false;
-                RemoveFunctionChange removeFunction = (RemoveFunctionChange) modelChanges
+                final RemoveFunctionChange removeFunction = (RemoveFunctionChange) modelChanges
                         .get(i);
                 for (int j = 0; !cont && j < modelChanges.size(); j++) {
 
@@ -228,7 +188,7 @@ public class AlterCustomizedDatabaseData extends Task {
                                             ((AddFunctionChange) modelChanges
                                                     .get(j)).getNewFunction()
                                                     .getName())) {
-                        AddFunctionChange addFunction = (AddFunctionChange) modelChanges
+                        final AddFunctionChange addFunction = (AddFunctionChange) modelChanges
                                 .get(j);
                         modelChanges.remove(addFunction);
                         modelChanges.remove(removeFunction);
@@ -238,7 +198,8 @@ public class AlterCustomizedDatabaseData extends Task {
                     }
                 }
             } else if (modelChanges.get(i) instanceof AddViewChange) {
-                AddViewChange addView = (AddViewChange) modelChanges.get(i);
+                final AddViewChange addView = (AddViewChange) modelChanges
+                        .get(i);
                 if (newDb.findView(addView.getNewView().getName()) != null) {
                     modelChanges.remove(addView);
                 }
@@ -251,28 +212,29 @@ public class AlterCustomizedDatabaseData extends Task {
             }
         }
 
-        _log.info("Applying model customizations to the new version");
+        getLog().info("Applying model customizations to the new version");
 
-        Iterator itModelChanges = dataComparator.getModelChanges();
+        final Iterator itModelChanges = dataComparator.getModelChanges();
         while (itModelChanges.hasNext()) {
-            ModelChange modelChange = (ModelChange) itModelChanges.next();
+            final ModelChange modelChange = (ModelChange) itModelChanges.next();
             try {
                 modelChange
                         .apply(newDb, platform.isDelimitedIdentifierModeOn());
-            } catch (Exception e) {
-                _log.error("Couldn't apply customization: " + modelChange);
+            } catch (final Exception e) {
+                getLog().error("Couldn't apply customization: " + modelChange);
             }
         }
 
-        _log.info("Applying data customizations to the new version");
-        Iterator itDataChanges = dataCustomization.iterator();
+        getLog().info("Applying data customizations to the new version");
+        final Iterator itDataChanges = dataCustomization.iterator();
         while (itDataChanges.hasNext()) {
             ((DataChange) itDataChanges.next()).apply(databaseNewData, platform
                     .isDelimitedIdentifierModeOn());
         }
 
         /*
-         * _log.info("Comparing customized new version to existing database");
+         * getLog().info("Comparing customized new version to existing database")
+         * ;
          * 
          * DataComparator finalDataComparator=new
          * DataComparator(platform.getSqlBuilder
@@ -282,18 +244,18 @@ public class AlterCustomizedDatabaseData extends Task {
          * originaldb)); dataComparator.compare(currentdb, newDb, platform,
          * databaseNewData);
          */
-        _log.info("Updating existing database");
+        getLog().info("Updating existing database");
 
-        Connection connection = platform.borrowConnection();
+        final Connection connection = platform.borrowConnection();
         try {
 
             // execute the pre-script
             if (getPrescript() == null) {
                 // try to execute the default prescript
-                File fpre = new File(getModel(), "prescript-"
+                final File fpre = new File(getModel(), "prescript-"
                         + platform.getName() + ".sql");
                 if (fpre.exists()) {
-                    _log.info("Executing default prescript");
+                    getLog().info("Executing default prescript");
                     platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
                 }
             } else {
@@ -301,28 +263,28 @@ public class AlterCustomizedDatabaseData extends Task {
                         true);
             }
 
-            _log.info("Updating database model");
+            getLog().info("Updating database model");
             platform.alterTables(currentdb, newDb, !isFailonerror());
 
-            _log.info("Updating database data");
+            getLog().info("Updating database data");
             dataReader = dbdio.getConfiguredCompareDataReader(newDb);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
         }
         // dataReader.getSink().start();
 
-        _log.debug("Disabling foreign keys");
+        getLog().debug("Disabling foreign keys");
         platform.disableAllFK(connection, currentdb, !isFailonerror());
-        _log.debug("Disabling triggers");
+        getLog().debug("Disabling triggers");
         platform.disableAllTriggers(connection, newDb, !isFailonerror());
-        DatabaseFilter filter = DatabaseUtils.getDynamicDatabaseFilter(
+        final DatabaseFilter filter = DatabaseUtils.getDynamicDatabaseFilter(
                 getFilter(), originaldb);
         if (filter != null) {
-            String[] tablenames = filter.getTableNames();
-            String[] tableFilters = new String[tablenames.length];
+            final String[] tablenames = filter.getTableNames();
+            final String[] tableFilters = new String[tablenames.length];
             int ind = 0;
-            for (String table : tablenames) {
+            for (final String table : tablenames) {
                 tableFilters[ind] = filter.getTableFilter(table);
                 ind++;
             }
@@ -333,29 +295,31 @@ public class AlterCustomizedDatabaseData extends Task {
         // StringWriter stringWriter=new StringWriter();
         // platform.getSqlBuilder().setWriter(stringWriter);
         for (int i = 0; i < newDb.getTableCount(); i++) {
-            Table table = newDb.getTable(i);
-            _log.debug("Inserting data from table " + table.getName());
-            Vector<DynaBean> rowsTable = databaseNewData.getRowsFromTable(table
-                    .getName());
+            final Table table = newDb.getTable(i);
+            getLog().debug("Inserting data from table " + table.getName());
+            final Vector<DynaBean> rowsTable = databaseNewData
+                    .getRowsFromTable(table.getName());
             if (rowsTable != null) {
                 for (int j = 0; j < rowsTable.size(); j++) {
-                    DynaBean row = rowsTable.get(j);
+                    final DynaBean row = rowsTable.get(j);
                     try {
                         platform.upsert(connection, newDb, row);
-                    } catch (Exception e) {
-                        _log.info("Error. Row " + row
-                                + " couldn't be inserted. " + e.getMessage());
+                    } catch (final Exception e) {
+                        getLog().info(
+                                "Error. Row " + row + " couldn't be inserted. "
+                                        + e.getMessage());
                     }
                 }
             }
         }
-        _log.debug("Removing invalid rows.");
+        getLog().debug("Removing invalid rows.");
         platform.deleteInvalidConstraintRows(newDb, !isFailonerror());
-        _log
-                .debug("Executing update final script (NOT NULLs and dropping temporal tables");
+        getLog()
+                .debug(
+                        "Executing update final script (NOT NULLs and dropping temporal tables");
         platform
                 .alterTablesPostScript(currentcloneddb, newDb, !isFailonerror());
-        _log.debug("Enabling Foreign Keys and Triggers");
+        getLog().debug("Enabling Foreign Keys and Triggers");
         platform.enableAllFK(connection, currentdb, !isFailonerror());
         platform.enableAllTriggers(connection, newDb, !isFailonerror()); // <-
         // we
@@ -379,53 +343,21 @@ public class AlterCustomizedDatabaseData extends Task {
             connection.close();
             if (getPostscript() == null) {
                 // try to execute the default prescript
-                File fpost = new File(getModel(), "postscript-"
+                final File fpost = new File(getModel(), "postscript-"
                         + platform.getName() + ".sql");
                 if (fpost.exists()) {
-                    _log.info("Executing default postscript");
+                    getLog().info("Executing default postscript");
                     platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
                 }
             } else {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()),
                         true);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             System.out.println("Exception: " + e.getMessage());
         }
 
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getExcludeobjects() {
@@ -519,17 +451,6 @@ public class AlterCustomizedDatabaseData extends Task {
 
     public String getObject() {
         return object;
-    }
-
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        _verbosity = level;
     }
 
 }

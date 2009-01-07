@@ -15,13 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.List;
-import java.util.Properties;
 
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
@@ -31,26 +25,14 @@ import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.UniqueDatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.task.VerbosityLevel;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 
 /**
  * 
  * @author adrian
  */
-public class ExportDataXML extends Task {
+public class ExportDataXML extends BaseDatabaseTask {
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
     private File prescript = null;
@@ -62,52 +44,24 @@ public class ExportDataXML extends Task {
     private File output;
     private String encoding = "UTF-8";
 
-    protected Log _log;
-    private VerbosityLevel _verbosity = null;
     private String codeRevision;
 
     /** Creates a new instance of WriteDataXML */
     public ExportDataXML() {
     }
 
-    /**
-     * Initializes the logging.
-     */
-    private void initLogging() {
-        // For Ant, we're forcing DdlUtils to do logging via log4j to the
-        // console
-        Properties props = new Properties();
-        String level = (_verbosity == null ? Level.INFO.toString() : _verbosity
-                .getValue()).toUpperCase();
+    @Override
+    public void doExecute() {
 
-        props.setProperty("log4j.rootCategory", level + ",A");
-        props.setProperty("log4j.appender.A",
-                "org.apache.log4j.ConsoleAppender");
-        props.setProperty("log4j.appender.A.layout",
-                "org.apache.log4j.PatternLayout");
-        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-        // we don't want debug logging from Digester/Betwixt
-        props.setProperty("log4j.logger.org.apache.commons", "WARN");
-
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(props);
-
-        _log = LogFactory.getLog(getClass());
-    }
-
-    public void execute() {
-
-        initLogging();
-
-        BasicDataSource ds = new BasicDataSource();
+        final BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
         ds.setUrl(getUrl());
         ds.setUsername(getUser());
         ds.setPassword(getPassword());
 
-        Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
-        DBSMOBUtil.verifyRevision(platform, getCodeRevision(), _log);
+        DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
 
         try {
             // execute the pre-script
@@ -122,35 +76,36 @@ public class ExportDataXML extends Task {
                         .getExcludeFilter(excludeobjects));
                 if (originaldb == null) {
                     originaldb = new Database();
-                    _log.info("Model considered empty.");
+                    getLog().info("Model considered empty.");
                 } else {
-                    _log.info("Model loaded from database.");
+                    getLog().info("Model loaded from database.");
                 }
             } else {
                 // Load the model from the file
                 originaldb = DatabaseUtils.readDatabase(getModel());
-                _log.info("Model loaded from file.");
+                getLog().info("Model loaded from file.");
             }
 
-            DatabaseDataIO dbdio = new DatabaseDataIO();
+            final DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
-            DatabaseFilter dbfilter = DatabaseUtils.getDynamicDatabaseFilter(
-                    getFilter(), originaldb);
+            final DatabaseFilter dbfilter = DatabaseUtils
+                    .getDynamicDatabaseFilter(getFilter(), originaldb);
 
             if (getOutput().isDirectory()) {
                 // First we delete all .xml files in the directory
 
-                File[] filestodelete = DatabaseIO.readFileArray(getOutput());
-                for (File filedelete : filestodelete) {
+                final File[] filestodelete = DatabaseIO
+                        .readFileArray(getOutput());
+                for (final File filedelete : filestodelete) {
                     filedelete.delete();
                 }
 
                 // Create a set of files one for each table
 
-                String[] tablenames = dbfilter.getTableNames();
+                final String[] tablenames = dbfilter.getTableNames();
                 for (int i = 0; i < tablenames.length; i++) {
 
-                    OutputStream out = new FileOutputStream(new File(
+                    final OutputStream out = new FileOutputStream(new File(
                             getOutput(), tablenames[i] + ".xml"));
                     dbdio.setDatabaseFilter(new UniqueDatabaseFilter(dbfilter,
                             tablenames[i]));
@@ -162,7 +117,7 @@ public class ExportDataXML extends Task {
             } else {
                 // Create a single file
 
-                OutputStream out = new FileOutputStream(getOutput());
+                final OutputStream out = new FileOutputStream(getOutput());
                 dbdio.setDatabaseFilter(dbfilter);
                 dbdio.writeDataToXML(platform, originaldb, out, getEncoding());
                 out.close();
@@ -173,42 +128,10 @@ public class ExportDataXML extends Task {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()),
                         true);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // log(e.getLocalizedMessage());
             throw new BuildException(e);
         }
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getExcludeobjects() {
@@ -265,17 +188,6 @@ public class ExportDataXML extends Task {
 
     public void setPostscript(File postscript) {
         this.postscript = postscript;
-    }
-
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        _verbosity = level;
     }
 
     public String getCodeRevision() {

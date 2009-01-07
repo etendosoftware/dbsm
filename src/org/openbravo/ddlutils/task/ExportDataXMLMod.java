@@ -16,38 +16,26 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.task.VerbosityLevel;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.BuildException;
-import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.model.ad.utility.DataSet;
-import org.openbravo.dal.core.DalInitializingTask;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.model.ad.utility.DataSet;
+import org.openbravo.model.ad.utility.DataSetTable;
 import org.openbravo.service.db.DataSetService;
 
 /**
  * 
  * @author adrian
  */
-public class ExportDataXMLMod extends DalInitializingTask {
+public class ExportDataXMLMod extends BaseDalInitializingTask {
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
     private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
     private File prescript = null;
@@ -61,61 +49,33 @@ public class ExportDataXMLMod extends DalInitializingTask {
     private File output;
     private String encoding = "UTF-8";
 
-    protected Log _log;
-    private VerbosityLevel _verbosity = null;
     private String codeRevision;
 
     /** Creates a new instance of WriteDataXML */
     public ExportDataXMLMod() {
     }
 
-    /**
-     * Initializes the logging.
-     */
-    private void initLogging() {
-        // For Ant, we're forcing DdlUtils to do logging via log4j to the
-        // console
-        Properties props = new Properties();
-        String level = (_verbosity == null ? Level.INFO.toString() : _verbosity
-                .getValue()).toUpperCase();
-
-        props.setProperty("log4j.rootCategory", level + ",A");
-        props.setProperty("log4j.appender.A",
-                "org.apache.log4j.ConsoleAppender");
-        props.setProperty("log4j.appender.A.layout",
-                "org.apache.log4j.PatternLayout");
-        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-        // we don't want debug logging from Digester/Betwixt
-        props.setProperty("log4j.logger.org.apache.commons", "WARN");
-
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(props);
-
-        _log = LogFactory.getLog(getClass());
-    }
-
     @Override
     public void doExecute() {
 
-        initLogging();
+        final DataSetService datasetService = DataSetService.getInstance();
 
-        DataSetService datasetService = DataSetService.getInstance();
-
-        BasicDataSource ds = new BasicDataSource();
+        final BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(getDriver());
         ds.setUrl(getUrl());
         ds.setUsername(getUser());
         ds.setPassword(getPassword());
 
-        Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
-        // DBSMOBUtil.verifyRevision(platform, codeRevision, _log);
+        // DBSMOBUtil.verifyRevision(platform, codeRevision, getLog());
 
-        DBSMOBUtil util = DBSMOBUtil.getInstance();
+        final DBSMOBUtil util = DBSMOBUtil.getInstance();
         util.getModules(platform, excludeobjects);
         if (util.getActiveModuleCount() == 0) {
-            _log
-                    .info("No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
+            getLog()
+                    .info(
+                            "No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
             return;
         }
         util.generateIndustryTemplateTree();
@@ -128,55 +88,59 @@ public class ExportDataXMLMod extends DalInitializingTask {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()),
                         true);
             }
-            _log.info("Loading models for AD and RD Datasets");
+            getLog().info("Loading models for AD and RD Datasets");
             Database originaldb;
             originaldb = platform.loadModelFromDatabase(DatabaseUtils
                     .getExcludeFilter(excludeobjects), "AD");
-            Database dbrd = platform.loadModelFromDatabase(DatabaseUtils
+            final Database dbrd = platform.loadModelFromDatabase(DatabaseUtils
                     .getExcludeFilter(excludeobjects), "ADRD");
             originaldb.mergeWith(dbrd);
-            _log.info("Model loaded");
+            getLog().info("Model loaded");
 
             // Create a set of files one for each table
-            Vector<String> datasets = new Vector<String>();
+            final Vector<String> datasets = new Vector<String>();
             datasets.add("AD");
             datasets.add("ADRD");
 
             int datasetI = 0;
 
-            for (String dataSetCode : datasets) {
-                DataSet dataSet = datasetService.getDataSetByValue(dataSetCode);
+            for (final String dataSetCode : datasets) {
+                final DataSet dataSet = datasetService
+                        .getDataSetByValue(dataSetCode);
                 System.out.println(dataSet);
-                List<DataSetTable> tableList = datasetService
+                final List<DataSetTable> tableList = datasetService
                         .getDataSetTables(dataSet);
                 for (int i = 0; i < util.getActiveModuleCount(); i++) {
                     if (module == null
                             || module.equals("%")
                             || util.isIncludedInExportList(util
                                     .getActiveModule(i))) {
-                        _log.info("Exporting module: "
-                                + util.getActiveModule(i).name);
-                        _log.info(originaldb.toString());
-                        DatabaseDataIO dbdio = new DatabaseDataIO();
+                        getLog().info(
+                                "Exporting module: "
+                                        + util.getActiveModule(i).name);
+                        getLog().info(originaldb.toString());
+                        final DatabaseDataIO dbdio = new DatabaseDataIO();
                         dbdio.setEnsureFKOrder(false);
                         if (util.getActiveModule(i).name
                                 .equalsIgnoreCase("CORE")) {
-                            _log.info("Path: " + output.getAbsolutePath());
+                            getLog().info("Path: " + output.getAbsolutePath());
                             // First we delete all .xml files in the directory
 
                             if (datasetI == 0) {
-                                File[] filestodelete = DatabaseIO
+                                final File[] filestodelete = DatabaseIO
                                         .readFileArray(getOutput());
-                                for (File filedelete : filestodelete) {
+                                for (final File filedelete : filestodelete) {
                                     filedelete.delete();
                                 }
                             }
 
-                            for (DataSetTable table : tableList) {
-                                _log.info("Exporting table: "
-                                        + table.getTable().getTableName()
-                                        + " to Core");
-                                OutputStream out = new FileOutputStream(
+                            for (final DataSetTable table : tableList) {
+                                getLog().info(
+                                        "Exporting table: "
+                                                + table.getTable()
+                                                        .getTableName()
+                                                + " to Core");
+                                final OutputStream out = new FileOutputStream(
                                         new File(getOutput(), table.getTable()
                                                 .getTableName().toUpperCase()
                                                 + ".xml"));
@@ -188,34 +152,43 @@ public class ExportDataXMLMod extends DalInitializingTask {
                             }
                         } else {
                             if (dataSetCode.equals("AD")) {
-                                File path = new File(moduledir, util
+                                final File path = new File(moduledir, util
                                         .getActiveModule(i).dir
                                         + "/src-db/database/sourcedata/");
-                                _log.info("Path: " + path);
+                                getLog().info("Path: " + path);
                                 path.mkdirs();
                                 if (datasetI == 0) {
-                                    File[] filestodelete = DatabaseIO
+                                    final File[] filestodelete = DatabaseIO
                                             .readFileArray(path);
-                                    for (File filedelete : filestodelete) {
+                                    for (final File filedelete : filestodelete) {
                                         filedelete.delete();
                                     }
                                 }
-                                for (DataSetTable table : tableList) {
-                                    _log.info("Exporting table: "
-                                            + table.getTable().getTableName()
-                                            + " to module "
-                                            + util.getActiveModule(i).name);
-                                    File tableFile = new File(path, table
+                                for (final DataSetTable table : tableList) {
+                                    getLog()
+                                            .info(
+                                                    "Exporting table: "
+                                                            + table
+                                                                    .getTable()
+                                                                    .getTableName()
+                                                            + " to module "
+                                                            + util
+                                                                    .getActiveModule(i).name);
+                                    final File tableFile = new File(path, table
                                             .getTable().getTableName()
                                             .toUpperCase()
                                             + ".xml");
-                                    OutputStream out = new FileOutputStream(
+                                    final OutputStream out = new FileOutputStream(
                                             tableFile);
-                                    boolean b = dbdio.writeDataForTableToXML(
-                                            originaldb, datasetService,
-                                            dataSetCode, table, out,
-                                            getEncoding(), util
-                                                    .getActiveModule(i).idMod);
+                                    final boolean b = dbdio
+                                            .writeDataForTableToXML(
+                                                    originaldb,
+                                                    datasetService,
+                                                    dataSetCode,
+                                                    table,
+                                                    out,
+                                                    getEncoding(),
+                                                    util.getActiveModule(i).idMod);
                                     if (!b)
                                         tableFile.delete();
                                     out.flush();
@@ -232,43 +205,11 @@ public class ExportDataXMLMod extends DalInitializingTask {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()),
                         true);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             // log(e.getLocalizedMessage());
             throw new BuildException(e);
         }
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getExcludeobjects() {
@@ -325,17 +266,6 @@ public class ExportDataXMLMod extends DalInitializingTask {
 
     public void setPostscript(File postscript) {
         this.postscript = postscript;
-    }
-
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        _verbosity = level;
     }
 
     public String getCodeRevision() {
