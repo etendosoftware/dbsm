@@ -19,8 +19,13 @@
 
 package org.openbravo.ddlutils.task;
 
+import java.util.Properties;
+
 import org.apache.ddlutils.task.VerbosityLevel;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.openbravo.dal.core.DalInitializingTask;
 import org.openbravo.utils.OBLogAppender;
 
@@ -54,6 +59,23 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
 
     @Override
     public void execute() {
+        final Properties props = new Properties();
+        final String level = (verbosity == null ? Level.INFO.toString()
+                : verbosity.getValue()).toUpperCase();
+
+        props.setProperty("log4j.rootCategory", level + ",A");
+        props.setProperty("log4j.appender.A",
+                "org.openbravo.utils.OBLogAppender");
+        // "org.apache.log4j.ConsoleAppender");
+        props.setProperty("log4j.appender.A.layout",
+                "org.apache.log4j.PatternLayout");
+        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
+        // we don't want debug logging from Digester/Betwixt
+        props.setProperty("log4j.logger.org.apache.commons", "WARN");
+
+        LogManager.resetConfiguration();
+        PropertyConfigurator.configure(props);
+
         initLogging();
         super.execute();
     }
