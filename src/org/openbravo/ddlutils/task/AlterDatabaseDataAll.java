@@ -21,10 +21,13 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
@@ -155,14 +158,19 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
             dirScanner.setIncludes(dirFilterA);
             dirScanner.scan();
             final String[] incDirs = dirScanner.getIncludedDirectories();
+            Vector<File> configScripts=new Vector<File>();
             for (int j = 0; j < incDirs.length; j++) {
                 final File dirFolder = new File(basedir, incDirs[j] + "/");
                 final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
                 for (int i = 0; i < fileArray.length; i++) {
                     files.add(fileArray[i]);
                 }
+                File configScript = new File(dirFolder.getParentFile(),"configScript.xml");
+                if(configScript.exists())
+                {
+                  configScripts.add(configScript);
+                }
             }
-
             final DataReader dataReader = dbdio
                     .getConfiguredCompareDataReader(db);
             getLog().info("Loading data from XML files");
@@ -182,7 +190,22 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                     e.printStackTrace();
                 }
             }
-
+            
+            _log.info("Loading and applying configuration scripts");
+            DatabaseIO dbIO = new DatabaseIO();
+            for(File f:configScripts)
+            {
+              _log.info("Loading configuration script: "+f.getAbsolutePath());
+              Vector<Change> changes = dbIO.readChanges(f);
+              for(Change change:changes)
+              {
+                if(change instanceof ModelChange)
+                  ((ModelChange)change).apply(db, platform.isDelimitedIdentifierModeOn());
+                else if(change instanceof DataChange)
+                  ((DataChange)change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+                System.out.println(change);
+              }
+            }
             getLog().info("Comparing databases to find differences");
             final DataComparator dataComparator = new DataComparator(platform
                     .getSqlBuilder().getPlatformInfo(), platform

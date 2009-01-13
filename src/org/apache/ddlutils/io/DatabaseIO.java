@@ -544,16 +544,18 @@ public class DatabaseIO {
     public Vector<Change> readChanges(File file) {
         try {
             BeanReader reader = getReader();
+            reader.setValidating(false);
             Vector<Change> changes = new Vector<Change>();
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
             String header = br.readLine();
             String line = "";
             while ((line = br.readLine()) != null) {
-                Change change = (Change) reader.parse(new ByteArrayInputStream(
-                        (line).getBytes()));
-                changes.add(change);
+              Change change = (Change) reader.parse(new ByteArrayInputStream(
+                      (line).getBytes()));
+              changes.add(change);
             }
+
             return changes;
 
         } catch (Exception e) {
