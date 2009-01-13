@@ -20,6 +20,7 @@ package org.apache.ddlutils.io;
  */
 
 import java.util.List;
+
 import org.apache.commons.digester.Rule;
 import org.apache.commons.digester.RulesBase;
 

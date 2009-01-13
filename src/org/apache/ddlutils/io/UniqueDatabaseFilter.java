@@ -9,7 +9,6 @@
 
 package org.apache.ddlutils.io;
 
-import org.apache.ddlutils.model.Database;
 
 /**
  * 

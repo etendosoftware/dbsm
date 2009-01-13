@@ -1,11 +1,8 @@
 package org.apache.ddlutils.platform.postgresql;
 
-import org.apache.ddlutils.model.*;
-import org.apache.ddlutils.translation.ByLineTranslation;
-import org.apache.ddlutils.translation.CombinedTranslation;
-import org.apache.ddlutils.translation.ReplaceStrTranslation;
+import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
-import org.apache.ddlutils.translation.Translation;
 
 public class PostgrePLSQLTriggerStandarization extends
         PostgrePLSQLStandarization {

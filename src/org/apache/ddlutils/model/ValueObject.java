@@ -17,6 +17,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;

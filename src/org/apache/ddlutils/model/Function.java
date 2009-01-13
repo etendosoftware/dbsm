@@ -19,17 +19,15 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.ddlutils.translation.*;
-import org.apache.ddlutils.util.ExtTypes;
+import org.apache.ddlutils.translation.NullTranslation;
+import org.apache.ddlutils.translation.Translation;
 
 /**
  * Represents a database function or procedure.

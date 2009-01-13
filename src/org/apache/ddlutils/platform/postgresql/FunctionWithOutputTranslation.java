@@ -13,6 +13,7 @@
 package org.apache.ddlutils.platform.postgresql;
 
 import java.util.regex.Pattern;
+
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.translation.ReplacePatTranslation;

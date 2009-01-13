@@ -1,12 +1,7 @@
 package org.apache.ddlutils.alteration;
 
-import java.util.HashMap;
-import java.util.Vector;
-
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
-import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 

@@ -1,6 +1,5 @@
 package org.apache.ddlutils.translation;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -21,6 +21,7 @@ package org.apache.ddlutils.model;
 
 import java.io.Serializable;
 import java.sql.Types;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.ddlutils.util.ExtTypes;

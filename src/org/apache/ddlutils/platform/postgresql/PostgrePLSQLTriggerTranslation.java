@@ -12,13 +12,9 @@
 
 package org.apache.ddlutils.platform.postgresql;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.translation.ByLineTranslation;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
-import org.apache.ddlutils.translation.ReplaceStrTranslation;
 import org.apache.ddlutils.translation.Translation;
 
 /**

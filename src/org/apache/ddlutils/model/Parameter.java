@@ -19,16 +19,8 @@ package org.apache.ddlutils.model;
  * under the License.
  */
 
-import java.math.BigDecimal;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.sql.Date;
-import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.ddlutils.util.ExtTypes;
-import org.apache.ddlutils.util.Jdbc3Utils;
 
 /**
  * 

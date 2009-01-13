@@ -13,8 +13,8 @@
 package org.apache.ddlutils.platform.postgresql;
 
 import org.apache.ddlutils.translation.CombinedTranslation;
-import org.apache.ddlutils.translation.ReplaceStrTranslation;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
+import org.apache.ddlutils.translation.ReplaceStrTranslation;
 
 /**
  * 

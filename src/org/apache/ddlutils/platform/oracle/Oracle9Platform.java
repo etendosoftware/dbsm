@@ -19,7 +19,6 @@ package org.apache.ddlutils.platform.oracle;
  * under the License.
  */
 
-import java.sql.Types;
 
 /**
  * The platform for Oracle 9.
