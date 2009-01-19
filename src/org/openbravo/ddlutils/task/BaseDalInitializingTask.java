@@ -52,7 +52,7 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     /**
      * Initializes the logging.
      */
-    private void initLogging() {
+    protected void initLogging() {
         log = Logger.getLogger(getClass());
         OBLogAppender.setProject(getProject());
     }
@@ -92,6 +92,9 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     }
 
     public Logger getLog() {
+        if (log == null) {
+            initLogging();
+        }
         return log;
     }
 
