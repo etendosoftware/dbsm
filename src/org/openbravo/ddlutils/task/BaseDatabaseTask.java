@@ -95,6 +95,9 @@ public abstract class BaseDatabaseTask extends Task {
     }
 
     public Logger getLog() {
+        if (log == null) {
+            initLogging();
+        }
         return log;
     }
 
