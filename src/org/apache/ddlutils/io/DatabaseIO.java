@@ -20,12 +20,9 @@ package org.apache.ddlutils.io;
  */
 
 import java.beans.IntrospectionException;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -524,17 +521,14 @@ public class DatabaseIO {
 
     public void write(File file, Vector<Change> changes) {
         try {
+
             BeanWriter writer = getWriter(new FileOutputStream(file));
             writer.writeXmlDeclaration("<?xml version=\"1.0\"?>");
             writer.flush();
 
-            // writer.write(new ChangeVector(changes));
-            // writer.write(changes);
+            writer.write(changes);
+            writer.flush();
 
-            for (Change change : changes) {
-                writer.write(change);
-                writer.flush();
-            }
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -544,24 +538,13 @@ public class DatabaseIO {
     public Vector<Change> readChanges(File file) {
         try {
             BeanReader reader = getReader();
-            reader.setValidating(false);
-            Vector<Change> changes = new Vector<Change>();
-            FileReader fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
-            String header = br.readLine();
-            String line = "";
-            while ((line = br.readLine()) != null) {
-              Change change = (Change) reader.parse(new ByteArrayInputStream(
-                      (line).getBytes()));
-              changes.add(change);
-            }
+            reader.registerBeanClass("vector", java.util.Vector.class);
 
+            Vector<Change> changes = (Vector<Change>) reader.parse(file);
             return changes;
-
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
-
 }

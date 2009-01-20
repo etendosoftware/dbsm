@@ -2474,33 +2474,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             typeCode = Types.CHAR;
         if (typeCode == ExtTypes.NVARCHAR)
             typeCode = Types.VARCHAR;
-
-        if (value == null) {
-            statement.setNull(sqlIndex, typeCode);
-        } else if (value instanceof String) {
-            statement.setString(sqlIndex, (String) value);
-        } else if (value instanceof byte[]) {
-            statement.setBytes(sqlIndex, (byte[]) value);
-        } else if (value instanceof Boolean) {
-            statement.setBoolean(sqlIndex, ((Boolean) value).booleanValue());
-        } else if (value instanceof Byte) {
-            statement.setByte(sqlIndex, ((Byte) value).byteValue());
-        } else if (value instanceof Short) {
-            statement.setShort(sqlIndex, ((Short) value).shortValue());
-        } else if (value instanceof Integer) {
-            statement.setInt(sqlIndex, ((Integer) value).intValue());
-        } else if (value instanceof Long) {
-            statement.setLong(sqlIndex, ((Long) value).longValue());
-        } else if (value instanceof BigDecimal) {
-            // setObject assumes a scale of 0, so we rather use the typed setter
-            statement.setBigDecimal(sqlIndex, (BigDecimal) value);
-        } else if (value instanceof Float) {
-            statement.setFloat(sqlIndex, ((Float) value).floatValue());
-        } else if (value instanceof Double) {
-            statement.setDouble(sqlIndex, ((Double) value).doubleValue());
-        } else {
-            statement.setObject(sqlIndex, value, typeCode);
-        }
+        statement.setObject(sqlIndex, value, typeCode);
     }
 
     /**

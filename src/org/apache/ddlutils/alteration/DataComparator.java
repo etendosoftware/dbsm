@@ -182,12 +182,17 @@ public class DataComparator {
                                             .getColumnName()
                                             .equalsIgnoreCase(columnC.getName()))
                                         value = db.get(property.getName());
-                                if (value != null)
+                                if (value != null) {
+                                    String val;
+                                    if (db.get(columnC.getName()) == null)
+                                        val = null;
+                                    else
+                                        val = db.get(columnC.getName())
+                                                .toString();
                                     dataChanges.add(new ColumnDataChange(
-                                            tableC, columnC, null, db
-                                                    .get(columnC.getName()), db
+                                            tableC, columnC, null, val, db
                                                     .getId()));
-                                else
+                                } else
                                     _log
                                             .warn("Column "
                                                     + columnC.getName()
@@ -371,9 +376,14 @@ public class DataComparator {
                             } catch (Exception e) {
                                 value = db.get(columnC.getName().toLowerCase());
                             }
+                            String val;
+                            if (db.get(columnC.getName()) == null)
+                                val = null;
+                            else
+                                val = db.get(columnC.getName()).toString();
                             dataChanges.add(new ColumnDataChange(tableC,
-                                    columnC, null, db.get(columnC.getName()),
-                                    currentdb.getDynaClassFor(db)
+                                    columnC, null, val, currentdb
+                                            .getDynaClassFor(db)
                                             .getPrimaryKeyProperties()));
                         }
                         try {
@@ -637,8 +647,18 @@ public class DataComparator {
             Object v2 = db2.get(nonprimaryKeys[i].getName());
             if ((v1 == null && v2 != null) || (v1 != null && v2 == null)
                     || (v1 != null && v2 != null && !v1.equals(v2))) {
+                String val1;
+                if (v1 == null)
+                    val1 = null;
+                else
+                    val1 = v1.toString();
+                String val2;
+                if (v2 == null)
+                    val2 = null;
+                else
+                    val2 = v2.toString();
                 dataChanges.add(new ColumnDataChange(dynaClass.getTable(),
-                        nonprimaryKeys[i].getColumn(), v1, v2, pkVal));
+                        nonprimaryKeys[i].getColumn(), val1, val2, pkVal));
                 // System.out.println("Column change:
                 // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
             }
@@ -646,6 +666,8 @@ public class DataComparator {
     }
 
     private Iterator readRowsFromTableDAL(DataSetTable table, String moduleIds) {
+        if (table == null)
+            return new Vector<BaseOBObject>().iterator();
         return DataSetService.getInstance().getExportableObjects(table,
                 moduleIds).iterator();
     }
@@ -844,13 +866,13 @@ public class DataComparator {
                 dbOrg = (BaseOBObject) iteratorDb.next();
                 obPending = 2;
             } else if (comp == -1) // Original model has additional rows, we
-                                   // have to "delete" them
+            // have to "delete" them
             {
                 dataChanges.add(new RemoveRowDALChange(table, dbOrg));
                 dbOrg = (BaseOBObject) iteratorDb.next();
                 obPending = 1;
             } else if (comp == 1) // Target model has additional rows, we have
-                                  // to "add" them
+            // to "add" them
             {
                 dataChanges.add(new AddRowChange(table, dbNew));
                 indNew++;
@@ -870,18 +892,18 @@ public class DataComparator {
                 int comp = comparePKs(model, dbOrg, dbNew, primaryKeys,
                         properties);
                 if (comp == 0) // Rows have the same PKs, we have to compare
-                               // them
+                // them
                 {
                     compareRows(model, dbOrg, dbNew, datasetTable, allColumns);
                     indNew++;
                     obPending = 0;
                 } else if (comp == -1) // Original model has additional rows, we
-                                       // have to "delete" them
+                // have to "delete" them
                 {
                     dataChanges.add(new RemoveRowDALChange(table, dbOrg));
                     obPending = 0;
                 } else if (comp == 1) // Target model has additional rows, we
-                                      // have to "add" them
+                // have to "add" them
                 {
                     dataChanges.add(new AddRowChange(table, dbNew));
                 } else if (comp == -2) {
@@ -956,12 +978,12 @@ public class DataComparator {
                 indNew++;
                 indOrg++;
             } else if (comp == -1) // Original model has additional rows, we
-                                   // have to "delete" them
+            // have to "delete" them
             {
                 dataChanges.add(new RemoveRowDALChange(table, dbOrg));
                 indOrg++;
             } else if (comp == 1) // Target model has additional rows, we have
-                                  // to "add" them
+            // to "add" them
             {
                 dataChanges.add(new AddRowChange(table, dbNew));
                 indNew++;
@@ -1042,6 +1064,8 @@ public class DataComparator {
         for (int i = 0; i < nonprimaryKeys.length; i++) {
             Object v1 = db1.get(nonprimaryKeys[i].getName());
             Object v2 = null;
+            String vs1 = null;
+            String vs2 = null;
             for (Property property : properties) {
                 if (property.getColumnName() != null
                         && property.getColumnName().equalsIgnoreCase(
@@ -1055,17 +1079,20 @@ public class DataComparator {
                         else
                             v2 = "N";
                     }
-
-                    if (v1 != null)
+                    if (v1 != null) {
                         v1 = v1.toString();
-                    if (v2 != null)
+                        vs1 = v1.toString();
+                    }
+                    if (v2 != null) {
                         v2 = v2.toString();
+                        vs2 = v2.toString();
+                    }
                 }
             }
             if ((v1 == null && v2 != null) || (v1 != null && v2 == null)
                     || (v1 != null && v2 != null && !v1.equals(v2))) {
                 dataChanges.add(new ColumnDataChange(dynaClass.getTable(),
-                        nonprimaryKeys[i].getColumn(), v1, v2, pkVal));
+                        nonprimaryKeys[i].getColumn(), vs1, vs2, pkVal));
                 // System.out.println("Column change:
                 // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
             }
@@ -1115,8 +1142,14 @@ public class DataComparator {
                     || (v1 != null && v2 == null)
                     || (v1 != null && v2 != null && !v1.toString().equals(
                             v2.toString()))) {
+                String vs1 = null;
+                String vs2 = null;
+                if (v1 != null)
+                    vs1 = v1.toString();
+                if (v2 != null)
+                    vs2 = v2.toString();
                 dataChanges.add(new ColumnDataChange(dynaClass.getTable(),
-                        nonprimaryKeys[i].getColumn(), v1, v2, pkVal));
+                        nonprimaryKeys[i].getColumn(), vs1, vs2, pkVal));
                 // System.out.println("Column change:
                 // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
             }

@@ -8,8 +8,8 @@ public class ColumnDataChange implements DataChange {
 
     Table _table;
     Column _column;
-    Object _oldValue;
-    Object _newValue;
+    String _oldValue;
+    String _newValue;
     Object _pkRow;
     String _tablename;
     String _columnname;
@@ -19,15 +19,15 @@ public class ColumnDataChange implements DataChange {
     }
 
     public ColumnDataChange(String tablename, String columnname,
-            Object oldValue, Object pkRow) {
+            String oldValue, Object pkRow) {
         this._tablename = tablename;
         this._columnname = columnname;
         this._oldValue = oldValue;
         this._pkRow = pkRow;
     }
 
-    public ColumnDataChange(Table table, Column column, Object oldValue,
-            Object newValue, Object pkRow) {
+    public ColumnDataChange(Table table, Column column, String oldValue,
+            String newValue, Object pkRow) {
         _table = table;
         _column = column;
         _oldValue = oldValue;
@@ -39,8 +39,12 @@ public class ColumnDataChange implements DataChange {
     }
 
     public void apply(DatabaseData databaseData, boolean caseSensitive) {
-        // databaseData.changeRow(_table, _column, _pkRow, _oldValue,
-        // _newValue);
+        if (_table == null)
+            _table = databaseData.getDatabase().findTable(_tablename);
+        if (_column == null)
+            _column = _table.findColumn(_columnname);
+        databaseData.changeRow(_table, _column, new Object[] { _pkRow },
+                _oldValue, _newValue);
     }
 
     @Override
@@ -59,11 +63,11 @@ public class ColumnDataChange implements DataChange {
         return _column;
     }
 
-    public Object getOldValue() {
+    public String getOldValue() {
         return _oldValue;
     }
 
-    public Object getNewValue() {
+    public String getNewValue() {
         return _newValue;
     }
 
@@ -95,11 +99,11 @@ public class ColumnDataChange implements DataChange {
         _pkRow = row;
     }
 
-    public void setOldValue(Object oldValue) {
+    public void setOldValue(String oldValue) {
         _oldValue = oldValue;
     }
 
-    public void setNewValue(Object newValue) {
+    public void setNewValue(String newValue) {
         _newValue = newValue;
     }
 }

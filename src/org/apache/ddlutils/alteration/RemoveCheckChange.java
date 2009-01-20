@@ -33,6 +33,13 @@ public class RemoveCheckChange extends TableChangeImplBase {
     /** The check to be removed. */
     private Check _check;
 
+    private String _checkName;
+    private String _tableName;
+
+    public RemoveCheckChange() {
+
+    }
+
     /**
      * Creates a new change object.
      * 
@@ -44,6 +51,13 @@ public class RemoveCheckChange extends TableChangeImplBase {
     public RemoveCheckChange(Table table, Check check) {
         super(table);
         _check = check;
+        _checkName = check.getName();
+        _tableName = table.getName();
+    }
+
+    public RemoveCheckChange(String tableName, String checkName) {
+        _checkName = checkName;
+        _tableName = tableName;
     }
 
     /**
@@ -55,19 +69,52 @@ public class RemoveCheckChange extends TableChangeImplBase {
         return _check;
     }
 
+    public void setCheck(Database model) {
+        Table table = model.findTable(_tableName);
+        if (table != null)
+            _check = table.findCheck(_checkName);
+    }
+
     /**
      * {@inheritDoc}
      */
     public void apply(Database database, boolean caseSensitive) {
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
-        Check check = table.findCheck(_check.getName(), caseSensitive);
+        Table table = null;
+
+        if (_tableName == null)
+            table = database.findTable(getChangedTable().getName(),
+                    caseSensitive);
+        else
+            table = database.findTable(_tableName);
+
+        Check check = null;
+
+        if (_checkName == null)
+            check = table.findCheck(_check.getName(), caseSensitive);
+        else
+            check = table.findCheck(_checkName);
 
         table.removeCheck(check);
     }
 
+    public String getCheckName() {
+        return _checkName;
+    }
+
+    public void setCheckName(String checkName) {
+        _checkName = checkName;
+    }
+
+    public String getTableName() {
+        return _tableName;
+    }
+
+    public void setTableName(String tableName) {
+        _tableName = tableName;
+    }
+
     @Override
     public String toString() {
-        return "RemoveCheckChange. Name: " + _check.getName();
+        return "RemoveCheckChange. Name: " + _checkName;
     }
 }

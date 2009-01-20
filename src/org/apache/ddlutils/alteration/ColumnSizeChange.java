@@ -97,11 +97,25 @@ public class ColumnSizeChange extends TableChangeImplBase implements
      * {@inheritDoc}
      */
     public void apply(Database database, boolean caseSensitive) {
+        if (_table == null) {
+            System.out.println("Table wasn't found in database.");
+            return;
+        }
         Table table = database.findTable(getChangedTable().getName(),
                 caseSensitive);
-        Column column = table.findColumn(_column.getName(), caseSensitive);
+        if (table != null) {
+            Column column = table.findColumn(_column.getName(), caseSensitive);
+            if (column != null)
+                column.setSizeAndScale(_newSize, _newScale);
+            else
+                System.out.println("Column " + getChangedColumn().getName()
+                        + " of table " + getChangedTable().getName()
+                        + " wasn't found in the database.");
+        } else {
+            System.out.println("Table " + getChangedTable().getName()
+                    + " wasn't found in the database");
+        }
 
-        column.setSizeAndScale(_newSize, _newScale);
     }
 
     public String getTablename() {
@@ -130,7 +144,12 @@ public class ColumnSizeChange extends TableChangeImplBase implements
 
     @Override
     public String toString() {
-        return "ColumnSizeChange. Column: " + _column.getName();
+        String name;
+        if (_column == null)
+            name = "null";
+        else
+            name = _column.getName();
+        return "ColumnSizeChange. Column: " + name;
     }
 
 }

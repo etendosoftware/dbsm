@@ -23,6 +23,7 @@ import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
@@ -60,176 +61,185 @@ public class ExportConfigScript extends BaseDalInitializingTask {
 
     @Override
     public void doExecute() {
+        try {
+            if (industryTemplate == null) {
+                throw new BuildException("No industry template was specified.");
+            }
 
-        if (industryTemplate == null) {
-            throw new BuildException("No industry template was specified.");
-        }
+            final BasicDataSource ds = new BasicDataSource();
+            ds.setDriverClassName(getDriver());
+            ds.setUrl(getUrl());
+            ds.setUsername(getUser());
+            ds.setPassword(getPassword());
 
-        final BasicDataSource ds = new BasicDataSource();
-        ds.setDriverClassName(getDriver());
-        ds.setUrl(getUrl());
-        ds.setUsername(getUser());
-        ds.setPassword(getPassword());
+            final Platform platform = PlatformFactory
+                    .createNewPlatformInstance(ds);
+            final DBSMOBUtil util = DBSMOBUtil.getInstance();
+            util.getModules(platform, excludeobjects);
 
-        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-        final DBSMOBUtil util = DBSMOBUtil.getInstance();
-        util.getModules(platform, excludeobjects);
+            final String indTemp = util.getNameOfActiveIndustryTemplate();
+            if (indTemp == null) {
+                getLog()
+                        .info(
+                                "ERROR: There is no industry template set as development.");
+                System.exit(1);
+            }
+            industryTemplate = indTemp;
 
-        final String indTemp = util.getNameOfActiveIndustryTemplate();
-        if (indTemp == null) {
-            getLog().info(
-                    "ERROR: There is no industry template set as development.");
-            System.exit(1);
-        }
-        industryTemplate = indTemp;
+            // util.getModulesForIndustryTemplate(industryTemplate, new
+            // Vector<String>());
+            getLog().info("Loading model from XML files");
+            final Vector<File> dirs = new Vector<File>();
+            dirs.add(model);
 
-        // util.getModulesForIndustryTemplate(industryTemplate, new
-        // Vector<String>());
-        getLog().info("Loading model from XML files");
-        final Vector<File> dirs = new Vector<File>();
-        dirs.add(model);
-
-        for (int j = 0; j < util.getModuleCount(); j++) {
-            if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-                final File dirF = new File(moduledir, util.getModule(j).dir
-                        + "/src-db/database/model/");
-                System.out.println(dirF.getAbsolutePath());
-                if (dirF.exists()) {
-                    dirs.add(dirF);
+            for (int j = 0; j < util.getModuleCount(); j++) {
+                if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
+                    final File dirF = new File(moduledir, util.getModule(j).dir
+                            + "/src-db/database/model/");
+                    System.out.println(dirF.getAbsolutePath());
+                    if (dirF.exists()) {
+                        dirs.add(dirF);
+                    }
                 }
             }
-        }
-        final File[] fileArray = new File[dirs.size()];
-        for (int i = 0; i < dirs.size(); i++) {
-            getLog().info(
-                    "Loading model for module. Path: "
-                            + dirs.get(i).getAbsolutePath());
-            fileArray[i] = dirs.get(i);
-        }
-        final Database xmlModel = DatabaseUtils.readDatabase(fileArray);
+            final File[] fileArray = new File[dirs.size()];
+            for (int i = 0; i < dirs.size(); i++) {
+                getLog().info(
+                        "Loading model for module. Path: "
+                                + dirs.get(i).getAbsolutePath());
+                fileArray[i] = dirs.get(i);
+            }
+            final Database xmlModel = DatabaseUtils.readDatabase(fileArray);
 
-        getLog().info("Loading original data from XML files");
+            getLog().info("Loading original data from XML files");
 
-        final DatabaseDataIO dbdio = new DatabaseDataIO();
-        dbdio.setEnsureFKOrder(false);
-        dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
-                getFilter(), xmlModel));
+            final DatabaseDataIO dbdio = new DatabaseDataIO();
+            dbdio.setEnsureFKOrder(false);
+            dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
+                    getFilter(), xmlModel));
 
-        final DataReader dataReader = dbdio
-                .getConfiguredCompareDataReader(xmlModel);
+            final DataReader dataReader = dbdio
+                    .getConfiguredCompareDataReader(xmlModel);
 
-        final Vector<File> dataFiles = DBSMOBUtil
-                .loadFilesFromFolder(getCoreData());
+            final Vector<File> dataFiles = DBSMOBUtil
+                    .loadFilesFromFolder(getCoreData());
 
-        for (int j = 0; j < util.getModuleCount(); j++) {
-            if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-                final File dirF = new File(moduledir, util.getModule(j).dir
-                        + "/src-db/database/sourcedata/");
-                System.out.println(dirF.getAbsolutePath());
-                if (dirF.exists()) {
-                    dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF
-                            .getAbsolutePath()));
+            for (int j = 0; j < util.getModuleCount(); j++) {
+                if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
+                    final File dirF = new File(moduledir, util.getModule(j).dir
+                            + "/src-db/database/sourcedata/");
+                    System.out.println(dirF.getAbsolutePath());
+                    if (dirF.exists()) {
+                        dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF
+                                .getAbsolutePath()));
+                    }
                 }
             }
-        }
 
-        final DatabaseData databaseOrgData = new DatabaseData(xmlModel);
-        for (int i = 0; i < dataFiles.size(); i++) {
-            // getLog().info("Loading data for module. Path:
-            // "+dataFiles.get(i).getAbsolutePath());
-            try {
-                dataReader.getSink().start();
-                final String tablename = dataFiles.get(i).getName().substring(
-                        0, dataFiles.get(i).getName().length() - 4);
-                final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader
-                        .getSink()).getVector();
-                dataReader.parse(dataFiles.get(i));
-                databaseOrgData.insertDynaBeansFromVector(tablename,
-                        vectorDynaBeans);
-                dataReader.getSink().end();
-            } catch (final Exception e) {
-                e.printStackTrace();
+            final DatabaseData databaseOrgData = new DatabaseData(xmlModel);
+            for (int i = 0; i < dataFiles.size(); i++) {
+                // getLog().info("Loading data for module. Path:
+                // "+dataFiles.get(i).getAbsolutePath());
+                try {
+                    dataReader.getSink().start();
+                    final String tablename = dataFiles.get(i).getName()
+                            .substring(0,
+                                    dataFiles.get(i).getName().length() - 4);
+                    final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader
+                            .getSink()).getVector();
+                    dataReader.parse(dataFiles.get(i));
+                    databaseOrgData.insertDynaBeansFromVector(tablename,
+                            vectorDynaBeans);
+                    dataReader.getSink().end();
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
 
-        getLog().info("Loading complete model from current database");
-        final Database currentdb = platform.loadModelFromDatabase(DatabaseUtils
-                .getExcludeFilter(excludeobjects));
+            getLog().info("Loading complete model from current database");
+            final Database currentdb = platform
+                    .loadModelFromDatabase(DatabaseUtils
+                            .getExcludeFilter(excludeobjects));
 
-        getLog().info("Creating submodels for modules");
+            getLog().info("Creating submodels for modules");
 
-        Database databaseModel = null;
-        for (int i = 0; i < util.getModuleCount(); i++) {
+            Database databaseModel = null;
+            for (int i = 0; i < util.getModuleCount(); i++) {
+                getLog().info(
+                        "Creating submodel for module: "
+                                + util.getModule(i).name);
+                Database dbI = null;
+                try {
+                    dbI = (Database) currentdb.clone();
+                } catch (final Exception e) {
+                    System.out.println("Error while cloning the database model"
+                            + e.getMessage());
+                    e.printStackTrace();
+                    return;
+                }
+                try {
+                    dbI.applyNamingConventionFilter(util.getModule(i).filter);
+                    if (databaseModel == null)
+                        databaseModel = dbI;
+                    else
+                        databaseModel.mergeWith(dbI);
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            getLog().info("Comparing models...");
+            final Vector<String> modIds = new Vector<String>();
+            for (int i = 0; i < util.getModuleCount(); i++) {
+                final String mod = util.getModule(i).idMod;
+                getLog().info("Module added to comparison: " + mod);
+                modIds.add(mod);
+            }
+            final DataComparator dataComparator = new DataComparator(platform
+                    .getSqlBuilder().getPlatformInfo(), platform
+                    .isDelimitedIdentifierModeOn());
+            dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
+                    getFilter(), currentdb));
+            dataComparator.compareUsingDAL(xmlModel, databaseModel, platform,
+                    databaseOrgData, "ADCS", null);
+            final Vector<Change> dataChanges = new Vector<Change>();
+            dataChanges.addAll(dataComparator.getChanges());
+            final Vector<Change> finalChanges = new Vector<Change>();
+            final Vector<Change> comparatorChanges = new Vector<Change>();
+            comparatorChanges.addAll(dataComparator.getModelChangesList());
+            for (final Object change : dataComparator.getModelChangesList())
+                if (change instanceof ColumnSizeChange
+                        || change instanceof RemoveCheckChange) {
+                    finalChanges.add((Change) change);
+                    comparatorChanges.remove(change);
+                }
+
+            for (final Change change : dataComparator.getChanges())
+                if (change instanceof ColumnDataChange) {
+                    finalChanges.add((change));
+                    dataChanges.remove(change);
+                }
+
+            comparatorChanges.addAll(dataChanges);
+
+            final DatabaseIO dbIO = new DatabaseIO();
+
+            final File configFile = new File(moduledir, industryTemplate
+                    + "/src-db/database/configScript.xml");
+            final File folder = new File(configFile.getParent());
+
+            folder.mkdirs();
+            dbIO.write(configFile, finalChanges);
+
             getLog().info(
-                    "Creating submodel for module: " + util.getModule(i).name);
-            Database dbI = null;
-            try {
-                dbI = (Database) currentdb.clone();
-            } catch (final Exception e) {
-                System.out.println("Error while cloning the database model"
-                        + e.getMessage());
-                e.printStackTrace();
-                return;
+                    "Changes that couldn't be exported to the config script:");
+            getLog().info(
+                    "*******************************************************");
+            for (final Change c : comparatorChanges) {
+                getLog().info(c);
             }
-            try {
-                dbI.applyNamingConventionFilter(util.getModule(i).filter);
-                if (databaseModel == null)
-                    databaseModel = dbI;
-                else
-                    databaseModel.mergeWith(dbI);
-            } catch (final Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        getLog().info("Comparing models...");
-        final Vector<String> modIds = new Vector<String>();
-        for (int i = 0; i < util.getModuleCount(); i++) {
-            final String mod = util.getModule(i).idMod;
-            getLog().info("Module added to comparison: " + mod);
-            modIds.add(mod);
-        }
-        final DataComparator dataComparator = new DataComparator(platform
-                .getSqlBuilder().getPlatformInfo(), platform
-                .isDelimitedIdentifierModeOn());
-        dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
-                getFilter(), currentdb));
-        dataComparator.compareUsingDAL(xmlModel, databaseModel, platform,
-                databaseOrgData, "ADCS", null);
-        final Vector<Change> dataChanges = new Vector<Change>();
-        dataChanges.addAll(dataComparator.getChanges());
-        final Vector<Change> finalChanges = new Vector<Change>();
-        final Vector<Change> comparatorChanges = new Vector<Change>();
-        comparatorChanges.addAll(dataComparator.getModelChangesList());
-        for (final Object change : dataComparator.getModelChangesList())
-            if (change instanceof ColumnSizeChange) {
-                finalChanges.add((ColumnSizeChange) change);
-                comparatorChanges.remove(change);
-            }
-
-        for (final Change change : dataComparator.getChanges())
-            if (change instanceof ColumnDataChange) {
-                finalChanges.add((change));
-                dataChanges.remove(change);
-            }
-
-        comparatorChanges.addAll(dataChanges);
-
-        final DatabaseIO dbIO = new DatabaseIO();
-
-        final File configFile = new File(moduledir, industryTemplate
-                + "/src-db/database/configScript.xml");
-        final File folder = new File(configFile.getParent());
-
-        folder.mkdirs();
-        dbIO.write(configFile, finalChanges);
-
-        getLog()
-                .info("Changes that couldn't be exported to the config script:");
-        getLog()
-                .info("*******************************************************");
-        for (final Change c : comparatorChanges) {
-            getLog().info(c);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

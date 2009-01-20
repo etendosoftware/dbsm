@@ -104,14 +104,11 @@ public class DatabaseData {
 
     public void changeRow(Table table, Column column, Object[] primaryKeys,
             Object oldValue, Object newValue) {
-        System.out.println("Trying to change table " + table.getName()
-                + ", column " + column.getName() + " from " + oldValue + " to "
-                + newValue);
-        if (_model.findTable(table.getName()) == null) {
+        if (table == null) {
             System.out.println("Error: impossible to change row in table "
                     + table + ", as the table doesn't exist.");
         } else {
-            if (_model.findTable(table.getName()).findColumn(column.getName()) == null) {
+            if (column == null) {
                 System.out.println("Error: impossible to change row in table "
                         + table + ", as the column " + column.getName()
                         + " doesn't exist.");

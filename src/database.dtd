@@ -415,11 +415,12 @@ Defines a trigger in the database schema.
     foreach (row, statement) "row"
 >
 
-<!ELEMENT columnDataChange>
+<!ELEMENT columnDataChange (oldValue*, newValue*)>
 <!ATTLIST columnDataChange
   tablename             CDATA #IMPLIED
   columnname             CDATA #IMPLIED
-  oldValue             CDATA #IMPLIED
-  newValue             CDATA #IMPLIED
   pkRow             CDATA #IMPLIED
 >
+
+<!ELEMENT oldValue (#PCDATA)>
+<!ELEMENT newValue (#PCDATA)>

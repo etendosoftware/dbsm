@@ -196,13 +196,21 @@ under the License.
     <element name="columnDataChange">
       <attribute name="tablename" property="tablename"/>
       <attribute name="columnname" property="columnname"/>
-      <attribute name="oldValue" property="oldValue"/>
-      <attribute name="newValue" property="newValue"/>
+      <element name="oldValue" property="oldValue">
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      </element>
+      <element name="newValue" property="newValue">
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      </element>
       <attribute name="pkRow" property="pkRow"/>
     </element>
   </class>
-  
-  
   
   <class name="org.apache.ddlutils.alteration.ColumnSizeChange">
     <element name="columnSizeChange">
@@ -211,5 +219,13 @@ under the License.
       <attribute name="newSize" property="newSize"/>
       <attribute name="newScale" property="newScale"/>
     </element>
+  </class> 
+    
+  <class name="org.apache.ddlutils.alteration.RemoveCheckChange">
+    <element name="removeCheckChange">
+      <attribute name="tableName" property="tableName"/>
+      <attribute name="checkName" property="checkName"/>
+    </element>
   </class>
+  
 </betwixt-config>
