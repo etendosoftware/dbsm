@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -236,6 +237,7 @@ public class DataComparator {
             }
 
         }
+        Collections.sort(dataChanges, new ChangeComparator());
     }
 
     public void compareUsingDALToUpdate(Database newdb, Platform platform,
@@ -274,6 +276,51 @@ public class DataComparator {
             compareTablesDALForUpdate(newdb, table, newdb.findTable(table
                     .getTable().getTableName()), service.getExportableObjects(
                     table, moduleIds), rowsOriginalData);
+        }
+
+        Collections.sort(dataChanges, new ChangeComparator());
+
+    }
+
+    private class ChangeComparator implements Comparator<Change> {
+        public int compare(Change o1, Change o2) {
+            if (o1 instanceof RemoveRowChange && o2 instanceof AddRowChange)
+                return -1;
+            else if (o1 instanceof RemoveRowDALChange
+                    && o2 instanceof AddRowChange)
+                return -1;
+            else if (o1 instanceof RemoveRowDALChange
+                    && o2 instanceof AddRowDALChange)
+                return -1;
+            else if (o1 instanceof RemoveRowChange
+                    && o2 instanceof AddRowDALChange)
+                return -1;
+            else if (o1 instanceof AddRowChange
+                    && o2 instanceof RemoveRowChange)
+                return 1;
+            else if (o1 instanceof AddRowDALChange
+                    && o2 instanceof RemoveRowChange)
+                return 1;
+            else if (o1 instanceof AddRowChange
+                    && o2 instanceof RemoveRowDALChange)
+                return 1;
+            else if (o1 instanceof AddRowDALChange
+                    && o2 instanceof RemoveRowDALChange)
+                return 1;
+            else if (o1 instanceof RemoveRowChange
+                    && o2 instanceof ColumnDataChange)
+                return -1;
+            else if (o1 instanceof RemoveRowDALChange
+                    && o2 instanceof ColumnDataChange)
+                return -1;
+            else if (o1 instanceof AddRowChange
+                    && o2 instanceof ColumnDataChange)
+                return 1;
+            else if (o1 instanceof AddRowDALChange
+                    && o2 instanceof ColumnDataChange)
+                return 1;
+            else
+                return 0;
         }
     }
 
