@@ -37,6 +37,7 @@ import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.JdbcModelReader;
 import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
+import org.apache.ddlutils.platform.ModelLoader;
 import org.apache.ddlutils.platform.SqlBuilder;
 
 /**
@@ -1457,4 +1458,6 @@ public interface Platform {
             Database model, boolean continueOnError);
 
     public void applyConfigScript(Database database, Vector<Change> changes);
+
+    public ModelLoader getModelLoader();
 }

@@ -107,6 +107,8 @@ public abstract class ModelLoaderBase implements ModelLoader {
     protected boolean _loadCompleteTables;
     protected String _moduleId;
 
+    private boolean onlyLoadTableColumns = false;
+
     /** Creates a new instance of BasicModelLoader */
     public ModelLoaderBase() {
 
@@ -218,14 +220,16 @@ public abstract class ModelLoaderBase implements ModelLoader {
             addTablesToCorrectPlace(db, readTablesFromList(filteredTables));
         else
             addTablesToCorrectPlace(db, filteredTables);
-        _log.info("Reading views...");
-        db.addViews(readViews());
-        _log.info("Reading sequences...");
-        db.addSequences(readSequences());
-        _log.info("Reading triggers...");
-        db.addTriggers(readTriggers());
-        _log.info("Reading functions...");
-        db.addFunctions(readFunctions());
+        if (!onlyLoadTableColumns) {
+            _log.info("Reading views...");
+            db.addViews(readViews());
+            _log.info("Reading sequences...");
+            db.addSequences(readSequences());
+            _log.info("Reading triggers...");
+            db.addTriggers(readTriggers());
+            _log.info("Reading functions...");
+            db.addFunctions(readFunctions());
+        }
 
         _log.info("Sorting foreign keys and checks...");
         for (int tableIdx = 0; tableIdx < db.getTableCount(); tableIdx++) {
@@ -907,5 +911,13 @@ public abstract class ModelLoaderBase implements ModelLoader {
             s.append('\'');
         }
         return s.toString();
+    }
+
+    public boolean isOnlyLoadTableColumns() {
+        return onlyLoadTableColumns;
+    }
+
+    public void setOnlyLoadTableColumns(boolean onlyLoadTableColumns) {
+        this.onlyLoadTableColumns = onlyLoadTableColumns;
     }
 }

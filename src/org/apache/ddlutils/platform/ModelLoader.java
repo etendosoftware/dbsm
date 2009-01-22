@@ -37,4 +37,7 @@ public interface ModelLoader {
     public void setLog(Log log);
 
     public Log getLog();
+
+    public void setOnlyLoadTableColumns(boolean onlyLoadTableColumns);
+
 }
