@@ -134,8 +134,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     @Override
     protected String translatePLSQLBody(String value) {
         String body = value.trim();
-        if (body.startsWith("DECLARE")) {
+        if (body.startsWith("DECLARE ")) {
             body = body.substring(9);
+        } else if (body.startsWith("DECLARE")) {
+            body = body.substring(8);
         }
         if (body.endsWith(";")) {
             body = body.substring(0, body.length() - 1);
@@ -541,7 +543,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
         _stmt_functioncode = _connection
                 .prepareStatement("select p.prosrc FROM pg_proc p WHERE UPPER(p.proname) = ?"); // dummy
-                                                                                                // sentence
+        // sentence
 
         _stmt_functionparams = _connection
                 .prepareStatement("  SELECT "

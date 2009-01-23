@@ -104,18 +104,20 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
         append(new ReplacePatTranslation(
                 "[Tt][Oo]_[Dd][Aa][Tt][Ee]\\([Nn][Oo][Ww]\\(\\)\\)", "now()"));
 
-        // Procedures with output parameters... and Perform
         for (int i = 0; i < database.getFunctionCount(); i++) {
-            if (database.getFunction(i).hasOutputParameters()) {
-                // appendFunctionWithOutputTranslation(database.getFunction(i));
-            } else {
-                // Perform
-                if (database.getFunction(i).getTypeCode() == Types.NULL) {
-                    append(new ReplacePatTranslation("PERFORM "
-                            + database.getFunction(i).getName() + "\\(",
-                            database.getFunction(i).getName() + "("));
-                }
+
+            if (database.getFunction(i).getTypeCode() == Types.NULL) {
+                System.out.println("[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
+                        + generateStringPat(database.getFunction(i).getName())
+                        + "\\(");
+                append(new ReplacePatTranslation(
+                        "[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
+                                + generateStringPat(database.getFunction(i)
+                                        .getName()) + "\\(", database
+                                .getFunction(i).getName()
+                                + "("));
             }
+
         }
 
         // The next translations are the translations corresponding to the
@@ -173,6 +175,17 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
                         "^(.+?)([\\s|\\t|\\(]+?)([Nn][Ee][Xx][Tt][Vv][Aa][Ll])\\('([^\\s|\\t|\\(]+?)'\\)(.+?)$",
                         "$1$2$4.$3$5")));
 
+    }
+
+    private String generateStringPat(String in) {
+        String out = "";
+        for (int i = 0; i < in.length(); i++)
+            if (in.charAt(i) == '_')
+                out = out + "[" + in.charAt(i) + "]";
+            else
+                out = out + "[" + in.substring(i, i + 1).toLowerCase()
+                        + in.substring(i, i + 1).toUpperCase() + "]";
+        return out;
     }
 
     public static void generateOutPatterns(Database database) {
