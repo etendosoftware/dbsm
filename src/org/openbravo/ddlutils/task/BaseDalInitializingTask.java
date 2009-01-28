@@ -72,6 +72,7 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
         props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
         // we don't want debug logging from Digester/Betwixt
         props.setProperty("log4j.logger.org.apache.commons", "WARN");
+        props.setProperty("log4j.logger.org.hibernate", "WARN");
 
         LogManager.resetConfiguration();
         PropertyConfigurator.configure(props);
