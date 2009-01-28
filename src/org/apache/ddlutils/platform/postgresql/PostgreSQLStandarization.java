@@ -24,6 +24,11 @@ public class PostgreSQLStandarization extends CombinedTranslation {
 
     /** Creates a new instance of PostgreSQLTranslation */
     public PostgreSQLStandarization() {
+        // postgres castings '::text', '::numeric', '::character varying',
+        // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
+        // with time zone
+        append(new ReplacePatTranslation(
+                "::[A-Za-z\"]*( varying)?( with time zone)?(\\[\\])?", ""));
 
         // sql "in" sentence and "not in"
         append(new ReplacePatTranslation(
@@ -32,12 +37,6 @@ public class PostgreSQLStandarization extends CombinedTranslation {
         append(new ReplacePatTranslation(
                 "<>\\s*[Aa][Ll][Ll]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)",
                 "NOT IN ($1)"));
-
-        // postgres castings '::text', '::numeric', '::character varying',
-        // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
-        // with time zone
-        append(new ReplacePatTranslation(
-                "::[A-Za-z\"]*( varying)?( with time zone)?", ""));
 
         // date truncs date_trunk('month', now()) --> trunc(now(),'MM')
         // suports 3 levels of recursivily in parenthesis -->
