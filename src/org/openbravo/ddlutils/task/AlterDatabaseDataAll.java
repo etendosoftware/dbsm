@@ -204,7 +204,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                     else if (change instanceof DataChange)
                         ((DataChange) change).apply(databaseOrgData, platform
                                 .isDelimitedIdentifierModeOn());
-                    System.out.println(change);
+                    getLog().debug(change);
                 }
             }
             getLog().info("Comparing databases to find differences");
@@ -213,9 +213,11 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                     .isDelimitedIdentifierModeOn());
             dataComparator.compareUsingDALToUpdate(db, platform,
                     databaseOrgData, "ADCS", null);
-            getLog().info("Data changes we will perform: ");
+
+            getLog().debug("Data changes we will perform: ");
             for (final Change change : dataComparator.getChanges())
-                getLog().info(change);
+                getLog().debug(change);
+
             OBDal.getInstance().commitAndClose();
 
             final Database oldModel = (Database) originaldb.clone();
