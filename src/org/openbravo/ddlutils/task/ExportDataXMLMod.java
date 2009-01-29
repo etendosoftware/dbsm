@@ -83,11 +83,7 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
             util.getIncDependenciesForModuleList(module);
 
         try {
-            // execute the pre-script
-            if (getPrescript() != null) {
-                platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()),
-                        true);
-            }
+
             getLog().info("Loading models for AD and RD Datasets");
             Database originaldb;
             originaldb = platform.loadModelFromDatabase(DatabaseUtils
