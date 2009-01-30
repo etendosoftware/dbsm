@@ -1927,10 +1927,26 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     private int update(Connection connection, Database model,
             ColumnDataChange change) throws DatabaseOperationException {
 
+        PreparedStatement dateStatement = getDateStatement(connection);
+        Date date = null;
+        try {
+            dateStatement.execute();
+            ResultSet resDate = dateStatement.getResultSet();
+            resDate.next();
+            date = resDate.getDate(1);
+            dateStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         HashMap map = new HashMap();
         Table table = model.findTable(change.getTablename());
         String pk = table.getPrimaryKeyColumns()[0].getName();
         map.put(pk, change.getPkRow());
+        if (table.findColumn("UPDATED") != null)
+            map.put("UPDATED", date);
+        if (table.findColumn("UPDATEDBY") != null)
+            map.put("UPDATEDBY", "O");
         map.put(change.getColumnname(), change.getNewValue());
 
         String sql = getSqlBuilder().getUpdateSql(table, map, true);
@@ -1944,19 +1960,31 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             beforeUpdate(connection, table);
 
             statement = connection.prepareStatement(sql);
-
             int sqlIndex = 1;
-            setObject(statement, sqlIndex++, change.getNewValue(), table
-                    .findColumn(change.getColumnname()));
+            for (int i = 0; i < table.getColumnCount(); i++) {
+                if (table.getColumn(i).getName().equalsIgnoreCase("UPDATED")) {
+                    setObject(statement, sqlIndex++, date, table
+                            .findColumn("UPDATED"));
+                }
+                if (table.getColumn(i).getName().equalsIgnoreCase(
+                        change.getColumnname())) {
+                    setObject(statement, sqlIndex++, change.getNewValue(),
+                            table.findColumn(change.getColumnname()));
+                }
+                if (table.getColumn(i).getName().equalsIgnoreCase("UPDATEDBY"))
+                    setObject(statement, sqlIndex++, "0", table
+                            .findColumn("UPDATEDBY"));
+            }
+
             setObject(statement, sqlIndex++, change.getPkRow(), table
                     .getPrimaryKeyColumns()[0]);
-
             int count = statement.executeUpdate();
 
             afterUpdate(connection, table);
 
             return count;
         } catch (SQLException ex) {
+            ex.printStackTrace();
             throw new DatabaseOperationException(
                     "Error while updating in the database : " + ex.getMessage(),
                     ex);

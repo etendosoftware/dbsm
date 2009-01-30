@@ -214,9 +214,9 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
             dataComparator.compareUsingDALToUpdate(db, platform,
                     databaseOrgData, "ADCS", null);
 
-            getLog().debug("Data changes we will perform: ");
+            getLog().info("Data changes we will perform: ");
             for (final Change change : dataComparator.getChanges())
-                getLog().debug(change);
+                getLog().info(change);
 
             OBDal.getInstance().commitAndClose();
 
