@@ -41,7 +41,7 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.db.DataSetService;
+import org.openbravo.service.dataset.DataSetService;
 
 /**
  * Provides basic live database data <-> XML functionality.

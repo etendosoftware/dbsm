@@ -29,7 +29,7 @@ import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 import org.openbravo.model.ad.utility.DataSet;
 import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.db.DataSetService;
+import org.openbravo.service.dataset.DataSetService;
 
 /**
  * 

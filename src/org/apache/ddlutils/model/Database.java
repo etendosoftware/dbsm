@@ -37,7 +37,7 @@ import org.apache.ddlutils.dynabean.SqlDynaException;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.util.ExtTypes;
 import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.db.DataSetService;
+import org.openbravo.service.dataset.DataSetService;
 
 /**
  * Represents the database model, ie. the tables in the database. It also
