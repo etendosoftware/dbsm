@@ -34,6 +34,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.utils.CheckSum;
 
 /**
  * 
@@ -60,10 +61,33 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
     private String dirFilter;
     private String datadir;
     private String datafilter;
+    private boolean force = false;
 
     /** Creates a new instance of ReadDataXML */
     public AlterDatabaseDataAll() {
         super();
+    }
+
+    public void execute() {
+        if (force) {
+            System.out
+                    .println("Database update process forced. Executing without checking changes.");
+        } else {
+            CheckSum cs = new CheckSum(basedir + "/../");
+            String oldStructCS = cs.getCheckSumDBSTructure();
+            String newStructCS = cs.calculateCheckSumDBStructure();
+            String oldDataCS = cs.getCheckSumDBSourceData();
+            String newDataCS = cs.calculateCheckSumDBSourceData();
+            if (oldStructCS.equals(newStructCS) && oldDataCS.equals(newDataCS)) {
+                System.out
+                        .println("Database files didn't change. No update process required.");
+                return;
+            } else {
+                System.out
+                        .println("Database files were changed. Initiating database update process.");
+            }
+        }
+        super.execute();
     }
 
     @Override
@@ -399,4 +423,11 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         this.datafilter = datafilter;
     }
 
+    public boolean isForce() {
+        return force;
+    }
+
+    public void setForce(boolean force) {
+        this.force = force;
+    }
 }
