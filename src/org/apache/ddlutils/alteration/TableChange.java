@@ -27,10 +27,10 @@ import org.apache.ddlutils.model.Table;
  * @version $Revision: $
  */
 public interface TableChange extends ModelChange {
-    /**
-     * Returns the affected table from the original model.
-     * 
-     * @return The affected table
-     */
-    public Table getChangedTable();
+  /**
+   * Returns the affected table from the original model.
+   * 
+   * @return The affected table
+   */
+  public Table getChangedTable();
 }

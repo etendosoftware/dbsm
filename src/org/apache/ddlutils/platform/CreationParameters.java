@@ -26,56 +26,55 @@ import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.ddlutils.model.Table;
 
 /**
- * Contains parameters used in the table creation. Note that the definition
- * order is retained (per table), so if a parameter should be applied before
- * some other parameter, then add it before the other one.
+ * Contains parameters used in the table creation. Note that the definition order is retained (per
+ * table), so if a parameter should be applied before some other parameter, then add it before the
+ * other one.
  * 
  * @version $Revision: 331006 $
  */
 public class CreationParameters {
-    /** The parameter maps keyed by the tables. */
-    private Map _parametersPerTable = new HashMap();
+  /** The parameter maps keyed by the tables. */
+  private Map _parametersPerTable = new HashMap();
 
-    /**
-     * Returns the parameters for the given table.
-     * 
-     * @param table
-     *            The table
-     * @return The parameters
-     */
-    public Map getParametersFor(Table table) {
-        ListOrderedMap result = new ListOrderedMap();
-        Map globalParams = (Map) _parametersPerTable.get(null);
-        Map tableParams = (Map) _parametersPerTable.get(table);
+  /**
+   * Returns the parameters for the given table.
+   * 
+   * @param table
+   *          The table
+   * @return The parameters
+   */
+  public Map getParametersFor(Table table) {
+    ListOrderedMap result = new ListOrderedMap();
+    Map globalParams = (Map) _parametersPerTable.get(null);
+    Map tableParams = (Map) _parametersPerTable.get(table);
 
-        if (globalParams != null) {
-            result.putAll(globalParams);
-        }
-        if (tableParams != null) {
-            result.putAll(tableParams);
-        }
-        return result;
+    if (globalParams != null) {
+      result.putAll(globalParams);
     }
-
-    /**
-     * Adds a parameter.
-     * 
-     * @param table
-     *            The table; if <code>null</code> then the parameter is for all
-     *            tables
-     * @param paramName
-     *            The name of the parameter
-     * @param paramValue
-     *            The value of the parameter
-     */
-    public void addParameter(Table table, String paramName, String paramValue) {
-        Map params = (Map) _parametersPerTable.get(table);
-
-        if (params == null) {
-            // we're using a list orderered map to retain the order
-            params = new ListOrderedMap();
-            _parametersPerTable.put(table, params);
-        }
-        params.put(paramName, paramValue);
+    if (tableParams != null) {
+      result.putAll(tableParams);
     }
+    return result;
+  }
+
+  /**
+   * Adds a parameter.
+   * 
+   * @param table
+   *          The table; if <code>null</code> then the parameter is for all tables
+   * @param paramName
+   *          The name of the parameter
+   * @param paramValue
+   *          The value of the parameter
+   */
+  public void addParameter(Table table, String paramName, String paramValue) {
+    Map params = (Map) _parametersPerTable.get(table);
+
+    if (params == null) {
+      // we're using a list orderered map to retain the order
+      params = new ListOrderedMap();
+      _parametersPerTable.put(table, params);
+    }
+    params.put(paramName, paramValue);
+  }
 }

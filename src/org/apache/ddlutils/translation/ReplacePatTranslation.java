@@ -21,30 +21,30 @@ import java.util.regex.Pattern;
  */
 public class ReplacePatTranslation implements Translation {
 
-    protected Pattern _p;
-    protected String _replaceStr;
+  protected Pattern _p;
+  protected String _replaceStr;
 
-    protected ReplacePatTranslation() {
-        _p = null;
-        _replaceStr = null;
+  protected ReplacePatTranslation() {
+    _p = null;
+    _replaceStr = null;
+  }
+
+  /** Creates a new instance of ReplaceTranslation */
+  public ReplacePatTranslation(String pattern, String replaceStr) {
+    _p = Pattern.compile(pattern);
+    _replaceStr = replaceStr;
+  }
+
+  public String exec(String s) {
+
+    Matcher m = _p.matcher(s);
+    StringBuffer sb = new StringBuffer();
+    while (m.find()) {
+      m.appendReplacement(sb, _replaceStr);
     }
+    m.appendTail(sb);
+    return sb.toString();
 
-    /** Creates a new instance of ReplaceTranslation */
-    public ReplacePatTranslation(String pattern, String replaceStr) {
-        _p = Pattern.compile(pattern);
-        _replaceStr = replaceStr;
-    }
-
-    public String exec(String s) {
-
-        Matcher m = _p.matcher(s);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            m.appendReplacement(sb, _replaceStr);
-        }
-        m.appendTail(sb);
-        return sb.toString();
-
-    }
+  }
 
 }

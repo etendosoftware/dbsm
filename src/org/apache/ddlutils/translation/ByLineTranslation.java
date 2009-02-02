@@ -22,28 +22,28 @@ import java.io.StringReader;
  */
 public class ByLineTranslation implements Translation {
 
-    private Translation t;
+  private Translation t;
 
-    /** Creates a new instance of ByLineTranslation */
-    public ByLineTranslation(Translation t) {
-        this.t = t;
+  /** Creates a new instance of ByLineTranslation */
+  public ByLineTranslation(Translation t) {
+    this.t = t;
+  }
+
+  public String exec(String s) {
+
+    StringBuffer sb = new StringBuffer();
+    BufferedReader br = new BufferedReader(new StringReader(s));
+
+    String inputStr;
+    try {
+      while ((inputStr = br.readLine()) != null) {
+        sb.append(t.exec(inputStr));
+        sb.append('\n');
+      }
+    } catch (IOException e) {
     }
 
-    public String exec(String s) {
-
-        StringBuffer sb = new StringBuffer();
-        BufferedReader br = new BufferedReader(new StringReader(s));
-
-        String inputStr;
-        try {
-            while ((inputStr = br.readLine()) != null) {
-                sb.append(t.exec(inputStr));
-                sb.append('\n');
-            }
-        } catch (IOException e) {
-        }
-
-        return sb.toString();
-    }
+    return sb.toString();
+  }
 
 }

@@ -28,50 +28,45 @@ import org.apache.tools.ant.types.EnumeratedAttribute;
  * @ant.task ignore="true"
  */
 public class VerbosityLevel extends EnumeratedAttribute {
-    /** The possible levels. */
-    private static final String[] LEVELS = {
-            Level.FATAL.toString().toUpperCase(),
-            Level.ERROR.toString().toUpperCase(),
-            Level.WARN.toString().toUpperCase(),
-            Level.INFO.toString().toUpperCase(),
-            Level.DEBUG.toString().toUpperCase(),
-            Level.FATAL.toString().toLowerCase(),
-            Level.ERROR.toString().toLowerCase(),
-            Level.WARN.toString().toLowerCase(),
-            Level.INFO.toString().toLowerCase(),
-            Level.DEBUG.toString().toLowerCase() };
+  /** The possible levels. */
+  private static final String[] LEVELS = { Level.FATAL.toString().toUpperCase(),
+      Level.ERROR.toString().toUpperCase(), Level.WARN.toString().toUpperCase(),
+      Level.INFO.toString().toUpperCase(), Level.DEBUG.toString().toUpperCase(),
+      Level.FATAL.toString().toLowerCase(), Level.ERROR.toString().toLowerCase(),
+      Level.WARN.toString().toLowerCase(), Level.INFO.toString().toLowerCase(),
+      Level.DEBUG.toString().toLowerCase() };
 
-    /**
-     * Creates an uninitialized verbosity level object.
-     */
-    public VerbosityLevel() {
-        super();
-    }
+  /**
+   * Creates an uninitialized verbosity level object.
+   */
+  public VerbosityLevel() {
+    super();
+  }
 
-    /**
-     * Creates an initialized verbosity level object.
-     * 
-     * @param level
-     *            The level
-     */
-    public VerbosityLevel(String level) {
-        super();
-        setValue(level);
-    }
+  /**
+   * Creates an initialized verbosity level object.
+   * 
+   * @param level
+   *          The level
+   */
+  public VerbosityLevel(String level) {
+    super();
+    setValue(level);
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getValues() {
-        return LEVELS;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public String[] getValues() {
+    return LEVELS;
+  }
 
-    /**
-     * Determines whether this is DEBUG verbosity.
-     * 
-     * @return <code>true</code> if this is the DEBUG level
-     */
-    public boolean isDebug() {
-        return Level.DEBUG.toString().equalsIgnoreCase(getValue());
-    }
+  /**
+   * Determines whether this is DEBUG verbosity.
+   * 
+   * @return <code>true</code> if this is the DEBUG level
+   */
+  public boolean isDebug() {
+    return Level.DEBUG.toString().equalsIgnoreCase(getValue());
+  }
 }

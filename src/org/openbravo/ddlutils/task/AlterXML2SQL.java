@@ -29,143 +29,141 @@ import org.apache.tools.ant.BuildException;
  */
 public class AlterXML2SQL extends BaseDatabaseTask {
 
-    private String platform = null;
-    private File originalmodel = null;
+  private String platform = null;
+  private File originalmodel = null;
 
-    private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+  private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
-    private File model;
-    private File output;
+  private File model;
+  private File output;
 
-    private String object = null;
+  private String object = null;
 
-    /** Creates a new instance of ExecuteXML2SQL */
-    public AlterXML2SQL() {
-    }
+  /** Creates a new instance of ExecuteXML2SQL */
+  public AlterXML2SQL() {
+  }
 
-    @Override
-    public void doExecute() {
+  @Override
+  public void doExecute() {
 
-        Platform pl;
-        Database originaldb;
+    Platform pl;
+    Database originaldb;
 
-        if (platform == null || originalmodel == null) {
-            final BasicDataSource ds = new BasicDataSource();
-            ds.setDriverClassName(getDriver());
-            ds.setUrl(getUrl());
-            ds.setUsername(getUser());
-            ds.setPassword(getPassword());
+    if (platform == null || originalmodel == null) {
+      final BasicDataSource ds = new BasicDataSource();
+      ds.setDriverClassName(getDriver());
+      ds.setUrl(getUrl());
+      ds.setUsername(getUser());
+      ds.setPassword(getPassword());
 
-            pl = PlatformFactory.createNewPlatformInstance(ds);
-            // platform.setDelimitedIdentifierModeOn(true);
-            getLog().info("Using database platform.");
+      pl = PlatformFactory.createNewPlatformInstance(ds);
+      // platform.setDelimitedIdentifierModeOn(true);
+      getLog().info("Using database platform.");
 
-            try {
+      try {
 
-                if (getOriginalmodel() == null) {
-                    originaldb = pl.loadModelFromDatabase(DatabaseUtils
-                            .getExcludeFilter(excludeobjects));
-                    if (originaldb == null) {
-                        originaldb = new Database();
-                        getLog().info("Original model considered empty.");
-                    } else {
-                        getLog().info("Original model loaded from database.");
-                    }
-                } else {
-                    // Load the model from the file
-                    originaldb = DatabaseUtils.readDatabase(getModel());
-                    getLog().info("Original model loaded from file.");
-                }
-            } catch (final Exception e) {
-                // log(e.getLocalizedMessage());
-                throw new BuildException(e);
-            }
+        if (getOriginalmodel() == null) {
+          originaldb = pl.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+          if (originaldb == null) {
+            originaldb = new Database();
+            getLog().info("Original model considered empty.");
+          } else {
+            getLog().info("Original model loaded from database.");
+          }
         } else {
-            pl = PlatformFactory.createNewPlatformInstance(platform);
-            getLog().info("Using platform : " + platform);
-
-            originaldb = DatabaseUtils.readDatabase(originalmodel);
-            getLog().info("Original model loaded from file.");
+          // Load the model from the file
+          originaldb = DatabaseUtils.readDatabase(getModel());
+          getLog().info("Original model loaded from file.");
         }
+      } catch (final Exception e) {
+        // log(e.getLocalizedMessage());
+        throw new BuildException(e);
+      }
+    } else {
+      pl = PlatformFactory.createNewPlatformInstance(platform);
+      getLog().info("Using platform : " + platform);
 
-        try {
-
-            Database db = DatabaseUtils.readDatabase(model);
-
-            // Write update script
-            getLog().info("Writing update script");
-            // crop database if needed
-            if (object != null) {
-                db = DatabaseUtils.cropDatabase(originaldb, db, object);
-                getLog().info("for database object " + object);
-            } else {
-                getLog().info("for the complete database");
-            }
-
-            final Writer w = new FileWriter(output);
-            pl.getSqlBuilder().setWriter(w);
-            pl.getSqlBuilder().alterDatabase(originaldb, db, null);
-            pl.getSqlBuilder().alterDatabasePostScript(originaldb, db, null);
-            w.close();
-
-            getLog().info("Database script created in : " + output.getPath());
-
-        } catch (final IOException e) {
-            // log(e.getLocalizedMessage());
-            throw new BuildException(e);
-        }
+      originaldb = DatabaseUtils.readDatabase(originalmodel);
+      getLog().info("Original model loaded from file.");
     }
 
-    public String getExcludeobjects() {
-        return excludeobjects;
-    }
+    try {
 
-    public void setExcludeobjects(String excludeobjects) {
-        this.excludeobjects = excludeobjects;
-    }
+      Database db = DatabaseUtils.readDatabase(model);
 
-    public String getPlatform() {
-        return platform;
-    }
+      // Write update script
+      getLog().info("Writing update script");
+      // crop database if needed
+      if (object != null) {
+        db = DatabaseUtils.cropDatabase(originaldb, db, object);
+        getLog().info("for database object " + object);
+      } else {
+        getLog().info("for the complete database");
+      }
 
-    public void setPlatform(String platform) {
-        this.platform = platform;
-    }
+      final Writer w = new FileWriter(output);
+      pl.getSqlBuilder().setWriter(w);
+      pl.getSqlBuilder().alterDatabase(originaldb, db, null);
+      pl.getSqlBuilder().alterDatabasePostScript(originaldb, db, null);
+      w.close();
 
-    public File getOriginalmodel() {
-        return originalmodel;
-    }
+      getLog().info("Database script created in : " + output.getPath());
 
-    public void setOriginalmodel(File originalmodel) {
-        this.originalmodel = originalmodel;
+    } catch (final IOException e) {
+      // log(e.getLocalizedMessage());
+      throw new BuildException(e);
     }
+  }
 
-    public File getOutput() {
-        return output;
-    }
+  public String getExcludeobjects() {
+    return excludeobjects;
+  }
 
-    public void setOutput(File output) {
-        this.output = output;
-    }
+  public void setExcludeobjects(String excludeobjects) {
+    this.excludeobjects = excludeobjects;
+  }
 
-    public File getModel() {
-        return model;
-    }
+  public String getPlatform() {
+    return platform;
+  }
 
-    public void setModel(File model) {
-        this.model = model;
-    }
+  public void setPlatform(String platform) {
+    this.platform = platform;
+  }
 
-    public void setObject(String object) {
-        if (object == null || object.trim().startsWith("$")
-                || object.trim().equals("")) {
-            this.object = null;
-        } else {
-            this.object = object;
-        }
-    }
+  public File getOriginalmodel() {
+    return originalmodel;
+  }
 
-    public String getObject() {
-        return object;
+  public void setOriginalmodel(File originalmodel) {
+    this.originalmodel = originalmodel;
+  }
+
+  public File getOutput() {
+    return output;
+  }
+
+  public void setOutput(File output) {
+    this.output = output;
+  }
+
+  public File getModel() {
+    return model;
+  }
+
+  public void setModel(File model) {
+    this.model = model;
+  }
+
+  public void setObject(String object) {
+    if (object == null || object.trim().startsWith("$") || object.trim().equals("")) {
+      this.object = null;
+    } else {
+      this.object = object;
     }
+  }
+
+  public String getObject() {
+    return object;
+  }
 }

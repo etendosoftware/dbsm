@@ -7,31 +7,30 @@ import org.apache.ddlutils.model.Table;
 
 public class AddRowChange implements DataChange {
 
-    Table _table;
-    DynaBean _row;
+  Table _table;
+  DynaBean _row;
 
-    public AddRowChange(Table table, DynaBean row) {
-        _table = table;
-        _row = row;
-    }
+  public AddRowChange(Table table, DynaBean row) {
+    _table = table;
+    _row = row;
+  }
 
-    public void apply(DatabaseData databaseData, boolean caseSensitive) {
-        SqlDynaClass dynaClass = (SqlDynaClass) _row.getDynaClass();
-        dynaClass.resetDynaClass(databaseData.getDatabase().findTable(
-                _table.getName()));
-        databaseData.addRow(_table, _row, false);
-    }
+  public void apply(DatabaseData databaseData, boolean caseSensitive) {
+    SqlDynaClass dynaClass = (SqlDynaClass) _row.getDynaClass();
+    dynaClass.resetDynaClass(databaseData.getDatabase().findTable(_table.getName()));
+    databaseData.addRow(_table, _row, false);
+  }
 
-    public String toString() {
-        return "New row in table [" + _table.getName() + "]: <" + _row + ">";
-    }
+  public String toString() {
+    return "New row in table [" + _table.getName() + "]: <" + _row + ">";
+  }
 
-    public DynaBean getRow() {
-        return _row;
-    }
+  public DynaBean getRow() {
+    return _row;
+  }
 
-    public Table getTable() {
-        return _table;
-    }
+  public Table getTable() {
+    return _table;
+  }
 
 }

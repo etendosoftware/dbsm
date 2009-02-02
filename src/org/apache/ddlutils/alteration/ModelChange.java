@@ -27,13 +27,13 @@ import org.apache.ddlutils.model.Database;
  * @version $Revision: $
  */
 public interface ModelChange extends Change {
-    /**
-     * Applies this change to the given database.
-     * 
-     * @param database
-     *            The database
-     * @param caseSensitive
-     *            Whether the case of names matters
-     */
-    public void apply(Database database, boolean caseSensitive);
+  /**
+   * Applies this change to the given database.
+   * 
+   * @param database
+   *          The database
+   * @param caseSensitive
+   *          Whether the case of names matters
+   */
+  public void apply(Database database, boolean caseSensitive);
 }

@@ -20,36 +20,36 @@ import java.util.ArrayList;
  */
 public class CombinedTranslation implements Translation {
 
-    private ArrayList<Translation> _translations;
+  private ArrayList<Translation> _translations;
 
-    /** Creates a new instance of CombinedTranslation */
-    public CombinedTranslation() {
-        _translations = new ArrayList<Translation>();
+  /** Creates a new instance of CombinedTranslation */
+  public CombinedTranslation() {
+    _translations = new ArrayList<Translation>();
+  }
+
+  public final CombinedTranslation append(Translation t) {
+    _translations.add(t);
+    return this;
+  }
+
+  public final String exec(String s) {
+
+    String initialComments = "";
+    String initialBlanks = "";
+    while (s.charAt(0) == '\n' || s.charAt(0) == ' ') {
+      initialBlanks += s.substring(0, 1);
+      s = s.substring(1);
+    }
+    if (s.startsWith("/*")) {
+      int ind = s.indexOf("*/");
+      initialComments = s.substring(0, ind);
+      s = s.substring(ind);
     }
 
-    public final CombinedTranslation append(Translation t) {
-        _translations.add(t);
-        return this;
+    for (Translation t : _translations) {
+      s = t.exec(s);
     }
-
-    public final String exec(String s) {
-
-        String initialComments = "";
-        String initialBlanks = "";
-        while (s.charAt(0) == '\n' || s.charAt(0) == ' ') {
-            initialBlanks += s.substring(0, 1);
-            s = s.substring(1);
-        }
-        if (s.startsWith("/*")) {
-            int ind = s.indexOf("*/");
-            initialComments = s.substring(0, ind);
-            s = s.substring(ind);
-        }
-
-        for (Translation t : _translations) {
-            s = t.exec(s);
-        }
-        return initialBlanks + initialComments + s;
-    }
+    return initialBlanks + initialComments + s;
+  }
 
 }

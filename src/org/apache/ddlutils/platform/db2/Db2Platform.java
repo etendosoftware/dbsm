@@ -30,64 +30,62 @@ import org.apache.ddlutils.platform.PlatformImplBase;
  * @version $Revision: 231306 $
  */
 public class Db2Platform extends PlatformImplBase {
-    /** Database name of this platform. */
-    public static final String DATABASENAME = "DB2";
-    /** The standard DB2 jdbc driver. */
-    public static final String JDBC_DRIVER = "com.ibm.db2.jcc.DB2Driver";
-    /** Older name for the jdbc driver. */
-    public static final String JDBC_DRIVER_OLD1 = "COM.ibm.db2.jdbc.app.DB2Driver";
-    /** Older name for the jdbc driver. */
-    public static final String JDBC_DRIVER_OLD2 = "COM.ibm.db2os390.sqlj.jdbc.DB2SQLJDriver";
-    /** The JTOpen JDBC Driver. */
-    public static final String JDBC_DRIVER_JTOPEN = "com.ibm.as400.access.AS400JDBCDriver";
-    /** The subprotocol used by the standard DB2 driver. */
-    public static final String JDBC_SUBPROTOCOL = "db2";
-    /** An alternative subprotocol used by the standard DB2 driver on OS/390. */
-    public static final String JDBC_SUBPROTOCOL_OS390_1 = "db2os390";
-    /** An alternative subprotocol used by the standard DB2 driver on OS/390. */
-    public static final String JDBC_SUBPROTOCOL_OS390_2 = "db2os390sqlj";
-    /** An alternative subprotocol used by the JTOpen driver on OS/400. */
-    public static final String JDBC_SUBPROTOCOL_JTOPEN = "as400";
+  /** Database name of this platform. */
+  public static final String DATABASENAME = "DB2";
+  /** The standard DB2 jdbc driver. */
+  public static final String JDBC_DRIVER = "com.ibm.db2.jcc.DB2Driver";
+  /** Older name for the jdbc driver. */
+  public static final String JDBC_DRIVER_OLD1 = "COM.ibm.db2.jdbc.app.DB2Driver";
+  /** Older name for the jdbc driver. */
+  public static final String JDBC_DRIVER_OLD2 = "COM.ibm.db2os390.sqlj.jdbc.DB2SQLJDriver";
+  /** The JTOpen JDBC Driver. */
+  public static final String JDBC_DRIVER_JTOPEN = "com.ibm.as400.access.AS400JDBCDriver";
+  /** The subprotocol used by the standard DB2 driver. */
+  public static final String JDBC_SUBPROTOCOL = "db2";
+  /** An alternative subprotocol used by the standard DB2 driver on OS/390. */
+  public static final String JDBC_SUBPROTOCOL_OS390_1 = "db2os390";
+  /** An alternative subprotocol used by the standard DB2 driver on OS/390. */
+  public static final String JDBC_SUBPROTOCOL_OS390_2 = "db2os390sqlj";
+  /** An alternative subprotocol used by the JTOpen driver on OS/400. */
+  public static final String JDBC_SUBPROTOCOL_JTOPEN = "as400";
 
-    /**
-     * Creates a new platform instance.
-     */
-    public Db2Platform() {
-        PlatformInfo info = getPlatformInfo();
+  /**
+   * Creates a new platform instance.
+   */
+  public Db2Platform() {
+    PlatformInfo info = getPlatformInfo();
 
-        info.setMaxIdentifierLength(18);
+    info.setMaxIdentifierLength(18);
 
-        // the BINARY types are also handled by Db2Builder.getSqlType(Column)
-        info.addNativeTypeMapping(Types.ARRAY, "BLOB", Types.BLOB);
-        info.addNativeTypeMapping(Types.BINARY, "CHAR {0} FOR BIT DATA");
-        info.addNativeTypeMapping(Types.BIT, "SMALLINT", Types.SMALLINT);
-        info.addNativeTypeMapping(Types.FLOAT, "DOUBLE", Types.DOUBLE);
-        info.addNativeTypeMapping(Types.JAVA_OBJECT, "BLOB", Types.BLOB);
-        info.addNativeTypeMapping(Types.LONGVARBINARY,
-                "LONG VARCHAR FOR BIT DATA");
-        info.addNativeTypeMapping(Types.LONGVARCHAR, "LONG VARCHAR");
-        info.addNativeTypeMapping(Types.NULL, "LONG VARCHAR FOR BIT DATA",
-                Types.LONGVARBINARY);
-        info.addNativeTypeMapping(Types.NUMERIC, "DECIMAL", Types.DECIMAL);
-        info.addNativeTypeMapping(Types.OTHER, "BLOB", Types.BLOB);
-        info.addNativeTypeMapping(Types.STRUCT, "BLOB", Types.BLOB);
-        info.addNativeTypeMapping(Types.TINYINT, "SMALLINT", Types.SMALLINT);
-        info.addNativeTypeMapping(Types.VARBINARY, "VARCHAR {0} FOR BIT DATA");
-        info.addNativeTypeMapping("BOOLEAN", "SMALLINT", "SMALLINT");
+    // the BINARY types are also handled by Db2Builder.getSqlType(Column)
+    info.addNativeTypeMapping(Types.ARRAY, "BLOB", Types.BLOB);
+    info.addNativeTypeMapping(Types.BINARY, "CHAR {0} FOR BIT DATA");
+    info.addNativeTypeMapping(Types.BIT, "SMALLINT", Types.SMALLINT);
+    info.addNativeTypeMapping(Types.FLOAT, "DOUBLE", Types.DOUBLE);
+    info.addNativeTypeMapping(Types.JAVA_OBJECT, "BLOB", Types.BLOB);
+    info.addNativeTypeMapping(Types.LONGVARBINARY, "LONG VARCHAR FOR BIT DATA");
+    info.addNativeTypeMapping(Types.LONGVARCHAR, "LONG VARCHAR");
+    info.addNativeTypeMapping(Types.NULL, "LONG VARCHAR FOR BIT DATA", Types.LONGVARBINARY);
+    info.addNativeTypeMapping(Types.NUMERIC, "DECIMAL", Types.DECIMAL);
+    info.addNativeTypeMapping(Types.OTHER, "BLOB", Types.BLOB);
+    info.addNativeTypeMapping(Types.STRUCT, "BLOB", Types.BLOB);
+    info.addNativeTypeMapping(Types.TINYINT, "SMALLINT", Types.SMALLINT);
+    info.addNativeTypeMapping(Types.VARBINARY, "VARCHAR {0} FOR BIT DATA");
+    info.addNativeTypeMapping("BOOLEAN", "SMALLINT", "SMALLINT");
 
-        info.setDefaultSize(Types.CHAR, 254);
-        info.setDefaultSize(Types.VARCHAR, 254);
-        info.setDefaultSize(Types.BINARY, 254);
-        info.setDefaultSize(Types.VARBINARY, 254);
+    info.setDefaultSize(Types.CHAR, 254);
+    info.setDefaultSize(Types.VARCHAR, 254);
+    info.setDefaultSize(Types.BINARY, 254);
+    info.setDefaultSize(Types.VARBINARY, 254);
 
-        setSqlBuilder(new Db2Builder(this));
-        setModelReader(new Db2ModelReader(this));
-    }
+    setSqlBuilder(new Db2Builder(this));
+    setModelReader(new Db2ModelReader(this));
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getName() {
-        return DATABASENAME;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public String getName() {
+    return DATABASENAME;
+  }
 }

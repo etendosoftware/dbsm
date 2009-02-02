@@ -22,47 +22,44 @@ import org.apache.ddlutils.translation.ReplaceStrTranslation;
  */
 public class PostgreSQLStandarization extends CombinedTranslation {
 
-    /** Creates a new instance of PostgreSQLTranslation */
-    public PostgreSQLStandarization() {
-        // postgres castings '::text', '::numeric', '::character varying',
-        // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
-        // with time zone
-        append(new ReplacePatTranslation(
-                "::[A-Za-z\"]*( varying)?( with time zone)?(\\[\\])?", ""));
+  /** Creates a new instance of PostgreSQLTranslation */
+  public PostgreSQLStandarization() {
+    // postgres castings '::text', '::numeric', '::character varying',
+    // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
+    // with time zone
+    append(new ReplacePatTranslation("::[A-Za-z\"]*( varying)?( with time zone)?(\\[\\])?", ""));
 
-        // sql "in" sentence and "not in"
-        append(new ReplacePatTranslation(
-                "=\\s*[Aa][Nn][Yy]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)",
-                "IN ($1)"));
-        append(new ReplacePatTranslation(
-                "<>\\s*[Aa][Ll][Ll]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)",
-                "NOT IN ($1)"));
+    // sql "in" sentence and "not in"
+    append(new ReplacePatTranslation(
+        "=\\s*[Aa][Nn][Yy]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)", "IN ($1)"));
+    append(new ReplacePatTranslation(
+        "<>\\s*[Aa][Ll][Ll]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)", "NOT IN ($1)"));
 
-        // date truncs date_trunk('month', now()) --> trunc(now(),'MM')
-        // suports 3 levels of recursivily in parenthesis -->
-        // date_trunk('month', ...(...(...(...)...)...)...)
-        append(new ReplacePatTranslation(
-                "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Mm][Oo][Nn][Tt][Hh]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
-                "TRUNC($1, 'MM')"));
-        append(new ReplacePatTranslation(
-                "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Dd][Aa][Yy]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
-                "TRUNC($1, 'DD')"));
-        append(new ReplacePatTranslation(
-                "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Ww][Ee][Ee][Kk]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
-                "TRUNC($1, 'DY')"));
-        append(new ReplacePatTranslation(
-                "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Qq][Uu][Aa][Rr][Tt][Ee][Rr]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
-                "TRUNC($1, 'Q')"));
+    // date truncs date_trunk('month', now()) --> trunc(now(),'MM')
+    // suports 3 levels of recursivily in parenthesis -->
+    // date_trunk('month', ...(...(...(...)...)...)...)
+    append(new ReplacePatTranslation(
+        "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Mm][Oo][Nn][Tt][Hh]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
+        "TRUNC($1, 'MM')"));
+    append(new ReplacePatTranslation(
+        "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Dd][Aa][Yy]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
+        "TRUNC($1, 'DD')"));
+    append(new ReplacePatTranslation(
+        "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Ww][Ee][Ee][Kk]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
+        "TRUNC($1, 'DY')"));
+    append(new ReplacePatTranslation(
+        "[Dd][Aa][Tt][Ee]_[Tt][Rr][Uu][Nn][Cc]\\s*\\(\\s*'[Qq][Uu][Aa][Rr][Tt][Ee][Rr]'\\s*,\\s*([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*(\\([^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*\\))?[^(\\(\\))]*)\\s*\\)",
+        "TRUNC($1, 'Q')"));
 
-        // numeric cast in sums
-        append(new ReplacePatTranslation(
-                "[Ss][Uu][Mm]\\s*\\(\\s*[Cc][Aa][Ss][Tt]\\s*\\((.*)\\s*[Aa][Ss]\\s*[Nn][Uu][Mm][Ee][Rr][Ii][Cc]\\)\\s*\\)",
-                "SUM($1)"));
+    // numeric cast in sums
+    append(new ReplacePatTranslation(
+        "[Ss][Uu][Mm]\\s*\\(\\s*[Cc][Aa][Ss][Tt]\\s*\\((.*)\\s*[Aa][Ss]\\s*[Nn][Uu][Mm][Ee][Rr][Ii][Cc]\\)\\s*\\)",
+        "SUM($1)"));
 
-        // removes the caracter ";" at the end of sql sentence
-        append(new ReplaceStrTranslation(";", ""));
-        // append(new ByLineTranslation(new
-        // ReplacePatTranslation("^[\\s]*(.*?)[\\s]*","$1")));
-    }
+    // removes the caracter ";" at the end of sql sentence
+    append(new ReplaceStrTranslation(";", ""));
+    // append(new ByLineTranslation(new
+    // ReplacePatTranslation("^[\\s]*(.*?)[\\s]*","$1")));
+  }
 
 }

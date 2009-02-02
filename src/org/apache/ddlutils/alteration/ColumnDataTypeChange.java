@@ -28,62 +28,60 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class ColumnDataTypeChange extends TableChangeImplBase implements
-        ColumnChange {
-    /** The column. */
-    private Column _column;
-    /** The JDBC type code of the new type. */
-    private int _newTypeCode;
+public class ColumnDataTypeChange extends TableChangeImplBase implements ColumnChange {
+  /** The column. */
+  private Column _column;
+  /** The JDBC type code of the new type. */
+  private int _newTypeCode;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table of the column
-     * @param column
-     *            The column
-     * @param newTypeCode
-     *            The JDBC type code of the new type
-     */
-    public ColumnDataTypeChange(Table table, Column column, int newTypeCode) {
-        super(table);
-        _column = column;
-        _newTypeCode = newTypeCode;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table of the column
+   * @param column
+   *          The column
+   * @param newTypeCode
+   *          The JDBC type code of the new type
+   */
+  public ColumnDataTypeChange(Table table, Column column, int newTypeCode) {
+    super(table);
+    _column = column;
+    _newTypeCode = newTypeCode;
+  }
 
-    /**
-     * Returns the column.
-     * 
-     * @return The column
-     */
-    public Column getChangedColumn() {
-        return _column;
-    }
+  /**
+   * Returns the column.
+   * 
+   * @return The column
+   */
+  public Column getChangedColumn() {
+    return _column;
+  }
 
-    /**
-     * Returns the JDBC type code of the new type.
-     * 
-     * @return The type code
-     */
-    public int getNewTypeCode() {
-        return _newTypeCode;
-    }
+  /**
+   * Returns the JDBC type code of the new type.
+   * 
+   * @return The type code
+   */
+  public int getNewTypeCode() {
+    return _newTypeCode;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
-        if (table != null) {
-            Column column = table.findColumn(_column.getName(), caseSensitive);
-            if (column != null)
-                column.setTypeCode(_newTypeCode);
-        }
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    if (table != null) {
+      Column column = table.findColumn(_column.getName(), caseSensitive);
+      if (column != null)
+        column.setTypeCode(_newTypeCode);
     }
+  }
 
-    @Override
-    public String toString() {
-        return "ColumnDataTypeChange. Column: " + _column.getName();
-    }
+  @Override
+  public String toString() {
+    return "ColumnDataTypeChange. Column: " + _column.getName();
+  }
 }

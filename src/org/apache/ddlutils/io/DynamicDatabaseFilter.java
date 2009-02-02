@@ -18,5 +18,5 @@ import org.apache.ddlutils.model.Database;
  */
 public interface DynamicDatabaseFilter extends DatabaseFilter {
 
-    public void init(Database database);
+  public void init(Database database);
 }

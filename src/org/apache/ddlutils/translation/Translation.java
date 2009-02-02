@@ -18,6 +18,6 @@ package org.apache.ddlutils.translation;
  */
 public interface Translation {
 
-    public String exec(String s);
+  public String exec(String s);
 
 }

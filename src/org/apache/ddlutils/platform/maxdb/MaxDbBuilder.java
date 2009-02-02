@@ -34,66 +34,64 @@ import org.apache.ddlutils.platform.sapdb.SapDbBuilder;
  * @version $Revision: $
  */
 public class MaxDbBuilder extends SapDbBuilder {
-    /**
-     * Creates a new builder instance.
-     * 
-     * @param platform
-     *            The plaftform this builder belongs to
-     */
-    public MaxDbBuilder(Platform platform) {
-        super(platform);
-    }
+  /**
+   * Creates a new builder instance.
+   * 
+   * @param platform
+   *          The plaftform this builder belongs to
+   */
+  public MaxDbBuilder(Platform platform) {
+    super(platform);
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void writeExternalPrimaryKeysCreateStmt(Table table,
-            Column[] primaryKeyColumns) throws IOException {
-        if ((primaryKeyColumns.length > 0)
-                && shouldGeneratePrimaryKeys(primaryKeyColumns)) {
-            print("ALTER TABLE ");
-            printlnIdentifier(getStructureObjectName(table));
-            printIndent();
-            print("ADD CONSTRAINT ");
-            printIdentifier(getConstraintName(null, table, "PK", null));
-            print(" ");
-            writePrimaryKeyStmt(table, primaryKeyColumns);
-            printEndOfStatement();
-        }
+  /**
+   * {@inheritDoc}
+   */
+  protected void writeExternalPrimaryKeysCreateStmt(Table table, Column[] primaryKeyColumns)
+      throws IOException {
+    if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns)) {
+      print("ALTER TABLE ");
+      printlnIdentifier(getStructureObjectName(table));
+      printIndent();
+      print("ADD CONSTRAINT ");
+      printIdentifier(getConstraintName(null, table, "PK", null));
+      print(" ");
+      writePrimaryKeyStmt(table, primaryKeyColumns);
+      printEndOfStatement();
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void writeExternalForeignKeyCreateStmt(Database database,
-            Table table, ForeignKey key) throws IOException {
-        if (key.getForeignTableName() == null) {
-            _log.warn("Foreign key table is null for key " + key);
-        } else {
-            writeTableAlterStmt(table);
+  /**
+   * {@inheritDoc}
+   */
+  protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
+      throws IOException {
+    if (key.getForeignTableName() == null) {
+      _log.warn("Foreign key table is null for key " + key);
+    } else {
+      writeTableAlterStmt(table);
 
-            print("ADD CONSTRAINT ");
-            printIdentifier(getForeignKeyName(table, key));
-            print(" FOREIGN KEY (");
-            writeLocalReferences(key);
-            print(") REFERENCES ");
-            printIdentifier(getStructureObjectName(database.findTable(key
-                    .getForeignTableName())));
-            print(" (");
-            writeForeignReferences(key);
-            print(")");
-            printEndOfStatement();
-        }
+      print("ADD CONSTRAINT ");
+      printIdentifier(getForeignKeyName(table, key));
+      print(" FOREIGN KEY (");
+      writeLocalReferences(key);
+      print(") REFERENCES ");
+      printIdentifier(getStructureObjectName(database.findTable(key.getForeignTableName())));
+      print(" (");
+      writeForeignReferences(key);
+      print(")");
+      printEndOfStatement();
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void writeExternalForeignKeyDropStmt(Table table,
-            ForeignKey foreignKey) throws IOException {
-        writeTableAlterStmt(table);
-        print("DROP CONSTRAINT ");
-        printIdentifier(getForeignKeyName(table, foreignKey));
-        printEndOfStatement();
-    }
+  /**
+   * {@inheritDoc}
+   */
+  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+      throws IOException {
+    writeTableAlterStmt(table);
+    print("DROP CONSTRAINT ");
+    printIdentifier(getForeignKeyName(table, foreignKey));
+    printEndOfStatement();
+  }
 }

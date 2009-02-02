@@ -18,11 +18,11 @@ package org.apache.ddlutils.util;
  */
 public class ExtTypes {
 
-    /** Creates a new instance of ExtTypes */
-    private ExtTypes() {
-    }
+  /** Creates a new instance of ExtTypes */
+  private ExtTypes() {
+  }
 
-    public static final int NCHAR = -15;
+  public static final int NCHAR = -15;
 
-    public static final int NVARCHAR = -9;
+  public static final int NVARCHAR = -9;
 }

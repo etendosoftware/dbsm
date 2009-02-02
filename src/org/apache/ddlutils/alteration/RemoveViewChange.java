@@ -29,39 +29,39 @@ import org.apache.ddlutils.model.View;
  */
 public class RemoveViewChange implements ModelChange {
 
-    /** The view. */
-    private View _view;
+  /** The view. */
+  private View _view;
 
-    /**
-     * Creates a remove change object.
-     * 
-     * @param view
-     *            The view
-     */
-    public RemoveViewChange(View view) {
-        _view = view;
-    }
+  /**
+   * Creates a remove change object.
+   * 
+   * @param view
+   *          The view
+   */
+  public RemoveViewChange(View view) {
+    _view = view;
+  }
 
-    /**
-     * Returns the view.
-     * 
-     * @return The view
-     */
-    public View getView() {
-        return _view;
-    }
+  /**
+   * Returns the view.
+   * 
+   * @return The view
+   */
+  public View getView() {
+    return _view;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        View view = database.findView(_view.getName(), caseSensitive);
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    View view = database.findView(_view.getName(), caseSensitive);
 
-        database.removeView(view);
-    }
+    database.removeView(view);
+  }
 
-    @Override
-    public String toString() {
-        return "RemoveViewChange. Name: " + _view.getName();
-    }
+  @Override
+  public String toString() {
+    return "RemoveViewChange. Name: " + _view.getName();
+  }
 }

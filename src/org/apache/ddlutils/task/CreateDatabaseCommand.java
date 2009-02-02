@@ -30,82 +30,77 @@ import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
 
 /**
- * The sub task for creating the target database. Note that this is only
- * supported on some database platforms. See the database support documentation
- * for details on which platforms support this.<br/>
- * This sub task does not require schema files. Therefore the
- * <code>fileset</code> subelement and the <code>schemaFile</code> attribute of
- * the enclosing task can be omitted.
+ * The sub task for creating the target database. Note that this is only supported on some database
+ * platforms. See the database support documentation for details on which platforms support this.<br/>
+ * This sub task does not require schema files. Therefore the <code>fileset</code> subelement and
+ * the <code>schemaFile</code> attribute of the enclosing task can be omitted.
  * 
  * @version $Revision: 231306 $
  * @ant.task name="createDatabase"
  */
 public class CreateDatabaseCommand extends DatabaseCommand {
-    /** The additional creation parameters. */
-    private ArrayList _parameters = new ArrayList();
+  /** The additional creation parameters. */
+  private ArrayList _parameters = new ArrayList();
 
-    /**
-     * Adds a parameter which is a name-value pair.
-     * 
-     * @param param
-     *            The parameter
-     */
-    public void addConfiguredParameter(Parameter param) {
-        _parameters.add(param);
+  /**
+   * Adds a parameter which is a name-value pair.
+   * 
+   * @param param
+   *          The parameter
+   */
+  public void addConfiguredParameter(Parameter param) {
+    _parameters.add(param);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public boolean isRequiringModel() {
+    return false;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void execute(DatabaseTaskBase task, Database model) throws BuildException {
+    BasicDataSource dataSource = getDataSource();
+
+    if (dataSource == null) {
+      throw new BuildException("No database specified.");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isRequiringModel() {
-        return false;
+    Platform platform = getPlatform();
+
+    try {
+      platform.createDatabase(dataSource.getDriverClassName(), dataSource.getUrl(), dataSource
+          .getUsername(), dataSource.getPassword(), getFilteredParameters(platform.getName()));
+
+      _log.info("Created database");
+    } catch (UnsupportedOperationException ex) {
+      _log.error("Database platform " + platform.getName() + " does not support database creation "
+          + "via JDBC or there was an error while creating it.", ex);
+    } catch (Exception ex) {
+      handleException(ex, ex.getMessage());
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void execute(DatabaseTaskBase task, Database model)
-            throws BuildException {
-        BasicDataSource dataSource = getDataSource();
+  /**
+   * Filters the parameters for the indicated platform.
+   * 
+   * @param platformName
+   *          The name of the platform
+   * @return The filtered parameters
+   */
+  private Map getFilteredParameters(String platformName) {
+    LinkedHashMap parameters = new LinkedHashMap();
 
-        if (dataSource == null) {
-            throw new BuildException("No database specified.");
-        }
+    for (Iterator it = _parameters.iterator(); it.hasNext();) {
+      Parameter param = (Parameter) it.next();
 
-        Platform platform = getPlatform();
-
-        try {
-            platform.createDatabase(dataSource.getDriverClassName(), dataSource
-                    .getUrl(), dataSource.getUsername(), dataSource
-                    .getPassword(), getFilteredParameters(platform.getName()));
-
-            _log.info("Created database");
-        } catch (UnsupportedOperationException ex) {
-            _log.error("Database platform " + platform.getName()
-                    + " does not support database creation "
-                    + "via JDBC or there was an error while creating it.", ex);
-        } catch (Exception ex) {
-            handleException(ex, ex.getMessage());
-        }
+      if (param.isForPlatform(platformName)) {
+        parameters.put(param.getName(), param.getValue());
+      }
     }
-
-    /**
-     * Filters the parameters for the indicated platform.
-     * 
-     * @param platformName
-     *            The name of the platform
-     * @return The filtered parameters
-     */
-    private Map getFilteredParameters(String platformName) {
-        LinkedHashMap parameters = new LinkedHashMap();
-
-        for (Iterator it = _parameters.iterator(); it.hasNext();) {
-            Parameter param = (Parameter) it.next();
-
-            if (param.isForPlatform(platformName)) {
-                parameters.put(param.getName(), param.getValue());
-            }
-        }
-        return parameters;
-    }
+    return parameters;
+  }
 }

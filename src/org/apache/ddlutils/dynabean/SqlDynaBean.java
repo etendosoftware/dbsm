@@ -24,43 +24,42 @@ import org.apache.commons.beanutils.DynaClass;
 import org.apache.commons.beanutils.DynaProperty;
 
 /**
- * SqlDynaBean is a DynaBean which can be persisted as a single row in a
- * Database Table.
+ * SqlDynaBean is a DynaBean which can be persisted as a single row in a Database Table.
  * 
  * @version $Revision: 463757 $
  */
 public class SqlDynaBean extends BasicDynaBean {
-    /** Unique ID for serializaion purposes. */
-    private static final long serialVersionUID = -6946514447446174227L;
+  /** Unique ID for serializaion purposes. */
+  private static final long serialVersionUID = -6946514447446174227L;
 
-    /**
-     * Creates a new dyna bean of the given class.
-     * 
-     * @param dynaClass
-     *            The dyna class
-     */
-    public SqlDynaBean(DynaClass dynaClass) {
-        super(dynaClass);
+  /**
+   * Creates a new dyna bean of the given class.
+   * 
+   * @param dynaClass
+   *          The dyna class
+   */
+  public SqlDynaBean(DynaClass dynaClass) {
+    super(dynaClass);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public String toString() {
+    StringBuffer result = new StringBuffer();
+    DynaClass type = getDynaClass();
+    DynaProperty[] props = type.getDynaProperties();
+
+    result.append(type.getName());
+    result.append(": ");
+    for (int idx = 0; idx < props.length; idx++) {
+      if (idx > 0) {
+        result.append(", ");
+      }
+      result.append(props[idx].getName());
+      result.append(" = ");
+      result.append(get(props[idx].getName()));
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String toString() {
-        StringBuffer result = new StringBuffer();
-        DynaClass type = getDynaClass();
-        DynaProperty[] props = type.getDynaProperties();
-
-        result.append(type.getName());
-        result.append(": ");
-        for (int idx = 0; idx < props.length; idx++) {
-            if (idx > 0) {
-                result.append(", ");
-            }
-            result.append(props[idx].getName());
-            result.append(" = ");
-            result.append(get(props[idx].getName()));
-        }
-        return result.toString();
-    }
+    return result.toString();
+  }
 }

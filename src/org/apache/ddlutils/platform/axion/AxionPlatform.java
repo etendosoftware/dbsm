@@ -36,102 +36,96 @@ import org.apache.ddlutils.platform.PlatformImplBase;
  * @version $Revision: 231306 $
  */
 public class AxionPlatform extends PlatformImplBase {
-    /** Database name of this platform. */
-    public static final String DATABASENAME = "Axion";
-    /** The axion jdbc driver. */
-    public static final String JDBC_DRIVER = "org.axiondb.jdbc.AxionDriver";
-    /** The subprotocol used by the axion driver. */
-    public static final String JDBC_SUBPROTOCOL = "axiondb";
+  /** Database name of this platform. */
+  public static final String DATABASENAME = "Axion";
+  /** The axion jdbc driver. */
+  public static final String JDBC_DRIVER = "org.axiondb.jdbc.AxionDriver";
+  /** The subprotocol used by the axion driver. */
+  public static final String JDBC_SUBPROTOCOL = "axiondb";
 
-    /**
-     * Creates a new axion platform instance.
-     */
-    public AxionPlatform() {
-        PlatformInfo info = getPlatformInfo();
+  /**
+   * Creates a new axion platform instance.
+   */
+  public AxionPlatform() {
+    PlatformInfo info = getPlatformInfo();
 
-        info.setDelimitedIdentifiersSupported(false);
-        info.setSqlCommentsSupported(false);
-        info.setLastIdentityValueReadable(false);
-        info.addNativeTypeMapping(Types.ARRAY, "BLOB", Types.BLOB);
-        info.addNativeTypeMapping(Types.BIT, "BOOLEAN");
-        info.addNativeTypeMapping(Types.DISTINCT, "VARBINARY", Types.VARBINARY);
-        info.addNativeTypeMapping(Types.NULL, "VARBINARY", Types.VARBINARY);
-        info.addNativeTypeMapping(Types.OTHER, "BLOB", Types.BLOB);
-        info.addNativeTypeMapping(Types.REAL, "REAL", Types.FLOAT);
-        info.addNativeTypeMapping(Types.REF, "VARBINARY", Types.VARBINARY);
-        info.addNativeTypeMapping(Types.STRUCT, "VARBINARY", Types.VARBINARY);
-        info.addNativeTypeMapping(Types.TINYINT, "SMALLINT", Types.SMALLINT);
-        info.addNativeTypeMapping("DATALINK", "VARBINARY", "VARBINARY");
+    info.setDelimitedIdentifiersSupported(false);
+    info.setSqlCommentsSupported(false);
+    info.setLastIdentityValueReadable(false);
+    info.addNativeTypeMapping(Types.ARRAY, "BLOB", Types.BLOB);
+    info.addNativeTypeMapping(Types.BIT, "BOOLEAN");
+    info.addNativeTypeMapping(Types.DISTINCT, "VARBINARY", Types.VARBINARY);
+    info.addNativeTypeMapping(Types.NULL, "VARBINARY", Types.VARBINARY);
+    info.addNativeTypeMapping(Types.OTHER, "BLOB", Types.BLOB);
+    info.addNativeTypeMapping(Types.REAL, "REAL", Types.FLOAT);
+    info.addNativeTypeMapping(Types.REF, "VARBINARY", Types.VARBINARY);
+    info.addNativeTypeMapping(Types.STRUCT, "VARBINARY", Types.VARBINARY);
+    info.addNativeTypeMapping(Types.TINYINT, "SMALLINT", Types.SMALLINT);
+    info.addNativeTypeMapping("DATALINK", "VARBINARY", "VARBINARY");
 
-        setSqlBuilder(new AxionBuilder(this));
-        setModelReader(new AxionModelReader(this));
-    }
+    setSqlBuilder(new AxionBuilder(this));
+    setModelReader(new AxionModelReader(this));
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getName() {
-        return DATABASENAME;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public String getName() {
+    return DATABASENAME;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void createDatabase(String jdbcDriverClassName,
-            String connectionUrl, String username, String password,
-            Map parameters) throws DatabaseOperationException,
-            UnsupportedOperationException {
-        // Axion will create the database automatically when connecting for the
-        // first time
-        if (JDBC_DRIVER.equals(jdbcDriverClassName)) {
-            Connection connection = null;
+  /**
+   * {@inheritDoc}
+   */
+  public void createDatabase(String jdbcDriverClassName, String connectionUrl, String username,
+      String password, Map parameters) throws DatabaseOperationException,
+      UnsupportedOperationException {
+    // Axion will create the database automatically when connecting for the
+    // first time
+    if (JDBC_DRIVER.equals(jdbcDriverClassName)) {
+      Connection connection = null;
 
-            try {
-                Class.forName(jdbcDriverClassName);
+      try {
+        Class.forName(jdbcDriverClassName);
 
-                connection = DriverManager.getConnection(connectionUrl,
-                        username, password);
-                logWarnings(connection);
-            } catch (Exception ex) {
-                throw new DatabaseOperationException(
-                        "Error while trying to create a database", ex);
-            } finally {
-                if (connection != null) {
-                    try {
-                        connection.close();
-                    } catch (SQLException ex) {
-                    }
-                }
-            }
-        } else {
-            throw new UnsupportedOperationException(
-                    "Unable to create a Axion database via the driver "
-                            + jdbcDriverClassName);
+        connection = DriverManager.getConnection(connectionUrl, username, password);
+        logWarnings(connection);
+      } catch (Exception ex) {
+        throw new DatabaseOperationException("Error while trying to create a database", ex);
+      } finally {
+        if (connection != null) {
+          try {
+            connection.close();
+          } catch (SQLException ex) {
+          }
         }
+      }
+    } else {
+      throw new UnsupportedOperationException("Unable to create a Axion database via the driver "
+          + jdbcDriverClassName);
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected Object extractColumnValue(ResultSet resultSet, String columnName,
-            int columnIdx, int jdbcType) throws SQLException {
-        boolean useIdx = (columnName == null);
-        Object value = null;
+  /**
+   * {@inheritDoc}
+   */
+  protected Object extractColumnValue(ResultSet resultSet, String columnName, int columnIdx,
+      int jdbcType) throws SQLException {
+    boolean useIdx = (columnName == null);
+    Object value = null;
 
-        switch (jdbcType) {
-        case Types.BIGINT:
-            // The Axion JDBC driver does not support reading BIGINT values
-            // directly
-            String strValue = useIdx ? resultSet.getString(columnIdx)
-                    : resultSet.getString(columnName);
+    switch (jdbcType) {
+    case Types.BIGINT:
+      // The Axion JDBC driver does not support reading BIGINT values
+      // directly
+      String strValue = useIdx ? resultSet.getString(columnIdx) : resultSet.getString(columnName);
 
-            value = resultSet.wasNull() ? null : new Long(strValue);
-            break;
-        default:
-            value = super.extractColumnValue(resultSet, columnName, columnIdx,
-                    jdbcType);
-            break;
-        }
-        return value;
+      value = resultSet.wasNull() ? null : new Long(strValue);
+      break;
+    default:
+      value = super.extractColumnValue(resultSet, columnName, columnIdx, jdbcType);
+      break;
     }
+    return value;
+  }
 }

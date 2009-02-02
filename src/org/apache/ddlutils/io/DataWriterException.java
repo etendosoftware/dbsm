@@ -27,45 +27,45 @@ import org.apache.commons.lang.exception.NestableRuntimeException;
  * @version $Revision: 289996 $
  */
 public class DataWriterException extends NestableRuntimeException {
-    /** Unique id for serialization purposes. */
-    private static final long serialVersionUID = 6254759931565130848L;
+  /** Unique id for serialization purposes. */
+  private static final long serialVersionUID = 6254759931565130848L;
 
-    /**
-     * Creates a new exception object.
-     */
-    public DataWriterException() {
-        super();
-    }
+  /**
+   * Creates a new exception object.
+   */
+  public DataWriterException() {
+    super();
+  }
 
-    /**
-     * Creates a new exception object.
-     * 
-     * @param message
-     *            The exception message
-     */
-    public DataWriterException(String message) {
-        super(message);
-    }
+  /**
+   * Creates a new exception object.
+   * 
+   * @param message
+   *          The exception message
+   */
+  public DataWriterException(String message) {
+    super(message);
+  }
 
-    /**
-     * Creates a new exception object.
-     * 
-     * @param baseEx
-     *            The base exception
-     */
-    public DataWriterException(Throwable baseEx) {
-        super(baseEx);
-    }
+  /**
+   * Creates a new exception object.
+   * 
+   * @param baseEx
+   *          The base exception
+   */
+  public DataWriterException(Throwable baseEx) {
+    super(baseEx);
+  }
 
-    /**
-     * Creates a new exception object.
-     * 
-     * @param message
-     *            The exception message
-     * @param baseEx
-     *            The base exception
-     */
-    public DataWriterException(String message, Throwable baseEx) {
-        super(message, baseEx);
-    }
+  /**
+   * Creates a new exception object.
+   * 
+   * @param message
+   *          The exception message
+   * @param baseEx
+   *          The base exception
+   */
+  public DataWriterException(String message, Throwable baseEx) {
+    super(message, baseEx);
+  }
 }

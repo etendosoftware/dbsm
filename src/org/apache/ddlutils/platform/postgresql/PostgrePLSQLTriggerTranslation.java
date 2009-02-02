@@ -23,36 +23,34 @@ import org.apache.ddlutils.translation.Translation;
  */
 public class PostgrePLSQLTriggerTranslation extends PostgrePLSQLTranslation {
 
-    /** Creates a new instance of PostgrePLSQLTriggerTranslation */
-    public PostgrePLSQLTriggerTranslation(Database database) {
-        super(database);
+  /** Creates a new instance of PostgrePLSQLTriggerTranslation */
+  public PostgrePLSQLTriggerTranslation(Database database) {
+    super(database);
 
-        // Here goes the specific translations for triggers
+    // Here goes the specific translations for triggers
 
-        append(new ReplacePatTranslation(":([Oo][Ll][Dd]).", "$1."));
-        append(new ReplacePatTranslation(":([Nn][Ee][Ww]).", "$1."));
-        append(new ReplacePatTranslation("RETURN;",
-                "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; "));
-        append(new ReplacePatTranslation("INSERTING", "TG_OP = 'INSERT'"));
-        append(new ReplacePatTranslation("UPDATING", "TG_OP = 'UPDATE'"));
-        append(new ReplacePatTranslation("DELETING", "TG_OP = 'DELETE'"));
-        append(new ReplacePatTranslation("inserting", "tg_op = 'INSERT'"));
-        append(new ReplacePatTranslation("updating", "tg_op = 'UPDATE'"));
-        append(new ReplacePatTranslation("deleting", "tg_op = 'DELETE'"));
-        append(new ByLineTranslation(
-                new ReplacePatTranslation("^EXCEPTION",
-                        "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\rEXCEPTION")));
+    append(new ReplacePatTranslation(":([Oo][Ll][Dd]).", "$1."));
+    append(new ReplacePatTranslation(":([Nn][Ee][Ww]).", "$1."));
+    append(new ReplacePatTranslation("RETURN;",
+        "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; "));
+    append(new ReplacePatTranslation("INSERTING", "TG_OP = 'INSERT'"));
+    append(new ReplacePatTranslation("UPDATING", "TG_OP = 'UPDATE'"));
+    append(new ReplacePatTranslation("DELETING", "TG_OP = 'DELETE'"));
+    append(new ReplacePatTranslation("inserting", "tg_op = 'INSERT'"));
+    append(new ReplacePatTranslation("updating", "tg_op = 'UPDATE'"));
+    append(new ReplacePatTranslation("deleting", "tg_op = 'DELETE'"));
+    append(new ByLineTranslation(new ReplacePatTranslation("^EXCEPTION",
+        "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\rEXCEPTION")));
 
-        // Add return for trigger
-        append(new Translation() {
-            public String exec(String s) {
-                int i = s.lastIndexOf("END ");
-                return i >= 0 ? s.substring(0, i)
-                        + "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\r"
-                        + s.substring(i, s.length())
-                        : s;
-            }
-        });
-    }
+    // Add return for trigger
+    append(new Translation() {
+      public String exec(String s) {
+        int i = s.lastIndexOf("END ");
+        return i >= 0 ? s.substring(0, i)
+            + "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\r"
+            + s.substring(i, s.length()) : s;
+      }
+    });
+  }
 
 }

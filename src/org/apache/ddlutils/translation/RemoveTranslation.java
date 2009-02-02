@@ -18,9 +18,9 @@ package org.apache.ddlutils.translation;
  */
 public class RemoveTranslation extends ReplaceStrTranslation {
 
-    /** Creates a new instance of RemoveTranslation */
-    public RemoveTranslation(String searchStr) {
-        super(searchStr, "");
-    }
+  /** Creates a new instance of RemoveTranslation */
+  public RemoveTranslation(String searchStr) {
+    super(searchStr, "");
+  }
 
 }

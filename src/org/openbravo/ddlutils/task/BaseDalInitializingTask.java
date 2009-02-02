@@ -30,112 +30,110 @@ import org.openbravo.dal.core.DalInitializingTask;
 import org.openbravo.utils.OBLogAppender;
 
 /**
- * This is the base class for the database ant tasks. It provides logging and
- * other base functionality.
+ * This is the base class for the database ant tasks. It provides logging and other base
+ * functionality.
  * 
  * @author mtaal
  */
 public abstract class BaseDalInitializingTask extends DalInitializingTask {
 
-    private String driver;
-    private String url;
-    private String user;
-    private String password;
+  private String driver;
+  private String url;
+  private String user;
+  private String password;
 
-    protected Logger log;
-    private VerbosityLevel verbosity = null;
+  protected Logger log;
+  private VerbosityLevel verbosity = null;
 
-    /** Creates a new instance of CreateDatabase */
-    public BaseDalInitializingTask() {
+  /** Creates a new instance of CreateDatabase */
+  public BaseDalInitializingTask() {
+  }
+
+  /**
+   * Initializes the logging.
+   */
+  protected void initLogging() {
+    log = Logger.getLogger(getClass());
+    OBLogAppender.setProject(getProject());
+  }
+
+  @Override
+  public void execute() {
+    final Properties props = new Properties();
+    final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
+        .toUpperCase();
+
+    props.setProperty("log4j.rootCategory", level + ",A");
+    props.setProperty("log4j.appender.A", "org.openbravo.utils.OBLogAppender");
+    // "org.apache.log4j.ConsoleAppender");
+    props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
+    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
+    // we don't want debug logging from Digester/Betwixt
+    props.setProperty("log4j.logger.org.apache.commons", "WARN");
+    props.setProperty("log4j.logger.org.hibernate", "WARN");
+
+    LogManager.resetConfiguration();
+    PropertyConfigurator.configure(props);
+
+    initLogging();
+    super.execute();
+  }
+
+  /**
+   * Specifies the verbosity of the task's debug output.
+   * 
+   * @param level
+   *          The verbosity level
+   * @ant.not-required Default is <code>INFO</code>.
+   */
+  public void setVerbosity(VerbosityLevel level) {
+    verbosity = level;
+  }
+
+  public Logger getLog() {
+    if (log == null) {
+      initLogging();
     }
+    return log;
+  }
 
-    /**
-     * Initializes the logging.
-     */
-    protected void initLogging() {
-        log = Logger.getLogger(getClass());
-        OBLogAppender.setProject(getProject());
-    }
+  public String getDriver() {
+    return driver;
+  }
 
-    @Override
-    public void execute() {
-        final Properties props = new Properties();
-        final String level = (verbosity == null ? Level.INFO.toString()
-                : verbosity.getValue()).toUpperCase();
+  public void setDriver(String driver) {
+    this.driver = driver;
+  }
 
-        props.setProperty("log4j.rootCategory", level + ",A");
-        props.setProperty("log4j.appender.A",
-                "org.openbravo.utils.OBLogAppender");
-        // "org.apache.log4j.ConsoleAppender");
-        props.setProperty("log4j.appender.A.layout",
-                "org.apache.log4j.PatternLayout");
-        props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-        // we don't want debug logging from Digester/Betwixt
-        props.setProperty("log4j.logger.org.apache.commons", "WARN");
-        props.setProperty("log4j.logger.org.hibernate", "WARN");
+  public String getUrl() {
+    return url;
+  }
 
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(props);
+  public void setUrl(String url) {
+    this.url = url;
+  }
 
-        initLogging();
-        super.execute();
-    }
+  public String getUser() {
+    return user;
+  }
 
-    /**
-     * Specifies the verbosity of the task's debug output.
-     * 
-     * @param level
-     *            The verbosity level
-     * @ant.not-required Default is <code>INFO</code>.
-     */
-    public void setVerbosity(VerbosityLevel level) {
-        verbosity = level;
-    }
+  public void setUser(String user) {
+    this.user = user;
+  }
 
-    public Logger getLog() {
-        if (log == null) {
-            initLogging();
-        }
-        return log;
-    }
+  public String getPassword() {
+    return password;
+  }
 
-    public String getDriver() {
-        return driver;
-    }
+  public void setPassword(String password) {
+    this.password = password;
+  }
 
-    public void setDriver(String driver) {
-        this.driver = driver;
-    }
+  public void setLog(Logger log) {
+    this.log = log;
+  }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setLog(Logger log) {
-        this.log = log;
-    }
-
-    public VerbosityLevel getVerbosity() {
-        return verbosity;
-    }
+  public VerbosityLevel getVerbosity() {
+    return verbosity;
+  }
 }

@@ -34,208 +34,202 @@ import org.apache.tools.ant.BuildException;
 
 public class DatabaseUtils {
 
-    /** Creates a new instance of DatabaseUtils */
-    private DatabaseUtils() {
+  /** Creates a new instance of DatabaseUtils */
+  private DatabaseUtils() {
+  }
+
+  public static Database readDatabase(File f) {
+
+    Database d = readDatabase_noChecks(f);
+    try {
+      d.initialize();
+    } catch (Exception e) {
+      System.out.println("Warning: " + e.getMessage());
+    }
+    return d;
+  }
+
+  public static Database readDatabaseNoInit(File f) {
+
+    Database d = readDatabase_noChecks(f);
+    return d;
+  }
+
+  public static Database readDatabaseNoInit(File[] f) {
+
+    Database d = readDatabase_noChecks(f[0]);
+    for (int i = 1; i < f.length; i++) {
+      d.mergeWith(readDatabase_noChecks(f[i]));
     }
 
-    public static Database readDatabase(File f) {
+    return d;
+  }
 
-        Database d = readDatabase_noChecks(f);
-        try {
-            d.initialize();
-        } catch (Exception e) {
-            System.out.println("Warning: " + e.getMessage());
+  public static Database readDatabase(File[] f) {
+
+    Database d = readDatabase_noChecks(f[0]);
+    for (int i = 1; i < f.length; i++) {
+      d.mergeWith(readDatabase_noChecks(f[i]));
+    }
+    d.initialize();
+    return d;
+  }
+
+  public static void saveDatabase(File f, Database model) {
+
+    try {
+
+      Writer w = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");
+      new DatabaseIO().write(model, w);
+      w.flush();
+      w.close();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public static File[] readFileArray(File f) {
+
+    if (f.isDirectory()) {
+
+      ArrayList<File> fileslist = new ArrayList<File>();
+
+      File[] directoryfiles = f.listFiles(new XMLFiles());
+      for (File file : directoryfiles) {
+        File[] ff = readFileArray(file);
+        for (File fileint : ff) {
+          fileslist.add(fileint);
         }
-        return d;
+      }
+
+      return fileslist.toArray(new File[fileslist.size()]);
+    } else {
+      return new File[] { f };
+    }
+  }
+
+  private static Database readDatabase_noChecks(File f) {
+
+    if (f.isDirectory()) {
+
+      // create an empty database
+      Database d = new Database();
+      d.setName(f.getName());
+
+      // gets the list and sort
+      File[] filelist = f.listFiles(new XMLFiles());
+      Arrays.sort(filelist, new FilesComparator());
+
+      for (File file : filelist) {
+        d.mergeWith(readDatabase_noChecks(file));
+      }
+
+      return d;
+    } else {
+      DatabaseIO dbIO = new DatabaseIO();
+      dbIO.setValidateXml(false);
+      Database db = dbIO.readplain(f);
+      if (f.getAbsolutePath().contains("modifiedTables"))
+        db.moveTablesToModified();
+      return db;
+    }
+  }
+
+  public static Database cropDatabase(Database sourcedb, Database targetdb, String sobjectlist) {
+
+    Database cropdb = null;
+    try {
+      cropdb = (Database) sourcedb.clone();
+
+      StringTokenizer st = new StringTokenizer(sobjectlist, ",");
+
+      while (st.hasMoreTokens()) {
+        moveObject(cropdb, targetdb, st.nextToken().trim());
+      }
+
+    } catch (CloneNotSupportedException e) {
     }
 
-    public static Database readDatabaseNoInit(File f) {
+    cropdb.initialize(); // throws an exception if inconsistent
+    return cropdb;
+  }
 
-        Database d = readDatabase_noChecks(f);
-        return d;
+  public static void moveObject(Database cropdb, Database targetdb, String sobject) {
+
+    cropdb.removeTable(cropdb.findTable(sobject));
+    cropdb.addTable(targetdb.findTable(sobject));
+
+    cropdb.removeSequence(cropdb.findSequence(sobject));
+    cropdb.addSequence(targetdb.findSequence(sobject));
+
+    cropdb.removeView(cropdb.findView(sobject));
+    cropdb.addView(targetdb.findView(sobject));
+
+    cropdb.removeFunction(cropdb.findFunction(sobject));
+    cropdb.addFunction(targetdb.findFunction(sobject));
+
+    cropdb.removeTrigger(cropdb.findTrigger(sobject));
+    cropdb.addTrigger(targetdb.findTrigger(sobject));
+  }
+
+  public static String readFile(File f) throws IOException {
+
+    StringBuffer s = new StringBuffer();
+    BufferedReader br = new BufferedReader(new FileReader(f));
+
+    String line;
+    while ((line = br.readLine()) != null) {
+      s.append(line);
+      s.append('\n');
     }
+    br.close();
+    return s.toString();
+  }
 
-    public static Database readDatabaseNoInit(File[] f) {
-
-        Database d = readDatabase_noChecks(f[0]);
-        for (int i = 1; i < f.length; i++) {
-            d.mergeWith(readDatabase_noChecks(f[i]));
-        }
-
-        return d;
+  public static DatabaseFilter getDynamicDatabaseFilter(String filter, Database database) {
+    try {
+      DynamicDatabaseFilter dbfilter = (DynamicDatabaseFilter) Class.forName(filter).newInstance();
+      dbfilter.init(database);
+      return dbfilter;
+    } catch (InstantiationException ex) {
+      throw new BuildException(ex);
+    } catch (IllegalAccessException ex) {
+      throw new BuildException(ex);
+    } catch (ClassNotFoundException ex) {
+      throw new BuildException(ex);
     }
+  }
 
-    public static Database readDatabase(File[] f) {
-
-        Database d = readDatabase_noChecks(f[0]);
-        for (int i = 1; i < f.length; i++) {
-            d.mergeWith(readDatabase_noChecks(f[i]));
-        }
-        d.initialize();
-        return d;
+  public static ExcludeFilter getExcludeFilter(String filtername) {
+    try {
+      return (ExcludeFilter) Class.forName(filtername).newInstance();
+    } catch (InstantiationException ex) {
+      throw new BuildException(ex);
+    } catch (IllegalAccessException ex) {
+      throw new BuildException(ex);
+    } catch (ClassNotFoundException ex) {
+      throw new BuildException(ex);
     }
+  }
 
-    public static void saveDatabase(File f, Database model) {
-
-        try {
-
-            Writer w = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");
-            new DatabaseIO().write(model, w);
-            w.flush();
-            w.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+  private static class XMLFiles implements FileFilter {
+    public boolean accept(File pathname) {
+      return pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(".xml"));
     }
+  }
 
-    public static File[] readFileArray(File f) {
+  private static class FilesComparator implements Comparator<File> {
+    public int compare(File a, File b) {
 
-        if (f.isDirectory()) {
-
-            ArrayList<File> fileslist = new ArrayList<File>();
-
-            File[] directoryfiles = f.listFiles(new XMLFiles());
-            for (File file : directoryfiles) {
-                File[] ff = readFileArray(file);
-                for (File fileint : ff) {
-                    fileslist.add(fileint);
-                }
-            }
-
-            return fileslist.toArray(new File[fileslist.size()]);
-        } else {
-            return new File[] { f };
-        }
+      if (a.isDirectory() && !b.isDirectory()) {
+        return -1;
+      } else if (!a.isDirectory() && b.isDirectory()) {
+        return 1;
+      } else {
+        return a.getName().compareTo(b.getName());
+      }
     }
-
-    private static Database readDatabase_noChecks(File f) {
-
-        if (f.isDirectory()) {
-
-            // create an empty database
-            Database d = new Database();
-            d.setName(f.getName());
-
-            // gets the list and sort
-            File[] filelist = f.listFiles(new XMLFiles());
-            Arrays.sort(filelist, new FilesComparator());
-
-            for (File file : filelist) {
-                d.mergeWith(readDatabase_noChecks(file));
-            }
-
-            return d;
-        } else {
-            DatabaseIO dbIO = new DatabaseIO();
-            dbIO.setValidateXml(false);
-            Database db = dbIO.readplain(f);
-            if (f.getAbsolutePath().contains("modifiedTables"))
-                db.moveTablesToModified();
-            return db;
-        }
-    }
-
-    public static Database cropDatabase(Database sourcedb, Database targetdb,
-            String sobjectlist) {
-
-        Database cropdb = null;
-        try {
-            cropdb = (Database) sourcedb.clone();
-
-            StringTokenizer st = new StringTokenizer(sobjectlist, ",");
-
-            while (st.hasMoreTokens()) {
-                moveObject(cropdb, targetdb, st.nextToken().trim());
-            }
-
-        } catch (CloneNotSupportedException e) {
-        }
-
-        cropdb.initialize(); // throws an exception if inconsistent
-        return cropdb;
-    }
-
-    public static void moveObject(Database cropdb, Database targetdb,
-            String sobject) {
-
-        cropdb.removeTable(cropdb.findTable(sobject));
-        cropdb.addTable(targetdb.findTable(sobject));
-
-        cropdb.removeSequence(cropdb.findSequence(sobject));
-        cropdb.addSequence(targetdb.findSequence(sobject));
-
-        cropdb.removeView(cropdb.findView(sobject));
-        cropdb.addView(targetdb.findView(sobject));
-
-        cropdb.removeFunction(cropdb.findFunction(sobject));
-        cropdb.addFunction(targetdb.findFunction(sobject));
-
-        cropdb.removeTrigger(cropdb.findTrigger(sobject));
-        cropdb.addTrigger(targetdb.findTrigger(sobject));
-    }
-
-    public static String readFile(File f) throws IOException {
-
-        StringBuffer s = new StringBuffer();
-        BufferedReader br = new BufferedReader(new FileReader(f));
-
-        String line;
-        while ((line = br.readLine()) != null) {
-            s.append(line);
-            s.append('\n');
-        }
-        br.close();
-        return s.toString();
-    }
-
-    public static DatabaseFilter getDynamicDatabaseFilter(String filter,
-            Database database) {
-        try {
-            DynamicDatabaseFilter dbfilter = (DynamicDatabaseFilter) Class
-                    .forName(filter).newInstance();
-            dbfilter.init(database);
-            return dbfilter;
-        } catch (InstantiationException ex) {
-            throw new BuildException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new BuildException(ex);
-        } catch (ClassNotFoundException ex) {
-            throw new BuildException(ex);
-        }
-    }
-
-    public static ExcludeFilter getExcludeFilter(String filtername) {
-        try {
-            return (ExcludeFilter) Class.forName(filtername).newInstance();
-        } catch (InstantiationException ex) {
-            throw new BuildException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new BuildException(ex);
-        } catch (ClassNotFoundException ex) {
-            throw new BuildException(ex);
-        }
-    }
-
-    private static class XMLFiles implements FileFilter {
-        public boolean accept(File pathname) {
-            return pathname.isDirectory()
-                    || (pathname.isFile() && pathname.getName()
-                            .endsWith(".xml"));
-        }
-    }
-
-    private static class FilesComparator implements Comparator<File> {
-        public int compare(File a, File b) {
-
-            if (a.isDirectory() && !b.isDirectory()) {
-                return -1;
-            } else if (!a.isDirectory() && b.isDirectory()) {
-                return 1;
-            } else {
-                return a.getName().compareTo(b.getName());
-            }
-        }
-    }
+  }
 
 }

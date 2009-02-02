@@ -23,22 +23,21 @@ import org.apache.ddlutils.translation.Translation;
  */
 public class PostgreSqlCheckTranslation extends CombinedTranslation {
 
-    public PostgreSqlCheckTranslation() {
+  public PostgreSqlCheckTranslation() {
 
-        append(new ReplaceStrTranslation(" = ANY", " in"));
-        append(new ReplaceStrTranslation("ARRAY[", ""));
-        append(new ReplaceStrTranslation("]", ""));
-        append(new ReplaceStrTranslation("::bpchar", ""));
-        append(new ReplaceStrTranslation("::text", ""));
-        append(new ReplaceStrTranslation("::character varying", ""));
-        append(new ReplacePatTranslation(
-                "\\(([0-9\\.\\-]+?)\\)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
-        append(new ReplacePatTranslation("\\((.*)\\) in \\((.*)\\)", "$1 IN $2"));
-        append(new ReplacePatTranslation("\\[", ""));
-        append(new Translation() {
-            public String exec(String s) {
-                return s.substring(1, s.length() - 1).toUpperCase();
-            }
-        });
-    }
+    append(new ReplaceStrTranslation(" = ANY", " in"));
+    append(new ReplaceStrTranslation("ARRAY[", ""));
+    append(new ReplaceStrTranslation("]", ""));
+    append(new ReplaceStrTranslation("::bpchar", ""));
+    append(new ReplaceStrTranslation("::text", ""));
+    append(new ReplaceStrTranslation("::character varying", ""));
+    append(new ReplacePatTranslation("\\(([0-9\\.\\-]+?)\\)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
+    append(new ReplacePatTranslation("\\((.*)\\) in \\((.*)\\)", "$1 IN $2"));
+    append(new ReplacePatTranslation("\\[", ""));
+    append(new Translation() {
+      public String exec(String s) {
+        return s.substring(1, s.length() - 1).toUpperCase();
+      }
+    });
+  }
 }

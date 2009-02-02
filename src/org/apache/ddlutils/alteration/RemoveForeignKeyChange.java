@@ -24,50 +24,49 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Table;
 
 /**
- * Represents the removal of a foreign key from a table. Note that for
- * simplicity and because it fits the model, this change actually implements
- * table change for the table that the foreign key originates.
+ * Represents the removal of a foreign key from a table. Note that for simplicity and because it
+ * fits the model, this change actually implements table change for the table that the foreign key
+ * originates.
  * 
  * @version $Revision: $
  */
 public class RemoveForeignKeyChange extends TableChangeImplBase {
-    /** The foreign key. */
-    private ForeignKey _foreignKey;
+  /** The foreign key. */
+  private ForeignKey _foreignKey;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table to remove the foreign key from
-     * @param foreignKey
-     *            The foreign key
-     */
-    public RemoveForeignKeyChange(Table table, ForeignKey foreignKey) {
-        super(table);
-        _foreignKey = foreignKey;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table to remove the foreign key from
+   * @param foreignKey
+   *          The foreign key
+   */
+  public RemoveForeignKeyChange(Table table, ForeignKey foreignKey) {
+    super(table);
+    _foreignKey = foreignKey;
+  }
 
-    /**
-     * Returns the foreign key to be removed.
-     * 
-     * @return The foreign key
-     */
-    public ForeignKey getForeignKey() {
-        return _foreignKey;
-    }
+  /**
+   * Returns the foreign key to be removed.
+   * 
+   * @return The foreign key
+   */
+  public ForeignKey getForeignKey() {
+    return _foreignKey;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
 
-        table.removeForeignKey(_foreignKey);
-    }
+    table.removeForeignKey(_foreignKey);
+  }
 
-    @Override
-    public String toString() {
-        return "RemoveForeignKeyChange. Name: " + _foreignKey.getName();
-    }
+  @Override
+  public String toString() {
+    return "RemoveForeignKeyChange. Name: " + _foreignKey.getName();
+  }
 }

@@ -20,34 +20,34 @@ import org.apache.tools.ant.BuildException;
  */
 public class ManageDatabase extends BaseDatabaseTask {
 
-    /** Creates a new instance of CreateDatabase */
-    public ManageDatabase() {
-    }
+  /** Creates a new instance of CreateDatabase */
+  public ManageDatabase() {
+  }
 
-    @Override
-    public void doExecute() {
+  @Override
+  public void doExecute() {
 
-        throw new BuildException("ant task not valid.");
+    throw new BuildException("ant task not valid.");
 
-        // BasicDataSource ds = new BasicDataSource();
-        // ds.setDriverClassName(getDriver());
-        // ds.setUrl(getUrl());
-        // ds.setUsername(getUser());
-        // ds.setPassword(getPassword());
-        //        
-        // // Check if already managed
-        // try {
-        // Database db = DatabaseUtils.loadCurrentDatabase(ds);
-        // throw new BuildException("Database already managed.");
-        // } catch (SQLException ex) {
-        // }
-        //               
-        // try {
-        // DatabaseUtils.manageDatabase(ds);
-        // } catch (Exception e) {
-        // // log(e.getLocalizedMessage());
-        // throw new BuildException(e);
-        // }
-    }
+    // BasicDataSource ds = new BasicDataSource();
+    // ds.setDriverClassName(getDriver());
+    // ds.setUrl(getUrl());
+    // ds.setUsername(getUser());
+    // ds.setPassword(getPassword());
+    //        
+    // // Check if already managed
+    // try {
+    // Database db = DatabaseUtils.loadCurrentDatabase(ds);
+    // throw new BuildException("Database already managed.");
+    // } catch (SQLException ex) {
+    // }
+    //               
+    // try {
+    // DatabaseUtils.manageDatabase(ds);
+    // } catch (Exception e) {
+    // // log(e.getLocalizedMessage());
+    // throw new BuildException(e);
+    // }
+  }
 
 }

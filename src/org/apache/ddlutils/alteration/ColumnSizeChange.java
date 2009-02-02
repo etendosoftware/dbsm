@@ -28,128 +28,123 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class ColumnSizeChange extends TableChangeImplBase implements
-        ColumnChange {
-    /** The column. */
-    private Column _column;
-    /** The new size. */
-    private int _newSize;
-    /** The new scale. */
-    private Integer _newScale;
-    private String _tablename;
-    private String _columnname;
+public class ColumnSizeChange extends TableChangeImplBase implements ColumnChange {
+  /** The column. */
+  private Column _column;
+  /** The new size. */
+  private int _newSize;
+  /** The new scale. */
+  private Integer _newScale;
+  private String _tablename;
+  private String _columnname;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table of the column
-     * @param column
-     *            The column
-     * @param newSize
-     *            The new size
-     * @param newScale
-     *            The new scale
-     */
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table of the column
+   * @param column
+   *          The column
+   * @param newSize
+   *          The new size
+   * @param newScale
+   *          The new scale
+   */
 
-    public ColumnSizeChange() {
+  public ColumnSizeChange() {
 
+  }
+
+  public ColumnSizeChange(Table table, Column column, int newSize, Integer newScale) {
+    super(table);
+    _column = column;
+    _newSize = newSize;
+    _newScale = newScale;
+    _columnname = column.getName();
+    _tablename = table.getName();
+  }
+
+  /**
+   * Returns the column.
+   * 
+   * @return The column
+   */
+  public Column getChangedColumn() {
+    return _column;
+  }
+
+  /**
+   * Returns the new size of the column.
+   * 
+   * @return The new size
+   */
+  public int getNewSize() {
+    return _newSize;
+  }
+
+  /**
+   * Returns the new scale of the column.
+   * 
+   * @return The new scale
+   */
+  public Integer getNewScale() {
+    return _newScale;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    if (_table == null) {
+      System.out.println("Table wasn't found in database.");
+      return;
+    }
+    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    if (table != null) {
+      Column column = table.findColumn(_column.getName(), caseSensitive);
+      if (column != null)
+        column.setSizeAndScale(_newSize, _newScale);
+      else
+        System.out.println("Column " + getChangedColumn().getName() + " of table "
+            + getChangedTable().getName() + " wasn't found in the database.");
+    } else {
+      System.out.println("Table " + getChangedTable().getName() + " wasn't found in the database");
     }
 
-    public ColumnSizeChange(Table table, Column column, int newSize,
-            Integer newScale) {
-        super(table);
-        _column = column;
-        _newSize = newSize;
-        _newScale = newScale;
-        _columnname = column.getName();
-        _tablename = table.getName();
-    }
+  }
 
-    /**
-     * Returns the column.
-     * 
-     * @return The column
-     */
-    public Column getChangedColumn() {
-        return _column;
-    }
+  public String getTablename() {
+    return _tablename;
+  }
 
-    /**
-     * Returns the new size of the column.
-     * 
-     * @return The new size
-     */
-    public int getNewSize() {
-        return _newSize;
-    }
+  public void setTablename(String tablename) {
+    _tablename = tablename;
+  }
 
-    /**
-     * Returns the new scale of the column.
-     * 
-     * @return The new scale
-     */
-    public Integer getNewScale() {
-        return _newScale;
-    }
+  public String getColumnname() {
+    return _columnname;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        if (_table == null) {
-            System.out.println("Table wasn't found in database.");
-            return;
-        }
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
-        if (table != null) {
-            Column column = table.findColumn(_column.getName(), caseSensitive);
-            if (column != null)
-                column.setSizeAndScale(_newSize, _newScale);
-            else
-                System.out.println("Column " + getChangedColumn().getName()
-                        + " of table " + getChangedTable().getName()
-                        + " wasn't found in the database.");
-        } else {
-            System.out.println("Table " + getChangedTable().getName()
-                    + " wasn't found in the database");
-        }
+  public void setColumnname(String columnname) {
+    _columnname = columnname;
+  }
 
-    }
+  public void setNewSize(int newSize) {
+    _newSize = newSize;
+  }
 
-    public String getTablename() {
-        return _tablename;
-    }
+  public void setNewScale(String newScale) {
+    _newScale = new Integer(newScale);
+  }
 
-    public void setTablename(String tablename) {
-        _tablename = tablename;
-    }
-
-    public String getColumnname() {
-        return _columnname;
-    }
-
-    public void setColumnname(String columnname) {
-        _columnname = columnname;
-    }
-
-    public void setNewSize(int newSize) {
-        _newSize = newSize;
-    }
-
-    public void setNewScale(String newScale) {
-        _newScale = new Integer(newScale);
-    }
-
-    @Override
-    public String toString() {
-        String name;
-        if (_column == null)
-            name = "null";
-        else
-            name = _column.getName();
-        return "ColumnSizeChange. Column: " + name;
-    }
+  @Override
+  public String toString() {
+    String name;
+    if (_column == null)
+      name = "null";
+    else
+      name = _column.getName();
+    return "ColumnSizeChange. Column: " + name;
+  }
 
 }

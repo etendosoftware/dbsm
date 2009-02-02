@@ -27,35 +27,35 @@ import org.apache.commons.collections.Predicate;
  * @version $Revision: $
  */
 public class MultiInstanceofPredicate implements Predicate {
-    /** The types to check. */
-    private Class[] _typesToCheck;
+  /** The types to check. */
+  private Class[] _typesToCheck;
 
-    /**
-     * Creates a new predicate.
-     * 
-     * @param typesToCheck
-     *            The types to check
-     */
-    public MultiInstanceofPredicate(Class[] typesToCheck) {
-        _typesToCheck = typesToCheck;
-    }
+  /**
+   * Creates a new predicate.
+   * 
+   * @param typesToCheck
+   *          The types to check
+   */
+  public MultiInstanceofPredicate(Class[] typesToCheck) {
+    _typesToCheck = typesToCheck;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean evaluate(Object obj) {
-        if ((_typesToCheck == null) || (_typesToCheck.length == 0)) {
-            return true;
-        } else {
-            Class typeOfObj = obj.getClass();
+  /**
+   * {@inheritDoc}
+   */
+  public boolean evaluate(Object obj) {
+    if ((_typesToCheck == null) || (_typesToCheck.length == 0)) {
+      return true;
+    } else {
+      Class typeOfObj = obj.getClass();
 
-            for (int idx = 0; idx < _typesToCheck.length; idx++) {
-                if (_typesToCheck[idx].isAssignableFrom(typeOfObj)) {
-                    return true;
-                }
-            }
-            return false;
+      for (int idx = 0; idx < _typesToCheck.length; idx++) {
+        if (_typesToCheck[idx].isAssignableFrom(typeOfObj)) {
+          return true;
         }
+      }
+      return false;
     }
+  }
 
 }

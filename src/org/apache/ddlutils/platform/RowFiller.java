@@ -21,5 +21,5 @@ import java.sql.SQLException;
  */
 public interface RowFiller {
 
-    public void fillRow(ResultSet r) throws SQLException;
+  public void fillRow(ResultSet r) throws SQLException;
 }

@@ -25,41 +25,41 @@ import org.apache.ddlutils.model.Function;
 
 public class AddFunctionChange implements ModelChange {
 
-    /** The new function. */
-    private Function _newFunction;
+  /** The new function. */
+  private Function _newFunction;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param newFunction
-     *            The new function
-     */
-    public AddFunctionChange(Function newFunction) {
-        _newFunction = newFunction;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param newFunction
+   *          The new function
+   */
+  public AddFunctionChange(Function newFunction) {
+    _newFunction = newFunction;
+  }
 
-    /**
-     * Returns the new function.
-     * 
-     * @return The new function
-     */
-    public Function getNewFunction() {
-        return _newFunction;
-    }
+  /**
+   * Returns the new function.
+   * 
+   * @return The new function
+   */
+  public Function getNewFunction() {
+    return _newFunction;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        try {
-            database.addFunction((Function) _newFunction.clone());
-        } catch (CloneNotSupportedException ex) {
-            throw new DdlUtilsException(ex);
-        }
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    try {
+      database.addFunction((Function) _newFunction.clone());
+    } catch (CloneNotSupportedException ex) {
+      throw new DdlUtilsException(ex);
     }
+  }
 
-    @Override
-    public String toString() {
-        return "AddFunctionChange. Name: " + _newFunction.getName();
-    }
+  @Override
+  public String toString() {
+    return "AddFunctionChange. Name: " + _newFunction.getName();
+  }
 }

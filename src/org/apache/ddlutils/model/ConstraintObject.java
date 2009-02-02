@@ -18,5 +18,5 @@ package org.apache.ddlutils.model;
  */
 public interface ConstraintObject {
 
-    public String getName();
+  public String getName();
 }

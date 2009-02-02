@@ -29,44 +29,43 @@ import org.apache.ddlutils.model.Unique;
  * @version $Revision: $
  */
 public class RemoveUniqueChange extends TableChangeImplBase {
-    /** The unique to be removed. */
-    private Unique _unique;
+  /** The unique to be removed. */
+  private Unique _unique;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table to remove the unique from
-     * @param unique
-     *            The unique
-     */
-    public RemoveUniqueChange(Table table, Unique unique) {
-        super(table);
-        _unique = unique;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table to remove the unique from
+   * @param unique
+   *          The unique
+   */
+  public RemoveUniqueChange(Table table, Unique unique) {
+    super(table);
+    _unique = unique;
+  }
 
-    /**
-     * Returns the unique.
-     * 
-     * @return The unique
-     */
-    public Unique getUnique() {
-        return _unique;
-    }
+  /**
+   * Returns the unique.
+   * 
+   * @return The unique
+   */
+  public Unique getUnique() {
+    return _unique;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
-        Unique unique = table.findUnique(_unique.getName(), caseSensitive);
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    Unique unique = table.findUnique(_unique.getName(), caseSensitive);
 
-        table.removeUnique(unique);
-    }
+    table.removeUnique(unique);
+  }
 
-    @Override
-    public String toString() {
-        return "RemoveUniqueChange. Name: " + _unique.getName();
-    }
+  @Override
+  public String toString() {
+    return "RemoveUniqueChange. Name: " + _unique.getName();
+  }
 }

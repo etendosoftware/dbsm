@@ -18,17 +18,17 @@ import org.apache.ddlutils.model.Database;
  */
 public final class AllDatabaseFilter extends AbstractDatabaseFilter {
 
-    /** Creates a new instance of AllDatabaseFilter */
-    public AllDatabaseFilter() {
-    }
+  /** Creates a new instance of AllDatabaseFilter */
+  public AllDatabaseFilter() {
+  }
 
-    /**
-     * Add to the filter all of the tables from database
-     * 
-     * @param database
-     *            The name of database
-     */
-    public void init(Database database) {
-        addAllTables(database);
-    }
+  /**
+   * Add to the filter all of the tables from database
+   * 
+   * @param database
+   *          The name of database
+   */
+  public void init(Database database) {
+    addAllTables(database);
+  }
 }

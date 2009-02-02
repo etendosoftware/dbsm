@@ -21,36 +21,36 @@ import org.apache.ddlutils.model.Database;
  */
 public final class NoneDatabaseFilter implements DynamicDatabaseFilter {
 
-    /** Creates a new instance of NoneDatabaseFilter */
-    public NoneDatabaseFilter() {
-    }
+  /** Creates a new instance of NoneDatabaseFilter */
+  public NoneDatabaseFilter() {
+  }
 
-    /**
-     * The init method
-     * 
-     * @param database
-     *            The database
-     */
-    public void init(Database database) {
-    }
+  /**
+   * The init method
+   * 
+   * @param database
+   *          The database
+   */
+  public void init(Database database) {
+  }
 
-    /**
-     * Return an empty String array
-     * 
-     * @return Empty String array
-     */
-    public String[] getTableNames() {
-        return new String[0];
-    }
+  /**
+   * Return an empty String array
+   * 
+   * @return Empty String array
+   */
+  public String[] getTableNames() {
+    return new String[0];
+  }
 
-    /**
-     * Return the constant FILTER_NODATA
-     * 
-     * @param tablename
-     *            The table
-     * @return The constant FILTER_NODATA
-     */
-    public String getTableFilter(String tablename) {
-        return FILTER_NODATA;
-    }
+  /**
+   * Return the constant FILTER_NODATA
+   * 
+   * @param tablename
+   *          The table
+   * @return The constant FILTER_NODATA
+   */
+  public String getTableFilter(String tablename) {
+    return FILTER_NODATA;
+  }
 }

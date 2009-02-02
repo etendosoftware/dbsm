@@ -18,37 +18,37 @@ package org.apache.ddlutils.translation;
  */
 public class ReplaceStrTranslation extends ReplacePatTranslation {
 
-    /** Creates a new instance of ReplaceExtTranslation */
-    public ReplaceStrTranslation(String searchStr, String replaceStr) {
-        super(getPattern(searchStr), replaceStr);
-    }
+  /** Creates a new instance of ReplaceExtTranslation */
+  public ReplaceStrTranslation(String searchStr, String replaceStr) {
+    super(getPattern(searchStr), replaceStr);
+  }
 
-    private static String getPattern(String searchStr) {
+  private static String getPattern(String searchStr) {
 
-        StringBuffer pattern = new StringBuffer();
-        for (int i = 0; i < searchStr.length(); i++) {
-            char c = searchStr.charAt(i);
-            if (c == ' ') {
-                pattern.append("(\\s|\\t)");
-            } else if (Character.isLetter(c)) {
-                pattern.append('[');
-                pattern.append(Character.toUpperCase(c));
-                pattern.append(Character.toLowerCase(c));
-                pattern.append(']');
-            } else if (c == '[') {
-                pattern.append("(\\[)");
-            } else if (c == ']') {
-                pattern.append("(\\])");
-            } else if (c == '(') {
-                pattern.append("(\\()");
-            } else if (c == ')') {
-                pattern.append("(\\))");
-            } else if (c == '\'') {
-                pattern.append("(')");
-            } else {
-                pattern.append(c);
-            }
-        }
-        return pattern.toString();
+    StringBuffer pattern = new StringBuffer();
+    for (int i = 0; i < searchStr.length(); i++) {
+      char c = searchStr.charAt(i);
+      if (c == ' ') {
+        pattern.append("(\\s|\\t)");
+      } else if (Character.isLetter(c)) {
+        pattern.append('[');
+        pattern.append(Character.toUpperCase(c));
+        pattern.append(Character.toLowerCase(c));
+        pattern.append(']');
+      } else if (c == '[') {
+        pattern.append("(\\[)");
+      } else if (c == ']') {
+        pattern.append("(\\])");
+      } else if (c == '(') {
+        pattern.append("(\\()");
+      } else if (c == ')') {
+        pattern.append("(\\))");
+      } else if (c == '\'') {
+        pattern.append("(')");
+      } else {
+        pattern.append(c);
+      }
     }
+    return pattern.toString();
+  }
 }

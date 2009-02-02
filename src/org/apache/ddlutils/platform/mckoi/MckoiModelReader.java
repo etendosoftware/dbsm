@@ -39,91 +39,85 @@ import org.apache.ddlutils.platform.JdbcModelReader;
  * @version $Revision: $
  */
 public class MckoiModelReader extends JdbcModelReader {
-    /**
-     * Creates a new model reader for Mckoi databases.
-     * 
-     * @param platform
-     *            The platform that this model reader belongs to
-     */
-    public MckoiModelReader(Platform platform) {
-        super(platform);
-        setDefaultCatalogPattern(null);
-        setDefaultSchemaPattern(null);
+  /**
+   * Creates a new model reader for Mckoi databases.
+   * 
+   * @param platform
+   *          The platform that this model reader belongs to
+   */
+  public MckoiModelReader(Platform platform) {
+    super(platform);
+    setDefaultCatalogPattern(null);
+    setDefaultSchemaPattern(null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+    Table table = super.readTable(metaData, values);
+
+    if (table != null) {
+      // Mckoi does not currently return unique indices in the metadata so
+      // we have to query
+      // internal tables to get this info
+      StringBuffer query = new StringBuffer();
+
+      query.append("SELECT uniqueColumns.column, uniqueColumns.seq_no, uniqueInfo.name");
+      query
+          .append(" FROM SYS_INFO.sUSRUniqueColumns uniqueColumns, SYS_INFO.sUSRUniqueInfo uniqueInfo");
+      query.append(" WHERE uniqueColumns.un_id = uniqueInfo.id AND uniqueInfo.table = '");
+      query.append(table.getName());
+      if (table.getSchema() != null) {
+        query.append("' AND uniqueInfo.schema = '");
+        query.append(table.getSchema());
+      }
+      query.append("'");
+
+      Statement stmt = getConnection().createStatement();
+      ResultSet resultSet = stmt.executeQuery(query.toString());
+      Map indices = new ListOrderedMap();
+      Map indexValues = new HashMap();
+
+      indexValues.put("NON_UNIQUE", Boolean.FALSE);
+      while (resultSet.next()) {
+        indexValues.put("COLUMN_NAME", resultSet.getString(1));
+        indexValues.put("ORDINAL_POSITION", new Short(resultSet.getShort(2)));
+        indexValues.put("INDEX_NAME", resultSet.getString(3));
+
+        readIndex(metaData, indexValues, indices);
+      }
+      resultSet.close();
+
+      table.addIndices(indices.values());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected Table readTable(DatabaseMetaDataWrapper metaData, Map values)
-            throws SQLException {
-        Table table = super.readTable(metaData, values);
+    return table;
+  }
 
-        if (table != null) {
-            // Mckoi does not currently return unique indices in the metadata so
-            // we have to query
-            // internal tables to get this info
-            StringBuffer query = new StringBuffer();
+  /**
+   * {@inheritDoc}
+   */
+  protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+    Column column = super.readColumn(metaData, values);
 
-            query
-                    .append("SELECT uniqueColumns.column, uniqueColumns.seq_no, uniqueInfo.name");
-            query
-                    .append(" FROM SYS_INFO.sUSRUniqueColumns uniqueColumns, SYS_INFO.sUSRUniqueInfo uniqueInfo");
-            query
-                    .append(" WHERE uniqueColumns.un_id = uniqueInfo.id AND uniqueInfo.table = '");
-            query.append(table.getName());
-            if (table.getSchema() != null) {
-                query.append("' AND uniqueInfo.schema = '");
-                query.append(table.getSchema());
-            }
-            query.append("'");
-
-            Statement stmt = getConnection().createStatement();
-            ResultSet resultSet = stmt.executeQuery(query.toString());
-            Map indices = new ListOrderedMap();
-            Map indexValues = new HashMap();
-
-            indexValues.put("NON_UNIQUE", Boolean.FALSE);
-            while (resultSet.next()) {
-                indexValues.put("COLUMN_NAME", resultSet.getString(1));
-                indexValues.put("ORDINAL_POSITION", new Short(resultSet
-                        .getShort(2)));
-                indexValues.put("INDEX_NAME", resultSet.getString(3));
-
-                readIndex(metaData, indexValues, indices);
-            }
-            resultSet.close();
-
-            table.addIndices(indices.values());
-        }
-
-        return table;
+    if (column.getSize() != null) {
+      if (column.getSizeAsInt() <= 0) {
+        column.setSize(null);
+      }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values)
-            throws SQLException {
-        Column column = super.readColumn(metaData, values);
+    String defaultValue = column.getDefaultValue();
 
-        if (column.getSize() != null) {
-            if (column.getSizeAsInt() <= 0) {
-                column.setSize(null);
-            }
-        }
-
-        String defaultValue = column.getDefaultValue();
-
-        if (defaultValue != null) {
-            if (defaultValue.toLowerCase().startsWith("nextval('")
-                    || defaultValue.toLowerCase().startsWith("uniquekey('")) {
-                column.setDefaultValue(null);
-                column.setAutoIncrement(true);
-            } else if (TypeMap.isTextType(column.getTypeCode())) {
-                column.setDefaultValue(unescape(column.getDefaultValue(), "'",
-                        "\\'"));
-            }
-        }
-        return column;
+    if (defaultValue != null) {
+      if (defaultValue.toLowerCase().startsWith("nextval('")
+          || defaultValue.toLowerCase().startsWith("uniquekey('")) {
+        column.setDefaultValue(null);
+        column.setAutoIncrement(true);
+      } else if (TypeMap.isTextType(column.getTypeCode())) {
+        column.setDefaultValue(unescape(column.getDefaultValue(), "'", "\\'"));
+      }
     }
+    return column;
+  }
 }

@@ -35,54 +35,54 @@ import org.apache.ddlutils.platform.JdbcModelReader;
  * @version $Revision: $
  */
 public class AxionModelReader extends JdbcModelReader {
-    /**
-     * Creates a new model reader for Axion databases.
-     * 
-     * @param platform
-     *            The platform that this model reader belongs to
-     */
-    public AxionModelReader(Platform platform) {
-        super(platform);
-        setDefaultCatalogPattern(null);
-        setDefaultSchemaPattern(null);
-        setDefaultTablePattern("%");
-    }
+  /**
+   * Creates a new model reader for Axion databases.
+   * 
+   * @param platform
+   *          The platform that this model reader belongs to
+   */
+  public AxionModelReader(Platform platform) {
+    super(platform);
+    setDefaultCatalogPattern(null);
+    setDefaultSchemaPattern(null);
+    setDefaultTablePattern("%");
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected Collection readPrimaryKeyNames(DatabaseMetaDataWrapper metaData,
-            String tableName) throws SQLException {
-        // Axion still does not support DatabaseMetaData#getPrimaryKeys
-        return new ArrayList();
-    }
+  /**
+   * {@inheritDoc}
+   */
+  protected Collection readPrimaryKeyNames(DatabaseMetaDataWrapper metaData, String tableName)
+      throws SQLException {
+    // Axion still does not support DatabaseMetaData#getPrimaryKeys
+    return new ArrayList();
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData,
-            String tableName) throws SQLException {
-        // Axion still does not support DatabaseMetaData#getImportedKeys or
-        // #getExportedKeys
-        return new ArrayList();
-    }
+  /**
+   * {@inheritDoc}
+   */
+  protected Collection readForeignKeys(DatabaseMetaDataWrapper metaData, String tableName)
+      throws SQLException {
+    // Axion still does not support DatabaseMetaData#getImportedKeys or
+    // #getExportedKeys
+    return new ArrayList();
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void removeSystemIndices(DatabaseMetaDataWrapper metaData,
-            Table table) throws SQLException {
-        // Axion's JDBC driver does not support primary key reading, so we have
-        // to filter at this level
-        for (int indexIdx = 0; indexIdx < table.getIndexCount();) {
-            Index index = table.getIndex(indexIdx);
+  /**
+   * {@inheritDoc}
+   */
+  protected void removeSystemIndices(DatabaseMetaDataWrapper metaData, Table table)
+      throws SQLException {
+    // Axion's JDBC driver does not support primary key reading, so we have
+    // to filter at this level
+    for (int indexIdx = 0; indexIdx < table.getIndexCount();) {
+      Index index = table.getIndex(indexIdx);
 
-            // also, Axion's internal indices are not unique
-            if (index.getName().startsWith("SYS_")) {
-                table.removeIndex(indexIdx);
-            } else {
-                indexIdx++;
-            }
-        }
+      // also, Axion's internal indices are not unique
+      if (index.getName().startsWith("SYS_")) {
+        table.removeIndex(indexIdx);
+      } else {
+        indexIdx++;
+      }
     }
+  }
 }

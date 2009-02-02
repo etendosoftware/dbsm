@@ -36,256 +36,222 @@ import org.openbravo.service.dataset.DataSetService;
  */
 public class ExportDataXMLMod extends BaseDalInitializingTask {
 
-    private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+  private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
-    private File prescript = null;
-    private File postscript = null;
+  private File prescript = null;
+  private File postscript = null;
 
-    private File model = null;
-    private File moduledir;
-    private String filter = "org.apache.ddlutils.io.AllDatabaseFilter";
-    private String module;
+  private File model = null;
+  private File moduledir;
+  private String filter = "org.apache.ddlutils.io.AllDatabaseFilter";
+  private String module;
 
-    private File output;
-    private String encoding = "UTF-8";
+  private File output;
+  private String encoding = "UTF-8";
 
-    private String codeRevision;
+  private String codeRevision;
 
-    /** Creates a new instance of WriteDataXML */
-    public ExportDataXMLMod() {
+  /** Creates a new instance of WriteDataXML */
+  public ExportDataXMLMod() {
+  }
+
+  @Override
+  public void doExecute() {
+
+    final DataSetService datasetService = DataSetService.getInstance();
+
+    final BasicDataSource ds = new BasicDataSource();
+    ds.setDriverClassName(getDriver());
+    ds.setUrl(getUrl());
+    ds.setUsername(getUser());
+    ds.setPassword(getPassword());
+
+    final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    // platform.setDelimitedIdentifierModeOn(true);
+    // DBSMOBUtil.verifyRevision(platform, codeRevision, getLog());
+
+    final DBSMOBUtil util = DBSMOBUtil.getInstance();
+    util.getModules(platform, excludeobjects);
+    if (util.getActiveModuleCount() == 0) {
+      getLog().info(
+          "No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
+      return;
     }
+    util.generateIndustryTemplateTree();
+    if (module != null && !module.equals("%"))
+      util.getIncDependenciesForModuleList(module);
 
-    @Override
-    public void doExecute() {
+    try {
 
-        final DataSetService datasetService = DataSetService.getInstance();
+      getLog().info("Loading models for AD and RD Datasets");
+      Database originaldb;
+      originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects),
+          "AD");
+      final Database dbrd = platform.loadModelFromDatabase(DatabaseUtils
+          .getExcludeFilter(excludeobjects), "ADRD");
+      originaldb.mergeWith(dbrd);
+      getLog().info("Model loaded");
 
-        final BasicDataSource ds = new BasicDataSource();
-        ds.setDriverClassName(getDriver());
-        ds.setUrl(getUrl());
-        ds.setUsername(getUser());
-        ds.setPassword(getPassword());
+      // Create a set of files one for each table
+      final Vector<String> datasets = new Vector<String>();
+      datasets.add("AD");
+      datasets.add("ADRD");
 
-        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-        // platform.setDelimitedIdentifierModeOn(true);
-        // DBSMOBUtil.verifyRevision(platform, codeRevision, getLog());
+      int datasetI = 0;
 
-        final DBSMOBUtil util = DBSMOBUtil.getInstance();
-        util.getModules(platform, excludeobjects);
-        if (util.getActiveModuleCount() == 0) {
-            getLog()
-                    .info(
-                            "No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
-            return;
-        }
-        util.generateIndustryTemplateTree();
-        if (module != null && !module.equals("%"))
-            util.getIncDependenciesForModuleList(module);
+      for (final String dataSetCode : datasets) {
+        final DataSet dataSet = datasetService.getDataSetByValue(dataSetCode);
+        System.out.println(dataSet);
+        final List<DataSetTable> tableList = datasetService.getDataSetTables(dataSet);
+        for (int i = 0; i < util.getActiveModuleCount(); i++) {
+          if (module == null || module.equals("%")
+              || util.isIncludedInExportList(util.getActiveModule(i))) {
+            getLog().info("Exporting module: " + util.getActiveModule(i).name);
+            getLog().info(originaldb.toString());
+            final DatabaseDataIO dbdio = new DatabaseDataIO();
+            dbdio.setEnsureFKOrder(false);
+            if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
+              getLog().info("Path: " + output.getAbsolutePath());
+              // First we delete all .xml files in the directory
 
-        try {
-
-            getLog().info("Loading models for AD and RD Datasets");
-            Database originaldb;
-            originaldb = platform.loadModelFromDatabase(DatabaseUtils
-                    .getExcludeFilter(excludeobjects), "AD");
-            final Database dbrd = platform.loadModelFromDatabase(DatabaseUtils
-                    .getExcludeFilter(excludeobjects), "ADRD");
-            originaldb.mergeWith(dbrd);
-            getLog().info("Model loaded");
-
-            // Create a set of files one for each table
-            final Vector<String> datasets = new Vector<String>();
-            datasets.add("AD");
-            datasets.add("ADRD");
-
-            int datasetI = 0;
-
-            for (final String dataSetCode : datasets) {
-                final DataSet dataSet = datasetService
-                        .getDataSetByValue(dataSetCode);
-                System.out.println(dataSet);
-                final List<DataSetTable> tableList = datasetService
-                        .getDataSetTables(dataSet);
-                for (int i = 0; i < util.getActiveModuleCount(); i++) {
-                    if (module == null
-                            || module.equals("%")
-                            || util.isIncludedInExportList(util
-                                    .getActiveModule(i))) {
-                        getLog().info(
-                                "Exporting module: "
-                                        + util.getActiveModule(i).name);
-                        getLog().info(originaldb.toString());
-                        final DatabaseDataIO dbdio = new DatabaseDataIO();
-                        dbdio.setEnsureFKOrder(false);
-                        if (util.getActiveModule(i).name
-                                .equalsIgnoreCase("CORE")) {
-                            getLog().info("Path: " + output.getAbsolutePath());
-                            // First we delete all .xml files in the directory
-
-                            if (datasetI == 0) {
-                                final File[] filestodelete = DatabaseIO
-                                        .readFileArray(getOutput());
-                                for (final File filedelete : filestodelete) {
-                                    filedelete.delete();
-                                }
-                            }
-
-                            for (final DataSetTable table : tableList) {
-                                getLog().info(
-                                        "Exporting table: "
-                                                + table.getTable()
-                                                        .getTableName()
-                                                + " to Core");
-                                final OutputStream out = new FileOutputStream(
-                                        new File(getOutput(), table.getTable()
-                                                .getTableName().toUpperCase()
-                                                + ".xml"));
-                                dbdio.writeDataForTableToXML(originaldb,
-                                        datasetService, dataSetCode, table,
-                                        out, getEncoding(), util
-                                                .getActiveModule(i).idMod);
-                                out.flush();
-                            }
-                        } else {
-                            if (dataSetCode.equals("AD")) {
-                                final File path = new File(moduledir, util
-                                        .getActiveModule(i).dir
-                                        + "/src-db/database/sourcedata/");
-                                getLog().info("Path: " + path);
-                                path.mkdirs();
-                                if (datasetI == 0) {
-                                    final File[] filestodelete = DatabaseIO
-                                            .readFileArray(path);
-                                    for (final File filedelete : filestodelete) {
-                                        filedelete.delete();
-                                    }
-                                }
-                                for (final DataSetTable table : tableList) {
-                                    getLog()
-                                            .info(
-                                                    "Exporting table: "
-                                                            + table
-                                                                    .getTable()
-                                                                    .getTableName()
-                                                            + " to module "
-                                                            + util
-                                                                    .getActiveModule(i).name);
-                                    final File tableFile = new File(path, table
-                                            .getTable().getTableName()
-                                            .toUpperCase()
-                                            + ".xml");
-                                    final OutputStream out = new FileOutputStream(
-                                            tableFile);
-                                    final boolean b = dbdio
-                                            .writeDataForTableToXML(
-                                                    originaldb,
-                                                    datasetService,
-                                                    dataSetCode,
-                                                    table,
-                                                    out,
-                                                    getEncoding(),
-                                                    util.getActiveModule(i).idMod);
-                                    if (!b)
-                                        tableFile.delete();
-                                    out.flush();
-                                }
-                            }
-                        }
-                    }
+              if (datasetI == 0) {
+                final File[] filestodelete = DatabaseIO.readFileArray(getOutput());
+                for (final File filedelete : filestodelete) {
+                  filedelete.delete();
                 }
-                datasetI++;
-            }
+              }
 
-            // execute the post-script
-            if (getPostscript() != null) {
-                platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()),
-                        true);
+              for (final DataSetTable table : tableList) {
+                getLog().info("Exporting table: " + table.getTable().getTableName() + " to Core");
+                final OutputStream out = new FileOutputStream(new File(getOutput(), table
+                    .getTable().getTableName().toUpperCase()
+                    + ".xml"));
+                dbdio.writeDataForTableToXML(originaldb, datasetService, dataSetCode, table, out,
+                    getEncoding(), util.getActiveModule(i).idMod);
+                out.flush();
+              }
+            } else {
+              if (dataSetCode.equals("AD")) {
+                final File path = new File(moduledir, util.getActiveModule(i).dir
+                    + "/src-db/database/sourcedata/");
+                getLog().info("Path: " + path);
+                path.mkdirs();
+                if (datasetI == 0) {
+                  final File[] filestodelete = DatabaseIO.readFileArray(path);
+                  for (final File filedelete : filestodelete) {
+                    filedelete.delete();
+                  }
+                }
+                for (final DataSetTable table : tableList) {
+                  getLog().info(
+                      "Exporting table: " + table.getTable().getTableName() + " to module "
+                          + util.getActiveModule(i).name);
+                  final File tableFile = new File(path, table.getTable().getTableName()
+                      .toUpperCase()
+                      + ".xml");
+                  final OutputStream out = new FileOutputStream(tableFile);
+                  final boolean b = dbdio.writeDataForTableToXML(originaldb, datasetService,
+                      dataSetCode, table, out, getEncoding(), util.getActiveModule(i).idMod);
+                  if (!b)
+                    tableFile.delete();
+                  out.flush();
+                }
+              }
             }
-        } catch (final Exception e) {
-            e.printStackTrace();
-            // log(e.getLocalizedMessage());
-            throw new BuildException(e);
+          }
         }
-    }
+        datasetI++;
+      }
 
-    public String getExcludeobjects() {
-        return excludeobjects;
+      // execute the post-script
+      if (getPostscript() != null) {
+        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
+      }
+    } catch (final Exception e) {
+      e.printStackTrace();
+      // log(e.getLocalizedMessage());
+      throw new BuildException(e);
     }
+  }
 
-    public void setExcludeobjects(String excludeobjects) {
-        this.excludeobjects = excludeobjects;
-    }
+  public String getExcludeobjects() {
+    return excludeobjects;
+  }
 
-    public File getModel() {
-        return model;
-    }
+  public void setExcludeobjects(String excludeobjects) {
+    this.excludeobjects = excludeobjects;
+  }
 
-    public void setModel(File model) {
-        this.model = model;
-    }
+  public File getModel() {
+    return model;
+  }
 
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
+  public void setModel(File model) {
+    this.model = model;
+  }
 
-    public String getFilter() {
-        return filter;
-    }
+  public void setFilter(String filter) {
+    this.filter = filter;
+  }
 
-    public File getOutput() {
-        return output;
-    }
+  public String getFilter() {
+    return filter;
+  }
 
-    public void setOutput(File output) {
-        this.output = output;
-    }
+  public File getOutput() {
+    return output;
+  }
 
-    public String getEncoding() {
-        return encoding;
-    }
+  public void setOutput(File output) {
+    this.output = output;
+  }
 
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
+  public String getEncoding() {
+    return encoding;
+  }
 
-    public File getPrescript() {
-        return prescript;
-    }
+  public void setEncoding(String encoding) {
+    this.encoding = encoding;
+  }
 
-    public void setPrescript(File prescript) {
-        this.prescript = prescript;
-    }
+  public File getPrescript() {
+    return prescript;
+  }
 
-    public File getPostscript() {
-        return postscript;
-    }
+  public void setPrescript(File prescript) {
+    this.prescript = prescript;
+  }
 
-    public void setPostscript(File postscript) {
-        this.postscript = postscript;
-    }
+  public File getPostscript() {
+    return postscript;
+  }
 
-    public String getCodeRevision() {
-        return codeRevision;
-    }
+  public void setPostscript(File postscript) {
+    this.postscript = postscript;
+  }
 
-    public void setCodeRevision(String rev) {
-        codeRevision = rev;
-    }
+  public String getCodeRevision() {
+    return codeRevision;
+  }
 
-    public File getModuledir() {
-        return moduledir;
-    }
+  public void setCodeRevision(String rev) {
+    codeRevision = rev;
+  }
 
-    public void setModuledir(File moduledir) {
-        this.moduledir = moduledir;
-    }
+  public File getModuledir() {
+    return moduledir;
+  }
 
-    public String getModule() {
-        return module;
-    }
+  public void setModuledir(File moduledir) {
+    this.moduledir = moduledir;
+  }
 
-    public void setModule(String module) {
-        this.module = module;
-    }
+  public String getModule() {
+    return module;
+  }
+
+  public void setModule(String module) {
+    this.module = module;
+  }
 
 }

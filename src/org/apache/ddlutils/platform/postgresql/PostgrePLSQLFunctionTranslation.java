@@ -20,11 +20,11 @@ import org.apache.ddlutils.model.Database;
  */
 public class PostgrePLSQLFunctionTranslation extends PostgrePLSQLTranslation {
 
-    /** Creates a new instance of PostgrePLSQLFunctionTranslation */
-    public PostgrePLSQLFunctionTranslation(Database database) {
-        super(database);
+  /** Creates a new instance of PostgrePLSQLFunctionTranslation */
+  public PostgrePLSQLFunctionTranslation(Database database) {
+    super(database);
 
-        // Here goes the specific translations for functions
-    }
+    // Here goes the specific translations for functions
+  }
 
 }

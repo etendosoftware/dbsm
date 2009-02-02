@@ -20,24 +20,24 @@ import org.apache.tools.ant.BuildException;
  */
 public class UnmanageDatabase extends BaseDatabaseTask {
 
-    /** Creates a new instance of CreateDatabase */
-    public UnmanageDatabase() {
-    }
+  /** Creates a new instance of CreateDatabase */
+  public UnmanageDatabase() {
+  }
 
-    @Override
-    public void doExecute() {
+  @Override
+  public void doExecute() {
 
-        throw new BuildException("ant task not valid.");
+    throw new BuildException("ant task not valid.");
 
-        // BasicDataSource ds = new BasicDataSource();
-        // ds.setDriverClassName(getDriver());
-        // ds.setUrl(getUrl());
-        // ds.setUsername(getUser());
-        // ds.setPassword(getPassword());
-        //               
-        // try {
-        // DatabaseUtils.unmanageDatabase(ds);
-        // } catch (Exception e) {
-        // }
-    }
+    // BasicDataSource ds = new BasicDataSource();
+    // ds.setDriverClassName(getDriver());
+    // ds.setUrl(getUrl());
+    // ds.setUsername(getUser());
+    // ds.setPassword(getPassword());
+    //               
+    // try {
+    // DatabaseUtils.unmanageDatabase(ds);
+    // } catch (Exception e) {
+    // }
+  }
 }

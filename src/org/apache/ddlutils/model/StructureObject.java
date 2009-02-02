@@ -18,5 +18,5 @@ package org.apache.ddlutils.model;
  */
 public interface StructureObject {
 
-    public String getName();
+  public String getName();
 }

@@ -23,35 +23,33 @@ import java.sql.Timestamp;
 import java.sql.Types;
 
 /**
- * Converts between {@link java.sql.Timestamp} and {@link java.lang.String}
- * using the standard representation "yyyy-mm-dd hh:mm:ss.fffffffff".
+ * Converts between {@link java.sql.Timestamp} and {@link java.lang.String} using the standard
+ * representation "yyyy-mm-dd hh:mm:ss.fffffffff".
  * 
  * @version $Revision: 289996 $
  */
 public class TimestampConverter implements SqlTypeConverter {
-    /**
-     * {@inheritDoc}
-     */
-    public Object convertFromString(String textRep, int sqlTypeCode)
-            throws ConversionException {
-        if (textRep == null) {
-            return null;
-        } else if (sqlTypeCode == Types.TIMESTAMP) {
-            return Timestamp.valueOf(textRep);
-        } else {
-            return textRep;
-        }
+  /**
+   * {@inheritDoc}
+   */
+  public Object convertFromString(String textRep, int sqlTypeCode) throws ConversionException {
+    if (textRep == null) {
+      return null;
+    } else if (sqlTypeCode == Types.TIMESTAMP) {
+      return Timestamp.valueOf(textRep);
+    } else {
+      return textRep;
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String convertToString(Object obj, int sqlTypeCode)
-            throws ConversionException {
-        if (obj == null)
-            return null;
-        Timestamp ts = (Timestamp) obj;
-        ts.setNanos(0);
-        return ts.toString();
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public String convertToString(Object obj, int sqlTypeCode) throws ConversionException {
+    if (obj == null)
+      return null;
+    Timestamp ts = (Timestamp) obj;
+    ts.setNanos(0);
+    return ts.toString();
+  }
 }

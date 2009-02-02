@@ -18,11 +18,11 @@ package org.apache.ddlutils.translation;
  */
 public final class NullTranslation implements Translation {
 
-    /** Creates a new instance of NullTranslation */
-    public NullTranslation() {
-    }
+  /** Creates a new instance of NullTranslation */
+  public NullTranslation() {
+  }
 
-    public String exec(String s) {
-        return s;
-    }
+  public String exec(String s) {
+    return s;
+  }
 }

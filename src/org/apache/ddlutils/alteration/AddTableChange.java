@@ -24,53 +24,53 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 
 /**
- * Represents the addition of a table to a model. Note that this change does not
- * include foreign keys originating from the new table.
+ * Represents the addition of a table to a model. Note that this change does not include foreign
+ * keys originating from the new table.
  * 
  * @version $Revision: $
  */
 public class AddTableChange implements ModelChange {
-    /** The new table. */
-    private Table _newTable;
+  /** The new table. */
+  private Table _newTable;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param newTable
-     *            The new table
-     */
-    public AddTableChange(Table newTable) {
-        _newTable = newTable;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param newTable
+   *          The new table
+   */
+  public AddTableChange(Table newTable) {
+    _newTable = newTable;
+  }
 
-    /**
-     * Returns the new table. Note that only the columns and table-level
-     * constraints are to be used. Any model-level constraints (e.g. foreign
-     * keys) shall be ignored as there are different change objects for them.
-     * 
-     * @return The new table
-     */
-    public Table getNewTable() {
-        return _newTable;
-    }
+  /**
+   * Returns the new table. Note that only the columns and table-level constraints are to be used.
+   * Any model-level constraints (e.g. foreign keys) shall be ignored as there are different change
+   * objects for them.
+   * 
+   * @return The new table
+   */
+  public Table getNewTable() {
+    return _newTable;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        try {
-            Table table = (Table) _newTable.clone();
-            for (int i = table.getForeignKeyCount() - 1; i >= 0; i--)
-                table.removeForeignKey(i);
-            database.addTable(table);
-        } catch (CloneNotSupportedException ex) {
-            throw new DdlUtilsException(ex);
-        }
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    try {
+      Table table = (Table) _newTable.clone();
+      for (int i = table.getForeignKeyCount() - 1; i >= 0; i--)
+        table.removeForeignKey(i);
+      database.addTable(table);
+    } catch (CloneNotSupportedException ex) {
+      throw new DdlUtilsException(ex);
     }
+  }
 
-    @Override
-    public String toString() {
-        return "AddTableChange. Name: " + _newTable.getName();
-    }
+  @Override
+  public String toString() {
+    return "AddTableChange. Name: " + _newTable.getName();
+  }
 
 }

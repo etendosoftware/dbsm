@@ -30,48 +30,47 @@ import org.apache.ddlutils.model.Unique;
  * @version $Revision: $
  */
 public class AddUniqueChange extends TableChangeImplBase {
-    /** The new unique. */
-    private Unique _newUnique;
+  /** The new unique. */
+  private Unique _newUnique;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table to add the unique to
-     * @param newUnique
-     *            The new unique
-     */
-    public AddUniqueChange(Table table, Unique newUnique) {
-        super(table);
-        _newUnique = newUnique;
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table to add the unique to
+   * @param newUnique
+   *          The new unique
+   */
+  public AddUniqueChange(Table table, Unique newUnique) {
+    super(table);
+    _newUnique = newUnique;
+  }
+
+  /**
+   * Returns the new unique.
+   * 
+   * @return The new unique
+   */
+  public Unique getNewUnique() {
+    return _newUnique;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Unique newUnique = null;
+
+    try {
+      newUnique = (Unique) _newUnique.clone();
+    } catch (CloneNotSupportedException ex) {
+      throw new DdlUtilsException(ex);
     }
+    database.findTable(getChangedTable().getName(), caseSensitive).addUnique(newUnique);
+  }
 
-    /**
-     * Returns the new unique.
-     * 
-     * @return The new unique
-     */
-    public Unique getNewUnique() {
-        return _newUnique;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Unique newUnique = null;
-
-        try {
-            newUnique = (Unique) _newUnique.clone();
-        } catch (CloneNotSupportedException ex) {
-            throw new DdlUtilsException(ex);
-        }
-        database.findTable(getChangedTable().getName(), caseSensitive)
-                .addUnique(newUnique);
-    }
-
-    @Override
-    public String toString() {
-        return "AddUniqueChange. Name: " + _newUnique.getName();
-    }
+  @Override
+  public String toString() {
+    return "AddUniqueChange. Name: " + _newUnique.getName();
+  }
 }

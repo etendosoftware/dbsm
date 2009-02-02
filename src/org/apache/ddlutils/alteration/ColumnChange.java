@@ -27,10 +27,10 @@ import org.apache.ddlutils.model.Column;
  * @version $Revision: $
  */
 public interface ColumnChange extends TableChange {
-    /**
-     * Returns the affected column from the original model.
-     * 
-     * @return The affected column
-     */
-    public Column getChangedColumn();
+  /**
+   * Returns the affected column from the original model.
+   * 
+   * @return The affected column
+   */
+  public Column getChangedColumn();
 }

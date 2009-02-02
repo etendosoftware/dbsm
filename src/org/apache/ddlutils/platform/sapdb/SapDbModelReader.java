@@ -34,41 +34,40 @@ import org.apache.ddlutils.platform.JdbcModelReader;
  * @version $Revision: $
  */
 public class SapDbModelReader extends JdbcModelReader {
-    /**
-     * Creates a new model reader for SapDb databases.
-     * 
-     * @param platform
-     *            The platform that this model reader belongs to
-     */
-    public SapDbModelReader(Platform platform) {
-        super(platform);
-        setDefaultCatalogPattern(null);
-        setDefaultSchemaPattern(null);
-        setDefaultTablePattern("%");
-    }
+  /**
+   * Creates a new model reader for SapDb databases.
+   * 
+   * @param platform
+   *          The platform that this model reader belongs to
+   */
+  public SapDbModelReader(Platform platform) {
+    super(platform);
+    setDefaultCatalogPattern(null);
+    setDefaultSchemaPattern(null);
+    setDefaultTablePattern("%");
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values)
-            throws SQLException {
-        Column column = super.readColumn(metaData, values);
+  /**
+   * {@inheritDoc}
+   */
+  protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+    Column column = super.readColumn(metaData, values);
 
-        if (column.getDefaultValue() != null) {
-            // SapDb pads the default value with spaces
-            column.setDefaultValue(column.getDefaultValue().trim());
-            // SapDb uses the default value for the auto-increment specification
-            if (column.getDefaultValue().startsWith("DEFAULT SERIAL")) {
-                column.setAutoIncrement(true);
-                column.setDefaultValue(null);
-            }
-        }
-        if (column.getTypeCode() == Types.DECIMAL) {
-            // We also perform back-mapping to BIGINT
-            if ((column.getSizeAsInt() == 38) && (column.getScaleAsInt() == 0)) {
-                column.setTypeCode(Types.BIGINT);
-            }
-        }
-        return column;
+    if (column.getDefaultValue() != null) {
+      // SapDb pads the default value with spaces
+      column.setDefaultValue(column.getDefaultValue().trim());
+      // SapDb uses the default value for the auto-increment specification
+      if (column.getDefaultValue().startsWith("DEFAULT SERIAL")) {
+        column.setAutoIncrement(true);
+        column.setDefaultValue(null);
+      }
     }
+    if (column.getTypeCode() == Types.DECIMAL) {
+      // We also perform back-mapping to BIGINT
+      if ((column.getSizeAsInt() == 38) && (column.getScaleAsInt() == 0)) {
+        column.setTypeCode(Types.BIGINT);
+      }
+    }
+    return column;
+  }
 }

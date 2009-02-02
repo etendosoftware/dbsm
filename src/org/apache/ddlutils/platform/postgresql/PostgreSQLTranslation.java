@@ -22,31 +22,22 @@ import org.apache.ddlutils.translation.ReplaceStrTranslation;
  */
 public class PostgreSQLTranslation extends CombinedTranslation {
 
-    /** Creates a new instance of PostgreSQLTranslation */
-    public PostgreSQLTranslation() {
-        append(new ReplaceStrTranslation("SYSDATE", "CURRENT_TIMESTAMP")); // See
-                                                                           // also
-                                                                           // PostgresSQLBuilder.getNativeFunction();
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('MM')(\\))",
-                "DATE_TRUNC('month',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'MM')(\\))",
-                "DATE_TRUNC('month',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('DD')(\\))",
-                "DATE_TRUNC('day',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'DD')(\\))",
-                "DATE_TRUNC('day',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('DY')(\\))",
-                "DATE_TRUNC('week',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'DY')(\\))",
-                "DATE_TRUNC('week',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('Q')(\\))",
-                "DATE_TRUNC('quarter',$3)"));
-        append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'Q')(\\))",
-                "DATE_TRUNC('quarter',$3)"));
-        append(new ReplacePatTranslation("(SUM)(\\()(\\w+)(\\))",
-                "SUM(CAST($3 as NUMERIC))"));
-        append(new ReplacePatTranslation("(SUM)(\\()(\\w+)(\\.)(\\w+)(\\))",
-                "SUM(CAST($3$4$5 as NUMERIC))"));
-    }
+  /** Creates a new instance of PostgreSQLTranslation */
+  public PostgreSQLTranslation() {
+    append(new ReplaceStrTranslation("SYSDATE", "CURRENT_TIMESTAMP")); // See
+    // also
+    // PostgresSQLBuilder.getNativeFunction();
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('MM')(\\))", "DATE_TRUNC('month',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'MM')(\\))", "DATE_TRUNC('month',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('DD')(\\))", "DATE_TRUNC('day',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'DD')(\\))", "DATE_TRUNC('day',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('DY')(\\))", "DATE_TRUNC('week',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'DY')(\\))", "DATE_TRUNC('week',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)('Q')(\\))", "DATE_TRUNC('quarter',$3)"));
+    append(new ReplacePatTranslation("(TRUNC)(\\()(\\S+)(,)( 'Q')(\\))", "DATE_TRUNC('quarter',$3)"));
+    append(new ReplacePatTranslation("(SUM)(\\()(\\w+)(\\))", "SUM(CAST($3 as NUMERIC))"));
+    append(new ReplacePatTranslation("(SUM)(\\()(\\w+)(\\.)(\\w+)(\\))",
+        "SUM(CAST($3$4$5 as NUMERIC))"));
+  }
 
 }

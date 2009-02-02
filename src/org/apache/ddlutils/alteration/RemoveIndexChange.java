@@ -29,44 +29,43 @@ import org.apache.ddlutils.model.Table;
  * @version $Revision: $
  */
 public class RemoveIndexChange extends TableChangeImplBase {
-    /** The index to be removed. */
-    private Index _index;
+  /** The index to be removed. */
+  private Index _index;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table to remove the index from
-     * @param index
-     *            The index
-     */
-    public RemoveIndexChange(Table table, Index index) {
-        super(table);
-        _index = index;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table to remove the index from
+   * @param index
+   *          The index
+   */
+  public RemoveIndexChange(Table table, Index index) {
+    super(table);
+    _index = index;
+  }
 
-    /**
-     * Returns the index.
-     * 
-     * @return The index
-     */
-    public Index getIndex() {
-        return _index;
-    }
+  /**
+   * Returns the index.
+   * 
+   * @return The index
+   */
+  public Index getIndex() {
+    return _index;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
-        Index index = table.findIndex(_index.getName(), caseSensitive);
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    Index index = table.findIndex(_index.getName(), caseSensitive);
 
-        table.removeIndex(index);
-    }
+    table.removeIndex(index);
+  }
 
-    @Override
-    public String toString() {
-        return "RemoveIndexChange. Name: " + _index.getName();
-    }
+  @Override
+  public String toString() {
+    return "RemoveIndexChange. Name: " + _index.getName();
+  }
 }

@@ -25,20 +25,20 @@ package org.apache.ddlutils.platform.sybase;
  * @version $Revision: $
  */
 public class SybaseASE15Platform extends SybasePlatform {
-    /** Database name of this platform. */
-    public static final String DATABASENAME = "SybaseASE15";
+  /** Database name of this platform. */
+  public static final String DATABASENAME = "SybaseASE15";
 
-    /**
-     * Creates a new platform instance.
-     */
-    public SybaseASE15Platform() {
-        super();
-    }
+  /**
+   * Creates a new platform instance.
+   */
+  public SybaseASE15Platform() {
+    super();
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getName() {
-        return DATABASENAME;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public String getName() {
+    return DATABASENAME;
+  }
 }

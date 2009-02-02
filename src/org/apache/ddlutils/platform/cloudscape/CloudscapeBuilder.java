@@ -32,29 +32,28 @@ import org.apache.ddlutils.platform.SqlBuilder;
  * @version $Revision: 463757 $
  */
 public class CloudscapeBuilder extends SqlBuilder {
-    /**
-     * Creates a new builder instance.
-     * 
-     * @param platform
-     *            The plaftform this builder belongs to
-     */
-    public CloudscapeBuilder(Platform platform) {
-        super(platform);
-        addEscapedCharSequence("'", "''");
-    }
+  /**
+   * Creates a new builder instance.
+   * 
+   * @param platform
+   *          The plaftform this builder belongs to
+   */
+  public CloudscapeBuilder(Platform platform) {
+    super(platform);
+    addEscapedCharSequence("'", "''");
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void writeColumnAutoIncrementStmt(Table table, Column column)
-            throws IOException {
-        print("GENERATED ALWAYS AS IDENTITY");
-    }
+  /**
+   * {@inheritDoc}
+   */
+  protected void writeColumnAutoIncrementStmt(Table table, Column column) throws IOException {
+    print("GENERATED ALWAYS AS IDENTITY");
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getSelectLastIdentityValues(Table table) {
-        return "VALUES IDENTITY_VAL_LOCAL()";
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public String getSelectLastIdentityValues(Table table) {
+    return "VALUES IDENTITY_VAL_LOCAL()";
+  }
 }

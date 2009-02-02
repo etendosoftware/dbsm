@@ -29,44 +29,43 @@ import org.apache.ddlutils.model.Table;
  * @version $Revision: $
  */
 public class RemoveColumnChange extends TableChangeImplBase {
-    /** The column. */
-    private Column _column;
+  /** The column. */
+  private Column _column;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table to remove the column from
-     * @param column
-     *            The column
-     */
-    public RemoveColumnChange(Table table, Column column) {
-        super(table);
-        _column = column;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table to remove the column from
+   * @param column
+   *          The column
+   */
+  public RemoveColumnChange(Table table, Column column) {
+    super(table);
+    _column = column;
+  }
 
-    /**
-     * Returns the column.
-     * 
-     * @return The column
-     */
-    public Column getColumn() {
-        return _column;
-    }
+  /**
+   * Returns the column.
+   * 
+   * @return The column
+   */
+  public Column getColumn() {
+    return _column;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Table table = database.findTable(getChangedTable().getName(),
-                caseSensitive);
-        Column column = table.findColumn(_column.getName(), caseSensitive);
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
+    Column column = table.findColumn(_column.getName(), caseSensitive);
 
-        table.removeColumn(column);
-    }
+    table.removeColumn(column);
+  }
 
-    @Override
-    public String toString() {
-        return "RemoveColumnChange. Name: " + _column.getName();
-    }
+  @Override
+  public String toString() {
+    return "RemoveColumnChange. Name: " + _column.getName();
+  }
 }

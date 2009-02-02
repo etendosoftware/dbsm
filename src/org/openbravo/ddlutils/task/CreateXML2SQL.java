@@ -28,108 +28,107 @@ import org.apache.tools.ant.BuildException;
  */
 public class CreateXML2SQL extends BaseDatabaseTask {
 
-    private String platform = null;
+  private String platform = null;
 
-    private File model;
-    private File output;
-    private boolean dropfirst;
+  private File model;
+  private File output;
+  private boolean dropfirst;
 
-    private String object = null;
+  private String object = null;
 
-    /** Creates a new instance of ExecuteXML2SQL */
-    public CreateXML2SQL() {
+  /** Creates a new instance of ExecuteXML2SQL */
+  public CreateXML2SQL() {
+  }
+
+  @Override
+  public void doExecute() {
+
+    Platform pl;
+    if (platform == null) {
+      final BasicDataSource ds = new BasicDataSource();
+      ds.setDriverClassName(getDriver());
+      ds.setUrl(getUrl());
+      ds.setUsername(getUser());
+      ds.setPassword(getPassword());
+
+      pl = PlatformFactory.createNewPlatformInstance(ds);
+      // platform.setDelimitedIdentifierModeOn(true);
+      getLog().info("Using database platform.");
+    } else {
+      pl = PlatformFactory.createNewPlatformInstance(platform);
+      getLog().info("Using platform : " + platform);
     }
 
-    @Override
-    public void doExecute() {
+    try {
 
-        Platform pl;
-        if (platform == null) {
-            final BasicDataSource ds = new BasicDataSource();
-            ds.setDriverClassName(getDriver());
-            ds.setUrl(getUrl());
-            ds.setUsername(getUser());
-            ds.setPassword(getPassword());
+      Database db = DatabaseUtils.readDatabase(model);
 
-            pl = PlatformFactory.createNewPlatformInstance(ds);
-            // platform.setDelimitedIdentifierModeOn(true);
-            getLog().info("Using database platform.");
-        } else {
-            pl = PlatformFactory.createNewPlatformInstance(platform);
-            getLog().info("Using platform : " + platform);
-        }
+      // Write creation script
+      getLog().info("Writing creation script");
+      // crop database if needed
+      if (object != null) {
+        final Database empty = new Database();
+        empty.setName("empty");
+        db = DatabaseUtils.cropDatabase(empty, db, object);
+        getLog().info("for database object " + object);
+      } else {
+        getLog().info("for the complete database");
+      }
 
-        try {
+      final Writer w = new FileWriter(output);
+      w.write(pl.getCreateTablesSqlScript(db, isDropfirst(), false));
+      w.close();
 
-            Database db = DatabaseUtils.readDatabase(model);
+      getLog().info("Database script created in : " + output.getPath());
 
-            // Write creation script
-            getLog().info("Writing creation script");
-            // crop database if needed
-            if (object != null) {
-                final Database empty = new Database();
-                empty.setName("empty");
-                db = DatabaseUtils.cropDatabase(empty, db, object);
-                getLog().info("for database object " + object);
-            } else {
-                getLog().info("for the complete database");
-            }
-
-            final Writer w = new FileWriter(output);
-            w.write(pl.getCreateTablesSqlScript(db, isDropfirst(), false));
-            w.close();
-
-            getLog().info("Database script created in : " + output.getPath());
-
-        } catch (final Exception e) {
-            // log(e.getLocalizedMessage());
-            throw new BuildException(e);
-        }
+    } catch (final Exception e) {
+      // log(e.getLocalizedMessage());
+      throw new BuildException(e);
     }
+  }
 
-    public String getPlatform() {
-        return platform;
-    }
+  public String getPlatform() {
+    return platform;
+  }
 
-    public void setPlatform(String platform) {
-        this.platform = platform;
-    }
+  public void setPlatform(String platform) {
+    this.platform = platform;
+  }
 
-    public File getModel() {
-        return model;
-    }
+  public File getModel() {
+    return model;
+  }
 
-    public void setModel(File model) {
-        this.model = model;
-    }
+  public void setModel(File model) {
+    this.model = model;
+  }
 
-    public File getOutput() {
-        return output;
-    }
+  public File getOutput() {
+    return output;
+  }
 
-    public void setOutput(File output) {
-        this.output = output;
-    }
+  public void setOutput(File output) {
+    this.output = output;
+  }
 
-    public boolean isDropfirst() {
-        return dropfirst;
-    }
+  public boolean isDropfirst() {
+    return dropfirst;
+  }
 
-    public void setDropfirst(boolean dropfirst) {
-        this.dropfirst = dropfirst;
-    }
+  public void setDropfirst(boolean dropfirst) {
+    this.dropfirst = dropfirst;
+  }
 
-    public void setObject(String object) {
-        if (object == null || object.trim().startsWith("$")
-                || object.trim().equals("")) {
-            this.object = null;
-        } else {
-            this.object = object;
-        }
+  public void setObject(String object) {
+    if (object == null || object.trim().startsWith("$") || object.trim().equals("")) {
+      this.object = null;
+    } else {
+      this.object = object;
     }
+  }
 
-    public String getObject() {
-        return object;
-    }
+  public String getObject() {
+    return object;
+  }
 
 }

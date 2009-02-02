@@ -30,91 +30,90 @@ import org.apache.ddlutils.model.Table;
  */
 public class RemoveCheckChange extends TableChangeImplBase {
 
-    /** The check to be removed. */
-    private Check _check;
+  /** The check to be removed. */
+  private Check _check;
 
-    private String _checkName;
-    private String _tableName;
+  private String _checkName;
+  private String _tableName;
 
-    public RemoveCheckChange() {
+  public RemoveCheckChange() {
 
-    }
+  }
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param table
-     *            The table to remove the check from
-     * @param index
-     *            The check
-     */
-    public RemoveCheckChange(Table table, Check check) {
-        super(table);
-        _check = check;
-        _checkName = check.getName();
-        _tableName = table.getName();
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param table
+   *          The table to remove the check from
+   * @param index
+   *          The check
+   */
+  public RemoveCheckChange(Table table, Check check) {
+    super(table);
+    _check = check;
+    _checkName = check.getName();
+    _tableName = table.getName();
+  }
 
-    public RemoveCheckChange(String tableName, String checkName) {
-        _checkName = checkName;
-        _tableName = tableName;
-    }
+  public RemoveCheckChange(String tableName, String checkName) {
+    _checkName = checkName;
+    _tableName = tableName;
+  }
 
-    /**
-     * Returns the check.
-     * 
-     * @return The check
-     */
-    public Check getCheck() {
-        return _check;
-    }
+  /**
+   * Returns the check.
+   * 
+   * @return The check
+   */
+  public Check getCheck() {
+    return _check;
+  }
 
-    public void setCheck(Database model) {
-        Table table = model.findTable(_tableName);
-        if (table != null)
-            _check = table.findCheck(_checkName);
-    }
+  public void setCheck(Database model) {
+    Table table = model.findTable(_tableName);
+    if (table != null)
+      _check = table.findCheck(_checkName);
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        Table table = null;
+  /**
+   * {@inheritDoc}
+   */
+  public void apply(Database database, boolean caseSensitive) {
+    Table table = null;
 
-        if (_tableName == null)
-            table = database.findTable(getChangedTable().getName(),
-                    caseSensitive);
-        else
-            table = database.findTable(_tableName);
+    if (_tableName == null)
+      table = database.findTable(getChangedTable().getName(), caseSensitive);
+    else
+      table = database.findTable(_tableName);
 
-        Check check = null;
+    Check check = null;
 
-        if (_checkName == null)
-            check = table.findCheck(_check.getName(), caseSensitive);
-        else
-            check = table.findCheck(_checkName);
+    if (_checkName == null)
+      check = table.findCheck(_check.getName(), caseSensitive);
+    else
+      check = table.findCheck(_checkName);
 
-        table.removeCheck(check);
-    }
+    table.removeCheck(check);
+  }
 
-    public String getCheckName() {
-        return _checkName;
-    }
+  public String getCheckName() {
+    return _checkName;
+  }
 
-    public void setCheckName(String checkName) {
-        _checkName = checkName;
-    }
+  public void setCheckName(String checkName) {
+    _checkName = checkName;
+  }
 
-    public String getTableName() {
-        return _tableName;
-    }
+  public String getTableName() {
+    return _tableName;
+  }
 
-    public void setTableName(String tableName) {
-        _tableName = tableName;
-    }
+  public void setTableName(String tableName) {
+    _tableName = tableName;
+  }
 
-    @Override
-    public String toString() {
-        return "RemoveCheckChange. Name: " + _checkName;
-    }
+  @Override
+  public String toString() {
+    return "RemoveCheckChange. Name: " + _checkName;
+  }
 }

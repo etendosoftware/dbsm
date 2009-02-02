@@ -29,26 +29,25 @@ import org.apache.ddlutils.io.DatabaseDataIO;
  * @ant.type ignore="true"
  */
 public abstract class ConvertingDatabaseCommand extends DatabaseCommand {
-    /** The database data io object. */
-    private DatabaseDataIO _dataIO = new DatabaseDataIO();
+  /** The database data io object. */
+  private DatabaseDataIO _dataIO = new DatabaseDataIO();
 
-    /**
-     * Returns the database data io object.
-     * 
-     * @return The data io object
-     */
-    protected DatabaseDataIO getDataIO() {
-        return _dataIO;
-    }
+  /**
+   * Returns the database data io object.
+   * 
+   * @return The data io object
+   */
+  protected DatabaseDataIO getDataIO() {
+    return _dataIO;
+  }
 
-    /**
-     * Registers a converter.
-     * 
-     * @param converterRegistration
-     *            The registration info
-     */
-    public void addConfiguredConverter(
-            DataConverterRegistration converterRegistration) {
-        _dataIO.registerConverter(converterRegistration);
-    }
+  /**
+   * Registers a converter.
+   * 
+   * @param converterRegistration
+   *          The registration info
+   */
+  public void addConfiguredConverter(DataConverterRegistration converterRegistration) {
+    _dataIO.registerConverter(converterRegistration);
+  }
 }

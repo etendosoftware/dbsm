@@ -33,507 +33,490 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * @version $Revision: 504014 $
  */
 public class ForeignKey implements ConstraintObject, Cloneable {
-    /** The name of the foreign key, may be <code>null</code>. */
-    private String _name;
-    /** The target table. */
-    private Table _foreignTable;
-    /** The name of the foreign table. */
-    private String _foreignTableName;
-    /**
-     * The integrity action for update.
-     * {@link java.sql.DatabaseMetaData#getImportedKeys}
-     */
-    private int _onUpdate;
-    /**
-     * The integrity action for delete.
-     * {@link java.sql.DatabaseMetaData#getImportedKeys}
-     */
-    private int _onDelete;
-    /** The references between local and remote columns. */
-    private ListOrderedSet _references = new ListOrderedSet();
-    /** Whether this foreign key has an associated auto-generated index. */
-    private boolean _autoIndexPresent;
+  /** The name of the foreign key, may be <code>null</code>. */
+  private String _name;
+  /** The target table. */
+  private Table _foreignTable;
+  /** The name of the foreign table. */
+  private String _foreignTableName;
+  /**
+   * The integrity action for update. {@link java.sql.DatabaseMetaData#getImportedKeys}
+   */
+  private int _onUpdate;
+  /**
+   * The integrity action for delete. {@link java.sql.DatabaseMetaData#getImportedKeys}
+   */
+  private int _onDelete;
+  /** The references between local and remote columns. */
+  private ListOrderedSet _references = new ListOrderedSet();
+  /** Whether this foreign key has an associated auto-generated index. */
+  private boolean _autoIndexPresent;
 
-    /**
-     * Creates a new foreign key object that has no name.
-     */
-    public ForeignKey() {
-        this(null);
+  /**
+   * Creates a new foreign key object that has no name.
+   */
+  public ForeignKey() {
+    this(null);
+  }
+
+  /**
+   * Creates a new foreign key object.
+   * 
+   * @param name
+   *          The name of the foreign key
+   */
+  public ForeignKey(String name) {
+    _name = name;
+    _onUpdate = DatabaseMetaData.importedKeyNoAction;
+    _onDelete = DatabaseMetaData.importedKeyNoAction;
+  }
+
+  /**
+   * Returns the name of this foreign key.
+   * 
+   * @return The name
+   */
+  public String getName() {
+    return _name;
+  }
+
+  /**
+   * Sets the name of this foreign key.
+   * 
+   * @param name
+   *          The name
+   */
+  public void setName(String name) {
+    _name = name;
+  }
+
+  /**
+   * Returns the foreign table.
+   * 
+   * @return The foreign table
+   */
+  public Table getForeignTable() {
+    return _foreignTable;
+  }
+
+  /**
+   * Sets the foreign table.
+   * 
+   * @param foreignTable
+   *          The foreign table
+   */
+  public void setForeignTable(Table foreignTable) {
+    _foreignTable = foreignTable;
+    _foreignTableName = (foreignTable == null ? null : foreignTable.getName());
+  }
+
+  /**
+   * Returns the name of the foreign table.
+   * 
+   * @return The table name
+   */
+  public String getForeignTableName() {
+    return _foreignTableName;
+  }
+
+  /**
+   * Sets the name of the foreign table. Please note that you should not use this method when
+   * manually constructing or manipulating the database model. Rather utilize the
+   * {@link #setForeignTable(Table)} method.
+   * 
+   * @param foreignTableName
+   *          The table name
+   */
+  public void setForeignTableName(String foreignTableName) {
+    if ((_foreignTable != null) && !_foreignTable.getName().equals(foreignTableName)) {
+      _foreignTable = null;
     }
+    _foreignTableName = foreignTableName;
+  }
 
-    /**
-     * Creates a new foreign key object.
-     * 
-     * @param name
-     *            The name of the foreign key
-     */
-    public ForeignKey(String name) {
-        _name = name;
-        _onUpdate = DatabaseMetaData.importedKeyNoAction;
-        _onDelete = DatabaseMetaData.importedKeyNoAction;
+  private String getAction(int actioncode) {
+
+    switch (actioncode) {
+    case DatabaseMetaData.importedKeyCascade:
+      return "cascade";
+    case DatabaseMetaData.importedKeyRestrict:
+      return "restrict";
+    case DatabaseMetaData.importedKeySetNull:
+      return "setnull";
+    case DatabaseMetaData.importedKeyNoAction: // fall-through
+    default:
+      return null; // "none"
     }
+  }
 
-    /**
-     * Returns the name of this foreign key.
-     * 
-     * @return The name
-     */
-    public String getName() {
-        return _name;
+  private int getActionCode(String action) {
+
+    if ("cascade".equals(action)) {
+      return DatabaseMetaData.importedKeyCascade;
+    } else if ("restrict".equals(action)) {
+      return DatabaseMetaData.importedKeyRestrict;
+    } else if ("setnull".equals(action)) {
+      return DatabaseMetaData.importedKeySetNull;
+    } else {
+      return DatabaseMetaData.importedKeyNoAction;
     }
+  }
 
-    /**
-     * Sets the name of this foreign key.
-     * 
-     * @param name
-     *            The name
-     */
-    public void setName(String name) {
-        _name = name;
-    }
+  /**
+   * Returns the action for update.
+   * 
+   * @return The name
+   */
+  public String getOnUpdate() {
+    return getAction(_onUpdate);
+  }
 
-    /**
-     * Returns the foreign table.
-     * 
-     * @return The foreign table
-     */
-    public Table getForeignTable() {
-        return _foreignTable;
-    }
+  /**
+   * Sets the action for update.
+   * 
+   * @param name
+   *          The name
+   */
+  public void setOnUpdate(String onUpdate) {
+    _onUpdate = getActionCode(onUpdate);
+  }
 
-    /**
-     * Sets the foreign table.
-     * 
-     * @param foreignTable
-     *            The foreign table
-     */
-    public void setForeignTable(Table foreignTable) {
-        _foreignTable = foreignTable;
-        _foreignTableName = (foreignTable == null ? null : foreignTable
-                .getName());
-    }
+  /**
+   * Returns the action code for update.
+   * 
+   * @return The code
+   */
+  public int getOnUpdateCode() {
+    return _onUpdate;
+  }
 
-    /**
-     * Returns the name of the foreign table.
-     * 
-     * @return The table name
-     */
-    public String getForeignTableName() {
-        return _foreignTableName;
-    }
+  /**
+   * Sets the action code for update.
+   * 
+   * @param code
+   *          The code
+   */
+  public void setOnUpdateCode(int onUpdate) {
+    _onUpdate = onUpdate;
+  }
 
-    /**
-     * Sets the name of the foreign table. Please note that you should not use
-     * this method when manually constructing or manipulating the database
-     * model. Rather utilize the {@link #setForeignTable(Table)} method.
-     * 
-     * @param foreignTableName
-     *            The table name
-     */
-    public void setForeignTableName(String foreignTableName) {
-        if ((_foreignTable != null)
-                && !_foreignTable.getName().equals(foreignTableName)) {
-            _foreignTable = null;
+  /**
+   * Returns the action for delete.
+   * 
+   * @return The name
+   */
+  public String getOnDelete() {
+    return getAction(_onDelete);
+  }
+
+  /**
+   * Sets the action for delete.
+   * 
+   * @param name
+   *          The name
+   */
+  public void setOnDelete(String onDelete) {
+    _onDelete = getActionCode(onDelete);
+  }
+
+  /**
+   * Returns the action code for delete.
+   * 
+   * @return The code
+   */
+  public int getOnDeleteCode() {
+    return _onDelete;
+  }
+
+  /**
+   * Sets the action code for delete.
+   * 
+   * @param onDelete
+   *          The code
+   */
+  public void setOnDeleteCode(int onDelete) {
+    _onDelete = onDelete;
+  }
+
+  /**
+   * Returns the number of references.
+   * 
+   * @return The number of references
+   */
+  public int getReferenceCount() {
+    return _references.size();
+  }
+
+  /**
+   * Returns the indicated reference.
+   * 
+   * @param idx
+   *          The index
+   * @return The reference
+   */
+  public Reference getReference(int idx) {
+    return (Reference) _references.get(idx);
+  }
+
+  /**
+   * Returns the references.
+   * 
+   * @return The references
+   */
+  public Reference[] getReferences() {
+    return (Reference[]) _references.toArray(new Reference[_references.size()]);
+  }
+
+  /**
+   * Returns the first reference if it exists.
+   * 
+   * @return The first reference
+   */
+  public Reference getFirstReference() {
+    return (Reference) (_references.isEmpty() ? null : _references.get(0));
+  }
+
+  /**
+   * Adds a reference, ie. a mapping between a local column (in the table that owns this foreign
+   * key) and a remote column.
+   * 
+   * @param reference
+   *          The reference to add
+   */
+  public void addReference(Reference reference) {
+    if (reference != null) {
+      for (int idx = 0; idx < _references.size(); idx++) {
+        Reference curRef = getReference(idx);
+
+        if (curRef.getSequenceValue() > reference.getSequenceValue()) {
+          _references.add(idx, reference);
+          return;
         }
-        _foreignTableName = foreignTableName;
+      }
+      _references.add(reference);
+    }
+  }
+
+  /**
+   * Removes the given reference.
+   * 
+   * @param reference
+   *          The reference to remove
+   */
+  public void removeReference(Reference reference) {
+    if (reference != null) {
+      _references.remove(reference);
+    }
+  }
+
+  /**
+   * Removes the indicated reference.
+   * 
+   * @param idx
+   *          The index of the reference to remove
+   */
+  public void removeReference(int idx) {
+    _references.remove(idx);
+  }
+
+  /**
+   * Determines whether this foreign key uses the given column as a local column in a reference.
+   * 
+   * @param column
+   *          The column to check
+   * @return <code>true</code> if a reference uses the column as a local column
+   */
+  public boolean hasLocalColumn(Column column) {
+    for (int idx = 0; idx < getReferenceCount(); idx++) {
+      if (column.equals(getReference(idx).getLocalColumn())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Determines whether this foreign key uses the given column as a foreign column in a reference.
+   * 
+   * @param column
+   *          The column to check
+   * @return <code>true</code> if a reference uses the column as a foreign column
+   */
+  public boolean hasForeignColumn(Column column) {
+    for (int idx = 0; idx < getReferenceCount(); idx++) {
+      if (column.equals(getReference(idx).getForeignColumn())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Determines whether this foreign key has an auto-generated associated index.
+   * 
+   * @return <code>true</code> if an auto-generated index exists
+   */
+  public boolean isAutoIndexPresent() {
+    return _autoIndexPresent;
+  }
+
+  /**
+   * Specifies whether this foreign key has an auto-generated associated index.
+   * 
+   * @param autoIndexPresent
+   *          <code>true</code> if an auto-generated index exists
+   */
+  public void setAutoIndexPresent(boolean autoIndexPresent) {
+    _autoIndexPresent = autoIndexPresent;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public Object clone() throws CloneNotSupportedException {
+    ForeignKey result = (ForeignKey) super.clone();
+
+    result._name = _name;
+    result._foreignTableName = _foreignTableName;
+    result._onUpdate = _onUpdate;
+    result._onDelete = _onDelete;
+    result._references = new ListOrderedSet();
+
+    for (Iterator it = _references.iterator(); it.hasNext();) {
+      result._references.add(((Reference) it.next()).clone());
     }
 
-    private String getAction(int actioncode) {
+    return result;
+  }
 
-        switch (actioncode) {
-        case DatabaseMetaData.importedKeyCascade:
-            return "cascade";
-        case DatabaseMetaData.importedKeyRestrict:
-            return "restrict";
-        case DatabaseMetaData.importedKeySetNull:
-            return "setnull";
-        case DatabaseMetaData.importedKeyNoAction: // fall-through
-        default:
-            return null; // "none"
+  /**
+   * {@inheritDoc}
+   */
+  public boolean equals(Object obj) {
+    if (obj instanceof ForeignKey) {
+      ForeignKey otherFk = (ForeignKey) obj;
+
+      // Note that this compares case sensitive
+      // Note also that we can simply compare the references regardless of
+      // their order
+      // (which is irrelevant for fks) because they are contained in a set
+      EqualsBuilder builder = new EqualsBuilder();
+
+      if ((_name != null) && (_name.length() > 0) && (otherFk._name != null)
+          && (otherFk._name.length() > 0)) {
+        builder.append(_name, otherFk._name);
+      }
+      return builder.append(_foreignTableName, otherFk._foreignTableName).append(_onUpdate,
+          otherFk._onUpdate).append(_onDelete, otherFk._onDelete).append(_references,
+          otherFk._references).isEquals();
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Compares this foreign key to the given one while ignoring the case of identifiers.
+   * 
+   * @param otherFk
+   *          The other foreign key
+   * @return <code>true</code> if this foreign key is equal (ignoring case) to the given one
+   */
+  public boolean equalsIgnoreCase(ForeignKey otherFk) {
+    boolean checkName = (_name != null) && (_name.length() > 0) && (otherFk._name != null)
+        && (otherFk._name.length() > 0);
+
+    if ((!checkName || _name.equalsIgnoreCase(otherFk._name))
+        && _foreignTableName.equalsIgnoreCase(otherFk._foreignTableName)
+        && _onUpdate == otherFk._onUpdate && _onDelete == otherFk._onDelete) {
+      HashSet otherRefs = new HashSet();
+
+      otherRefs.addAll(otherFk._references);
+      for (Iterator it = _references.iterator(); it.hasNext();) {
+        Reference curLocalRef = (Reference) it.next();
+        boolean found = false;
+
+        for (Iterator otherIt = otherRefs.iterator(); otherIt.hasNext();) {
+          Reference curOtherRef = (Reference) otherIt.next();
+
+          if (curLocalRef.equalsIgnoreCase(curOtherRef)) {
+            otherIt.remove();
+            found = true;
+            break;
+          }
         }
-    }
-
-    private int getActionCode(String action) {
-
-        if ("cascade".equals(action)) {
-            return DatabaseMetaData.importedKeyCascade;
-        } else if ("restrict".equals(action)) {
-            return DatabaseMetaData.importedKeyRestrict;
-        } else if ("setnull".equals(action)) {
-            return DatabaseMetaData.importedKeySetNull;
-        } else {
-            return DatabaseMetaData.importedKeyNoAction;
+        if (!found) {
+          return false;
         }
+      }
+      return otherRefs.isEmpty();
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37).append(_name).append(_foreignTableName).append(_onUpdate)
+        .append(_onDelete).append(_references).toHashCode();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public String toString() {
+    StringBuffer result = new StringBuffer();
+
+    result.append("Foreign key [");
+    if ((getName() != null) && (getName().length() > 0)) {
+      result.append("name=");
+      result.append(getName());
+      result.append("; ");
+    }
+    result.append("onupdate=");
+    result.append(getOnUpdate());
+    result.append("; ");
+    result.append("ondelete=");
+    result.append(getOnDelete());
+    result.append("; ");
+    result.append("foreign table=");
+    result.append(getForeignTableName());
+    result.append("; ");
+    result.append(getReferenceCount());
+    result.append(" references]");
+
+    return result.toString();
+  }
+
+  /**
+   * Returns a verbose string representation of this foreign key.
+   * 
+   * @return The string representation
+   */
+  public String toVerboseString() {
+    StringBuffer result = new StringBuffer();
+
+    result.append("Foreign key [");
+    if ((getName() != null) && (getName().length() > 0)) {
+      result.append("name=");
+      result.append(getName());
+      result.append("; ");
+    }
+    result.append("onupdate=");
+    result.append(getOnUpdate());
+    result.append("; ");
+    result.append("ondelete=");
+    result.append(getOnDelete());
+    result.append("; ");
+    result.append("foreign table=");
+    result.append(getForeignTableName());
+    result.append("] references:");
+    for (int idx = 0; idx < getReferenceCount(); idx++) {
+      result.append(" ");
+      result.append(getReference(idx).toString());
     }
 
-    /**
-     * Returns the action for update.
-     * 
-     * @return The name
-     */
-    public String getOnUpdate() {
-        return getAction(_onUpdate);
-    }
-
-    /**
-     * Sets the action for update.
-     * 
-     * @param name
-     *            The name
-     */
-    public void setOnUpdate(String onUpdate) {
-        _onUpdate = getActionCode(onUpdate);
-    }
-
-    /**
-     * Returns the action code for update.
-     * 
-     * @return The code
-     */
-    public int getOnUpdateCode() {
-        return _onUpdate;
-    }
-
-    /**
-     * Sets the action code for update.
-     * 
-     * @param code
-     *            The code
-     */
-    public void setOnUpdateCode(int onUpdate) {
-        _onUpdate = onUpdate;
-    }
-
-    /**
-     * Returns the action for delete.
-     * 
-     * @return The name
-     */
-    public String getOnDelete() {
-        return getAction(_onDelete);
-    }
-
-    /**
-     * Sets the action for delete.
-     * 
-     * @param name
-     *            The name
-     */
-    public void setOnDelete(String onDelete) {
-        _onDelete = getActionCode(onDelete);
-    }
-
-    /**
-     * Returns the action code for delete.
-     * 
-     * @return The code
-     */
-    public int getOnDeleteCode() {
-        return _onDelete;
-    }
-
-    /**
-     * Sets the action code for delete.
-     * 
-     * @param onDelete
-     *            The code
-     */
-    public void setOnDeleteCode(int onDelete) {
-        _onDelete = onDelete;
-    }
-
-    /**
-     * Returns the number of references.
-     * 
-     * @return The number of references
-     */
-    public int getReferenceCount() {
-        return _references.size();
-    }
-
-    /**
-     * Returns the indicated reference.
-     * 
-     * @param idx
-     *            The index
-     * @return The reference
-     */
-    public Reference getReference(int idx) {
-        return (Reference) _references.get(idx);
-    }
-
-    /**
-     * Returns the references.
-     * 
-     * @return The references
-     */
-    public Reference[] getReferences() {
-        return (Reference[]) _references.toArray(new Reference[_references
-                .size()]);
-    }
-
-    /**
-     * Returns the first reference if it exists.
-     * 
-     * @return The first reference
-     */
-    public Reference getFirstReference() {
-        return (Reference) (_references.isEmpty() ? null : _references.get(0));
-    }
-
-    /**
-     * Adds a reference, ie. a mapping between a local column (in the table that
-     * owns this foreign key) and a remote column.
-     * 
-     * @param reference
-     *            The reference to add
-     */
-    public void addReference(Reference reference) {
-        if (reference != null) {
-            for (int idx = 0; idx < _references.size(); idx++) {
-                Reference curRef = getReference(idx);
-
-                if (curRef.getSequenceValue() > reference.getSequenceValue()) {
-                    _references.add(idx, reference);
-                    return;
-                }
-            }
-            _references.add(reference);
-        }
-    }
-
-    /**
-     * Removes the given reference.
-     * 
-     * @param reference
-     *            The reference to remove
-     */
-    public void removeReference(Reference reference) {
-        if (reference != null) {
-            _references.remove(reference);
-        }
-    }
-
-    /**
-     * Removes the indicated reference.
-     * 
-     * @param idx
-     *            The index of the reference to remove
-     */
-    public void removeReference(int idx) {
-        _references.remove(idx);
-    }
-
-    /**
-     * Determines whether this foreign key uses the given column as a local
-     * column in a reference.
-     * 
-     * @param column
-     *            The column to check
-     * @return <code>true</code> if a reference uses the column as a local
-     *         column
-     */
-    public boolean hasLocalColumn(Column column) {
-        for (int idx = 0; idx < getReferenceCount(); idx++) {
-            if (column.equals(getReference(idx).getLocalColumn())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Determines whether this foreign key uses the given column as a foreign
-     * column in a reference.
-     * 
-     * @param column
-     *            The column to check
-     * @return <code>true</code> if a reference uses the column as a foreign
-     *         column
-     */
-    public boolean hasForeignColumn(Column column) {
-        for (int idx = 0; idx < getReferenceCount(); idx++) {
-            if (column.equals(getReference(idx).getForeignColumn())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Determines whether this foreign key has an auto-generated associated
-     * index.
-     * 
-     * @return <code>true</code> if an auto-generated index exists
-     */
-    public boolean isAutoIndexPresent() {
-        return _autoIndexPresent;
-    }
-
-    /**
-     * Specifies whether this foreign key has an auto-generated associated
-     * index.
-     * 
-     * @param autoIndexPresent
-     *            <code>true</code> if an auto-generated index exists
-     */
-    public void setAutoIndexPresent(boolean autoIndexPresent) {
-        _autoIndexPresent = autoIndexPresent;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Object clone() throws CloneNotSupportedException {
-        ForeignKey result = (ForeignKey) super.clone();
-
-        result._name = _name;
-        result._foreignTableName = _foreignTableName;
-        result._onUpdate = _onUpdate;
-        result._onDelete = _onDelete;
-        result._references = new ListOrderedSet();
-
-        for (Iterator it = _references.iterator(); it.hasNext();) {
-            result._references.add(((Reference) it.next()).clone());
-        }
-
-        return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean equals(Object obj) {
-        if (obj instanceof ForeignKey) {
-            ForeignKey otherFk = (ForeignKey) obj;
-
-            // Note that this compares case sensitive
-            // Note also that we can simply compare the references regardless of
-            // their order
-            // (which is irrelevant for fks) because they are contained in a set
-            EqualsBuilder builder = new EqualsBuilder();
-
-            if ((_name != null) && (_name.length() > 0)
-                    && (otherFk._name != null) && (otherFk._name.length() > 0)) {
-                builder.append(_name, otherFk._name);
-            }
-            return builder.append(_foreignTableName, otherFk._foreignTableName)
-                    .append(_onUpdate, otherFk._onUpdate).append(_onDelete,
-                            otherFk._onDelete).append(_references,
-                            otherFk._references).isEquals();
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Compares this foreign key to the given one while ignoring the case of
-     * identifiers.
-     * 
-     * @param otherFk
-     *            The other foreign key
-     * @return <code>true</code> if this foreign key is equal (ignoring case) to
-     *         the given one
-     */
-    public boolean equalsIgnoreCase(ForeignKey otherFk) {
-        boolean checkName = (_name != null) && (_name.length() > 0)
-                && (otherFk._name != null) && (otherFk._name.length() > 0);
-
-        if ((!checkName || _name.equalsIgnoreCase(otherFk._name))
-                && _foreignTableName
-                        .equalsIgnoreCase(otherFk._foreignTableName)
-                && _onUpdate == otherFk._onUpdate
-                && _onDelete == otherFk._onDelete) {
-            HashSet otherRefs = new HashSet();
-
-            otherRefs.addAll(otherFk._references);
-            for (Iterator it = _references.iterator(); it.hasNext();) {
-                Reference curLocalRef = (Reference) it.next();
-                boolean found = false;
-
-                for (Iterator otherIt = otherRefs.iterator(); otherIt.hasNext();) {
-                    Reference curOtherRef = (Reference) otherIt.next();
-
-                    if (curLocalRef.equalsIgnoreCase(curOtherRef)) {
-                        otherIt.remove();
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    return false;
-                }
-            }
-            return otherRefs.isEmpty();
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(_name).append(
-                _foreignTableName).append(_onUpdate).append(_onDelete).append(
-                _references).toHashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String toString() {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Foreign key [");
-        if ((getName() != null) && (getName().length() > 0)) {
-            result.append("name=");
-            result.append(getName());
-            result.append("; ");
-        }
-        result.append("onupdate=");
-        result.append(getOnUpdate());
-        result.append("; ");
-        result.append("ondelete=");
-        result.append(getOnDelete());
-        result.append("; ");
-        result.append("foreign table=");
-        result.append(getForeignTableName());
-        result.append("; ");
-        result.append(getReferenceCount());
-        result.append(" references]");
-
-        return result.toString();
-    }
-
-    /**
-     * Returns a verbose string representation of this foreign key.
-     * 
-     * @return The string representation
-     */
-    public String toVerboseString() {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Foreign key [");
-        if ((getName() != null) && (getName().length() > 0)) {
-            result.append("name=");
-            result.append(getName());
-            result.append("; ");
-        }
-        result.append("onupdate=");
-        result.append(getOnUpdate());
-        result.append("; ");
-        result.append("ondelete=");
-        result.append(getOnDelete());
-        result.append("; ");
-        result.append("foreign table=");
-        result.append(getForeignTableName());
-        result.append("] references:");
-        for (int idx = 0; idx < getReferenceCount(); idx++) {
-            result.append(" ");
-            result.append(getReference(idx).toString());
-        }
-
-        return result.toString();
-    }
+    return result.toString();
+  }
 }

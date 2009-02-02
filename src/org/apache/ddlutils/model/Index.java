@@ -31,198 +31,192 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * @version $Revision: $
  */
 public class Index implements ConstraintObject, Cloneable, Serializable {
-    /** The name of the index. */
-    protected String _name;
-    /** Te index is unique */
-    protected boolean _unique = false;
-    /** The columns making up the index. */
-    protected ArrayList _columns = new ArrayList();
+  /** The name of the index. */
+  protected String _name;
+  /** Te index is unique */
+  protected boolean _unique = false;
+  /** The columns making up the index. */
+  protected ArrayList _columns = new ArrayList();
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getName() {
-        return _name;
+  /**
+   * {@inheritDoc}
+   */
+  public String getName() {
+    return _name;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void setName(String name) {
+    _name = name;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public int getColumnCount() {
+    return _columns.size();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public IndexColumn getColumn(int idx) {
+    return (IndexColumn) _columns.get(idx);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public IndexColumn[] getColumns() {
+    return (IndexColumn[]) _columns.toArray(new IndexColumn[_columns.size()]);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public boolean hasColumn(Column column) {
+    for (int idx = 0; idx < _columns.size(); idx++) {
+      IndexColumn curColumn = getColumn(idx);
+
+      if (column.equals(curColumn.getColumn())) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void setName(String name) {
-        _name = name;
-    }
+  /**
+   * {@inheritDoc}
+   */
+  public void addColumn(IndexColumn column) {
+    if (column != null) {
+      for (int idx = 0; idx < _columns.size(); idx++) {
+        IndexColumn curColumn = getColumn(idx);
 
-    /**
-     * {@inheritDoc}
-     */
-    public int getColumnCount() {
-        return _columns.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public IndexColumn getColumn(int idx) {
-        return (IndexColumn) _columns.get(idx);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public IndexColumn[] getColumns() {
-        return (IndexColumn[]) _columns
-                .toArray(new IndexColumn[_columns.size()]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean hasColumn(Column column) {
-        for (int idx = 0; idx < _columns.size(); idx++) {
-            IndexColumn curColumn = getColumn(idx);
-
-            if (column.equals(curColumn.getColumn())) {
-                return true;
-            }
+        if (curColumn.getOrdinalPosition() > column.getOrdinalPosition()) {
+          _columns.add(idx, column);
+          return;
         }
-        return false;
+      }
+      _columns.add(column);
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void addColumn(IndexColumn column) {
-        if (column != null) {
-            for (int idx = 0; idx < _columns.size(); idx++) {
-                IndexColumn curColumn = getColumn(idx);
+  /**
+   * {@inheritDoc}
+   */
+  public void removeColumn(IndexColumn column) {
+    _columns.remove(column);
+  }
 
-                if (curColumn.getOrdinalPosition() > column
-                        .getOrdinalPosition()) {
-                    _columns.add(idx, column);
-                    return;
-                }
-            }
-            _columns.add(column);
+  /**
+   * {@inheritDoc}
+   */
+  public void removeColumn(int idx) {
+    _columns.remove(idx);
+  }
+
+  public boolean isUnique() {
+    return _unique;
+  }
+
+  public void setUnique(boolean unique) {
+    _unique = unique;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public boolean equals(Object obj) {
+    if (obj instanceof Index) {
+      Index other = (Index) obj;
+
+      return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique).append(
+          _columns, other._columns).isEquals();
+    } else {
+      return false;
+    }
+  }
+
+  public boolean equalsIgnoreCase(Index other) {
+    if (other instanceof Index) {
+      Index otherIndex = (Index) other;
+
+      boolean checkName = (_name != null) && (_name.length() > 0) && (otherIndex._name != null)
+          && (otherIndex._name.length() > 0);
+
+      if ((!checkName || _name.equalsIgnoreCase(otherIndex._name))
+          && (getColumnCount() == otherIndex.getColumnCount())) {
+        if (_unique != other._unique) {
+          return false;
         }
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void removeColumn(IndexColumn column) {
-        _columns.remove(column);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void removeColumn(int idx) {
-        _columns.remove(idx);
-    }
-
-    public boolean isUnique() {
-        return _unique;
-    }
-
-    public void setUnique(boolean unique) {
-        _unique = unique;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean equals(Object obj) {
-        if (obj instanceof Index) {
-            Index other = (Index) obj;
-
-            return new EqualsBuilder().append(_name, other._name).append(
-                    _unique, other._unique).append(_columns, other._columns)
-                    .isEquals();
-        } else {
-            return false;
-        }
-    }
-
-    public boolean equalsIgnoreCase(Index other) {
-        if (other instanceof Index) {
-            Index otherIndex = (Index) other;
-
-            boolean checkName = (_name != null) && (_name.length() > 0)
-                    && (otherIndex._name != null)
-                    && (otherIndex._name.length() > 0);
-
-            if ((!checkName || _name.equalsIgnoreCase(otherIndex._name))
-                    && (getColumnCount() == otherIndex.getColumnCount())) {
-                if (_unique != other._unique) {
-                    return false;
-                }
-
-                for (int idx = 0; idx < getColumnCount(); idx++) {
-                    if (!getColumn(idx).equalsIgnoreCase(
-                            otherIndex.getColumn(idx))) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(_name).append(_unique)
-                .append(_columns).toHashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String toString() {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Index [name=");
-        result.append(getName());
-        result.append("; unique =");
-        result.append(isUnique());
-        result.append("; ");
-        result.append(getColumnCount());
-        result.append(" columns]");
-
-        return result.toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String toVerboseString() {
-        StringBuffer result = new StringBuffer();
-
-        result.append("Index [name=");
-        result.append(getName());
-        result.append("; unique =");
-        result.append(isUnique());
-        result.append("] columns:");
         for (int idx = 0; idx < getColumnCount(); idx++) {
-            result.append(" ");
-            result.append(getColumn(idx).toString());
+          if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx))) {
+            return false;
+          }
         }
+        return true;
+      }
+    }
+    return false;
+  }
 
-        return result.toString();
+  /**
+   * {@inheritDoc}
+   */
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_columns).toHashCode();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public String toString() {
+    StringBuffer result = new StringBuffer();
+
+    result.append("Index [name=");
+    result.append(getName());
+    result.append("; unique =");
+    result.append(isUnique());
+    result.append("; ");
+    result.append(getColumnCount());
+    result.append(" columns]");
+
+    return result.toString();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public String toVerboseString() {
+    StringBuffer result = new StringBuffer();
+
+    result.append("Index [name=");
+    result.append(getName());
+    result.append("; unique =");
+    result.append(isUnique());
+    result.append("] columns:");
+    for (int idx = 0; idx < getColumnCount(); idx++) {
+      result.append(" ");
+      result.append(getColumn(idx).toString());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Object clone() throws CloneNotSupportedException {
-        Index result = new Index();
+    return result.toString();
+  }
 
-        result._name = _name;
-        result._unique = _unique;
-        result._columns = (ArrayList) _columns.clone();
+  /**
+   * {@inheritDoc}
+   */
+  public Object clone() throws CloneNotSupportedException {
+    Index result = new Index();
 
-        return result;
-    }
+    result._name = _name;
+    result._unique = _unique;
+    result._columns = (ArrayList) _columns.clone();
+
+    return result;
+  }
 }
