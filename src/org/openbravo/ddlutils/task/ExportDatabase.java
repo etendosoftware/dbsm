@@ -25,11 +25,15 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
+import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.utility.DataSet;
 import org.openbravo.model.ad.utility.DataSetTable;
 import org.openbravo.service.dataset.DataSetService;
+import org.openbravo.service.system.SystemService;
+import org.openbravo.service.system.SystemValidationResult;
 
 /**
  * 
@@ -90,6 +94,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
           dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
           getLog().info(db.toString());
           final DatabaseIO io = new DatabaseIO();
+
+          validateModule(util.getActiveModule(i).idMod, dbI);
+
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
             getLog().info("Path: " + model.getAbsolutePath());
             io.writeToDir(dbI, model);
@@ -113,17 +120,20 @@ public class ExportDatabase extends BaseDalInitializingTask {
         for (int i = 0; i < util.getActiveModuleCount(); i++) {
           final ModuleRow row = util.getActiveModule(i);
           if (util.isIncludedInExportList(row)) {
-            getLog().info("Exporting module: " + row.name);
             if (row == null)
               throw new BuildException("Module not found in AD_MODULE table.");
             if (row.prefixes.size() == 0) {
               getLog().info("Module doesn't have dbprefix. We will not export structure for it.");
               return;
             }
+            getLog().info("Exporting module: " + row.name);
             if (row.isInDevelopment != null && row.isInDevelopment.equalsIgnoreCase("Y")) {
               getLog().info("Loading submodel from database...");
               db = platform
                   .loadModelFromDatabase(row.filter, row.prefixes.get(0), false, row.idMod);
+
+              validateModule(row.idMod, db);
+
               getLog().info("Submodel loaded");
               final DatabaseIO io = new DatabaseIO();
               final File path = new File(moduledir, row.dir + "/src-db/database/model/");
@@ -210,6 +220,14 @@ public class ExportDatabase extends BaseDalInitializingTask {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void validateModule(String moduleId, Database dbI) {
+    getLog().info("Validating Module...");
+    final Module moduleToValidate = OBDal.getInstance().get(Module.class, moduleId);
+    final SystemValidationResult result = SystemService.getInstance().validateModule(
+        moduleToValidate, dbI);
+    SystemService.getInstance().logValidationResult(log, result);
   }
 
   public String getExcludeobjects() {
