@@ -25,6 +25,7 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
@@ -228,6 +229,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
     final SystemValidationResult result = SystemService.getInstance().validateModule(
         moduleToValidate, dbI);
     SystemService.getInstance().logValidationResult(log, result);
+    if (result.getErrors().size() > 0) {
+      throw new OBException(
+          "Module validation failed, see the above list of errors for more information");
+    }
   }
 
   public String getExcludeobjects() {
