@@ -260,6 +260,7 @@ public class DataComparator {
             tableMap.put(table.getTable().getTableName().toUpperCase(), table);
             HashMap<String, DataSetColumn> columnsT = new HashMap<String, DataSetColumn>();
             List<DataSetColumn> columnList = service.getDataSetColumns(table);
+
             for (DataSetColumn column : columnList)
                 columnsT.put(column.getColumn().getColumnName().toUpperCase(),
                         column);
@@ -1167,43 +1168,53 @@ public class DataComparator {
         }
         pk += "]";
         Vector<String> tablesModel = new Vector<String>();
-        for (int i = 0; i < nonprimaryKeys.length; i++) {
-            Object v2 = db2.get(nonprimaryKeys[i].getName());
-            Object v1 = null;
-            for (Property property : properties) {
-                if (property.getColumnName() != null
-                        && property.getColumnName().equalsIgnoreCase(
-                                nonprimaryKeys[i].getName())) {
-                    v1 = db1.get(property.getName());
-                    if (v1 instanceof BaseOBObject)
-                        v1 = DalUtil.getReferencedPropertyValue(property, v1);
-                    if (v1 instanceof Boolean) {
-                        if (((Boolean) v1).booleanValue())
-                            v1 = "Y";
-                        else
-                            v1 = "N";
-                    }
+        for (Property property : properties) {
+            if (!property.isId()) {
+                Object v1 = null;
+                Object v2 = null;
+                Column column = null;
+                for (int i = 0; i < nonprimaryKeys.length; i++) {
+                    if (property.getColumnName() != null
+                            && property.getColumnName().equalsIgnoreCase(
+                                    nonprimaryKeys[i].getName())) {
+                        v2 = db2.get(nonprimaryKeys[i].getName());
+                        column = nonprimaryKeys[i].getColumn();
+                        v1 = db1.get(property.getName());
+                        if (v1 instanceof BaseOBObject)
+                            v1 = DalUtil.getReferencedPropertyValue(property,
+                                    v1);
+                        if (v1 instanceof Boolean) {
+                            if (((Boolean) v1).booleanValue())
+                                v1 = "Y";
+                            else
+                                v1 = "N";
+                        }
 
-                    /*
-                     * if (v1 != null) v1 = v1.toString(); if (v2 != null) v2 =
-                     * v2.toString();
-                     */
+                        /*
+                         * if (v1 != null) v1 = v1.toString(); if (v2 != null)
+                         * v2 = v2.toString();
+                         */
+                    }
                 }
-            }
-            if ((v1 == null && v2 != null)
-                    || (v1 != null && v2 == null)
-                    || (v1 != null && v2 != null && !v1.toString().equals(
-                            v2.toString()))) {
-                String vs1 = null;
-                String vs2 = null;
-                if (v1 != null)
-                    vs1 = v1.toString();
-                if (v2 != null)
-                    vs2 = v2.toString();
-                dataChanges.add(new ColumnDataChange(dynaClass.getTable(),
-                        nonprimaryKeys[i].getColumn(), vs1, vs2, pkVal));
-                // System.out.println("Column change:
-                // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
+                if (column != null) {
+                    if ((v1 == null && v2 != null)
+                            || (v1 != null && v2 == null)
+                            || (v1 != null && v2 != null && !v1.toString()
+                                    .equals(v2.toString()))) {
+                        String vs1 = null;
+                        String vs2 = null;
+                        if (v1 != null)
+                            vs1 = v1.toString();
+                        if (v2 != null)
+                            vs2 = v2.toString();
+                        dataChanges.add(new ColumnDataChange(dynaClass
+                                .getTable(), column, vs1, vs2, pkVal));
+                        System.out.println(dataChanges
+                                .get(dataChanges.size() - 1));
+                        // System.out.println("Column change:
+                        // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
+                    }
+                }
             }
         }
     }

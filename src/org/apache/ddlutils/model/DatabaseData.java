@@ -110,13 +110,16 @@ public class DatabaseData {
         boolean found = false;
         while (i < rows.size() && !found) {
           found = true;
-          SqlDynaProperty[] primaryKeysCols = _model.getDynaClassFor(rows.get(i))
-              .getPrimaryKeyProperties();
+          // SqlDynaProperty[]
+          // primaryKeysCols=_model.getDynaClassFor(rows.get(i)).getPrimaryKeyProperties();
+          Column[] primaryKeysCols = table.getPrimaryKeyColumns();
           Object[] primaryKeyA = new Object[primaryKeysCols.length];
           for (int j = 0; j < primaryKeyA.length; j++)
             primaryKeyA[j] = rows.get(i).get(primaryKeysCols[j].getName());
           for (int j = 0; j < primaryKeys.length && found; j++)
-            if (!primaryKeys[j].equals(primaryKeyA[j]))
+            if ((primaryKeys[j] == null && primaryKeyA[j] != null)
+                || (primaryKeys[j] != null && primaryKeyA[j] == null)
+                || !primaryKeys[j].toString().equals(primaryKeyA[j].toString()))
               found = false;
           i++;
         }

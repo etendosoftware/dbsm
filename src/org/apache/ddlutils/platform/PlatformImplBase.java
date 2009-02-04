@@ -26,12 +26,12 @@ import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1511,12 +1511,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
                 connection.setAutoCommit(false);
             }
 
-            PreparedStatement dateStatement = getDateStatement(connection);
-            dateStatement.execute();
-            ResultSet resDate = dateStatement.getResultSet();
-            resDate.next();
-            Date date = resDate.getDate(1);
-            dateStatement.close();
+            Timestamp date = getDateStatement(connection);
 
             beforeInsert(connection, dynaClass.getTable());
 
@@ -1628,9 +1623,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
     }
 
-    protected PreparedStatement getDateStatement(Connection connection) {
+    protected Timestamp getDateStatement(Connection connection) {
         try {
-            return connection.prepareStatement("SELECT SYSDATE FROM DUAL");
+            PreparedStatement dateStatement = connection
+                    .prepareStatement("SELECT NOW() FROM DUAL");
+            dateStatement.execute();
+            ResultSet resDate = dateStatement.getResultSet();
+            resDate.next();
+            Timestamp date = resDate.getTimestamp(1);
+            dateStatement.close();
+            return date;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1927,17 +1929,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     private int update(Connection connection, Database model,
             ColumnDataChange change) throws DatabaseOperationException {
 
-        PreparedStatement dateStatement = getDateStatement(connection);
-        Date date = null;
-        try {
-            dateStatement.execute();
-            ResultSet resDate = dateStatement.getResultSet();
-            resDate.next();
-            date = resDate.getDate(1);
-            dateStatement.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Timestamp date = getDateStatement(connection);
 
         HashMap map = new HashMap();
         Table table = model.findTable(change.getTablename());
@@ -1952,7 +1944,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         String sql = getSqlBuilder().getUpdateSql(table, map, true);
         // createUpdateSql(model, dynaClass, primaryKeys, properties, null);
         PreparedStatement statement = null;
-        System.out.println(sql);
+
         if (_log.isDebugEnabled()) {
             _log.debug("About to execute SQL: " + sql);
         }
@@ -1966,13 +1958,22 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
                     setObject(statement, sqlIndex++, date, table
                             .findColumn("UPDATED"));
                 } else if (table.getColumn(i).getName().equalsIgnoreCase(
-                        change.getColumnname())) {
-                    setObject(statement, sqlIndex++, change.getNewValue(),
-                            table.findColumn(change.getColumnname()));
-                } else if (table.getColumn(i).getName().equalsIgnoreCase(
                         "UPDATEDBY")) {
                     setObject(statement, sqlIndex++, "0", table
                             .findColumn("UPDATEDBY"));
+                } else if (table.getColumn(i).getName().equalsIgnoreCase(
+                        change.getColumnname())) {
+                    if (table.getColumn(i).getName().equalsIgnoreCase(
+                            "CREATEDBY"))
+                        setObject(statement, sqlIndex++, "0", table
+                                .findColumn(change.getColumnname()));
+                    else if (table.getColumn(i).getName().equalsIgnoreCase(
+                            "CREATED"))
+                        setObject(statement, sqlIndex++, date, table
+                                .findColumn(change.getColumnname()));
+                    else
+                        setObject(statement, sqlIndex++, change.getNewValue(),
+                                table.findColumn(change.getColumnname()));
                 }
             }
 

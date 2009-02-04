@@ -34,6 +34,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.utils.CheckSum;
 
 /**
@@ -104,7 +105,20 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
         final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
-
+        boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(
+                platform, false);
+        if (hasBeenModified) {
+            if (force)
+                getLog()
+                        .info(
+                                "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+            else {
+                getLog()
+                        .info(
+                                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -D=force=yes");
+                return;
+            }
+        }
         try {
             // execute the pre-script
             if (getPrescript() == null) {
@@ -242,8 +256,15 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                 getLog().info("Dataset DS has changed. We need to update it.");
                 OBDal.getInstance().commitAndClose();
                 final Connection connection = platform.borrowConnection();
+                getLog().info("Disabling foreign keys");
+                platform.disableAllFK(connection, originaldb, !isFailonerror());
+                getLog().info("Disabling triggers");
+                platform.disableAllTriggers(connection, db, !isFailonerror());
                 platform.alterData(connection, db, dataComparatorDS
                         .getChanges());
+                getLog().info("Enabling Foreign Keys and Triggers");
+                platform.enableAllFK(connection, originaldb, !isFailonerror());
+                platform.enableAllTriggers(connection, db, !isFailonerror());
                 getLog().info(
                         "Dataset DS updated succesfully. Reinitializing DAL");
                 DalLayerInitializer.getInstance().initialize(true);
@@ -280,7 +301,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                     .info(
                             "Executing update final script (NOT NULLs and dropping temporal tables");
             platform.alterTablesPostScript(oldModel, db, !isFailonerror());
-            ;
+
             getLog().info("Enabling Foreign Keys and Triggers");
             platform.enableAllFK(connection, originaldb, !isFailonerror());
             platform.enableAllTriggers(connection, db, !isFailonerror());
@@ -298,6 +319,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                 platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()),
                         true);
             }
+            DBSMOBUtil.getInstance().updateCRC(platform);
 
         } catch (final Exception e) {
             // log(e.getLocalizedMessage());
