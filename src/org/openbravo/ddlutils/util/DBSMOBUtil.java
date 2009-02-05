@@ -449,6 +449,7 @@ public class DBSMOBUtil {
     public boolean hasBeenModified(Platform platform, boolean updateCRC) {
         try {
             final Connection connection = platform.borrowConnection();
+
             System.out
                     .println("Checking if data has changed in the application dictionary.");
             PreparedStatement statementDate = connection
@@ -460,9 +461,10 @@ public class DBSMOBUtil {
             boolean datachange = SystemService.getInstance().hasChanged(
                     DataSetService.getInstance().getDataSetByValue("ADCS"),
                     date);
-            /*
-             * if (datachange) return true;
-             */
+
+            if (datachange)
+                return true;
+
             System.out
                     .println("Checking if database structure was modified locally.");
             String sql;

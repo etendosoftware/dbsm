@@ -1209,8 +1209,6 @@ public class DataComparator {
                             vs2 = v2.toString();
                         dataChanges.add(new ColumnDataChange(dynaClass
                                 .getTable(), column, vs1, vs2, pkVal));
-                        System.out.println(dataChanges
-                                .get(dataChanges.size() - 1));
                         // System.out.println("Column change:
                         // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
                     }

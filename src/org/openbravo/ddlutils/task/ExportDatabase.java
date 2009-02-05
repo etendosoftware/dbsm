@@ -58,33 +58,30 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
     @Override
     public void doExecute() {
-        try {
+        getLog().info(
+                "Database connection: " + getUrl() + ". User: " + getUser());
+
+        final BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName(getDriver());
+        ds.setUrl(getUrl());
+        ds.setUsername(getUser());
+        ds.setPassword(getPassword());
+
+        final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+        // platform.setDelimitedIdentifierModeOn(true);
+
+        boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(
+                platform, true);
+        if (!hasBeenModified && !force) {
             getLog()
                     .info(
-                            "Database connection: " + getUrl() + ". User: "
-                                    + getUser());
+                            "Database doesn't have local changes. We will not export changes. If you want to force the export, do: ant export.database -D=force=yes");
+            return;
+        }
 
-            final BasicDataSource ds = new BasicDataSource();
-            ds.setDriverClassName(getDriver());
-            ds.setUrl(getUrl());
-            ds.setUsername(getUser());
-            ds.setPassword(getPassword());
+        DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
 
-            final Platform platform = PlatformFactory
-                    .createNewPlatformInstance(ds);
-            // platform.setDelimitedIdentifierModeOn(true);
-
-            boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(
-                    platform, true);
-            if (!hasBeenModified && !force) {
-                getLog()
-                        .info(
-                                "Database doesn't have local changes. We will not export changes. If you want to force the export, do: ant export.database -D=force=yes");
-                return;
-            }
-
-            DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
-
+        try {
             final DBSMOBUtil util = DBSMOBUtil.getInstance();
             util.getModules(platform, excludeobjects);
             if (util.getActiveModuleCount() == 0) {
