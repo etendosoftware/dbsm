@@ -63,6 +63,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
     private String datadir;
     private String datafilter;
     private boolean force = false;
+    private boolean onlyIfModified = false;
 
     /** Creates a new instance of ReadDataXML */
     public AlterDatabaseDataAll() {
@@ -70,9 +71,9 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
     }
 
     public void execute() {
-        if (force) {
+        if (!onlyIfModified) {
             System.out
-                    .println("Database update process forced. Executing without checking changes.");
+                    .println("Executing database update process without checking changes in local files.");
         } else {
             CheckSum cs = new CheckSum(basedir + "/../");
             String oldStructCS = cs.getCheckSumDBSTructure();
@@ -105,6 +106,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
         final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
         // platform.setDelimitedIdentifierModeOn(true);
+
         boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(
                 platform, false);
         if (hasBeenModified) {
@@ -115,10 +117,12 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
             else {
                 getLog()
                         .info(
-                                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -D=force=yes");
-                return;
+                                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=yes (you will lose all your changes if you do it)");
+                throw new BuildException(
+                        "Database has local changes. Update.database not done.");
             }
         }
+
         try {
             // execute the pre-script
             if (getPrescript() == null) {
@@ -451,5 +455,13 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
     public void setForce(boolean force) {
         this.force = force;
+    }
+
+    public boolean isOnlyIfModified() {
+        return onlyIfModified;
+    }
+
+    public void setOnlyIfModified(boolean onlyIfModified) {
+        this.onlyIfModified = onlyIfModified;
     }
 }

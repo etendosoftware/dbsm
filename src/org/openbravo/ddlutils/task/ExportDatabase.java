@@ -75,7 +75,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (!hasBeenModified && !force) {
             getLog()
                     .info(
-                            "Database doesn't have local changes. We will not export changes. If you want to force the export, do: ant export.database -D=force=yes");
+                            "Database doesn't have local changes. We will not export changes. If you want to force the export, do: ant export.database -Dforce=yes");
             return;
         }
 
