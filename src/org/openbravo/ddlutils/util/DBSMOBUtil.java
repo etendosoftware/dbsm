@@ -450,21 +450,6 @@ public class DBSMOBUtil {
             final Connection connection = platform.borrowConnection();
 
             System.out
-                    .println("Checking if data has changed in the application dictionary.");
-            PreparedStatement statementDate = connection
-                    .prepareStatement("SELECT last_dbupdate from AD_SYSTEM_INFO");
-            statementDate.execute();
-            ResultSet rsDate = statementDate.getResultSet();
-            rsDate.next();
-            Timestamp date = rsDate.getTimestamp(1);
-            boolean datachange = DataSetService.getInstance().hasChanged(
-                    DataSetService.getInstance().getDataSetByValue("ADCS"),
-                    date);
-
-            if (datachange)
-                return true;
-
-            System.out
                     .println("Checking if database structure was modified locally.");
             String sql;
             if (updateCRC)
@@ -478,6 +463,21 @@ public class DBSMOBUtil {
             rs.next();
             String answer = rs.getString(1);
             if (answer.equalsIgnoreCase("Y"))
+                return true;
+
+            System.out
+                    .println("Checking if data has changed in the application dictionary.");
+            PreparedStatement statementDate = connection
+                    .prepareStatement("SELECT last_dbupdate from AD_SYSTEM_INFO");
+            statementDate.execute();
+            ResultSet rsDate = statementDate.getResultSet();
+            rsDate.next();
+            Timestamp date = rsDate.getTimestamp(1);
+            boolean datachange = DataSetService.getInstance().hasChanged(
+                    DataSetService.getInstance().getDataSetByValue("ADCS"),
+                    date);
+
+            if (datachange)
                 return true;
             else
                 return false;
