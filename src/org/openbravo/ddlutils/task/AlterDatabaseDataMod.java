@@ -139,11 +139,9 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
         Database completedb = null;
         Database dbAD = null;
-        Database oldModel = null;
         try {
             completedb = (Database) dbXML.clone();
             dbAD = (Database) dbXML.clone();
-            oldModel = (Database) dbXML.clone();
             dbAD.filterByDataset("ADCS");
         } catch (final Exception e) {
             e.printStackTrace();
@@ -206,8 +204,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
                 final Database db = (Database) dbXML.clone();
                 db.applyNamingConventionToUpdate(row.filter);
-                final Database olddb = (Database) oldModel.clone();
-                olddb.applyNamingConventionToUpdate(row.filter);
+                final Database olddb = (Database) originaldb.clone();
 
                 final DatabaseDataIO dbdio = new DatabaseDataIO();
                 dbdio.setEnsureFKOrder(false);
