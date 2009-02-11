@@ -1567,7 +1567,7 @@ public class Database implements Serializable, Cloneable {
     for (DataSetTable table : tables) {
       for (int i = 0; i < oldTables.size(); i++) {
         Table t = (Table) oldTables.get(i);
-        if (t.getName().equalsIgnoreCase(table.getTable().getTableName())) {
+        if (t.getName().equalsIgnoreCase(table.getTable().getDBTableName())) {
           _tables.add(t);
         }
       }

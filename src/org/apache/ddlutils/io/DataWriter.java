@@ -355,7 +355,7 @@ public class DataWriter {
     Vector subElements = new Vector();
     Vector elementValues = new Vector();
     List<Property> pkProperties = object.getEntity().getIdProperties();
-    Table table = db.findTable(datasetTable.getTable().getTableName());
+    Table table = db.findTable(datasetTable.getTable().getDBTableName());
 
     String comment = "";
     for (int i = 0; i < pkProperties.size(); i++) {
@@ -565,7 +565,7 @@ public class DataWriter {
       try {
         objectList = datasetService.getExportableObjects(datasetTable, moduleID);
       } catch (Exception e) {
-        _log.error("Table " + datasetTable.getTable().getTableName()
+        _log.error("Table " + datasetTable.getTable().getDBTableName()
             + " not found in runtime model");
         e.printStackTrace();
         return b;

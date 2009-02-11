@@ -246,7 +246,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
       Iterator it = tablenames.iterator();
       while (it.hasNext()) {
         String tablename = (String) it.next();
-        if (tablename.equalsIgnoreCase(table.getTable().getTableName()))
+        if (tablename.equalsIgnoreCase(table.getTable().getDBTableName()))
           db.addTable(readTable(tablename, false));
       }
     }

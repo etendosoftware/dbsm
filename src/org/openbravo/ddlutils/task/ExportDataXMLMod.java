@@ -122,9 +122,9 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
               }
 
               for (final DataSetTable table : tableList) {
-                getLog().info("Exporting table: " + table.getTable().getTableName() + " to Core");
+                getLog().info("Exporting table: " + table.getTable().getDBTableName() + " to Core");
                 final OutputStream out = new FileOutputStream(new File(getOutput(), table
-                    .getTable().getTableName().toUpperCase()
+                    .getTable().getDBTableName().toUpperCase()
                     + ".xml"));
                 dbdio.writeDataForTableToXML(originaldb, datasetService, dataSetCode, table, out,
                     getEncoding(), util.getActiveModule(i).idMod);
@@ -144,9 +144,9 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
                 }
                 for (final DataSetTable table : tableList) {
                   getLog().info(
-                      "Exporting table: " + table.getTable().getTableName() + " to module "
+                      "Exporting table: " + table.getTable().getDBTableName() + " to module "
                           + util.getActiveModule(i).name);
-                  final File tableFile = new File(path, table.getTable().getTableName()
+                  final File tableFile = new File(path, table.getTable().getDBTableName()
                       .toUpperCase()
                       + ".xml");
                   final OutputStream out = new FileOutputStream(tableFile);
