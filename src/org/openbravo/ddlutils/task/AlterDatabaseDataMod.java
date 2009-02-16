@@ -189,23 +189,27 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
                 throw new BuildException("Module " + modName
                         + " not found in AD_MODULE table.");
             Database originaldb = null;
+            Database db = null;
             try {
                 if (row.prefixes.size() == 0) {
                     getLog()
                             .info(
                                     "Module doesn't have dbprefix. We will not update database model.");
+                    moduleModels.add(new Database());
+                    moduleOldModels.add(new Database());
                 } else {
                     getLog().info("Loading submodel from database...");
                     originaldb = platform.loadModelFromDatabase(row.filter,
                             row.prefixes.get(0), true, row.idMod);
                     originaldb.moveModifiedToTables();
                     getLog().info("Submodel loaded");
+
+                    db = (Database) dbXML.clone();
+                    db.applyNamingConventionToUpdate(row.filter);
+                    final Database olddb = (Database) originaldb.clone();
+                    moduleModels.add(db);
+                    moduleOldModels.add(olddb);
                 }
-
-                final Database db = (Database) dbXML.clone();
-                db.applyNamingConventionToUpdate(row.filter);
-                final Database olddb = (Database) originaldb.clone();
-
                 final DatabaseDataIO dbdio = new DatabaseDataIO();
                 dbdio.setEnsureFKOrder(false);
                 dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
@@ -251,8 +255,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
                     getLog().info(change);
                 getLog().info("Comparing databases to find data differences");
                 dataChanges.add(dataComparator.getChanges());
-                moduleModels.add(db);
-                moduleOldModels.add(olddb);
                 OBDal.getInstance().commitAndClose();
 
                 getLog().info("Updating database model...");
