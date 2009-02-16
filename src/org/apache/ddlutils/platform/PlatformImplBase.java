@@ -1864,6 +1864,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     private int privateupdate(Connection connection, Database model,
             DynaBean dynaBean) throws DatabaseOperationException {
 
+        Timestamp date = getDateStatement(connection);
         SqlDynaClass dynaClass = model.getDynaClassFor(dynaBean);
         SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
         SqlDynaProperty[] nonprimaryKeys = dynaClass
@@ -1900,9 +1901,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             int sqlIndex = 1;
 
             for (int idx = 0; idx < properties.length; idx++) {
-                if (table.findColumn(properties[idx].getName()) != null)
+
+                if (properties[idx].getName().equalsIgnoreCase("UPDATED")) {
+                    setObject(statement, sqlIndex++, date, table
+                            .findColumn("UPDATED"));
+                } else if (properties[idx].getName().equalsIgnoreCase(
+                        "UPDATEDBY")) {
+                    setObject(statement, sqlIndex++, "0", table
+                            .findColumn("UPDATEDBY"));
+                } else if (properties[idx].getName().equalsIgnoreCase(
+                        "CREATEDBY")) {
+                    setObject(statement, sqlIndex++, "0", table
+                            .findColumn("CREATEDBY"));
+                } else if (properties[idx].getName()
+                        .equalsIgnoreCase("CREATED")) {
+                    setObject(statement, sqlIndex++, date, table
+                            .findColumn("CREATED"));
+                } else if (table.findColumn(properties[idx].getName()) != null) {
                     setObject(statement, sqlIndex++, dynaBean, properties[idx]);
-                else
+                } else
                     _log.debug("Rejected column: " + properties[idx].getName());
             }
             for (int idx = 0; idx < primaryKeys.length; idx++) {
