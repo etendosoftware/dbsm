@@ -290,7 +290,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
             platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
             getLog()
                     .info(
-                            "Executing update final script (NOT NULLs and dropping temporal tables");
+                            "Executing update final script (NOT NULLs and dropping temporary tables)");
             platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels
                     .get(i), !isFailonerror());
         }
