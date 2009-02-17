@@ -136,8 +136,8 @@ public class DatabaseData {
                     Object currentValue = rows.get(i - 1).get(column.getName());
                     if (!(oldValue == null && currentValue == null)
                             && ((oldValue == null && currentValue != null)
-                                    || (oldValue != null && currentValue == null) || (!currentValue
-                                    .equals(oldValue)))) {
+                                    || (oldValue != null && currentValue == null) || (!currentValue.toString()
+                                    .equals(oldValue.toString())))) {
                         String error = "Warning: old value in row not equal to expected one. Table:["
                                 + table.getName() + "] PK[: ";
                         for (int j = 0; j < primaryKeys.length; j++) {
