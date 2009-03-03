@@ -759,10 +759,18 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected String translateCheckCondition(String code) {
+    if (code.substring(0, 1).equals("\n"))
+      code = code.substring(1);
+    if (code.substring(code.length() - 1, code.length()).equals("\n"))
+      code = code.substring(0, code.length() - 1);
     return code;
   }
 
   protected String translateSQL(String sql) {
+    if (sql.substring(0, 1).equals("\n"))
+      sql = sql.substring(1);
+    if (sql.substring(sql.length() - 1, sql.length()).equals("\n"))
+      sql = sql.substring(0, sql.length() - 1);
     return sql;
   }
 
