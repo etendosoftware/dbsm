@@ -617,10 +617,6 @@ public abstract class SqlBuilder {
 
       if (change instanceof AddColumnChange) {
         newColumns.add((AddColumnChange) change);
-      } else if (change instanceof AddUniqueChange) {
-        processChange(currentModel, desiredModel, params, ((AddUniqueChange) change));
-      } else if (change instanceof AddCheckChange) {
-        processChange(currentModel, desiredModel, params, ((AddCheckChange) change));
       }
 
     }
@@ -741,6 +737,10 @@ public abstract class SqlBuilder {
       if (change instanceof AddForeignKeyChange) {
         writeExternalForeignKeyCreateStmt(desiredModel, ((AddForeignKeyChange) change)
             .getChangedTable(), ((AddForeignKeyChange) change).getNewForeignKey());
+      } else if (change instanceof AddUniqueChange) {
+        processChange(currentModel, desiredModel, params, ((AddUniqueChange) change));
+      } else if (change instanceof AddCheckChange) {
+        processChange(currentModel, desiredModel, params, ((AddCheckChange) change));
       }
     }
     _PLSQLFunctionTranslation = new NullTranslation();
