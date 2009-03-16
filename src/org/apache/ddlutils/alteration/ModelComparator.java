@@ -190,16 +190,16 @@ public class ModelComparator {
             foundViewWithSameName = true;
           i++;
         }
-        if (!foundViewWithSameName) // We will only generate a drop view
+        // if (!foundViewWithSameName) // We will only generate a drop view
         // statement if the view will not be
         // recreated
-        {
-          if (_log.isInfoEnabled()) {
-            _log.info("Processing View " + sourceView + " (removed from database "
-                + sourceModel.getName() + ")");
-          }
-          changes.add(new RemoveViewChange(sourceView));
+        // {
+        if (_log.isInfoEnabled()) {
+          _log.info("Processing View " + sourceView + " (removed from database "
+              + sourceModel.getName() + ")");
         }
+        changes.add(new RemoveViewChange(sourceView));
+        // }
       }
     }
 
