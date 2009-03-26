@@ -639,6 +639,26 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement(getStructureObjectName(trigger));
   }
 
+  protected void dropView(View view) throws IOException {
+
+    if (getPlatformInfo().isViewsSupported()) {
+      if (view.getName() == null) {
+        _log.warn("Cannot write unnamed view " + view);
+      } else {
+
+        dropUpdateRules(view);
+
+        printStartOfStatement("VIEW", getStructureObjectName(view));
+
+        printScriptOptions("FORCE = TRUE");
+        print("DROP VIEW IF EXISTS ");
+        printIdentifier(getStructureObjectName(view));
+
+        printEndOfStatement(getStructureObjectName(view));
+      }
+    }
+  }
+
   @Override
   protected void writeCreateViewStatement(View view) throws IOException {
 

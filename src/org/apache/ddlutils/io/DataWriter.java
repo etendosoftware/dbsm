@@ -375,7 +375,7 @@ public class DataWriter {
             comment += object.get(pkProperties.get(i).getName()).toString();
         }
 
-        List<Property> exportableColumns = datasetService.getEntityProperties(
+        List<Property> exportableColumns = datasetService.getExportableProperties(
                 object, datasetTable, datasetColumns); // object.getEntity().
         // getProperties();
         try {
