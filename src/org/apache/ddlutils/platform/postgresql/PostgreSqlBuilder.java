@@ -849,4 +849,13 @@ public class PostgreSqlBuilder extends SqlBuilder {
     }
   }
 
+  protected void writeCastExpression(Column sourceColumn, Column targetColumn) throws IOException {
+    if (sourceColumn.isOfTextType() && targetColumn.isOfNumericType()) {
+      print("TO_NUMBER(");
+      printIdentifier(getColumnName(sourceColumn));
+      print(")");
+    } else {
+      printIdentifier(getColumnName(sourceColumn));
+    }
+  }
 }
