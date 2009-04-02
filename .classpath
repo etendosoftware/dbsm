@@ -20,6 +20,5 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/openbravo"/>
 	<classpathentry kind="lib" path="/openbravo/src-db/database/lib/dbmanager.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/OpenbravoCore"/>
 	<classpathentry kind="output" path="nbproject/build/classes"/>
 </classpath>

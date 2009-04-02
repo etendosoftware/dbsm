@@ -241,7 +241,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     Database db = new Database();
     DataSetService ds = DataSetService.getInstance();
     List tablenames = readTableNames();
-    List<DataSetTable> tables = ds.getDataSetTables(ds.getDataSetByValue(datasetName));
+    List<DataSetTable> tables = ds.getDataSetByValue(datasetName).getDataSetTableList();
     for (DataSetTable table : tables) {
       Iterator it = tablenames.iterator();
       while (it.hasNext()) {

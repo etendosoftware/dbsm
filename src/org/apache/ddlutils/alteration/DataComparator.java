@@ -70,13 +70,13 @@ public class DataComparator {
 
     DataSetService service = DataSetService.getInstance();
     dataset = service.getDataSetByValue(datasetName);
-    List<DataSetTable> tableList = service.getDataSetTables(dataset);
+    List<DataSetTable> tableList = dataset.getDataSetTableList();
     tableMap = new HashMap<String, DataSetTable>();
     columnMap = new HashMap<String, HashMap<String, DataSetColumn>>();
     for (DataSetTable table : tableList) {
       tableMap.put(table.getTable().getDBTableName().toUpperCase(), table);
       HashMap<String, DataSetColumn> columnsT = new HashMap<String, DataSetColumn>();
-      List<DataSetColumn> columnList = service.getDataSetColumns(table);
+      List<DataSetColumn> columnList = table.getDataSetColumnList();
       for (DataSetColumn column : columnList)
         columnsT.put(column.getColumn().getDBColumnName().toUpperCase(), column);
       columnMap.put(table.getTable().getDBTableName().toUpperCase(), columnsT);
@@ -161,8 +161,7 @@ public class DataComparator {
               while (answer != null && answer.hasNext()) {
                 BaseOBObject db = (BaseOBObject) answer.next();
                 List<Property> exportableProperties = service.getExportableProperties(db, tableMap
-                    .get(tableC.getName()), service.getDataSetColumns(tableMap
-                    .get(tableC.getName())));
+                    .get(tableC.getName()), tableMap.get(tableC.getName()).getDataSetColumnList());
                 Object value = null;
                 for (Property property : exportableProperties)
                   if (property.getColumnName().equalsIgnoreCase(columnC.getName()))
@@ -226,13 +225,13 @@ public class DataComparator {
       _log.error("Error: dataset " + datasetName + " not found in database.");
       return;
     }
-    List<DataSetTable> tableList = service.getDataSetTables(dataset);
+    List<DataSetTable> tableList = dataset.getDataSetTableList();
     tableMap = new HashMap<String, DataSetTable>();
     columnMap = new HashMap<String, HashMap<String, DataSetColumn>>();
     for (DataSetTable table : tableList) {
       tableMap.put(table.getTable().getDBTableName().toUpperCase(), table);
       HashMap<String, DataSetColumn> columnsT = new HashMap<String, DataSetColumn>();
-      List<DataSetColumn> columnList = service.getDataSetColumns(table);
+      List<DataSetColumn> columnList = table.getDataSetColumnList();
 
       for (DataSetColumn column : columnList)
         columnsT.put(column.getColumn().getDBColumnName().toUpperCase(), column);
@@ -698,7 +697,7 @@ public class DataComparator {
     SqlDynaClass dynaClass = model.getDynaClassFor(dbOrg);
     SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
     DataSetTable datasetTable = tableMap.get(dynaClass.getTable().getName());
-    List<DataSetColumn> allColumns = DataSetService.getInstance().getDataSetColumns(datasetTable);
+    List<DataSetColumn> allColumns = datasetTable.getDataSetColumnList();
     List<Property> properties = DataSetService.getInstance().getExportableProperties(dbNew,
         datasetTable, allColumns);
 
@@ -824,7 +823,7 @@ public class DataComparator {
     SqlDynaClass dynaClass = model.getDynaClassFor(dbNew);
     SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
 
-    List<DataSetColumn> allColumns = DataSetService.getInstance().getDataSetColumns(datasetTable);
+    List<DataSetColumn> allColumns = datasetTable.getDataSetColumnList();
     List<Property> properties = DataSetService.getInstance().getExportableProperties(dbOrg,
         datasetTable, allColumns);
     int obPending = 1;
@@ -930,7 +929,7 @@ public class DataComparator {
     SqlDynaClass dynaClass = model.getDynaClassFor(dbNew);
     SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
 
-    List<DataSetColumn> allColumns = DataSetService.getInstance().getDataSetColumns(datasetTable);
+    List<DataSetColumn> allColumns = datasetTable.getDataSetColumnList();
     List<Property> properties = DataSetService.getInstance().getExportableProperties(dbOrg,
         datasetTable, allColumns);
 

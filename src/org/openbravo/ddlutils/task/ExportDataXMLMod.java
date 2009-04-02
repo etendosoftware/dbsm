@@ -102,7 +102,7 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
       for (final String dataSetCode : datasets) {
         final DataSet dataSet = datasetService.getDataSetByValue(dataSetCode);
         System.out.println(dataSet);
-        final List<DataSetTable> tableList = datasetService.getDataSetTables(dataSet);
+        final List<DataSetTable> tableList = dataSet.getDataSetTableList();
         for (int i = 0; i < util.getActiveModuleCount(); i++) {
           if (module == null || module.equals("%")
               || util.isIncludedInExportList(util.getActiveModule(i))) {
