@@ -31,6 +31,7 @@ import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Parameter;
@@ -856,6 +857,52 @@ public class PostgreSqlBuilder extends SqlBuilder {
       print(")");
     } else {
       printIdentifier(getColumnName(sourceColumn));
+    }
+  }
+
+  public void deleteInvalidConstraintRows(Database model) {
+
+    try {
+      // We will now delete the rows in tables which have a foreign key constraint
+      // with "on delete cascade" whose parent has been deleted
+      for (int i = 0; i < model.getTableCount(); i++) {
+        Table table = model.getTable(i);
+        ForeignKey[] fksTable = table.getForeignKeys();
+        for (int j = 0; j < fksTable.length; j++) {
+          ForeignKey fk = fksTable[j];
+          Table parentTable = fk.getForeignTable();
+          String col1 = "";
+          if (fk.getOnDelete() != null && fk.getOnDelete().contains("cascade")) {
+            print("DELETE FROM " + table.getName() + " WHERE ");
+            boolean first = true;
+            for (int k = 0; k < table.getColumnCount(); k++) {
+              if (fk.hasLocalColumn(table.getColumn(k))) {
+                if (!first)
+                  col1 += (",");
+                first = false;
+                col1 += (table.getColumn(k).getName());
+              }
+            }
+            print(col1 + " IN ((SELECT " + col1 + " FROM " + table.getName() + ") EXCEPT (SELECT ");
+            first = true;
+            for (int k = 0; k < parentTable.getColumnCount(); k++) {
+              if (fk.hasForeignColumn(parentTable.getColumn(k))) {
+                if (!first)
+                  print(",");
+                first = false;
+                print(parentTable.getColumn(k).getName());
+              }
+            }
+
+            print(" FROM " + parentTable.getName() + "))");
+            printEndOfStatement();
+          }
+        }
+      }
+    } catch (Exception e) {
+      System.out.println(e);
+      System.out.println(e.getMessage());
+      _log.error(e.getLocalizedMessage());
     }
   }
 }
