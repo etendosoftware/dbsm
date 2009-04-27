@@ -153,7 +153,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
         final Vector<ModuleRow> moduleRows = new Vector<ModuleRow>();
 
         final DBSMOBUtil util = DBSMOBUtil.getInstance();
-        util.getModules(platform, excludeobjects);
         if (module.toUpperCase().contains("CORE") || module.equals("%")) {
             getLog()
                     .info(
@@ -179,6 +178,8 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
             ada.doExecute();
             return;
         }
+        DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform,completedb, module);
+        util.getModules(platform, excludeobjects);
         final StringTokenizer st = new StringTokenizer(module, ",");
         while (st.hasMoreElements()) {
             final String modName = st.nextToken().trim();

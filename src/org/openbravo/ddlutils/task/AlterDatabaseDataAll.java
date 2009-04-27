@@ -124,6 +124,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         }
 
         try {
+            DBSMOBUtil.getInstance().deleteInstallTables(platform);
             // execute the pre-script
             if (getPrescript() == null) {
                 // try to execute the default prescript
