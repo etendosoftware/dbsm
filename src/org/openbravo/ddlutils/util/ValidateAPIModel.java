@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddCheckChange;
+import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddForeignKeyChange;
 import org.apache.ddlutils.alteration.AddFunctionChange;
 import org.apache.ddlutils.alteration.AddIndexChange;
@@ -100,7 +101,15 @@ public class ValidateAPIModel extends ValidateAPI {
     if (change instanceof TableChange) {
       String tablename = ((TableChange) change).getChangedTable().getName();
 
-      if (change instanceof AddForeignKeyChange) {
+      if (change instanceof AddColumnChange) {
+        AddColumnChange c = (AddColumnChange) change;
+        Column oldCol = validDB.findTable(c.getChangedTable().getName()).findColumn(
+            c.getNewColumn().getName());
+        if (oldCol == null && c.getNewColumn().isRequired()) {
+          // it is a real creation, not a re-creation
+          errors.add("Added mandatory column: " + tablename + "." + c.getNewColumn().getName());
+        }
+      } else if (change instanceof AddForeignKeyChange) {
         AddForeignKeyChange c = (AddForeignKeyChange) change;
         ForeignKey fk = validDB.findTable(tablename).findForeignKey(c.getNewForeignKey());
         if (fk != null) {
