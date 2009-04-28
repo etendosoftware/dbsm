@@ -971,6 +971,82 @@ public class DataComparator {
     }
   }
 
+  public void compare(DatabaseData databaseDataOrg, DatabaseData databaseDataNew) {
+    Database databaseOrg = databaseDataOrg.getDatabase();
+    Database databaseNew = databaseDataNew.getDatabase();
+    Vector<Table> commonTables = new Vector<Table>();
+    Table[] tablesOrg = databaseOrg.getTables();
+    Table[] tablesNew = databaseNew.getTables();
+    for (int i = 0; i < tablesOrg.length; i++) {
+      if (databaseNew.findTable(tablesOrg[i].getName()) == null) {
+        // Table has been removed. We remove its data.
+        Vector<DynaBean> rows = databaseDataOrg.getRowsFromTable(tablesOrg[i].getName());
+        for (DynaBean bean : rows)
+          dataChanges.add(new RemoveRowChange(tablesOrg[i], bean));
+      } else
+        commonTables.add(tablesOrg[i]);
+    }
+
+    for (int i = 0; i < tablesNew.length; i++) {
+      if (databaseOrg.findTable(tablesNew[i].getName()) == null) {
+        // Table has been added. We add its data.
+        Vector<DynaBean> rows = databaseDataNew.getRowsFromTable(tablesNew[i].getName());
+        for (DynaBean bean : rows)
+          dataChanges.add(new AddRowChange(tablesNew[i], bean));
+      }
+    }
+
+    for (Table table : commonTables)
+      compareTables(databaseDataOrg, databaseDataNew, table.getName());
+
+  }
+
+  private void compareTables(DatabaseData databaseDataOrg, DatabaseData databaseDataNew,
+      String tablename) {
+    Table tableOrg = databaseDataOrg.getDatabase().findTable(tablename);
+    Table tableNew = databaseDataNew.getDatabase().findTable(tablename);
+
+    Vector<DynaBean> rowsOrg = databaseDataOrg.getRowsFromTable(tablename);
+    Vector<DynaBean> rowsNew = databaseDataNew.getRowsFromTable(tablename);
+    int indOrg = 0;
+    int indNew = 0;
+    while (indNew < rowsOrg.size() && indOrg < rowsNew.size()) {
+      int comp = comparePKs(tableOrg, tableNew, rowsOrg.get(indOrg), rowsNew.get(indNew));
+      if (comp == 0) // Rows have the same PKs, we have to compare them
+      {
+        compareRows(tableOrg, tableNew, rowsOrg.get(indOrg), rowsNew.get(indNew));
+        indNew++;
+        indOrg++;
+      } else if (comp == -1) // Original model has additional rows, we
+      // have to "delete" them
+      {
+        dataChanges.add(new RemoveRowChange(tableOrg, rowsOrg.get(indOrg)));
+        indOrg++;
+      } else if (comp == 1) // Target model has additional rows, we have
+      // to "add" them
+      {
+        dataChanges.add(new AddRowChange(tableNew, rowsNew.get(indNew)));
+        indNew++;
+      } else if (comp == -2) {
+        _log.error("Error: problem while comparing primary key in table " + tableOrg.getName()
+            + ".");
+        return;
+      }
+    }
+
+    if (indNew < rowsNew.size() && indOrg >= rowsOrg.size()) {
+      // There are rows in the target tables, but not in the original tables. We have
+      // to insert them
+      while (indNew < rowsNew.size())
+        dataChanges.add(new AddRowChange(tableNew, rowsNew.get(indNew++)));
+    } else if (indNew >= rowsNew.size() && indOrg < rowsOrg.size()) {
+      // No rows remaining in the target table files. We will remove all the
+      // remaining rows of the original table.
+      while (indOrg < rowsOrg.size())
+        dataChanges.add(new RemoveRowChange(tableOrg, rowsOrg.get(indOrg++)));
+    }
+  }
+
   private int comparePKs(Database model, BaseOBObject db1, DynaBean db2,
       SqlDynaProperty[] primaryKeys, List<Property> properties) {
     BaseOBIDHexComparator comparator = new BaseOBIDHexComparator();
@@ -981,6 +1057,19 @@ public class DataComparator {
         if (property.getColumnName() != null
             && property.getColumnName().equalsIgnoreCase(primaryKeys[i].getName()))
           pk1 = db1.get(property.getName()).toString();
+      int c = comparator.compare(pk1, pk2.toString());
+      if (c != 0)
+        return c;
+    }
+    return 0;
+
+  }
+
+  private int comparePKs(Table tableOrg, Table tableNew, DynaBean db1, DynaBean db2) {
+    BaseOBIDHexComparator comparator = new BaseOBIDHexComparator();
+    for (int i = 0; i < tableOrg.getPrimaryKeyColumns().length; i++) {
+      String pk1 = db1.get(tableOrg.getPrimaryKeyColumns()[0].getName()).toString();
+      String pk2 = db2.get(tableOrg.getPrimaryKeyColumns()[0].getName()).toString();
       int c = comparator.compare(pk1, pk2.toString());
       if (c != 0)
         return c;
@@ -1109,6 +1198,40 @@ public class DataComparator {
             // System.out.println("Column change:
             // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
           }
+        }
+      }
+    }
+  }
+
+  private void compareRows(Table tableOrg, Table tableNew, DynaBean db1, DynaBean db2) {
+
+    for (int i = 0; i < tableOrg.getColumnCount(); i++) {
+      if (!tableOrg.getColumn(i).isPrimaryKey()) {
+        if (tableNew.findColumn(tableOrg.getColumn(i).getName()) != null) {
+          Object v1 = db1.get(tableOrg.getColumn(i).getName());
+          Object v2 = db2.get(tableOrg.getColumn(i).getName());
+          String vs1 = v1 == null ? null : v1.toString();
+          String vs2 = v2 == null ? null : v2.toString();
+          if (!(vs1 == null && vs2 == null)
+              && ((vs1 == null && vs2 != null) || (vs1 != null && vs2 == null) || !vs1.equals(vs2)))
+            dataChanges.add(new ColumnDataChange(tableOrg, tableOrg.getColumn(i), vs1, vs2, db1
+                .get(tableOrg.getPrimaryKeyColumns()[0].getName())));
+        } else {
+          // Column doesn't exist in new table
+        }
+      }
+    }
+
+    for (int i = 0; i < tableNew.getColumnCount(); i++) {
+      if (!tableNew.getColumn(i).isPrimaryKey()) {
+        if (tableOrg.findColumn(tableNew.getColumn(i).getName()) != null) {
+          // Column exists in both, so it was taken into account in the previous loop
+        } else {
+          String vs2 = db2.get(tableNew.getColumn(i).getName()) == null ? null : db2.get(
+              tableNew.getColumn(i).getName()).toString();
+          // Column doesn't exist. We'll add its values.
+          dataChanges.add(new ColumnDataChange(tableNew, tableNew.getColumn(i), null, vs2, db2
+              .get(tableNew.getPrimaryKeyColumns()[0].getName())));
         }
       }
     }

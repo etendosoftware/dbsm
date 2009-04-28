@@ -18,17 +18,25 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.io.DataReader;
+import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
+import org.openbravo.ddlutils.util.ValidateAPIData;
+import org.openbravo.ddlutils.util.ValidateAPIModel;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.utility.DataSet;
 import org.openbravo.model.ad.utility.DataSetTable;
@@ -52,6 +60,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private String encoding = "UTF-8";
   private boolean force = false;
   private boolean validateModel = true;
+  private boolean testAPI = false;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
@@ -105,18 +114,28 @@ public class ExportDatabase extends BaseDalInitializingTask {
           dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
           getLog().info(db.toString());
           final DatabaseIO io = new DatabaseIO();
+          String strPath;
+          File path;
+
+          if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
+            strPath = model.getAbsolutePath();
+            path = model;
+          } else {
+            strPath = moduledir + "/" + util.getActiveModule(i).dir + "/src-db/database/model/";
+            path = new File(strPath);
+          }
+
+          if (testAPI) {
+            getLog().info("Reading XML model for API checking" + path);
+            Database dbXML = DatabaseUtils.readDatabase(path);
+            validateAPIForModel(platform, dbI, dbXML);
+          }
+
           if (validateModel)
             validateDatabaseForModule(util.getActiveModule(i).idMod, dbI);
 
-          if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
-            getLog().info("Path: " + model.getAbsolutePath());
-            io.writeToDir(dbI, model);
-          } else {
-            final File path = new File(moduledir, util.getActiveModule(i).dir
-                + "/src-db/database/model/");
-            getLog().info("Path: " + path);
-            io.writeToDir(dbI, path);
-          }
+          getLog().info("Path: " + path);
+          io.writeToDir(dbI, path);
         }
       } else {
         getLog().info("Loading models for AD and RD Datasets");
@@ -143,11 +162,18 @@ public class ExportDatabase extends BaseDalInitializingTask {
               Database dbMod = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0),
                   false, row.idMod);
 
+              final File path = new File(moduledir, row.dir + "/src-db/database/model/");
+              if (testAPI) {
+                getLog().info("Reading XML model for API checking" + path);
+                Database dbXML = DatabaseUtils.readDatabase(path);
+                validateAPIForModel(platform, db, dbXML);
+              }
+
               validateDatabaseForModule(row.idMod, dbMod);
 
               getLog().info("Submodel loaded");
               final DatabaseIO io = new DatabaseIO();
-              final File path = new File(moduledir, row.dir + "/src-db/database/model/");
+
               getLog().info("Path: " + path);
               io.writeToDir(dbMod, path);
             } else {
@@ -174,56 +200,84 @@ public class ExportDatabase extends BaseDalInitializingTask {
               || util.isIncludedInExportList(util.getActiveModule(i))) {
             getLog().info("Exporting module: " + util.getActiveModule(i).name);
             getLog().info(db.toString());
+
+            File path;
+            if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
+              path = output;
+            } else {
+              path = new File(moduledir, util.getActiveModule(i).dir
+                  + "/src-db/database/sourcedata/");
+            }
+
+            if (testAPI) {
+              Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(path.getAbsolutePath());
+              getLog().info("data API testing...");
+
+              final DatabaseDataIO dbdio = new DatabaseDataIO();
+              dbdio.setEnsureFKOrder(false);
+              dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
+                  "com.openbravo.db.OpenbravoMetadataFilter", db));
+
+              DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
+
+              final DatabaseData databaseXMLData = new DatabaseData(db);
+              for (int j = 0; j < dataFiles.size(); j++) {
+                // getLog().info("Loading data for module. Path:
+                // "+dataFiles.get(i).getAbsolutePath());
+                try {
+                  dataReader.getSink().start();
+                  final String tablename = dataFiles.get(j).getName().substring(0,
+                      dataFiles.get(j).getName().length() - 4);
+                  final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
+                      .getVector();
+                  dataReader.parse(dataFiles.get(j));
+                  databaseXMLData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
+                  dataReader.getSink().end();
+                } catch (final Exception e) {
+                  e.printStackTrace();
+                }
+              }
+
+              final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+                  .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+              dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
+                  "com.openbravo.db.OpenbravoMetadataFilter", db));
+              getLog().info("Comparing models");
+              dataComparator.compareUsingDAL(db, db, platform, databaseXMLData, "AD", util
+                  .getActiveModule(i).idMod);
+
+              validateAPIForModel(dataComparator.getChanges());
+
+            }
+
             final DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
-            if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
-              getLog().info("Path: " + output.getAbsolutePath());
-              // First we delete all .xml files in the directory
 
+            if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
+              getLog().info("Path: " + path);
+              path.mkdirs();
               if (datasetI == 0) {
-                final File[] filestodelete = DatabaseIO.readFileArray(getOutput());
+                final File[] filestodelete = DatabaseIO.readFileArray(path);
                 for (final File filedelete : filestodelete) {
                   filedelete.delete();
                 }
               }
-
               for (final DataSetTable table : tableList) {
-                getLog().info("Exporting table: " + table.getTable().getDBTableName() + " to Core");
-                final OutputStream out = new FileOutputStream(new File(getOutput(), table
-                    .getTable().getDBTableName().toUpperCase()
-                    + ".xml"));
-                dbdio.writeDataForTableToXML(db, datasetService, dataSetCode, table, out,
-                    getEncoding(), util.getActiveModule(i).idMod);
+                getLog().info(
+                    "Exporting table: " + table.getTable().getDBTableName() + " to module "
+                        + util.getActiveModule(i).name);
+                final File tableFile = new File(path, table.getTable().getDBTableName()
+                    .toUpperCase()
+                    + ".xml");
+                final OutputStream out = new FileOutputStream(tableFile);
+                final boolean b = dbdio.writeDataForTableToXML(db, datasetService, dataSetCode,
+                    table, out, getEncoding(), util.getActiveModule(i).idMod);
+                if (!b)
+                  tableFile.delete();
                 out.flush();
               }
-            } else {
-              if (dataSetCode.equals("AD")) {
-                final File path = new File(moduledir, util.getActiveModule(i).dir
-                    + "/src-db/database/sourcedata/");
-                getLog().info("Path: " + path);
-                path.mkdirs();
-                if (datasetI == 0) {
-                  final File[] filestodelete = DatabaseIO.readFileArray(path);
-                  for (final File filedelete : filestodelete) {
-                    filedelete.delete();
-                  }
-                }
-                for (final DataSetTable table : tableList) {
-                  getLog().info(
-                      "Exporting table: " + table.getTable().getDBTableName() + " to module "
-                          + util.getActiveModule(i).name);
-                  final File tableFile = new File(path, table.getTable().getDBTableName()
-                      .toUpperCase()
-                      + ".xml");
-                  final OutputStream out = new FileOutputStream(tableFile);
-                  final boolean b = dbdio.writeDataForTableToXML(db, datasetService, dataSetCode,
-                      table, out, getEncoding(), util.getActiveModule(i).idMod);
-                  if (!b)
-                    tableFile.delete();
-                  out.flush();
-                }
-              }
             }
+
           }
         }
         datasetI++;
@@ -243,6 +297,28 @@ public class ExportDatabase extends BaseDalInitializingTask {
       throw new OBException(
           "Module validation failed, see the above list of errors for more information");
     }
+  }
+
+  private void validateAPIForModel(Platform platform, Database dbDB, Database dbXml) {
+    getLog().info("Validating model API");
+    ValidateAPIModel validate = new ValidateAPIModel(platform, dbXml, dbDB);
+    validate.execute();
+    validate.printErrors(getLog());
+    validate.printWarnings(getLog());
+    if (validate.hasErrors()) {
+      throw new OBException("Model did not validate API");
+    }
+  }
+
+  private void validateAPIForModel(Vector<Change> changes) {
+    ValidateAPIData val = new ValidateAPIData(changes);
+    val.execute();
+    val.printErrors();
+    val.printWarnings();
+    if (val.hasErrors()) {
+      throw new OBException("Data did not validate API");
+    }
+
   }
 
   public String getExcludeobjects() {
@@ -315,5 +391,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   public void setValidateModel(boolean validateModel) {
     this.validateModel = validateModel;
+  }
+
+  public boolean isTestAPI() {
+    return testAPI;
+  }
+
+  public void setTestAPI(boolean testAPI) {
+    this.testAPI = testAPI;
   }
 }
