@@ -1125,12 +1125,18 @@ public class Table implements StructureObject, Serializable, Cloneable {
         this._foreignKeys.add(((ForeignKey) table._foreignKeys.get(i)).clone());
       }
       for (int i = 0; i < table._indices.size(); i++) {
+        if (findIndex(((Index) table._indices.get(i)).getName()) != null)
+          removeIndex(findIndex(((Index) table._indices.get(i)).getName()));
         this._indices.add(((Index) table._indices.get(i)).clone());
       }
       for (int i = 0; i < table._uniques.size(); i++) {
+        if (findUnique(((Unique) table._uniques.get(i)).getName()) != null)
+          removeUnique(findUnique(((Unique) table._uniques.get(i)).getName()));
         this._uniques.add(((Unique) table._uniques.get(i)).clone());
       }
       for (int i = 0; i < table._checks.size(); i++) {
+        if (findCheck(((Check) table._checks.get(i)).getName()) != null)
+          removeCheck(findCheck(((Check) table._checks.get(i)).getName()));
         this._checks.add(((Check) table._checks.get(i)).clone());
       }
     } catch (CloneNotSupportedException e) {

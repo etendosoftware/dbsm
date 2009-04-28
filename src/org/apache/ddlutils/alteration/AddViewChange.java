@@ -52,6 +52,8 @@ public class AddViewChange implements ModelChange {
    */
   public void apply(Database database, boolean caseSensitive) {
     try {
+      if (database.findView(_newView.getName()) != null)
+        database.removeView(database.findView(_newView.getName()));
       database.addView((View) _newView.clone());
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);

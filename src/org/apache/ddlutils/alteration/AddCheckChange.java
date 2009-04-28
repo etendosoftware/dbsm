@@ -56,13 +56,18 @@ public class AddCheckChange extends TableChangeImplBase {
    */
   public void apply(Database database, boolean caseSensitive) {
     Check newCheck = null;
-
+    Table table = database.findTable(getChangedTable().getName());
     try {
       newCheck = (Check) _newCheck.clone();
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);
     }
-    database.findTable(getChangedTable().getName()).addCheck(newCheck);
+    System.out.println(table.getName() + ";;" + newCheck.getName());
+    if (table.findCheck(newCheck.getName()) != null) {
+      System.out.println("found");
+      table.removeCheck(table.findCheck(newCheck.getName()));
+    }
+    table.addCheck(newCheck);
   }
 
   @Override

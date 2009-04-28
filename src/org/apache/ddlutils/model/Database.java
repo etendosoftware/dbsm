@@ -114,10 +114,7 @@ public class Database implements Serializable, Cloneable {
       View view = (View) it.next();
 
       if (findView(view.getName()) != null) {
-        // TODO: It might make more sense to log a warning and overwrite
-        // the view (or merge them) ?
-        throw new ModelException("Cannot merge the models because view " + view.getName()
-            + " already defined in this model");
+        this.removeView(findView(view.getName()));
       }
       try {
         addView((View) view.clone());
@@ -130,12 +127,6 @@ public class Database implements Serializable, Cloneable {
       Function function = (Function) it.next();
       Function oldFunction = findFunction(function.getName());
       if (oldFunction != null) {
-        // TODO: It might make more sense to log a warning and overwrite
-        // the function (or merge them) ?
-        /*
-         * throw new ModelException( "Cannot merge the models because function " +
-         * function.getName() + " already defined in this model");
-         */
         this.removeFunction(oldFunction);
       }
       try {
@@ -149,12 +140,6 @@ public class Database implements Serializable, Cloneable {
       Trigger trigger = (Trigger) it.next();
       Trigger oldTrigger = findTrigger(trigger.getName());
       if (oldTrigger != null) {
-        // TODO: It might make more sense to log a warning and overwrite
-        // the trigger (or merge them) ?
-        /*
-         * throw new ModelException( "Cannot merge the models because trigger " + trigger.getName()
-         * + " already defined in this model");
-         */
         this.removeTrigger(oldTrigger);
       }
       try {

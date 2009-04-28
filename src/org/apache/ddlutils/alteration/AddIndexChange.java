@@ -61,12 +61,15 @@ public class AddIndexChange extends TableChangeImplBase {
   public void apply(Database database, boolean caseSensitive) {
     Index newIndex = null;
 
+    Table table = database.findTable(getChangedTable().getName());
     try {
       newIndex = (Index) _newIndex.clone();
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);
     }
-    database.findTable(getChangedTable().getName(), caseSensitive).addIndex(newIndex);
+    if (table.findIndex(newIndex.getName()) != null)
+      table.removeIndex(table.findIndex(newIndex.getName()));
+    table.addIndex(newIndex);
   }
 
   @Override

@@ -61,12 +61,15 @@ public class AddUniqueChange extends TableChangeImplBase {
   public void apply(Database database, boolean caseSensitive) {
     Unique newUnique = null;
 
+    Table table = database.findTable(getChangedTable().getName());
     try {
       newUnique = (Unique) _newUnique.clone();
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);
     }
-    database.findTable(getChangedTable().getName(), caseSensitive).addUnique(newUnique);
+    if (table.findUnique(newUnique.getName()) != null)
+      table.removeUnique(table.findUnique(newUnique.getName()));
+    table.addUnique(newUnique);
   }
 
   @Override
