@@ -140,16 +140,16 @@ public class ExportDatabase extends BaseDalInitializingTask {
             getLog().info("Exporting module: " + row.name);
             if (row.isInDevelopment != null && row.isInDevelopment.equalsIgnoreCase("Y")) {
               getLog().info("Loading submodel from database...");
-              db = platform
-                  .loadModelFromDatabase(row.filter, row.prefixes.get(0), false, row.idMod);
+              Database dbMod = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0),
+                  false, row.idMod);
 
-              validateDatabaseForModule(row.idMod, db);
+              validateDatabaseForModule(row.idMod, dbMod);
 
               getLog().info("Submodel loaded");
               final DatabaseIO io = new DatabaseIO();
               final File path = new File(moduledir, row.dir + "/src-db/database/model/");
               getLog().info("Path: " + path);
-              io.writeToDir(db, path);
+              io.writeToDir(dbMod, path);
             } else {
               getLog().info(
                   "Module is not in development. Check that it is, before trying to export it.");
