@@ -144,14 +144,14 @@ public class ExcludeFilter {
 
   public boolean isInOthersExceptionsObject(String objectName) {
     for (ExceptionRow row : othersexceptions)
-      if (objectName.equalsIgnoreCase(row.name1))
+      if (objectName.equalsIgnoreCase(row.name1) && row.name2 == null)
         return true;
     return false;
   }
 
   public boolean isInExceptionsObject(String objectName) {
     for (ExceptionRow row : exceptions)
-      if (objectName.equalsIgnoreCase(row.name1))
+      if (objectName.equalsIgnoreCase(row.name1) && row.name2 == null)
         return true;
     return false;
   }
