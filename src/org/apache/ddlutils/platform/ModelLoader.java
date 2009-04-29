@@ -38,4 +38,6 @@ public interface ModelLoader {
 
   public void setOnlyLoadTableColumns(boolean onlyLoadTableColumns);
 
+  public void addAdditionalTableIfExists(Connection connection, Database model, String tablename);
+
 }

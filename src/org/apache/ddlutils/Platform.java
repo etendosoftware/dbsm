@@ -1319,4 +1319,9 @@ public interface Platform {
   public void applyConfigScript(Database database, Vector<Change> changes);
 
   public ModelLoader getModelLoader();
+
+  public void insertNonModuleTablesFromXML(Database loadedDatabase, Database correctDatabase);
+
+  public void insertNonModuleTablesFromDatabase(Database loadedDatabase, Database fullXMLDatabase,
+      Database filteredDatabase);
 }

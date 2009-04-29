@@ -902,4 +902,22 @@ public abstract class ModelLoaderBase implements ModelLoader {
   public void setOnlyLoadTableColumns(boolean onlyLoadTableColumns) {
     this.onlyLoadTableColumns = onlyLoadTableColumns;
   }
+
+  public void addAdditionalTableIfExists(Connection connection, Database model, String tablename) {
+    try {
+      this._connection = connection;
+      initMetadataSentences();
+      List tablenames = readTableNames();
+      for (int i = 0; i < tablenames.size(); i++) {
+        String tablenameDB = (String) tablenames.get(i);
+        if (tablenameDB.equals(tablename)) {
+          // The table exists, we need to load it.
+          Table table = readTable(tablename, false);
+          model.addTable(table);
+        }
+      }
+    } catch (Exception e) {
+      getLog().error(e);
+    }
+  }
 }
