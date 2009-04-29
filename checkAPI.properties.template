@@ -1,0 +1,2 @@
+stableDBdir=path_to_stable_db_dir
+testDBdir=path_to_test_dir

@@ -1008,6 +1008,10 @@ public class DataComparator {
 
     Vector<DynaBean> rowsOrg = databaseDataOrg.getRowsFromTable(tablename);
     Vector<DynaBean> rowsNew = databaseDataNew.getRowsFromTable(tablename);
+
+    if (rowsOrg == null && rowsNew == null)
+      return;
+
     int indOrg = 0;
     int indNew = 0;
     while (indNew < rowsOrg.size() && indOrg < rowsNew.size()) {

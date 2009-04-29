@@ -157,6 +157,9 @@ public class ValidateAPIModel extends ValidateAPI {
         if (c.getNewIndex().isUnique()) {
           errors.add("Unique index addition: table: " + tablename + " - Index: "
               + c.getNewIndex().getName());
+        } else {
+          warnings.add("Non unique index addition table:" + tablename + "- Index: "
+              + c.getNewIndex().getName());
         }
       } else if (change instanceof AddPrimaryKeyChange) {
         AddPrimaryKeyChange c = (AddPrimaryKeyChange) change;
@@ -200,9 +203,7 @@ public class ValidateAPIModel extends ValidateAPI {
             errors.add("Column type change from text to numeric: column:" + tableColumn);
           } else if (originalType != Types.TIMESTAMP && testType == Types.TIMESTAMP) {
             errors.add("Column type change from date to " + c.getChangedColumn().getType());
-          } else if (!((originalType == Types.VARCHAR && testType == ExtTypes.NVARCHAR)
-              || (originalColumn.isOfNumericType() && c.getChangedColumn().isOfTextType()) || (originalType == Types.DATE && c
-              .getChangedColumn().isOfTextType()))) {
+          } else if (originalType != testType) {
             warnings.add("Column type change from " + originalColumn.getType() + " to "
                 + c.getChangedColumn().getType() + ": column:" + tableColumn);
           }
@@ -220,6 +221,9 @@ public class ValidateAPIModel extends ValidateAPI {
           int originalSize = validDB.findTable(tablename).findColumn(columnname).getSizeAsInt();
           if (originalSize < testSize) {
             errors.add("Column size decreased from " + originalSize + " to " + testSize
+                + ": column: " + tableColumn);
+          } else {
+            warnings.add("Column size changed from " + originalSize + " to " + testSize
                 + ": column: " + tableColumn);
           }
         }
