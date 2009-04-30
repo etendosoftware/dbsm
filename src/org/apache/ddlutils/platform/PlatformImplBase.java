@@ -60,6 +60,7 @@ import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.util.ExtTypes;
@@ -2679,5 +2680,23 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
     }
 
+  }
+
+  public void insertFunctionsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
+      Database filteredDatabase) {
+    try {
+      for (int i = 0; i < fullXMLDatabase.getFunctionCount(); i++) {
+        Function func = fullXMLDatabase.getFunction(i);
+        Function func1 = (Function) func.clone();
+        Function func2 = (Function) func.clone();
+        if (loadedDatabase.findFunction(func.getName()) == null
+            && filteredDatabase.findFunction(func.getName()) == null) {
+          loadedDatabase.addFunction(func1);
+          filteredDatabase.addFunction(func2);
+        }
+      }
+    } catch (Exception e) {
+      // won't happen
+    }
   }
 }

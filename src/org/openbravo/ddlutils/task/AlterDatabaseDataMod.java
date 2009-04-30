@@ -198,8 +198,10 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
           db = (Database) dbXML.clone();
           db.applyNamingConventionToUpdate(row.filter);
+
           platform.insertNonModuleTablesFromXML(originaldb, db);
           platform.insertNonModuleTablesFromDatabase(originaldb, dbXML, db);
+          platform.insertFunctionsInBothModels(originaldb, dbXML, db);
           final Database olddb = (Database) originaldb.clone();
           moduleModels.add(db);
           moduleOldModels.add(olddb);

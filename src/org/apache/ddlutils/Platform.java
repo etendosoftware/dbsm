@@ -1324,4 +1324,7 @@ public interface Platform {
 
   public void insertNonModuleTablesFromDatabase(Database loadedDatabase, Database fullXMLDatabase,
       Database filteredDatabase);
+
+  public void insertFunctionsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
+      Database filteredDatabase);
 }
