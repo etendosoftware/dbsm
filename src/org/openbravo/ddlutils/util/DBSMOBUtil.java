@@ -496,49 +496,74 @@ public class DBSMOBUtil {
     try {
       Connection connection = platform.borrowConnection();
       final StringTokenizer st = new StringTokenizer(modulePackages, ",");
+      Table[] db_prefinst = { database.findTable("AD_MODULE_DBPREFIX_INSTALL") };
+      Table[] mod_dep = { database.findTable("AD_MODULE_DEPENDENCY_INST") };
+      Table[] mod_inst = { database.findTable("AD_MODULE_INSTALL") };
+      Vector<String> moduleIds = new Vector<String>();
+      Vector<SqlDynaBean> moduleRows = new Vector<SqlDynaBean>();
+      Vector<SqlDynaBean> prefRows = new Vector<SqlDynaBean>();
+      Vector<SqlDynaBean> depRows = new Vector<SqlDynaBean>();
+      String modPacks = "";
       while (st.hasMoreElements()) {
         final String modPack = st.nextToken().trim();
-        Table[] mod_inst = { database.findTable("AD_MODULE_INSTALL") };
-        Iterator it = platform.query(database,
-            "SELECT * FROM AD_MODULE_INSTALL WHERE JAVAPACKAGE='" + modPack + "'", mod_inst);
-        if (it.hasNext()) {
-          Table[] db_prefinst = { database.findTable("AD_MODULE_DBPREFIX_INSTALL") };
-          Table[] mod_dep = { database.findTable("AD_MODULE_DEPENDENCY_INST") };
-          SqlDynaBean moduleRow = (SqlDynaBean) it.next();
-          String moduleId = moduleRow.get("AD_MODULE_ID").toString();
-          ((SqlDynaClass) moduleRow.getDynaClass()).resetDynaClass(database.findTable("AD_MODULE"));
-          platform.updateinsert(connection, database, moduleRow);
-          Iterator itPref = platform.query(database,
-              "SELECT * FROM AD_MODULE_DBPREFIX_INSTALL WHERE AD_MODULE_ID='" + moduleId + "'",
-              db_prefinst);
-          if (itPref.hasNext()) {
-            SqlDynaBean prefRow = (SqlDynaBean) itPref.next();
-            ((SqlDynaClass) prefRow.getDynaClass()).resetDynaClass(database
-                .findTable("AD_MODULE_DBPREFIX"));
-            platform.updateinsert(connection, database, prefRow);
-          }
-          Iterator itDep = platform.query(database,
-              "SELECT * FROM AD_MODULE_DEPENDENCY_INST WHERE AD_MODULE_ID='" + moduleId + "'",
-              mod_dep);
-          while (itDep.hasNext()) {
-            SqlDynaBean depRow = (SqlDynaBean) itDep.next();
-            ((SqlDynaClass) depRow.getDynaClass()).resetDynaClass(database
-                .findTable("AD_MODULE_DEPENDENCY"));
-            platform.updateinsert(connection, database, depRow);
-          }
-          String sql = "DELETE FROM AD_MODULE_INSTALL WHERE AD_MODULE_ID='" + moduleId + "'";
-          String sql1 = "DELETE FROM AD_MODULE_DBPREFIX_INSTALL WHERE AD_MODULE_ID='" + moduleId
-              + "'";
-          String sql2 = "DELETE FROM AD_MODULE_DEPENDENCY_INST WHERE AD_MODULE_ID='" + moduleId
-              + "'";
-          PreparedStatement statement = connection.prepareStatement(sql);
-          statement.execute();
-          statement = connection.prepareStatement(sql1);
-          statement.execute();
-          statement = connection.prepareStatement(sql2);
-          statement.execute();
+        if (!modPacks.equals(""))
+          modPacks += ",";
+        modPacks += "'" + modPack + "'";
+      }
+      Iterator it = platform.query(database,
+          "SELECT * FROM AD_MODULE_INSTALL WHERE JAVAPACKAGE IN (" + modPacks + ")", mod_inst);
+      while (it.hasNext()) {
+        SqlDynaBean moduleRow = (SqlDynaBean) it.next();
+        String moduleId = moduleRow.get("AD_MODULE_ID").toString();
+        moduleIds.add(moduleId);
+        moduleRows.add(moduleRow);
+      }
+      for (String moduleId : moduleIds) {
+        Iterator itPref = platform.query(database,
+            "SELECT * FROM AD_MODULE_DBPREFIX_INSTALL WHERE AD_MODULE_ID='" + moduleId + "'",
+            db_prefinst);
+        if (itPref.hasNext()) {
+          SqlDynaBean prefRow = (SqlDynaBean) itPref.next();
+          prefRows.add(prefRow);
+        }
+        Iterator itDep = platform.query(database,
+            "SELECT * FROM AD_MODULE_DEPENDENCY_INST WHERE AD_MODULE_ID='" + moduleId + "'",
+            mod_dep);
+        while (itDep.hasNext()) {
+          SqlDynaBean depRow = (SqlDynaBean) itDep.next();
+          depRows.add(depRow);
         }
       }
+
+      for (SqlDynaBean moduleRow : moduleRows) {
+        ((SqlDynaClass) moduleRow.getDynaClass()).resetDynaClass(database.findTable("AD_MODULE"));
+        platform.updateinsert(connection, database, moduleRow);
+      }
+
+      for (SqlDynaBean prefRow : prefRows) {
+        ((SqlDynaClass) prefRow.getDynaClass()).resetDynaClass(database
+            .findTable("AD_MODULE_DBPREFIX"));
+        platform.updateinsert(connection, database, prefRow);
+      }
+      for (SqlDynaBean depRow : depRows) {
+        ((SqlDynaClass) depRow.getDynaClass()).resetDynaClass(database
+            .findTable("AD_MODULE_DEPENDENCY"));
+        platform.updateinsert(connection, database, depRow);
+      }
+      for (String moduleId : moduleIds) {
+        // Deleting rows in _install tabless
+        String sql = "DELETE FROM AD_MODULE_INSTALL WHERE AD_MODULE_ID='" + moduleId + "'";
+        String sql1 = "DELETE FROM AD_MODULE_DBPREFIX_INSTALL WHERE AD_MODULE_ID='" + moduleId
+            + "'";
+        String sql2 = "DELETE FROM AD_MODULE_DEPENDENCY_INST WHERE AD_MODULE_ID='" + moduleId + "'";
+        PreparedStatement statement = connection.prepareStatement(sql);
+        statement.execute();
+        statement = connection.prepareStatement(sql1);
+        statement.execute();
+        statement = connection.prepareStatement(sql2);
+        statement.execute();
+      }
+
     } catch (Exception e) {
       System.out.println("Error while moving data from install tables.");
       e.printStackTrace();
