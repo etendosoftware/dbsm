@@ -124,7 +124,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         }
 
         try {
-            DBSMOBUtil.getInstance().deleteInstallTables(platform);
             // execute the pre-script
             if (getPrescript() == null) {
                 // try to execute the default prescript
@@ -184,6 +183,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                 db = DatabaseUtils.readDatabase(fileArray);
             }
 
+            DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
             final DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
             dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(

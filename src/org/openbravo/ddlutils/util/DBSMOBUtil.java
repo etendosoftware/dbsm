@@ -473,12 +473,18 @@ public class DBSMOBUtil {
     }
   }
 
-  public void deleteInstallTables(Platform platform) {
+  public void deleteInstallTables(Platform platform, Database database) {
     String sql = "DELETE FROM AD_MODULE_INSTALL";
     String sql1 = "DELETE FROM AD_MODULE_DBPREFIX_INSTALL";
     String sql2 = "DELETE FROM AD_MODULE_DEPENDENCY_INST";
     try {
       final Connection connection = platform.borrowConnection();
+      Iterator itCheck = platform.query(database,
+          "SELECT * FROM AD_TABLE WHERE LOWER(TABLENAME)='ad_module_install'");
+      if (!itCheck.hasNext()) {
+        // Install tables do not exist. We shouldn't try to move the module data from them.
+        return;
+      }
       PreparedStatement statement = connection.prepareStatement(sql);
       statement.execute();
       statement = connection.prepareStatement(sql1);
@@ -493,8 +499,14 @@ public class DBSMOBUtil {
 
   public void moveModuleDataFromInstTables(Platform platform, Database database,
       String modulePackages) {
+    Connection connection = platform.borrowConnection();
     try {
-      Connection connection = platform.borrowConnection();
+      Iterator itCheck = platform.query(database,
+          "SELECT * FROM AD_TABLE WHERE LOWER(TABLENAME)='ad_module_install'");
+      if (!itCheck.hasNext()) {
+        // Install tables do not exist. We shouldn't try to move the module data from them.
+        return;
+      }
       final StringTokenizer st = new StringTokenizer(modulePackages, ",");
       Table[] db_prefinst = { database.findTable("AD_MODULE_DBPREFIX_INSTALL") };
       Table[] mod_dep = { database.findTable("AD_MODULE_DEPENDENCY_INST") };
@@ -567,6 +579,8 @@ public class DBSMOBUtil {
     } catch (Exception e) {
       System.out.println("Error while moving data from install tables.");
       e.printStackTrace();
+    } finally {
+      platform.returnConnection(connection);
     }
   }
 }
