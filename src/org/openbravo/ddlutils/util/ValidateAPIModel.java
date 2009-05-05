@@ -208,8 +208,11 @@ public class ValidateAPIModel extends ValidateAPI {
           } else if (originalType != Types.TIMESTAMP && testType == Types.TIMESTAMP) {
             errors.add("Column type change from date to " + c.getChangedColumn().getType());
           } else if (originalType != testType) {
-            warnings.add("Column type change from " + originalColumn.getType() + " to "
-                + c.getChangedColumn().getType() + ": column:" + tableColumn);
+            warnings.add("Column type change from "
+                + originalColumn.getType()
+                + " to "
+                + testDB.findTable(c.getChangedTable().getName()).findColumn(
+                    c.getChangedColumn().getName()).getType() + ": column:" + tableColumn);
           }
         } else if (change instanceof ColumnAutoIncrementChange) {
           errors.add("Column changed to auto increment: column" + tableColumn);
@@ -220,10 +223,9 @@ public class ValidateAPIModel extends ValidateAPI {
             errors.add("Column change from not required to required: column: " + tableColumn);
           }
         } else if (change instanceof ColumnSizeChange) {
-          ColumnSizeChange c = (ColumnSizeChange) change;
-          int testSize = c.getChangedColumn().getSizeAsInt();
+          int testSize = testDB.findTable(tablename).findColumn(columnname).getSizeAsInt();
           int originalSize = validDB.findTable(tablename).findColumn(columnname).getSizeAsInt();
-          if (originalSize < testSize) {
+          if (testSize < originalSize) {
             errors.add("Column size decreased from " + originalSize + " to " + testSize
                 + ": column: " + tableColumn);
           } else {
