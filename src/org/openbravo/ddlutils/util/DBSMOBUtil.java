@@ -28,10 +28,11 @@ public class DBSMOBUtil {
   private Vector<ModuleRow> activeModules = new Vector<ModuleRow>();
   private HashMap<String, Vector<String>> dependencies = new HashMap<String, Vector<String>>();
   private HashMap<String, Vector<String>> incdependencies = new HashMap<String, Vector<String>>();
-  private Vector<String> dirDependantModules = new Vector<String>();
+  private Vector<String> dirTemplateModules = new Vector<String>();
   private HashMap<String, Vector<String>> prefixDependencies = new HashMap<String, Vector<String>>();
   private Vector<String> idTemplates = new Vector<String>();
   private Vector<String> idModulesToExport = new Vector<String>();
+  private Vector<String> idDependantModules = new Vector<String>();
 
   private static DBSMOBUtil instance = null;
 
@@ -50,7 +51,7 @@ public class DBSMOBUtil {
   }
 
   public ModuleRow getTemplateModule(int i) {
-    final String dirMod = dirDependantModules.get(i);
+    final String dirMod = dirTemplateModules.get(i);
     for (final ModuleRow row : allModules)
       if (row.dir.equalsIgnoreCase(dirMod))
         return row;
@@ -74,7 +75,22 @@ public class DBSMOBUtil {
   }
 
   public int getTemplateModuleCount() {
-    return dirDependantModules.size();
+    return dirTemplateModules.size();
+  }
+
+  public boolean listDependsOnTemplate(String list) {
+    final StringTokenizer st = new StringTokenizer(list, ",");
+    while (st.hasMoreElements()) {
+      ModuleRow targetRow = getRowFromDir(st.nextToken());
+      if (targetRow.type.equalsIgnoreCase("T"))
+        return true;
+      for (ModuleRow row : allModules) {
+        if (row.type.equalsIgnoreCase("T"))
+          if (isDependant(row, targetRow))
+            return true;
+      }
+    }
+    return false;
   }
 
   public void getModules(Platform platform, String excludeobjects) {
@@ -261,7 +277,7 @@ public class DBSMOBUtil {
 
   public void getModulesForIndustryTemplate(String templateDir, Vector<String> idList) {
     final String tempId = getId(templateDir);
-    dirDependantModules.add(templateDir);
+    dirTemplateModules.add(templateDir);
     if (!idList.contains(tempId))
       idList.add(tempId);
     if (incdependencies.get(tempId) != null) {
@@ -284,6 +300,18 @@ public class DBSMOBUtil {
         }
       }
     }
+  }
+
+  public boolean isDependant(ModuleRow module, ModuleRow targetModule) {
+    if (dependencies.get(module.idMod) == null)
+      return false;
+    if (dependencies.get(module.idMod).contains(targetModule.idMod))
+      return true;
+    for (String idDepMod : dependencies.get(module.idMod)) {
+      if (isDependant(getRow(idDepMod), targetModule))
+        return true;
+    }
+    return false;
   }
 
   public void generateIndustryTemplateTree() {

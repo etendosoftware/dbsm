@@ -147,10 +147,23 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     final Vector<ModuleRow> moduleRows = new Vector<ModuleRow>();
 
     final DBSMOBUtil util = DBSMOBUtil.getInstance();
+    DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, completedb, module);
+    util.getModules(platform, excludeobjects);
+    boolean fullUpdate = false;
+
     if (module.toUpperCase().contains("CORE") || module.equals("%")) {
       getLog()
           .info(
               "You've either specified a list that contains Core, or module specified is %. Complete update.database will be performed.");
+      fullUpdate = true;
+    }
+    if (util.listDependsOnTemplate(module)) {
+      getLog()
+          .info(
+              "One of the modules you've specified either is an industry template or depends on an industry template. Complete update.database will be performed.");
+      fullUpdate = true;
+    }
+    if (fullUpdate) {
       final AlterDatabaseDataAll ada = new AlterDatabaseDataAll();
       ada.setDriver(getDriver());
       ada.setUrl(getUrl());
@@ -169,11 +182,10 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       ada.setDatafilter(datafilter);
       ada.setUserId(userId);
       ada.setPropertiesFile(propertiesFile);
+      ada.setLog(getLog());
       ada.doExecute();
       return;
     }
-    DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, completedb, module);
-    util.getModules(platform, excludeobjects);
     final StringTokenizer st = new StringTokenizer(module, ",");
     while (st.hasMoreElements()) {
       final String modName = st.nextToken().trim();
