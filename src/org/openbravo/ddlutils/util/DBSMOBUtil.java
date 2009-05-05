@@ -491,13 +491,16 @@ public class DBSMOBUtil {
 
   public void updateCRC(Platform platform) {
     String sql = "SELECT ad_db_modified('Y') FROM DUAL";
+    final Connection connection = platform.borrowConnection();
     try {
-      final Connection connection = platform.borrowConnection();
       PreparedStatement statement = connection.prepareStatement(sql);
       statement.execute();
     } catch (Exception e) {
       System.out.println("There was a problem updating the CRC in the database.");
       e.printStackTrace();
+
+    } finally {
+      platform.returnConnection(connection);
     }
   }
 
