@@ -111,29 +111,33 @@ public class ValidateAPIModel extends ValidateAPI {
         }
       } else if (change instanceof AddForeignKeyChange) {
         AddForeignKeyChange c = (AddForeignKeyChange) change;
-        ForeignKey fk = validDB.findTable(tablename).findForeignKey(c.getNewForeignKey());
-        if (fk != null) {
-          errors.add("Added foreign key: table: " + tablename + " - FK name: "
-              + c.getNewForeignKey().getName());
+        if (validDB.findTable(tablename) != null) { // no new table
+          ForeignKey fk = validDB.findTable(tablename).findForeignKey(c.getNewForeignKey());
+          if (fk != null) {
+            errors.add("Added foreign key: table: " + tablename + " - FK name: "
+                + c.getNewForeignKey().getName());
+          }
         }
       } else if (change instanceof RemoveForeignKeyChange) {
         RemoveForeignKeyChange c = (RemoveForeignKeyChange) change;
         // let's check whether the fk is in new model (if it is there it is not a removal but a
         // modification)
-        ForeignKey fk = testDB.findTable(tablename).findForeignKey(c.getForeignKey());
+        if (testDB.findTable(tablename) != null) {
+          ForeignKey fk = testDB.findTable(tablename).findForeignKey(c.getForeignKey());
 
-        if (fk == null) {
-          ForeignKey[] fks = testDB.findTable(tablename).getForeignKeys();
-          boolean found = false;
-          for (int i = 0; i < fks.length && !found; i++) {
-            found = fks[i].getName().equals(c.getForeignKey().getName());
-          }
-          if (found) {
-            warnings.add("Changed Foreign Key: table: " + tablename + " - FK: "
-                + c.getForeignKey().getName());
-          } else {
-            warnings.add("Removed Foreign Key: table: " + tablename + " - FK: "
-                + c.getForeignKey().getName());
+          if (fk == null) {
+            ForeignKey[] fks = testDB.findTable(tablename).getForeignKeys();
+            boolean found = false;
+            for (int i = 0; i < fks.length && !found; i++) {
+              found = fks[i].getName().equals(c.getForeignKey().getName());
+            }
+            if (found) {
+              warnings.add("Changed Foreign Key: table: " + tablename + " - FK: "
+                  + c.getForeignKey().getName());
+            } else {
+              warnings.add("Removed Foreign Key: table: " + tablename + " - FK: "
+                  + c.getForeignKey().getName());
+            }
           }
         }
       } else if (change instanceof RemovePrimaryKeyChange) {

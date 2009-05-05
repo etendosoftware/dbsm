@@ -981,6 +981,8 @@ public class DataComparator {
       if (databaseNew.findTable(tablesOrg[i].getName()) == null) {
         // Table has been removed. We remove its data.
         Vector<DynaBean> rows = databaseDataOrg.getRowsFromTable(tablesOrg[i].getName());
+        if (rows == null)
+          rows = new Vector<DynaBean>();
         for (DynaBean bean : rows)
           dataChanges.add(new RemoveRowChange(tablesOrg[i], bean));
       } else
@@ -991,6 +993,8 @@ public class DataComparator {
       if (databaseOrg.findTable(tablesNew[i].getName()) == null) {
         // Table has been added. We add its data.
         Vector<DynaBean> rows = databaseDataNew.getRowsFromTable(tablesNew[i].getName());
+        if (rows == null)
+          rows = new Vector<DynaBean>();
         for (DynaBean bean : rows)
           dataChanges.add(new AddRowChange(tablesNew[i], bean));
       }
@@ -1011,10 +1015,14 @@ public class DataComparator {
 
     if (rowsOrg == null && rowsNew == null)
       return;
+    if (rowsOrg == null)
+      rowsOrg = new Vector<DynaBean>();
+    if (rowsNew == null)
+      rowsNew = new Vector<DynaBean>();
 
     int indOrg = 0;
     int indNew = 0;
-    while (indNew < rowsOrg.size() && indOrg < rowsNew.size()) {
+    while (indOrg < rowsOrg.size() && indNew < rowsNew.size()) {
       int comp = comparePKs(tableOrg, tableNew, rowsOrg.get(indOrg), rowsNew.get(indNew));
       if (comp == 0) // Rows have the same PKs, we have to compare them
       {
