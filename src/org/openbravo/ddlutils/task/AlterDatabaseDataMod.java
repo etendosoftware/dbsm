@@ -85,6 +85,11 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     ds.setUrl(getUrl());
     ds.setUsername(getUser());
     ds.setPassword(getPassword());
+    if (getDriver().contains("Oracle"))
+      ds.setValidationQuery("SELECT 1 FROM DUAL");
+    else
+      ds.setValidationQuery("SELECT 1");
+    ds.setTestOnBorrow(true);
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);
