@@ -81,7 +81,8 @@ public class DBSMOBUtil {
   public boolean listDependsOnTemplate(String list) {
     final StringTokenizer st = new StringTokenizer(list, ",");
     while (st.hasMoreElements()) {
-      ModuleRow targetRow = getRowFromDir(st.nextToken());
+      String modDir = st.nextToken().trim();
+      ModuleRow targetRow = getRowFromDir(modDir);
       if (targetRow.type.equalsIgnoreCase("T"))
         return true;
       for (ModuleRow row : allModules) {
@@ -267,7 +268,7 @@ public class DBSMOBUtil {
   public void getIncDependenciesForModuleList(String list) {
     final StringTokenizer st = new StringTokenizer(list, ",");
     while (st.hasMoreElements()) {
-      getIncludedModulesInModule(st.nextToken(), idModulesToExport);
+      getIncludedModulesInModule(st.nextToken().trim(), idModulesToExport);
     }
   }
 
