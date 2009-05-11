@@ -188,6 +188,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       ada.setUserId(userId);
       ada.setPropertiesFile(propertiesFile);
       ada.setLog(getLog());
+      ada.setForce(isForce());
       ada.doExecute();
       return;
     }
