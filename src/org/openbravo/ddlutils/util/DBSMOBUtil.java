@@ -220,34 +220,34 @@ public class DBSMOBUtil {
       resultSet = statement.getResultSet();
     } catch (final Exception e) {
       System.out.println(e.getMessage());
-      throw new BuildException("Code revision not found in database");
+      throw new BuildException("Code revision id not found in database");
     }
     try {
       if (resultSet.next()) {
       } else {
-        throw new BuildException("Code revision not found in database");
+        throw new BuildException("Code revision id not found in database");
       }
     } catch (final Exception e) {
-      throw new BuildException("Code revision not found in database");
+      throw new BuildException("Code revision id not found in database");
     }
-    int databaseRevision = 0;
+    String databaseRevision = "0";
     try {
-      databaseRevision = resultSet.getInt("CODE_REVISION");
+      databaseRevision = resultSet.getString("CODE_REVISION");
     } catch (final Exception e) {
       try {
-        databaseRevision = resultSet.getInt("code_revision");
+        databaseRevision = resultSet.getString("code_revision");
       } catch (final Exception er) {
-        System.out.println("Error while trying to fetch code revision from database.");
+        System.out.println("Error while trying to fetch code revision id from database.");
       }
     }
-    _log.info("Database code revision: #" + databaseRevision + "#");
+    _log.info("Database code revision id: " + databaseRevision);
 
-    _log.info("Source code revision: #" + codeRevision + "#");
+    _log.info("Source code revision id: " + codeRevision);
     if (codeRevision.equals("0")) {
-      _log.info("Subversion code revision not found.");
-    } else if (Integer.parseInt(codeRevision) != databaseRevision) {
+      _log.info("Mercurial code revision id not found.");
+    } else if (!codeRevision.equals(databaseRevision)) {
       throw new BuildException(
-          "Database revision different from source code revision. An svn switch to your previous revision should be performed before exporting: svn switch URL@revision .");
+          "Database revision id differs from the source code revision id. A hg update to your previous revision ID should be performed before exporting: hg update -r REV");
     }
   }
 
