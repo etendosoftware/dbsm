@@ -269,12 +269,12 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
                 getLog().info("Disabling foreign keys");
                 platform.disableAllFK(connection, originaldb, !isFailonerror());
                 getLog().info("Disabling triggers");
-                platform.disableAllTriggers(connection, db, !isFailonerror());
+                platform.disableAllTriggers(connection, originaldb, !isFailonerror());
                 platform.alterData(connection, db, dataComparatorDS
                         .getChanges());
                 getLog().info("Enabling Foreign Keys and Triggers");
                 platform.enableAllFK(connection, originaldb, !isFailonerror());
-                platform.enableAllTriggers(connection, db, !isFailonerror());
+                platform.enableAllTriggers(connection, originaldb, !isFailonerror());
                 getLog().info(
                         "Dataset DS updated succesfully. Reinitializing DAL");
                 DalLayerInitializer.getInstance().initialize(true);
