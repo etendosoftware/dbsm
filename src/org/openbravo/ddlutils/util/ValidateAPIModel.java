@@ -52,6 +52,7 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -170,8 +171,14 @@ public class ValidateAPIModel extends ValidateAPI {
         warnings.add("Added PK: table: " + tablename + " - PK: " + c.getprimaryKeyName());
       } else if (change instanceof AddUniqueChange) {
         AddUniqueChange c = (AddUniqueChange) change;
-        errors.add("Unique constraint added: table: " + tablename + " - Unique constraint: "
-            + c.getNewUnique().getName());
+        for (IndexColumn cols : c.getNewUnique().getColumns()) {
+          if (!(validDB.findTable(tablename) == null || validDB.findTable(tablename).findColumn(
+              cols.getName()) == null))
+            // error only in case the constraint is for an already existent col
+            errors.add("Unique constraint added: table: " + tablename + " - Unique constraint: "
+                + c.getNewUnique().getName());
+        }
+
       } else if (change instanceof PrimaryKeyChange) {
         PrimaryKeyChange c = (PrimaryKeyChange) change;
 

@@ -46,11 +46,13 @@ public class ValidateAPIData extends ValidateAPI {
 
     if (change instanceof RemoveRowChange) {
       RemoveRowChange c = (RemoveRowChange) change;
-      errors.add("Removed row from table "
-          + c.getTable().getName()
-          + " - ID: "
-          + c.getRow().get(
-              ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
+      if (!c.getTable().getName().equalsIgnoreCase("AD_TextInterfaces")) {
+        errors.add("Removed row from table "
+            + c.getTable().getName()
+            + " - ID: "
+            + c.getRow().get(
+                ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
+      }
     } else if (change instanceof ColumnDataChange) {
       ColumnDataChange c = (ColumnDataChange) change;
       String tableName = c.getTable().getName();
