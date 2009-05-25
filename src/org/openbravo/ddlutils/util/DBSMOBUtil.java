@@ -245,10 +245,16 @@ public class DBSMOBUtil {
     _log.info("Source code revision id: " + codeRevision);
     if (codeRevision.equals("0")) {
       _log.info("Mercurial code revision id not found.");
-    } else if (!codeRevision.equals(databaseRevision)) {
+    } else if (!filterRevision(codeRevision).equals(filterRevision(databaseRevision))) {
       throw new BuildException(
           "Database revision id differs from the source code revision id. A hg update to your previous revision ID should be performed before exporting: hg update -r REV");
     }
+  }
+
+  private static String filterRevision(String revision) {
+    if (revision.charAt(revision.length() - 1) == '+')
+      return revision.substring(0, revision.length() - 1);
+    return revision;
   }
 
   public static Vector<File> loadFilesFromFolder(String folders) {
