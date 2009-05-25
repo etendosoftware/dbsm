@@ -154,31 +154,31 @@ public class ExportDatabase extends BaseDalInitializingTask {
               throw new BuildException("Module not found in AD_MODULE table.");
             if (row.prefixes.size() == 0) {
               getLog().info("Module doesn't have dbprefix. We will not export structure for it.");
-              return;
-            }
-            getLog().info("Exporting module: " + row.name);
-            if (row.isInDevelopment != null && row.isInDevelopment.equalsIgnoreCase("Y")) {
-              getLog().info("Loading submodel from database...");
-              Database dbMod = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0),
-                  false, row.idMod);
-
-              final File path = new File(moduledir, row.dir + "/src-db/database/model/");
-              if (testAPI) {
-                getLog().info("Reading XML model for API checking" + path);
-                Database dbXML = DatabaseUtils.readDatabase(path);
-                validateAPIForModel(platform, db, dbXML);
-              }
-
-              validateDatabaseForModule(row.idMod, dbMod);
-
-              getLog().info("Submodel loaded");
-              final DatabaseIO io = new DatabaseIO();
-
-              getLog().info("Path: " + path);
-              io.writeToDir(dbMod, path);
             } else {
-              getLog().info(
-                  "Module is not in development. Check that it is, before trying to export it.");
+              getLog().info("Exporting module: " + row.name);
+              if (row.isInDevelopment != null && row.isInDevelopment.equalsIgnoreCase("Y")) {
+                getLog().info("Loading submodel from database...");
+                Database dbMod = platform.loadModelFromDatabase(row.filter, row.prefixes.get(0),
+                    false, row.idMod);
+
+                final File path = new File(moduledir, row.dir + "/src-db/database/model/");
+                if (testAPI) {
+                  getLog().info("Reading XML model for API checking" + path);
+                  Database dbXML = DatabaseUtils.readDatabase(path);
+                  validateAPIForModel(platform, db, dbXML);
+                }
+
+                validateDatabaseForModule(row.idMod, dbMod);
+
+                getLog().info("Submodel loaded");
+                final DatabaseIO io = new DatabaseIO();
+
+                getLog().info("Path: " + path);
+                io.writeToDir(dbMod, path);
+              } else {
+                getLog().info(
+                    "Module is not in development. Check that it is, before trying to export it.");
+              }
             }
           }
         }
