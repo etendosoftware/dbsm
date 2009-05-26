@@ -522,6 +522,7 @@ public class DatabaseIO {
   public Vector<Change> readChanges(File file) {
     try {
       BeanReader reader = getReader();
+      reader.setValidating(false);
       reader.registerBeanClass("vector", java.util.Vector.class);
 
       Vector<Change> changes = (Vector<Change>) reader.parse(file);
