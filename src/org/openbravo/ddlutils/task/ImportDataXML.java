@@ -177,6 +177,7 @@ public class ImportDataXML extends BaseDatabaseTask {
 
     } catch (final Exception e) {
       // log(e.getLocalizedMessage());
+      e.printStackTrace();
       throw new BuildException(e);
     }
 
