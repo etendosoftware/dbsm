@@ -20,6 +20,7 @@ package org.apache.ddlutils.platform;
  */
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
@@ -2330,8 +2331,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       SqlDynaProperty property) throws SQLException {
     int typeCode = property.getColumn().getTypeCode();
     Object value = dynaBean.get(property.getName());
-
-    setStatementParameterValue(statement, sqlIndex, typeCode, value);
+    if (typeCode == Types.CLOB) {
+      if (value == null)
+        statement.setCharacterStream(sqlIndex, null, 0);
+      else
+        statement.setCharacterStream(sqlIndex, new StringReader(value.toString()), value.toString()
+            .length());
+    } else {
+      setStatementParameterValue(statement, sqlIndex, typeCode, value);
+    }
   }
 
   protected void setObject(PreparedStatement statement, int sqlIndex, Object value, Column column)
