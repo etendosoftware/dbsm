@@ -243,7 +243,7 @@ public class DataComparator {
       tablenames[i] = tableList.get(i).getTable().getDBTableName();
 
     for (DataSetTable table : tableList) {
-      _log.info("Comparing table " + table.getTable().getName());
+      _log.info("Comparing table " + table.getTable().getDBTableName());
       // Tables can now be compared.
       Vector<DynaBean> rowsOriginalData = originalData.getRowsFromTable(table.getTable()
           .getDBTableName());

@@ -160,6 +160,7 @@ public abstract class SqlBuilder {
   private Translation _PLSQLFunctionTranslation = new NullTranslation();
   public Translation _PLSQLTriggerTranslation = new NullTranslation();
   private Translation _SQLTranslation = new NullTranslation();
+  private boolean script = false;
 
   //
   // Configuration
@@ -210,6 +211,10 @@ public abstract class SqlBuilder {
    */
   public void setWriter(Writer writer) {
     _writer = writer;
+  }
+
+  public void setScript(boolean script) {
+    this.script = script;
   }
 
   /**
@@ -2418,11 +2423,17 @@ public abstract class SqlBuilder {
       result.append(getPlatformInfo().getValueQuoteToken());
       break;
     case Types.TIMESTAMP:
+      if (value.toString().equals("now()")) {
+        result.append("now()");
+        break;
+      }
+      result.append("to_date(");
       result.append(getPlatformInfo().getValueQuoteToken());
       // TODO: SimpleDateFormat does not support nano seconds so we would
       // need a custom date formatter for timestamps
-      result.append(value.toString());
+      result.append(value.toString().substring(0, value.toString().length() - 2));
       result.append(getPlatformInfo().getValueQuoteToken());
+      result.append(",'YYYY-MM-DD HH24:MI:SS')");
       break;
     case Types.REAL:
     case Types.NUMERIC:
@@ -4055,7 +4066,11 @@ public abstract class SqlBuilder {
   protected void printEndOfStatement(String statementName) throws IOException {
     println();
     print(getPlatformInfo().getSqlCommandDelimiter());
-    printComment("END " + statementName);
+    if (script) {
+      println();
+    } else {
+      printComment("END");
+    }
     // println();
   }
 

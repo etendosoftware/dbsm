@@ -19,6 +19,7 @@ package org.apache.ddlutils;
  * under the License.
  */
 
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.Collection;
@@ -554,6 +555,9 @@ public interface Platform {
       throws DatabaseOperationException;
 
   public void alterData(Connection connection, Database model, Vector<Change> changes)
+      throws DatabaseOperationException;
+
+  public void alterData(Database model, Vector<Change> changes, Writer writer)
       throws DatabaseOperationException;
 
   /**
@@ -1274,6 +1278,18 @@ public interface Platform {
    *          Whether to continue executing the sql commands when an error occurred
    */
   public void enableAllFK(Connection connection, Database model, boolean continueOnError)
+      throws DatabaseOperationException;
+
+  public void disableAllFK(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException;
+
+  public void disableAllTriggers(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException;
+
+  public void enableAllFK(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException;
+
+  public void enableAllTriggers(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException;
 
   // /**

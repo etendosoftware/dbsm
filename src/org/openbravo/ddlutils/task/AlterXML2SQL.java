@@ -14,30 +14,26 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.Writer;
+import java.sql.Connection;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.dal.service.OBDal;
 
 /**
  * 
  * @author adrian
  */
-public class AlterXML2SQL extends BaseDatabaseTask {
+public class AlterXML2SQL extends AlterDatabaseDataAll {
 
-  private String platform = null;
-  private File originalmodel = null;
-
-  private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
-
-  private File model;
   private File output;
-
-  private String object = null;
 
   /** Creates a new instance of ExecuteXML2SQL */
   public AlterXML2SQL() {
@@ -46,97 +42,113 @@ public class AlterXML2SQL extends BaseDatabaseTask {
   @Override
   public void doExecute() {
 
-    Platform pl;
-    Database originaldb;
+    try {
+      getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
-    if (platform == null || originalmodel == null) {
       final BasicDataSource ds = new BasicDataSource();
       ds.setDriverClassName(getDriver());
       ds.setUrl(getUrl());
       ds.setUsername(getUser());
       ds.setPassword(getPassword());
+      if (getDriver().contains("Oracle"))
+        ds.setValidationQuery("SELECT 1 FROM DUAL");
+      else
+        ds.setValidationQuery("SELECT 1");
+      ds.setTestOnBorrow(true);
 
-      pl = PlatformFactory.createNewPlatformInstance(ds);
+      final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
       // platform.setDelimitedIdentifierModeOn(true);
-      getLog().info("Using database platform.");
 
-      try {
+      Writer w = new FileWriter(output);
+      platform.getSqlBuilder().setScript(true);
 
-        if (getOriginalmodel() == null) {
-          originaldb = pl.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
-          if (originaldb == null) {
-            originaldb = new Database();
-            getLog().info("Original model considered empty.");
-          } else {
-            getLog().info("Original model loaded from database.");
-          }
+      Database db = null;
+      db = readDatabaseModel();
+
+      Database originaldb;
+      if (getOriginalmodel() == null) {
+        originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+        if (originaldb == null) {
+          originaldb = new Database();
+          getLog().info("Original model considered empty.");
         } else {
-          // Load the model from the file
-          originaldb = DatabaseUtils.readDatabase(getModel());
-          getLog().info("Original model loaded from file.");
+          getLog().info("Original model loaded from database.");
         }
-      } catch (final Exception e) {
-        // log(e.getLocalizedMessage());
-        throw new BuildException(e);
-      }
-    } else {
-      pl = PlatformFactory.createNewPlatformInstance(platform);
-      getLog().info("Using platform : " + platform);
-
-      originaldb = DatabaseUtils.readDatabase(originalmodel);
-      getLog().info("Original model loaded from file.");
-    }
-
-    try {
-
-      Database db = DatabaseUtils.readDatabase(model);
-
-      // Write update script
-      getLog().info("Writing update script");
-      // crop database if needed
-      if (object != null) {
-        db = DatabaseUtils.cropDatabase(originaldb, db, object);
-        getLog().info("for database object " + object);
       } else {
-        getLog().info("for the complete database");
+        // Load the model from the file
+        originaldb = DatabaseUtils.readDatabase(getModel());
+        getLog().info("Original model loaded from file.");
       }
 
-      final Writer w = new FileWriter(output);
-      pl.getSqlBuilder().setWriter(w);
-      pl.getSqlBuilder().alterDatabase(originaldb, db, null);
-      pl.getSqlBuilder().alterDatabasePostScript(originaldb, db, null);
+      final DatabaseData databaseOrgData = new DatabaseData(db);
+      loadDataStructures(platform, databaseOrgData, originaldb, db);
+
+      getLog().info("Comparing databases to find differences");
+
+      final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      dataComparatorDS.compareUsingDALToUpdate(db, platform, databaseOrgData, "DS", null);
+      if (dataComparatorDS.getChanges().size() > 0) {
+        String message = "The Dataset DS definition was changed. The update.database.script will need to be run a second time (after the script has been run in the database) to get the second part of the script update. Both scripts will need to be executed in the final database to obtain the desired result.";
+        getLog().info(message);
+        w.append("-- " + message + "\n\n");
+      }
+
+      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
+
+      getLog().info("Data changes we will perform: ");
+      for (final Change change : dataComparator.getChanges())
+        getLog().info(change);
+
+      OBDal.getInstance().commitAndClose();
+
+      // execute the pre-script
+      // try to execute the default prescript
+      final File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
+      if (fpre.exists()) {
+        getLog().info("Appending default prescript");
+        w.append(DatabaseUtils.readFile(fpre));
+      }
+      final Database oldModel = (Database) originaldb.clone();
+      platform.getSqlBuilder().setWriter(w);
+      getLog().info("Updating database model...");
+      platform.alterTables(originaldb, db, !isFailonerror());
+      getLog().info("Model update complete.");
+
+      getLog().info("Disabling foreign keys");
+      final Connection connection = platform.borrowConnection();
+      platform.disableAllFK(originaldb, !isFailonerror(), w);
+      getLog().info("Disabling triggers");
+      platform.disableAllTriggers(db, !isFailonerror(), w);
+      getLog().info("Updating database data...");
+      platform.alterData(db, dataComparator.getChanges(), w);
+      getLog().info("Removing invalid rows.");
+      platform.getSqlBuilder().setWriter(w);
+      platform.getSqlBuilder().deleteInvalidConstraintRows(db);
+      getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
+      platform.getSqlBuilder().alterDatabasePostScript(oldModel, db, null);
+
+      getLog().info("Enabling Foreign Keys and Triggers");
+      platform.enableAllFK(originaldb, !isFailonerror(), w);
+      platform.enableAllTriggers(db, !isFailonerror(), w);
+
+      // execute the post-script
+      // try to execute the default prescript
+      final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+      if (fpost.exists()) {
+        getLog().info("Executing default postscript");
+        w.append(DatabaseUtils.readFile(fpost));
+      }
+      w.flush();
       w.close();
 
-      getLog().info("Database script created in : " + output.getPath());
-
-    } catch (final IOException e) {
+    } catch (final Exception e) {
       // log(e.getLocalizedMessage());
+      e.printStackTrace();
       throw new BuildException(e);
     }
-  }
-
-  public String getExcludeobjects() {
-    return excludeobjects;
-  }
-
-  public void setExcludeobjects(String excludeobjects) {
-    this.excludeobjects = excludeobjects;
-  }
-
-  public String getPlatform() {
-    return platform;
-  }
-
-  public void setPlatform(String platform) {
-    this.platform = platform;
-  }
-
-  public File getOriginalmodel() {
-    return originalmodel;
-  }
-
-  public void setOriginalmodel(File originalmodel) {
-    this.originalmodel = originalmodel;
   }
 
   public File getOutput() {
@@ -147,23 +159,4 @@ public class AlterXML2SQL extends BaseDatabaseTask {
     this.output = output;
   }
 
-  public File getModel() {
-    return model;
-  }
-
-  public void setModel(File model) {
-    this.model = model;
-  }
-
-  public void setObject(String object) {
-    if (object == null || object.trim().startsWith("$") || object.trim().equals("")) {
-      this.object = null;
-    } else {
-      this.object = object;
-    }
-  }
-
-  public String getObject() {
-    return object;
-  }
 }

@@ -19,6 +19,8 @@ package org.apache.ddlutils.platform.oracle;
  * under the License.
  */
 
+import java.io.StringWriter;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -226,6 +228,88 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
+  public void disableAllFK(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+
+    String current = null;
+    try {
+
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTableCount(); i++) {
+        getSqlBuilder().dropExternalForeignKeys(model.getTable(i));
+      }
+      writer.append(buffer.toString());
+    } catch (Exception e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
+      throw new DatabaseOperationException("Error while disabling foreign key ", e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void enableAllFK(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+
+    String current = null;
+    StringWriter buffer = new StringWriter();
+    try {
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTableCount(); i++) {
+
+        getSqlBuilder().createExternalForeignKeys(model, model.getTable(i));
+      }
+      writer.append(buffer.toString());
+    } catch (Exception e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
+      throw new DatabaseOperationException("Error while enabling foreign key ", e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void disableAllTriggers(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+
+    String current = null;
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTriggerCount(); i++) {
+        getSqlBuilder().dropTrigger(model, model.getTrigger(i));
+      }
+      writer.append(buffer.toString());
+    } catch (Exception e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
+      throw new DatabaseOperationException("Error while disabling triggers ", e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void enableAllTriggers(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+
+    String current = null;
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTriggerCount(); i++) {
+        getSqlBuilder().createTrigger(model, model.getTrigger(i));
+      }
+      writer.append(buffer.toString());
+    } catch (Exception e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
+      throw new DatabaseOperationException("Error while enabling triggers ", e);
+    }
+  }
   // /**
   // * {@inheritDoc}
   // */

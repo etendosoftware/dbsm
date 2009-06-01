@@ -22,6 +22,7 @@ package org.apache.ddlutils.platform;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Blob;
@@ -706,17 +707,78 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         update(connection, model, (ColumnDataChange) change);
       }
     }
-
-    /*
-     * String sql = null;
-     * 
-     * try { StringWriter buffer = new StringWriter();
-     * 
-     * getSqlBuilder().setWriter(buffer); getSqlBuilder().alterData(model, changes); sql =
-     * buffer.toString(); } catch (IOException ex) { // won't happen because we're using a string
-     * writer } evaluateBatch(connection, sql, true);
-     */
   }
+
+  public void alterData(Database model, Vector<Change> changes, Writer writer)
+      throws DatabaseOperationException {
+    try {
+      getSqlBuilder().setWriter(writer);
+      for (Change change : changes) {
+        if (change instanceof AddRowChange) {
+          HashMap map = new HashMap();
+          AddRowChange addChange = (AddRowChange) change;
+          Table table = addChange.getTable();
+          for (int i = 0; i < table.getColumnCount(); i++) {
+            if (table.getColumn(i).getName().equalsIgnoreCase("UPDATED"))
+              map.put(table.getColumn(i).getName(), "now()");
+            else if (table.getColumn(i).getName().equalsIgnoreCase("UPDATEDBY"))
+              map.put(table.getColumn(i).getName(), "O");
+            else if (table.getColumn(i).getName().equalsIgnoreCase("CREATED"))
+              map.put(table.getColumn(i).getName(), "now()");
+            else if (table.getColumn(i).getName().equalsIgnoreCase("CREATEDBY"))
+              map.put(table.getColumn(i).getName(), "0");
+            else
+              map.put(table.getColumn(i).getName(), addChange.getRow().get(
+                  table.getColumn(i).getName()));
+          }
+
+          writer.append(getSqlBuilder().getInsertSql(table, map, false));
+          getSqlBuilder().printEndOfStatement("");
+        } else if (change instanceof RemoveRowDALChange) {
+          RemoveRowDALChange removeChange = (RemoveRowDALChange) change;
+          HashMap map = new HashMap();
+          Table table = removeChange.getTable();
+          for (int i = 0; i < table.getPrimaryKeyColumns().length; i++)
+            map.put(table.getPrimaryKeyColumns()[i].getName(), removeChange.getRow().getId());
+          writer.append(getSqlBuilder().getDeleteSql(table, map, false));
+          getSqlBuilder().printEndOfStatement("");
+        } else if (change instanceof ColumnDataChange) {
+          HashMap map = new HashMap();
+          ColumnDataChange colChange = (ColumnDataChange) change;
+          Table table = colChange.getTable();
+          String pk = table.getPrimaryKeyColumns()[0].getName();
+          map.put(pk, colChange.getPkRow());
+          if (table.findColumn("UPDATED") != null)
+            map.put("UPDATED", "now()");
+          else if (table.findColumn("UPDATEDBY") != null)
+            map.put("UPDATEDBY", "O");
+          if (colChange.getColumnname().equalsIgnoreCase("CREATED"))
+            map.put(colChange.getColumnname(), "now()");
+          else if (colChange.getColumnname().equalsIgnoreCase("CREATEDBY"))
+            map.put(colChange.getColumnname(), "0");
+          else
+            map.put(colChange.getColumnname(), colChange.getNewValue());
+
+          writer.append(getSqlBuilder().getUpdateSql(table, map, false));
+          getSqlBuilder().printEndOfStatement("");
+        }
+      }
+      writer.flush();
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  /*
+   * String sql = null;
+   * 
+   * try { StringWriter buffer = new StringWriter();
+   * 
+   * getSqlBuilder().setWriter(buffer); getSqlBuilder().alterData(model, changes); sql =
+   * buffer.toString(); } catch (IOException ex) { // won't happen because we're using a string
+   * writer } evaluateBatch(connection, sql, true);
+   */
 
   /**
    * {@inheritDoc}
@@ -2229,6 +2291,26 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    * {@inheritDoc}
    */
   public void enableAllTriggers(Connection connection, Database model, boolean continueOnError)
+      throws DatabaseOperationException {
+    throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  public void disableAllFK(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+    throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  public void disableAllTriggers(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+    throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  public void enableAllFK(Database model, boolean continueOnError, Writer writer)
+      throws DatabaseOperationException {
+    throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  public void enableAllTriggers(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
     throw new DatabaseOperationException("Error: Operation not supported");
   }

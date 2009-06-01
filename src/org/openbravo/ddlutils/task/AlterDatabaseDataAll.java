@@ -43,27 +43,27 @@ import org.openbravo.utils.CheckSum;
  */
 public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
-  private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
+  protected String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
-  private File prescript = null;
-  private File postscript = null;
+  protected File prescript = null;
+  protected File postscript = null;
 
-  private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
+  protected String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
 
-  private File input;
-  private String encoding = "UTF-8";
-  private File originalmodel;
-  private File model;
-  private boolean failonerror = false;
+  protected File input;
+  protected String encoding = "UTF-8";
+  protected File originalmodel;
+  protected File model;
+  protected boolean failonerror = false;
 
-  private String object = null;
+  protected String object = null;
 
-  private String basedir;
-  private String dirFilter;
-  private String datadir;
-  private String datafilter;
-  private boolean force = false;
-  private boolean onlyIfModified = false;
+  protected String basedir;
+  protected String dirFilter;
+  protected String datadir;
+  protected String datafilter;
+  protected boolean force = false;
+  protected boolean onlyIfModified = false;
 
   /** Creates a new instance of ReadDataXML */
   public AlterDatabaseDataAll() {
@@ -152,94 +152,11 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       }
 
       Database db = null;
-      if (basedir == null) {
-        getLog().info(
-            "Basedir for additional files not specified. Updating database with just Core.");
-        db = DatabaseUtils.readDatabase(getModel());
-      } else {
-        // We read model files using the filter, obtaining a file array.
-        // The models will be merged
-        // to create a final target model.
-        final Vector<File> dirs = new Vector<File>();
-        dirs.add(model);
-        final DirectoryScanner dirScanner = new DirectoryScanner();
-        dirScanner.setBasedir(new File(basedir));
-        final String[] dirFilterA = { dirFilter };
-        dirScanner.setIncludes(dirFilterA);
-        dirScanner.scan();
-        final String[] incDirs = dirScanner.getIncludedDirectories();
-        for (int j = 0; j < incDirs.length; j++) {
-          final File dirF = new File(basedir, incDirs[j]);
-          dirs.add(dirF);
-        }
-        final File[] fileArray = new File[dirs.size()];
-        for (int i = 0; i < dirs.size(); i++) {
-          fileArray[i] = dirs.get(i);
-        }
-        db = DatabaseUtils.readDatabase(fileArray);
-      }
-
-      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
-      final DatabaseDataIO dbdio = new DatabaseDataIO();
-      dbdio.setEnsureFKOrder(false);
-      dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-
-      final Vector<File> files = new Vector<File>();
-      final File[] sourceFiles = DatabaseUtils.readFileArray(getInput());
-      for (int i = 0; i < sourceFiles.length; i++) {
-        files.add(sourceFiles[i]);
-      }
-
-      final String token = datafilter;
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(basedir));
-      final String[] dirFilterA = { token };
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      Vector<File> configScripts = new Vector<File>();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirFolder = new File(basedir, incDirs[j] + "/");
-        final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
-        for (int i = 0; i < fileArray.length; i++) {
-          files.add(fileArray[i]);
-        }
-        File configScript = new File(dirFolder.getParentFile(), "configScript.xml");
-        if (configScript.exists()) {
-          configScripts.add(configScript);
-        }
-      }
-      final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
-      getLog().info("Loading data from XML files");
+      db = readDatabaseModel();
       final DatabaseData databaseOrgData = new DatabaseData(db);
-      for (int i = 0; i < files.size(); i++) {
-        try {
-          dataReader.getSink().start();
-          final String tablename = files.get(i).getName().substring(0,
-              files.get(i).getName().length() - 4);
-          final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
-              .getVector();
-          dataReader.parse(files.get(i));
-          databaseOrgData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
-          dataReader.getSink().end();
-        } catch (final Exception e) {
-          e.printStackTrace();
-        }
-      }
+      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
+      loadDataStructures(platform, databaseOrgData, originaldb, db);
 
-      getLog().info("Loading and applying configuration scripts");
-      DatabaseIO dbIO = new DatabaseIO();
-      for (File f : configScripts) {
-        getLog().info("Loading configuration script: " + f.getAbsolutePath());
-        Vector<Change> changes = dbIO.readChanges(f);
-        for (Change change : changes) {
-          if (change instanceof ModelChange)
-            ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange)
-            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
-          getLog().debug(change);
-        }
-      }
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -309,6 +226,100 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       // log(e.getLocalizedMessage());
       e.printStackTrace();
       throw new BuildException(e);
+    }
+  }
+
+  protected Database readDatabaseModel() {
+    Database db = null;
+    if (basedir == null) {
+      getLog()
+          .info("Basedir for additional files not specified. Updating database with just Core.");
+      db = DatabaseUtils.readDatabase(getModel());
+    } else {
+      // We read model files using the filter, obtaining a file array.
+      // The models will be merged
+      // to create a final target model.
+      final Vector<File> dirs = new Vector<File>();
+      dirs.add(getModel());
+      final DirectoryScanner dirScanner = new DirectoryScanner();
+      dirScanner.setBasedir(new File(basedir));
+      final String[] dirFilterA = { dirFilter };
+      dirScanner.setIncludes(dirFilterA);
+      dirScanner.scan();
+      final String[] incDirs = dirScanner.getIncludedDirectories();
+      for (int j = 0; j < incDirs.length; j++) {
+        final File dirF = new File(basedir, incDirs[j]);
+        dirs.add(dirF);
+      }
+      final File[] fileArray = new File[dirs.size()];
+      for (int i = 0; i < dirs.size(); i++) {
+        fileArray[i] = dirs.get(i);
+      }
+      db = DatabaseUtils.readDatabase(fileArray);
+    }
+    return db;
+  }
+
+  protected void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
+      Database originaldb, Database db) {
+    final DatabaseDataIO dbdio = new DatabaseDataIO();
+    dbdio.setEnsureFKOrder(false);
+    dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+
+    final Vector<File> files = new Vector<File>();
+    final File[] sourceFiles = DatabaseUtils.readFileArray(getInput());
+    for (int i = 0; i < sourceFiles.length; i++) {
+      files.add(sourceFiles[i]);
+    }
+
+    final String token = datafilter;
+    final DirectoryScanner dirScanner = new DirectoryScanner();
+    dirScanner.setBasedir(new File(basedir));
+    final String[] dirFilterA = { token };
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    final String[] incDirs = dirScanner.getIncludedDirectories();
+    Vector<File> configScripts = new Vector<File>();
+    for (int j = 0; j < incDirs.length; j++) {
+      final File dirFolder = new File(basedir, incDirs[j] + "/");
+      final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+      for (int i = 0; i < fileArray.length; i++) {
+        files.add(fileArray[i]);
+      }
+      File configScript = new File(dirFolder.getParentFile(), "configScript.xml");
+      if (configScript.exists()) {
+        configScripts.add(configScript);
+      }
+    }
+    final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
+    getLog().info("Loading data from XML files");
+    for (int i = 0; i < files.size(); i++) {
+      try {
+        dataReader.getSink().start();
+        final String tablename = files.get(i).getName().substring(0,
+            files.get(i).getName().length() - 4);
+        final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
+            .getVector();
+        dataReader.parse(files.get(i));
+        databaseOrgData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
+        dataReader.getSink().end();
+      } catch (final Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    getLog().info("Loading and applying configuration scripts");
+    DatabaseIO dbIO = new DatabaseIO();
+    for (File f : configScripts) {
+      getLog().info("Loading configuration script: " + f.getAbsolutePath());
+      Vector<Change> changes = dbIO.readChanges(f);
+      for (Change change : changes) {
+        if (change instanceof ModelChange)
+          ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
+        else if (change instanceof DataChange)
+          ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+        getLog().debug(change);
+      }
     }
   }
 
