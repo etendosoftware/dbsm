@@ -21,11 +21,11 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
     // Numeric Type
     append(new ReplaceStrTranslation(" NUMERIC,", " NUMBER,"));
     append(new ByLineTranslation(new ReplacePatTranslation(
-        "(\\s|\\t|\\(|')+[Nn][Uu][Mm][Ee][Rr][Ii][Cc](\\s|\\t|:|,|\\|')+", "$1NUMBER$2")));
+        "(\\s|\\(|')+[Nn][Uu][Mm][Ee][Rr][Ii][Cc](\\s|\\t|:|,|\\|')+", "$1NUMBER$2")));
     append(new ReplaceStrTranslation(" NUMERIC(", " NUMBER("));
     append(new ReplaceStrTranslation(" NUMERIC)", " NUMBER)"));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s|\\t)+NUMERIC(\\s|\\t)*$",
-        "$1NUMBER$2")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(\\s)+NUMERIC(\\s|\\t)*$", "$1NUMBER$2")));
     append(new ReplaceStrTranslation(" NUMERIC;", " NUMBER;"));
     append(new ReplaceStrTranslation(" NUMERIC:", " NUMBER:"));
     append(new ReplaceStrTranslation("'NUMERIC'", "'NUMBER'"));
@@ -40,10 +40,9 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
     // TimeStamp Type
     append(new ReplaceStrTranslation(" TIMESTAMP,", " DATE,"));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s|\\t)+TIMESTAMP(\\s|\\t)+",
-        "$1DATE$2")));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s|\\t)+TIMESTAMP(\\s|\\t)*$",
-        "$1DATE$2")));
+    append(new ByLineTranslation(new ReplacePatTranslation("(\\s)+TIMESTAMP(\\s|\\t)+", "$1DATE$2")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(\\s)+TIMESTAMP(\\s|\\t)*$", "$1DATE$2")));
     append(new ReplaceStrTranslation("TO_DATE", "TO_DATE"));
     append(new ReplaceStrTranslation(" TIMESTAMP;", " DATE;"));
     append(new ReplaceStrTranslation("'TIMESTAMP'", "'DATE'"));

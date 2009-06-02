@@ -34,15 +34,14 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
 
     // Here goes the common translations for triggers and functions
     // append(............
-
     // Numeric Type
     append(new ReplaceStrTranslation(" NUMBER,", " NUMERIC,"));
     append(new ByLineTranslation(new ReplacePatTranslation(
-        "(\\s|\\t)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)+", "$1NUMERIC$2")));
+        "(\\s)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)+", "$1NUMERIC$2")));
     append(new ReplaceStrTranslation(" NUMBER(", " NUMERIC("));
     append(new ReplaceStrTranslation(" NUMBER)", " NUMERIC)"));
     append(new ByLineTranslation(new ReplacePatTranslation(
-        "(\\s|\\t)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)*$", "$1NUMERIC$2")));
+        "(\\s)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)*$", "$1NUMERIC$2")));
     append(new ReplaceStrTranslation(" NUMBER;", " NUMERIC;"));
     append(new ReplaceStrTranslation(" NUMBER:", " NUMERIC:"));
     append(new ReplaceStrTranslation("'NUMBER'", "'NUMERIC'"));
@@ -69,9 +68,9 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
 
     // TimeStamp Type
     append(new ReplaceStrTranslation(" DATE,", " TIMESTAMP,"));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s|\\t)+[Dd][Aa][Tt][Ee](\\s|\\t)+",
+    append(new ByLineTranslation(new ReplacePatTranslation("(\\s)+[Dd][Aa][Tt][Ee](\\s|\\t)+",
         "$1TIMESTAMP$2")));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s|\\t)+[Dd][Aa][Tt][Ee](\\s|\\t)*$",
+    append(new ByLineTranslation(new ReplacePatTranslation("(\\s)+[Dd][Aa][Tt][Ee](\\s|\\t)*$",
         "$1TIMESTAMP$2")));
     append(new ReplaceStrTranslation("TO_DATE", "TO_DATE"));
     append(new ReplaceStrTranslation(" DATE;", " TIMESTAMP;"));
