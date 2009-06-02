@@ -161,30 +161,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparatorDS.compareUsingDALToUpdate(db, platform, databaseOrgData, "DS", null);
-      if (dataComparatorDS.getChanges().size() > 0) {
-        getLog().info("Dataset DS has changed. We need to update it.");
-        OBDal.getInstance().commitAndClose();
-        final Connection connection = platform.borrowConnection();
-        getLog().info("Disabling foreign keys");
-        platform.disableAllFK(connection, originaldb, !isFailonerror());
-        getLog().info("Disabling triggers");
-        platform.disableAllTriggers(connection, originaldb, !isFailonerror());
-        platform.alterData(connection, db, dataComparatorDS.getChanges());
-        getLog().info("Enabling Foreign Keys and Triggers");
-        platform.enableAllFK(connection, originaldb, !isFailonerror());
-        platform.enableAllTriggers(connection, originaldb, !isFailonerror());
-        getLog().info("Dataset DS updated succesfully. Reinitializing DAL");
-        DalLayerInitializer.getInstance().initialize(true);
-
-      }
-
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
-
-      getLog().info("Data changes we will perform: ");
-      for (final Change change : dataComparator.getChanges())
-        getLog().info(change);
 
       OBDal.getInstance().commitAndClose();
 
@@ -198,6 +174,22 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       platform.disableAllFK(connection, originaldb, !isFailonerror());
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
+
+      if (dataComparatorDS.getChanges().size() > 0) {
+        getLog().info("Dataset DS has changed. We need to update it.");
+        platform.alterData(connection, db, dataComparatorDS.getChanges());
+        getLog().info("Dataset DS updated succesfully. Reinitializing DAL");
+        DalLayerInitializer.getInstance().initialize(true);
+
+      }
+
+      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
+      OBDal.getInstance().commitAndClose();
+      getLog().info("Data changes we will perform: ");
+      for (final Change change : dataComparator.getChanges())
+        getLog().info(change);
       getLog().info("Updating database data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
