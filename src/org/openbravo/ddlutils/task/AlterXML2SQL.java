@@ -114,7 +114,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       final Database oldModel = (Database) originaldb.clone();
       platform.getSqlBuilder().setWriter(w);
       getLog().info("Updating database model...");
-      platform.alterTables(originaldb, db, !isFailonerror());
+      platform.getSqlBuilder().alterDatabase(originaldb, db, null);
       getLog().info("Model update complete.");
 
       getLog().info("Disabling foreign keys");
