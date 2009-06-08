@@ -247,8 +247,10 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       case Types.BINARY:
       case Types.VARBINARY:
       case Types.LONGVARBINARY:
-      case Types.BLOB:
         statement.setBlob(sqlIndex, (Blob) null);
+        break;
+      case Types.BLOB:
+        statement.setNull(sqlIndex, Types.BINARY);
         break;
       default:
         statement.setNull(sqlIndex, typeCode);
