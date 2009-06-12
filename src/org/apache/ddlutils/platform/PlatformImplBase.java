@@ -65,6 +65,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
+import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
 import org.apache.ddlutils.util.Jdbc3Utils;
 import org.apache.ddlutils.util.JdbcSupport;
@@ -2783,6 +2784,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             && filteredDatabase.findFunction(func.getName()) == null) {
           loadedDatabase.addFunction(func1);
           filteredDatabase.addFunction(func2);
+        }
+      }
+    } catch (Exception e) {
+      // won't happen
+    }
+  }
+
+  public void insertViewsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
+      Database filteredDatabase) {
+    try {
+      for (int i = 0; i < fullXMLDatabase.getViewCount(); i++) {
+        View func = fullXMLDatabase.getView(i);
+        View func1 = (View) func.clone();
+        View func2 = (View) func.clone();
+        if (loadedDatabase.findView(func.getName()) == null
+            && filteredDatabase.findView(func.getName()) == null) {
+          loadedDatabase.addView(func1);
+          filteredDatabase.addView(func2);
         }
       }
     } catch (Exception e) {

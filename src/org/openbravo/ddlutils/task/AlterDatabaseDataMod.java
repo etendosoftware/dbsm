@@ -220,6 +220,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
           platform.insertNonModuleTablesFromXML(originaldb, db);
           platform.insertNonModuleTablesFromDatabase(originaldb, dbXML, db);
           platform.insertFunctionsInBothModels(originaldb, dbXML, db);
+          platform.insertViewsInBothModels(originaldb, dbXML, db);
           final Database olddb = (Database) originaldb.clone();
           moduleModels.add(db);
           moduleOldModels.add(olddb);

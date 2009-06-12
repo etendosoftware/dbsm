@@ -1343,4 +1343,7 @@ public interface Platform {
 
   public void insertFunctionsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
       Database filteredDatabase);
+
+  public void insertViewsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
+      Database filteredDatabase);
 }
