@@ -22,7 +22,9 @@ import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
@@ -115,6 +117,7 @@ public class ExportConfigScript extends BaseDalInitializingTask {
 
       final Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(getCoreData());
 
+      Vector<File> configScripts = new Vector<File>();
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
           final File dirF = new File(moduledir, util.getModule(j).dir
@@ -123,6 +126,10 @@ public class ExportConfigScript extends BaseDalInitializingTask {
           if (dirF.exists()) {
             dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
           }
+          File configScript = new File(moduledir, util.getModule(j).dir
+              + "/src-db/database/configScript.xml");
+          if (!util.getModule(j).dir.equals(industryTemplate) && configScript.exists())
+            configScripts.add(configScript);
         }
       }
 
@@ -141,6 +148,20 @@ public class ExportConfigScript extends BaseDalInitializingTask {
           dataReader.getSink().end();
         } catch (final Exception e) {
           e.printStackTrace();
+        }
+      }
+
+      getLog().info("Loading and applying configuration scripts");
+      DatabaseIO dbIOs = new DatabaseIO();
+      for (File f : configScripts) {
+        getLog().info("Loading configuration script: " + f.getAbsolutePath());
+        Vector<Change> changes = dbIOs.readChanges(f);
+        for (Change change : changes) {
+          if (change instanceof ModelChange)
+            ((ModelChange) change).apply(xmlModel, platform.isDelimitedIdentifierModeOn());
+          else if (change instanceof DataChange)
+            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+          getLog().debug(change);
         }
       }
 
@@ -212,8 +233,10 @@ public class ExportConfigScript extends BaseDalInitializingTask {
       folder.mkdirs();
       dbIO.write(configFile, finalChanges);
 
-      getLog().info("Changes that couldn't be exported to the config script:");
-      getLog().info("*******************************************************");
+      if (comparatorChanges.size() > 0) {
+        getLog().info("Changes that couldn't be exported to the config script:");
+        getLog().info("*******************************************************");
+      }
       for (final Change c : comparatorChanges) {
         getLog().info(c);
       }
