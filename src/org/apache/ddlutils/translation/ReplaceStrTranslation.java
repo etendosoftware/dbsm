@@ -29,7 +29,7 @@ public class ReplaceStrTranslation extends ReplacePatTranslation {
     for (int i = 0; i < searchStr.length(); i++) {
       char c = searchStr.charAt(i);
       if (c == ' ') {
-        pattern.append("(\\s|\\t)");
+        pattern.append("(\\s)");
       } else if (Character.isLetter(c)) {
         pattern.append('[');
         pattern.append(Character.toUpperCase(c));

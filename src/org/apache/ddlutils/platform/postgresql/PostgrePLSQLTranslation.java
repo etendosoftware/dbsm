@@ -146,7 +146,7 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
         // Perform
         if (database.getFunction(i).getTypeCode() == Types.NULL) {
           append(new ReplaceStrTranslation(" " + database.getFunction(i).getName() + " *(",
-              "PERFORM " + database.getFunction(i).getName() + "("));
+              " PERFORM " + database.getFunction(i).getName() + "("));
         }
       }
     }
