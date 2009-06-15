@@ -855,6 +855,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
       print("TO_NUMBER(");
       printIdentifier(getColumnName(sourceColumn));
       print(")");
+    } else if (sourceColumn.getTypeCode() == Types.OTHER
+        && targetColumn.getTypeCode() == Types.BLOB) {
+      printIdentifier("NULL");
     } else {
       printIdentifier(getColumnName(sourceColumn));
     }

@@ -81,7 +81,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     info.addNativeTypeMapping(Types.LONGVARCHAR, "TEXT", Types.LONGVARCHAR);
     info.addNativeTypeMapping(Types.NULL, "BYTEA", Types.LONGVARBINARY);
     info.addNativeTypeMapping(Types.NUMERIC, "NUMERIC");
-    info.addNativeTypeMapping(Types.OTHER, "BYTEA", Types.LONGVARBINARY);
+    info.addNativeTypeMapping(Types.OTHER, "OID", Types.OTHER);
     info.addNativeTypeMapping(Types.REF, "BYTEA", Types.LONGVARBINARY);
     info.addNativeTypeMapping(Types.STRUCT, "BYTEA", Types.LONGVARBINARY);
     info.addNativeTypeMapping(Types.TIME, "TIME");
