@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.service.dataset.DataSetService;
+import org.openbravo.utils.CheckSum;
 
 public class DBSMOBUtil {
 
@@ -209,7 +210,7 @@ public class DBSMOBUtil {
     return value;
   }
 
-  public static void verifyRevision(Platform platform, String codeRevision, Logger _log) {
+  public static String getDBRevision(Platform platform) {
     final String sql = "SELECT * FROM AD_SYSTEM_INFO";
 
     final Connection connection = platform.borrowConnection();
@@ -240,6 +241,12 @@ public class DBSMOBUtil {
         System.out.println("Error while trying to fetch code revision id from database.");
       }
     }
+    return databaseRevision;
+  }
+
+  public static void verifyRevision(Platform platform, String codeRevision, Logger _log) {
+    String databaseRevision = getDBRevision(platform);
+
     _log.info("Database code revision id: " + databaseRevision);
 
     _log.info("Source code revision id: " + codeRevision);
@@ -620,5 +627,27 @@ public class DBSMOBUtil {
     } finally {
       platform.returnConnection(connection);
     }
+  }
+
+  public static void writeCheckSumInfo(String obDir) {
+    CheckSum cs = new CheckSum(obDir);
+    cs.calculateCheckSum("md5.db.all");
+  }
+
+  private static String readCheckSumInfo(String obDir) {
+    CheckSum cs = new CheckSum(obDir);
+    return cs.getCheckSum("md5.db.all");
+  }
+
+  public static boolean verifyCheckSum(String obDir) {
+    String oldCS = readCheckSumInfo(obDir);
+    if ("0".equals(oldCS)) {
+      System.out.println("CheckSum value not found in properties file. CheckSum test not done.");
+      return true;
+    }
+    CheckSum cs = new CheckSum(obDir);
+    String newCS = cs.calculateCheckSumWithoutSaving("md5.db.all");
+    return newCS.equals(oldCS);
+
   }
 }

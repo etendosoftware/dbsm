@@ -108,7 +108,8 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // platform.setDelimitedIdentifierModeOn(true);
-
+    DBSMOBUtil
+        .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);
     if (hasBeenModified) {
       if (force)

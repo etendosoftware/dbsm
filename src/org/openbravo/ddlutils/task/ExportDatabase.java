@@ -87,8 +87,15 @@ public class ExportDatabase extends BaseDalInitializingTask {
       return;
     }
 
-    DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
-
+    // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
+    if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
+        .getAbsolutePath())) {
+      getLog()
+          .error(
+              "A file was modified in the database folder (this can happen if you update your repository or modify the files, and don't do update.database). Eliminate the differences (by either reverting the changes in the files, or reverting to the old revision of sources), and try to export again.");
+      getLog().info("Mercurial revision in database: " + DBSMOBUtil.getDBRevision(platform));
+      throw new BuildException("Found modifications in files when exporting");
+    }
     try {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeobjects);
