@@ -289,6 +289,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
         }
         datasetI++;
       }
+      getLog().info("Writing checksum info");
+      DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
+          .getAbsolutePath());
     } catch (Exception e) {
       e.printStackTrace();
     }
