@@ -21,6 +21,7 @@ import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.util.DBSMOBUtil;
 
 /**
  * 
@@ -123,6 +124,9 @@ public class CreateDatabase extends BaseDatabaseTask {
       } else {
         platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
       }
+      getLog().info("Writing checksum info");
+      DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
+          .getAbsolutePath());
 
     } catch (final Exception e) {
       throw new BuildException(e);
