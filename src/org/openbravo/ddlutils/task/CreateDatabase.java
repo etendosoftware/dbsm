@@ -190,7 +190,7 @@ public class CreateDatabase extends BaseDatabaseTask {
       }
 
       platform.executeOnCreateDefaultForMandatoryColumns(db);
-      platform.activateNOTNULLColumns(db);
+      platform.enableNOTNULLColumns(db);
       dataReader.getSink().end();
 
       final DBSMOBUtil util = DBSMOBUtil.getInstance();

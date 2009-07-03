@@ -289,6 +289,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     platform.disableAllFK(connection, dbAD, !isFailonerror());
     getLog().info("Disabling triggers");
     platform.disableAllTriggers(connection, dbAD, !isFailonerror());
+    platform.disableNOTNULLColumns(dbAD);
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Updating database data for module " + moduleRows.get(i).name);
       platform.alterData(connection, dbAD, dataChanges.get(i));
@@ -297,9 +298,11 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
       platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror());
     }
+    platform.executeOnCreateDefaultForMandatoryColumns(dbAD);
     getLog().info("Enabling Foreign Keys and Triggers");
     platform.enableAllFK(connection, dbAD, !isFailonerror());
     platform.enableAllTriggers(connection, dbAD, !isFailonerror());
+    platform.enableNOTNULLColumns(dbAD);
 
   }
 

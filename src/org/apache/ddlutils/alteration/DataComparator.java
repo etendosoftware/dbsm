@@ -172,7 +172,8 @@ public class DataComparator {
                     val = null;
                   else
                     val = db.get(columnC.getName()).toString();
-                  dataChanges.add(new ColumnDataChange(tableC, columnC, null, val, db.getId()));
+                  if (val != null || !columnC.isRequired())
+                    dataChanges.add(new ColumnDataChange(tableC, columnC, null, val, db.getId()));
                 } else
                   _log.warn("Column " + columnC.getName() + " of table " + tableC.getName()
                       + " wasn't exported because it wasn't exportable.");
@@ -1150,8 +1151,9 @@ public class DataComparator {
       }
       if ((v1 == null && v2 != null) || (v1 != null && v2 == null)
           || (v1 != null && v2 != null && !v1.equals(v2))) {
-        dataChanges.add(new ColumnDataChange(dynaClass.getTable(), nonprimaryKeys[i].getColumn(),
-            vs1, vs2, pkVal));
+        if (v2 != null || !nonprimaryKeys[i].getColumn().isRequired())
+          dataChanges.add(new ColumnDataChange(dynaClass.getTable(), nonprimaryKeys[i].getColumn(),
+              vs1, vs2, pkVal));
         // System.out.println("Column change:
         // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
       }
@@ -1206,7 +1208,8 @@ public class DataComparator {
               vs1 = v1.toString();
             if (v2 != null)
               vs2 = v2.toString();
-            dataChanges.add(new ColumnDataChange(dynaClass.getTable(), column, vs1, vs2, pkVal));
+            if (v2 != null || !column.isRequired())
+              dataChanges.add(new ColumnDataChange(dynaClass.getTable(), column, vs1, vs2, pkVal));
             // System.out.println("Column change:
             // "+pk+"["+nonprimaryKeys[i].getName()+"]:"+v1+","+v2);
           }

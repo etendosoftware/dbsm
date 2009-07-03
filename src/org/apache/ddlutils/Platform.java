@@ -1347,7 +1347,9 @@ public interface Platform {
   public void insertViewsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
       Database filteredDatabase);
 
-  public void activateNOTNULLColumns(Database database);
+  public void disableNOTNULLColumns(Database database);
+
+  public void enableNOTNULLColumns(Database database);
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
 }

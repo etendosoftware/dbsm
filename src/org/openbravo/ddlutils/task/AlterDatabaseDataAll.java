@@ -175,7 +175,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       platform.disableAllFK(connection, originaldb, !isFailonerror());
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
-
+      platform.disableNOTNULLColumns(db);
       if (dataComparatorDS.getChanges().size() > 0) {
         getLog().info("Dataset DS has changed. We need to update it.");
         platform.alterData(connection, db, dataComparatorDS.getChanges());
@@ -198,6 +198,8 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
       platform.alterTablesPostScript(oldModel, db, !isFailonerror());
 
+      platform.executeOnCreateDefaultForMandatoryColumns(db);
+      platform.enableNOTNULLColumns(db);
       getLog().info("Enabling Foreign Keys and Triggers");
       platform.enableAllFK(connection, originaldb, !isFailonerror());
       platform.enableAllTriggers(connection, db, !isFailonerror());

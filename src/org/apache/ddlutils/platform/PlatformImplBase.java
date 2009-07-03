@@ -2809,7 +2809,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  public void activateNOTNULLColumns(Database database) {
+  public void disableNOTNULLColumns(Database database) {
+    Connection connection = borrowConnection();
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < database.getTableCount(); i++) {
+        getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i));
+      }
+      evaluateBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public void enableNOTNULLColumns(Database database) {
     Connection connection = borrowConnection();
 
     try {
@@ -2839,7 +2857,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         for (int j = 0; j < table.getColumnCount(); j++) {
           Column column = table.getColumn(j);
           if (column.isRequired() && column.getOnCreateDefault() != null) {
-            if (validateOnCreateDefault(connection, column.getOnCreateDefault())) {
+            if (validateOnCreateDefault(connection, column.getOnCreateDefault(), table)) {
               getSqlBuilder().executeOnCreateDefault(table, null, column, false, true);
             }
           }
@@ -2853,11 +2871,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  public boolean validateOnCreateDefault(Connection connection, String onCreateDefault) {
-    if (!onCreateDefault.toUpperCase().contains("SELECT"))
+  public boolean validateOnCreateDefault(Connection connection, String onCreateDefault, Table table) {
+    if (onCreateDefault.startsWith("'"))
       return true;
     try {
-      PreparedStatement st = connection.prepareStatement(onCreateDefault);
+      PreparedStatement st = connection.prepareStatement("SELECT (" + onCreateDefault + ") FROM "
+          + table.getName());
       st.executeQuery();
     } catch (Exception e) {
       return false;

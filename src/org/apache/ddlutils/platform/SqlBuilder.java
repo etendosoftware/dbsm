@@ -161,6 +161,7 @@ public abstract class SqlBuilder {
   public Translation _PLSQLTriggerTranslation = new NullTranslation();
   private Translation _SQLTranslation = new NullTranslation();
   private boolean script = false;
+  private ArrayList<String> recreatedTables = new ArrayList<String>();
 
   //
   // Configuration
@@ -671,7 +672,6 @@ public abstract class SqlBuilder {
         writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i)
             .getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
         writeExternalIndicesCreateStmt(desiredModel.getTable(i));
-        enableAllNOTNULLColumns(desiredModel.getTable(i));
         if (newColumn) {
           Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
           dropTemporaryTable(desiredModel, tempTable);
@@ -765,6 +765,10 @@ public abstract class SqlBuilder {
       return false;
     else
       return true;
+  }
+
+  public boolean hasBeenRecreated(Table table) {
+    return recreatedTables.contains(table.getName());
   }
 
   public void executeStandardDefault(Table table, Column col) throws IOException {
@@ -1565,7 +1569,6 @@ public abstract class SqlBuilder {
         // Likewise, foreign keys have already been dropped as necessary
         dropTable(sourceTable);
         createTable(desiredModel, realTargetTable, parameters);
-        disableAllNOTNULLColumns(realTargetTable);
         writeCopyDataStatement(tempTable, targetTable);
         if (!newColumn)
           dropTemporaryTable(desiredModel, tempTable);
