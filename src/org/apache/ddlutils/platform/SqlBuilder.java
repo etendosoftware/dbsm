@@ -482,7 +482,7 @@ public abstract class SqlBuilder {
       createTable(database, table, params == null ? null : params.getParametersFor(table));
       writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
       writeExternalIndicesCreateStmt(table);
-
+      disableAllNOTNULLColumns(table);
     }
 
     // we're writing the external foreignkeys last to ensure that all
@@ -662,7 +662,7 @@ public abstract class SqlBuilder {
         if (table.getName().equalsIgnoreCase(desiredModel.getTable(i).getName())) {
           Table tempTable = getTemporaryTableFor(desiredModel, change.getChangedTable());
           if (change.getNewColumn().getOnCreateDefault() != null) {
-            executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated);
+            executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, false);
             writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
           }
         }
@@ -775,25 +775,30 @@ public abstract class SqlBuilder {
     }
   }
 
-  public void executeOnCreateDefault(Table table, Table tempTable, Column col, boolean recreated)
-      throws IOException {
+  public void executeOnCreateDefault(Table table, Table tempTable, Column col, boolean recreated,
+      boolean onlyForNullRows) throws IOException {
     String pk = "";
     Column[] pks1 = table.getPrimaryKeyColumns();
-    for (int i = 0; i < pks1.length; i++) {
-      if (i > 0)
-        pk += " AND ";
-      pk += "TO_CHAR(" + table.getName() + "." + pks1[i].getName() + ")=TO_CHAR("
-          + tempTable.getName() + "." + pks1[i].getName() + ")";
+    if (recreated) {
+      for (int i = 0; i < pks1.length; i++) {
+        if (i > 0)
+          pk += " AND ";
+        pk += "TO_CHAR(" + table.getName() + "." + pks1[i].getName() + ")=TO_CHAR("
+            + tempTable.getName() + "." + pks1[i].getName() + ")";
+      }
     }
     String oncreatedefault = col.getOnCreateDefault();
     if (oncreatedefault != null && !oncreatedefault.equals("")) {
-      if (recreated)
-        println("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
+      if (recreated) {
+        print("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
             + ") WHERE EXISTS (SELECT 1 FROM " + tempTable.getName() + " WHERE " + pk + ") AND "
             + col.getName() + " IS NULL");
-      else
-        println("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
-            + ")");
+      } else {
+        print("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault + ")");
+        if (onlyForNullRows)
+          print(" WHERE " + col.getName() + " IS NULL");
+      }
+      println();
       printEndOfStatement();
     }
   }
@@ -1673,7 +1678,7 @@ public abstract class SqlBuilder {
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NULL");
         printEndOfStatement();
@@ -1697,7 +1702,7 @@ public abstract class SqlBuilder {
   protected void enableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NOT NULL");
         printEndOfStatement();

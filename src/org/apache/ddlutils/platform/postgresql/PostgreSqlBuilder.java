@@ -200,7 +200,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
         println("ALTER TABLE " + table.getName() + " ALTER " + getColumnName(column)
             + " DROP NOT NULL");
         printEndOfStatement();
@@ -249,7 +249,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
   protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {
     for (int i = 0; i < newColumns.size(); i++) {
       Column column = newColumns.get(i).getNewColumn();
-      if (column.isRequired()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
         println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + " ALTER "
             + getColumnName(column) + " SET NOT NULL");
         printEndOfStatement();

@@ -2808,4 +2808,60 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       // won't happen
     }
   }
+
+  public void activateNOTNULLColumns(Database database) {
+    Connection connection = borrowConnection();
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < database.getTableCount(); i++) {
+        getSqlBuilder().enableAllNOTNULLColumns(database.getTable(i));
+      }
+      evaluateBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public void executeOnCreateDefaultForMandatoryColumns(Database database) {
+    Connection connection = borrowConnection();
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < database.getTableCount(); i++) {
+        Table table = database.getTable(i);
+        for (int j = 0; j < table.getColumnCount(); j++) {
+          Column column = table.getColumn(j);
+          if (column.isRequired() && column.getOnCreateDefault() != null) {
+            if (validateOnCreateDefault(connection, column.getOnCreateDefault())) {
+              getSqlBuilder().executeOnCreateDefault(table, null, column, false, true);
+            }
+          }
+        }
+      }
+      evaluateBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public boolean validateOnCreateDefault(Connection connection, String onCreateDefault) {
+    if (!onCreateDefault.toUpperCase().contains("SELECT"))
+      return true;
+    try {
+      PreparedStatement st = connection.prepareStatement(onCreateDefault);
+      st.executeQuery();
+    } catch (Exception e) {
+      return false;
+    }
+    return true;
+  }
 }

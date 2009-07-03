@@ -13,15 +13,21 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.io.DataReader;
+import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModuleRow;
 
 /**
  * 
@@ -39,7 +45,11 @@ public class CreateDatabase extends BaseDatabaseTask {
   private String object = null;
 
   private String basedir;
+  private String modulesDir;
+
   private String dirFilter;
+  private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
+  private String input;
 
   /** Creates a new instance of CreateDatabase */
   public CreateDatabase() {
@@ -72,9 +82,9 @@ public class CreateDatabase extends BaseDatabaseTask {
       }
 
       Database db = null;
-      if (basedir == null) {
+      if (modulesDir == null) {
         getLog().info(
-            "Basedir for additional files not specified. Creating database with just Core.");
+            "modulesDir for additional files not specified. Creating database with just Core.");
         db = DatabaseUtils.readDatabase(getModel());
       } else {
         // We read model files using the filter, obtaining a file array.
@@ -83,13 +93,13 @@ public class CreateDatabase extends BaseDatabaseTask {
         final Vector<File> dirs = new Vector<File>();
         dirs.add(model);
         final DirectoryScanner dirScanner = new DirectoryScanner();
-        dirScanner.setBasedir(new File(basedir));
+        dirScanner.setBasedir(new File(modulesDir));
         final String[] dirFilterA = { dirFilter };
         dirScanner.setIncludes(dirFilterA);
         dirScanner.scan();
         final String[] incDirs = dirScanner.getIncludedDirectories();
         for (int j = 0; j < incDirs.length; j++) {
-          final File dirF = new File(basedir, incDirs[j]);
+          final File dirF = new File(modulesDir, incDirs[j]);
           dirs.add(dirF);
         }
         final File[] fileArray = new File[dirs.size()];
@@ -128,7 +138,83 @@ public class CreateDatabase extends BaseDatabaseTask {
       DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
           .getAbsolutePath());
 
+      // Now we insert sourcedata into the database
+      // first we load the data files
+      final String filters = getFilter();
+      final StringTokenizer strTokFil = new StringTokenizer(filters, ",");
+      final String folders = getInput();
+      final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
+      final Vector<File> files = new Vector<File>();
+      while (strTokFol.hasMoreElements()) {
+        if (basedir == null) {
+          getLog().info("Basedir not specified, will insert just Core data files.");
+          final String folder = strTokFol.nextToken();
+          final File[] fileArray = DatabaseUtils.readFileArray(new File(folder));
+          for (int i = 0; i < fileArray.length; i++)
+            files.add(fileArray[i]);
+        } else {
+          final String token = strTokFol.nextToken();
+          final DirectoryScanner dirScanner = new DirectoryScanner();
+          dirScanner.setBasedir(new File(basedir));
+          final String[] dirFilterA = { token };
+          dirScanner.setIncludes(dirFilterA);
+          dirScanner.scan();
+          final String[] incDirs = dirScanner.getIncludedDirectories();
+          for (int j = 0; j < incDirs.length; j++) {
+            final File dirFolder = new File(basedir, incDirs[j] + "/");
+            final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+            for (int i = 0; i < fileArray.length; i++) {
+              files.add(fileArray[i]);
+            }
+          }
+        }
+      }
+      getLog().info("Inserting data into the database.");
+      // Now we insert the data into the database
+      final DatabaseDataIO dbdio = new DatabaseDataIO();
+      dbdio.setEnsureFKOrder(false);
+      DataReader dataReader = null;
+      while (strTokFil.hasMoreElements()) {
+        final String filter = strTokFil.nextToken();
+        if (filter != null && !filter.equals("")) {
+          dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(filter, db));
+          dataReader = dbdio.getConfiguredDataReader(platform, db);
+          dataReader.getSink().start(); // we do this to delete data
+          // from tables in each of the
+          // filters
+        }
+      }
+      for (int i = 0; i < files.size(); i++) {
+        getLog().debug("Importing data from file: " + files.get(i).getName());
+        dbdio.writeDataToDatabase(dataReader, files.get(i));
+      }
+
+      platform.executeOnCreateDefaultForMandatoryColumns(db);
+      platform.activateNOTNULLColumns(db);
+      dataReader.getSink().end();
+
+      final DBSMOBUtil util = DBSMOBUtil.getInstance();
+      util.getModules(platform, "org.apache.ddlutils.platform.ExcludeFilter");
+      util.generateIndustryTemplateTree();
+      for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
+        final ModuleRow temp = util.getIndustryTemplateId(i);
+        final File f = new File(basedir, "modules/" + temp.dir
+            + "/src-db/database/configScript.xml");
+        getLog().info(
+            "Loading config script for module " + temp.name + ". Path: " + f.getAbsolutePath());
+        if (f.exists()) {
+          final DatabaseIO dbIO = new DatabaseIO();
+          final Vector<Change> changesConfigScript = dbIO.readChanges(f);
+          platform.applyConfigScript(db, changesConfigScript);
+        } else {
+          getLog().error(
+              "Error. We couldn't find configuration script for template " + temp.name + ". Path: "
+                  + f.getAbsolutePath());
+        }
+      }
+
     } catch (final Exception e) {
+      e.printStackTrace();
       throw new BuildException(e);
     }
   }
@@ -199,5 +285,29 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   public String getObject() {
     return object;
+  }
+
+  public void setFilter(String filter) {
+    this.filter = filter;
+  }
+
+  public String getFilter() {
+    return filter;
+  }
+
+  public String getInput() {
+    return input;
+  }
+
+  public void setInput(String input) {
+    this.input = input;
+  }
+
+  public String getModulesDir() {
+    return modulesDir;
+  }
+
+  public void setModulesDir(String modulesDir) {
+    this.modulesDir = modulesDir;
   }
 }
