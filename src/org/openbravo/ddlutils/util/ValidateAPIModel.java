@@ -106,9 +106,11 @@ public class ValidateAPIModel extends ValidateAPI {
         AddColumnChange c = (AddColumnChange) change;
         Column oldCol = validDB.findTable(c.getChangedTable().getName()).findColumn(
             c.getNewColumn().getName());
-        if (oldCol == null && c.getNewColumn().isRequired()) {
+        if (oldCol == null && c.getNewColumn().isRequired()
+            && c.getNewColumn().getOnCreateDefault() == null) {
           // it is a real creation, not a re-creation
-          errors.add("Added mandatory column: " + tablename + "." + c.getNewColumn().getName());
+          errors.add("Added mandatory column without onCreateDefault: " + tablename + "."
+              + c.getNewColumn().getName());
         }
       } else if (change instanceof AddForeignKeyChange) {
         AddForeignKeyChange c = (AddForeignKeyChange) change;
