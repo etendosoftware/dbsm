@@ -53,6 +53,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -172,15 +173,53 @@ public class ValidateAPIModel extends ValidateAPI {
         AddPrimaryKeyChange c = (AddPrimaryKeyChange) change;
         warnings.add("Added PK: table: " + tablename + " - PK: " + c.getprimaryKeyName());
       } else if (change instanceof AddUniqueChange) {
+        /*
+         * Disalllowed changes in Unique constraints:
+         * 
+         * -Delete a column from a existent contraint
+         * 
+         * -Create a new constraint with already existent columns
+         * 
+         * Allowed changes in Unique constraints:
+         * 
+         * -Create a new constraint composed just by new columns in the model
+         * 
+         * -Add column to an existent constraint
+         */
         AddUniqueChange c = (AddUniqueChange) change;
-        for (IndexColumn cols : c.getNewUnique().getColumns()) {
-          if (!(validDB.findTable(tablename) == null || validDB.findTable(tablename).findColumn(
-              cols.getName()) == null))
-            // error only in case the constraint is for an already existent col
-            errors.add("Unique constraint added: table: " + tablename + " - Unique constraint: "
-                + c.getNewUnique().getName());
-        }
+        Unique originalUnique = validDB.findTable(tablename).findUnique(c.getNewUnique().getName());
+        Unique newUnique = c.getNewUnique();
 
+        if (originalUnique == null) {
+          // New constraint, it only can have new columns in the model
+          for (IndexColumn cols : newUnique.getColumns()) {
+            if (!(validDB.findTable(tablename) == null || validDB.findTable(tablename).findColumn(
+                cols.getName()) == null)) {
+              // error only in case the constraint is for an already existent table/column
+              errors.add("Unique constraint added: table: " + tablename + " - Unique constraint: "
+                  + newUnique.getName());
+              break;
+            }
+          }
+        } else {
+          // Constraint modification
+          // check no columns where removed from original constraint
+          for (IndexColumn colOriginal : originalUnique.getColumns()) {
+            boolean found = false;
+            for (IndexColumn colNew : newUnique.getColumns()) {
+              if (colNew.getName().equals(colOriginal.getName())) {
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              errors.add("Unique constraint modified, column removed: table: " + tablename
+                  + " - Unique constraint: " + newUnique.getName() + " - removed column "
+                  + colOriginal.getName());
+            }
+          }
+
+        }
       } else if (change instanceof PrimaryKeyChange) {
         PrimaryKeyChange c = (PrimaryKeyChange) change;
 
