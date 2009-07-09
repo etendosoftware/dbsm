@@ -254,7 +254,7 @@ public class ValidateAPIModel extends ValidateAPI {
           } else if (originalColumn.isOfTextType() && c.getChangedColumn().isOfNumericType()) {
             errors.add("Column type change from text to numeric: column:" + tableColumn);
           } else if (originalType != Types.TIMESTAMP && testType == Types.TIMESTAMP) {
-            errors.add("Column type change from date to " + c.getChangedColumn().getType());
+            errors.add("Column type change from " + c.getChangedColumn().getType() + " to DATE");
           } else if (originalType != testType) {
             warnings.add("Column type change from "
                 + originalColumn.getType()
