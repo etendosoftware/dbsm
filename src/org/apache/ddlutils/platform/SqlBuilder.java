@@ -1897,6 +1897,12 @@ public abstract class SqlBuilder {
       }
     }
 
+    for (int idx = 0; idx < targetTable.getColumnCount(); idx++) {
+      Column targetColumn = targetTable.getColumn(idx);
+      if (targetColumn.getOnCreateDefault() != null && !columns.containsKey(targetColumn)) {
+        columns.put(targetColumn, null);
+      }
+    }
     print("INSERT INTO ");
     printIdentifier(getStructureObjectName(targetTable));
     print(" (");
@@ -1909,8 +1915,11 @@ public abstract class SqlBuilder {
     print(") SELECT ");
     for (Iterator columnsIt = columns.entrySet().iterator(); columnsIt.hasNext();) {
       Map.Entry entry = (Map.Entry) columnsIt.next();
-
-      writeCastExpression((Column) entry.getKey(), (Column) entry.getValue());
+      if (entry.getValue() != null) {
+        writeCastExpression((Column) entry.getKey(), (Column) entry.getValue());
+      } else {
+        print(((Column) entry.getKey()).getOnCreateDefault());
+      }
       if (columnsIt.hasNext()) {
         print(",");
       }

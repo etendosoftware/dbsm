@@ -92,7 +92,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
   @Override
   public void doExecute() {
-
+    System.out.println("hola");
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     final BasicDataSource ds = new BasicDataSource();
