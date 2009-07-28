@@ -783,8 +783,12 @@ public class Database implements Serializable, Cloneable {
 
         if (fkName.length() > 0) {
           if (namesOfProcessedFks.contains(fkName)) {
-            throw new ModelException("There are multiple foreign keys in table "
-                + curTable.getName() + " with the name " + fkName);
+            for (int i = 0; i < curTable.getForeignKeyCount(); i++) {
+              if (curTable.getForeignKey(i).getName().equals(fkName)) {
+                curTable.removeForeignKey(curTable.getForeignKey(i));
+                break;
+              }
+            }
           }
           namesOfProcessedFks.add(fkName);
         }
