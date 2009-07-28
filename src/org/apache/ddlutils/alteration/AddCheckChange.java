@@ -62,9 +62,7 @@ public class AddCheckChange extends TableChangeImplBase {
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);
     }
-    System.out.println(table.getName() + ";;" + newCheck.getName());
     if (table.findCheck(newCheck.getName()) != null) {
-      System.out.println("found");
       table.removeCheck(table.findCheck(newCheck.getName()));
     }
     table.addCheck(newCheck);
