@@ -50,6 +50,7 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
   private String encoding = "UTF-8";
 
   private String codeRevision;
+  private String datasetList;
 
   /** Creates a new instance of WriteDataXML */
   public ExportDataXMLMod() {
@@ -94,8 +95,9 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
 
       // Create a set of files one for each table
       final Vector<String> datasets = new Vector<String>();
-      datasets.add("AD");
-      datasets.add("ADRD");
+      String[] datasetArray = datasetList.split(",");
+      for (String dataset : datasetArray)
+        datasets.add(dataset);
 
       int datasetI = 0;
 
@@ -252,6 +254,14 @@ public class ExportDataXMLMod extends BaseDalInitializingTask {
 
   public void setModule(String module) {
     this.module = module;
+  }
+
+  public String getDatasetList() {
+    return datasetList;
+  }
+
+  public void setDatasetList(String datasetList) {
+    this.datasetList = datasetList;
   }
 
 }

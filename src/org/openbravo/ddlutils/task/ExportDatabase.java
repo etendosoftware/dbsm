@@ -61,6 +61,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private boolean force = false;
   private boolean validateModel = true;
   private boolean testAPI = false;
+  private String datasetList;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
@@ -192,8 +193,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
       }
 
       final Vector<String> datasets = new Vector<String>();
-      datasets.add("AD");
-      datasets.add("ADRD");
+      String[] datasetArray = datasetList.split(",");
+      for (String dataset : datasetArray)
+        datasets.add(dataset);
 
       final DataSetService datasetService = DataSetService.getInstance();
       int datasetI = 0;
@@ -409,5 +411,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   public void setTestAPI(boolean testAPI) {
     this.testAPI = testAPI;
+  }
+
+  public String getDatasetList() {
+    return datasetList;
+  }
+
+  public void setDatasetList(String datasetList) {
+    this.datasetList = datasetList;
   }
 }
