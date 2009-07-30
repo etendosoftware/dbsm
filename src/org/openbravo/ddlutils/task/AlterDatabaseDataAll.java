@@ -32,6 +32,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.base.model.ModelProvider;
 import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -92,7 +93,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
   @Override
   public void doExecute() {
-    System.out.println("hola");
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     final BasicDataSource ds = new BasicDataSource();
@@ -180,6 +180,8 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         getLog().info("Dataset DS has changed. We need to update it.");
         platform.alterData(connection, db, dataComparatorDS.getChanges());
         getLog().info("Dataset DS updated succesfully. Reinitializing DAL");
+        ModelProvider.setInstance(null);
+        DalLayerInitializer.getInstance().setInitialized(false);
         DalLayerInitializer.getInstance().initialize(true);
 
       }
