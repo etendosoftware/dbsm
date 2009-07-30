@@ -1899,7 +1899,8 @@ public abstract class SqlBuilder {
 
     for (int idx = 0; idx < targetTable.getColumnCount(); idx++) {
       Column targetColumn = targetTable.getColumn(idx);
-      if (targetColumn.getOnCreateDefault() != null && !columns.containsKey(targetColumn)) {
+      if (targetColumn.getOnCreateDefault() != null
+          && sourceTable.findColumn(targetColumn.getName()) == null) {
         columns.put(targetColumn, null);
       }
     }
@@ -1918,7 +1919,7 @@ public abstract class SqlBuilder {
       if (entry.getValue() != null) {
         writeCastExpression((Column) entry.getKey(), (Column) entry.getValue());
       } else {
-        print(((Column) entry.getKey()).getOnCreateDefault());
+        print("(" + ((Column) entry.getKey()).getOnCreateDefault() + ")");
       }
       if (columnsIt.hasNext()) {
         print(",");
