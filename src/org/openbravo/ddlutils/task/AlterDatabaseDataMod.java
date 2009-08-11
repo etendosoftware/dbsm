@@ -192,6 +192,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       ada.doExecute();
       return;
     }
+    Database originaldb = null;
     final StringTokenizer st = new StringTokenizer(module, ",");
     while (st.hasMoreElements()) {
       final String modName = st.nextToken().trim();
@@ -200,7 +201,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       moduleRows.add(row);
       if (row == null)
         throw new BuildException("Module " + modName + " not found in AD_MODULE table.");
-      Database originaldb = null;
       Database db = null;
       try {
         if (row.prefixes.size() == 0) {
@@ -257,9 +257,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
         final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
             .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
         dataComparator.compareUsingDALToUpdate(dbAD, platform, databaseOrgData, "AD", row.idMod);
-        getLog().info("Data changes we will perform: ");
-        for (final Change change : dataComparator.getChanges())
-          getLog().info(change);
         getLog().info("Comparing databases to find data differences");
         dataChanges.add(dataComparator.getChanges());
         OBDal.getInstance().commitAndClose();
@@ -284,6 +281,11 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
     getLog().info("Updating database data...");
 
+    if (originaldb != null) {
+      // First we fix the dbAD model, removing the foreign keys that have been removed in the
+      // database by the model upgrade process
+      platform.removeDeletedFKTriggers(originaldb, dbAD);
+    }
     getLog().info("Disabling foreign keys");
     final Connection connection = platform.borrowConnection();
     platform.disableAllFK(connection, dbAD, !isFailonerror());

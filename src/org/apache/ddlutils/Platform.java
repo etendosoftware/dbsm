@@ -1347,6 +1347,8 @@ public interface Platform {
   public void insertViewsInBothModels(Database loadedDatabase, Database fullXMLDatabase,
       Database filteredDatabase);
 
+  public void removeDeletedFKTriggers(Database modifiedDatabase, Database fullXMLDatabase);
+
   public void disableNOTNULLColumns(Database database);
 
   public void enableNOTNULLColumns(Database database);

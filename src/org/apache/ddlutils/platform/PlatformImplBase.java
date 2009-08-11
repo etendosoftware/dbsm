@@ -62,8 +62,10 @@ import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
@@ -2806,6 +2808,30 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
     } catch (Exception e) {
       // won't happen
+    }
+  }
+
+  public void removeDeletedFKTriggers(Database modifiedDatabase, Database fullXMLDatabase) {
+    for (int i = 0; i < fullXMLDatabase.getTableCount(); i++) {
+      Table table = fullXMLDatabase.getTable(i);
+      Table table2 = modifiedDatabase.findTable(table.getName());
+      if (table2 != null) {
+        ForeignKey[] fks = table.getForeignKeys();
+        for (int j = 0; j < fks.length; j++) {
+          if (table2.findForeignKey(fks[j]) == null)
+            table.removeForeignKey(fks[j]);
+        }
+      }
+    }
+
+    Trigger[] triggers = fullXMLDatabase.getTriggers();
+    for (int i = 0; i < triggers.length; i++) {
+      Trigger trigger = triggers[i];
+      Trigger trigger2 = modifiedDatabase.findTrigger(trigger.getName());
+      if (trigger2 == null && modifiedDatabase.findTable(trigger.getTable()) != null) {
+        fullXMLDatabase.removeTrigger(trigger);
+      }
+
     }
   }
 
