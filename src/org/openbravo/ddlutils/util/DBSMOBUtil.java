@@ -310,7 +310,7 @@ public class DBSMOBUtil {
     if (incdependencies.get(row.idMod) != null) {
       for (final String id : incdependencies.get(row.idMod)) {
         if (!idList.contains(id)) {
-          getIncludedModulesInModule(getRow(id).name, idList);
+          getIncludedModulesInModule(getRow(id).dir, idList);
         }
       }
     }
