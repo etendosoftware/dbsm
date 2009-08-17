@@ -4021,6 +4021,18 @@ public abstract class SqlBuilder {
   }
 
   /**
+   * Returns the structure name. This method takes care of length limitations imposed by some
+   * databases.
+   * 
+   * @param name
+   *          The structure name
+   * @return The shortened structure name
+   */
+  public String getStructureObjectName(String name) {
+    return shortenName(name, getMaxTableNameLength());
+  }
+
+  /**
    * Returns the full SQL type specification for the given type.
    * 
    * @param column

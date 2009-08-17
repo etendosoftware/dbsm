@@ -625,7 +625,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
   protected void writeDropTriggerEndStatement(Database database, Trigger trigger)
       throws IOException {
     print(" ON ");
-    print(getStructureObjectName(database.findTable(trigger.getTable())));
+    print(getStructureObjectName(trigger.getTable()));
     print(" CASCADE");
   }
 
