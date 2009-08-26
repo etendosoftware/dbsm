@@ -190,9 +190,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
       OBDal.getInstance().commitAndClose();
-      getLog().info("Data changes we will perform: ");
-      for (final Change change : dataComparator.getChanges())
-        getLog().info(change);
       getLog().info("Updating database data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
