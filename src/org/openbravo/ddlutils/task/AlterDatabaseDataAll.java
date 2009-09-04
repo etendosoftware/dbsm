@@ -123,7 +123,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         throw new BuildException("Database has local changes. Update.database not done.");
       }
     }
-
+    getLog().info("Executing full update.database");
     try {
       // execute the pre-script
       if (getPrescript() == null) {

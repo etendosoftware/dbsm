@@ -54,7 +54,12 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
    */
   protected void initLogging() {
     log = Logger.getLogger(getClass());
-    OBLogAppender.setProject(getProject());
+    if (getProject() != null) {
+      OBLogAppender.setProject(getProject());
+    } else {
+      OBLogAppender.setOutputStream(System.out);
+      OBLogAppender.setLevel(Level.INFO);
+    }
   }
 
   @Override
