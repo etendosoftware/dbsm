@@ -29,7 +29,10 @@ public class AlterDatabaseJava {
     ada.setDatafilter(args[14]);
     ada.setUserId(args[15]);
     ada.setPropertiesFile(args[16]);
-    ada.setForce(new Boolean(args[17]).booleanValue());
+    String force = args[17];
+    if (force.equalsIgnoreCase("yes"))
+      force = "true";
+    ada.setForce(new Boolean(force).booleanValue());
     ada.execute();
 
   }
