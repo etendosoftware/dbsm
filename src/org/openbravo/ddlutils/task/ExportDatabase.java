@@ -63,6 +63,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private boolean testAPI = false;
   private String datasetList;
 
+  private boolean rd;
+
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
   }
@@ -201,6 +203,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
       int datasetI = 0;
 
       for (final String dataSetCode : datasets) {
+        if (dataSetCode.equalsIgnoreCase("ADRD") && !rd)
+          continue;
         final DataSet dataSet = datasetService.getDataSetByValue(dataSetCode);
         System.out.println(dataSet);
         final List<DataSetTable> tableList = dataSet.getDataSetTableList();
@@ -213,6 +217,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
             File path;
             if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
               path = output;
+              if (dataSetCode.equalsIgnoreCase("ADRD"))
+                path = new File(path, "referencedData");
             } else {
               path = new File(moduledir, util.getActiveModule(i).dir
                   + "/src-db/database/sourcedata/");
@@ -268,7 +274,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
               if (datasetI == 0) {
                 final File[] filestodelete = DatabaseIO.readFileArray(path);
                 for (final File filedelete : filestodelete) {
-                  filedelete.delete();
+                  if (!filedelete.isDirectory())
+                    filedelete.delete();
                 }
               }
               for (final DataSetTable table : tableList) {
@@ -419,5 +426,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   public void setDatasetList(String datasetList) {
     this.datasetList = datasetList;
+  }
+
+  public boolean isRd() {
+    return rd;
+  }
+
+  public void setRd(boolean rd) {
+    this.rd = rd;
   }
 }
