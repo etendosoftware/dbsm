@@ -272,7 +272,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
               getLog().info("Path: " + path);
               path.mkdirs();
               if (datasetI == 0) {
-                final File[] filestodelete = DatabaseIO.readFileArray(path);
+                final File[] filestodelete = path.listFiles();
                 for (final File filedelete : filestodelete) {
                   if (!filedelete.isDirectory())
                     filedelete.delete();
