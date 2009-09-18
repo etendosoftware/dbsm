@@ -101,7 +101,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       else {
         getLog()
             .info(
-                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=yes (you will lose all your changes if you do it)");
+                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes if you do it)");
         throw new BuildException("Database has local changes. Update.database not done.");
       }
     }
