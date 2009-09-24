@@ -32,6 +32,8 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.service.OBDal;
@@ -179,6 +181,17 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       if (dataComparatorDS.getChanges().size() > 0) {
         getLog().info("Dataset DS has changed. We need to update it.");
         platform.alterData(connection, db, dataComparatorDS.getChanges());
+        getLog().info("Generating entities...");
+        try {
+          Project project = new Project();
+          project.init();
+          File op = new File(basedir, "/../");
+          project.setBasedir(op.getAbsolutePath());
+          ProjectHelper.getProjectHelper().parse(project, new File(op, "/build.xml"));
+          project.executeTarget("generate.entities");
+        } catch (Exception e) {
+          getLog().error("generate.entities process failed: ", e);
+        }
         getLog().info("Dataset DS updated succesfully. Reinitializing DAL");
         ModelProvider.setInstance(null);
         DalLayerInitializer.getInstance().setInitialized(false);
