@@ -461,8 +461,8 @@ public class DBSMOBUtil {
   }
 
   public boolean hasBeenModified(Platform platform, boolean updateCRC) {
+    final Connection connection = platform.borrowConnection();
     try {
-      final Connection connection = platform.borrowConnection();
       PreparedStatement statementDate = connection
           .prepareStatement("SELECT last_dbupdate from AD_SYSTEM_INFO");
       statementDate.execute();
@@ -498,6 +498,8 @@ public class DBSMOBUtil {
       e.printStackTrace();
       System.out
           .println("There was a problem verifying the changes in the database. Updating the database anyway...");
+    } finally {
+      platform.returnConnection(connection);
     }
     return false;
 

@@ -162,7 +162,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
               + " end; \n"
               + "$BODY$\n"
               + " LANGUAGE 'plpgsql' VOLATILE");
-      s.executeUpdate();
+      s.execute();
       s.close();
     } catch (SQLException e) {
       e.printStackTrace();
@@ -977,28 +977,28 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   @Override
-    protected int translateColumnType(String nativeType) {
+  protected int translateColumnType(String nativeType) {
 
-        if (nativeType == null) {
-            return Types.NULL;
-        } else if ("BPCHAR".equalsIgnoreCase(nativeType)) {
-            return Types.CHAR;
-        } else if ("VARCHAR".equalsIgnoreCase(nativeType)) {
-            return Types.VARCHAR;
-        } else if ("NUMERIC".equalsIgnoreCase(nativeType)) {
-            return Types.DECIMAL;
-        } else if ("TIMESTAMP".equalsIgnoreCase(nativeType)) {
-            return Types.TIMESTAMP;
-        } else if ("TEXT".equalsIgnoreCase(nativeType)) {
-            return Types.CLOB;
-        } else if ("BYTEA".equalsIgnoreCase(nativeType)) {
-            return Types.BLOB;
-        }else if ("OID".equalsIgnoreCase(nativeType)){
-            return Types.OTHER;
-        } else {
-            return Types.VARCHAR;
-        }
+    if (nativeType == null) {
+      return Types.NULL;
+    } else if ("BPCHAR".equalsIgnoreCase(nativeType)) {
+      return Types.CHAR;
+    } else if ("VARCHAR".equalsIgnoreCase(nativeType)) {
+      return Types.VARCHAR;
+    } else if ("NUMERIC".equalsIgnoreCase(nativeType)) {
+      return Types.DECIMAL;
+    } else if ("TIMESTAMP".equalsIgnoreCase(nativeType)) {
+      return Types.TIMESTAMP;
+    } else if ("TEXT".equalsIgnoreCase(nativeType)) {
+      return Types.CLOB;
+    } else if ("BYTEA".equalsIgnoreCase(nativeType)) {
+      return Types.BLOB;
+    } else if ("OID".equalsIgnoreCase(nativeType)) {
+      return Types.OTHER;
+    } else {
+      return Types.VARCHAR;
     }
+  }
 
   @Override
   protected int translateParamType(String nativeType) {
