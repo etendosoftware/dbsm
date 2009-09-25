@@ -130,8 +130,8 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
     append(new ReplacePatTranslation("OPEN(.+?)FOR(.+?);", "OPEN $1 FOR EXECUTE $2;"));
 
     append(new ReplacePatTranslation("TYPE TYPE_Ref IS ", "TYPE_Ref "));
-    append(new ReplacePatTranslation("TYPE(\\s|\\t)(.+?)(\\s|\\t)(IS)(\\s|\\t)(.+)",
-        "--TYPE$1$2$3$4$5$6"));
+    append(new ReplacePatTranslation(
+        "([Tt][yY][Pp][Ee])(\\s*)([Rr][Ee][cC][oO][rR][dD])(\\s*)([iI][sS])", "--$1$2$3$4$5"));
 
     append(new ReplacePatTranslation("ArrayPesos;", "INTEGER[10];"));
     append(new ReplacePatTranslation("ArrayPesos\\(", "Array("));

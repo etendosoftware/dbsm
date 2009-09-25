@@ -78,8 +78,8 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
         "$1EXECUTE IMMEDIATE")));
 
     append(new ReplacePatTranslation("TYPE_Ref ", "TYPE TYPE_Ref IS "));
-    append(new ReplacePatTranslation("--TYPE(\\s|\\t)(.+?)(\\s|\\t)(IS)(\\s|\\t)(.+)",
-        "TYPE$1$2$3$4$5$6"));
+    append(new ReplacePatTranslation(
+        "--([Tt][yY][Pp][Ee])(\\s*)([Rr][Ee][cC][oO][rR][dD])(\\s*)([iI][sS])", "$1$2$3$4$5"));
 
     append(new ReplacePatTranslation("INTEGER[10];", "ArrayPesos;"));
     append(new ReplacePatTranslation("Array\\(", "ArrayPesos("));
