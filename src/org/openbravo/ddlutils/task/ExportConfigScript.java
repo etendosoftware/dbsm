@@ -77,12 +77,8 @@ public class ExportConfigScript extends BaseDalInitializingTask {
       final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeobjects);
-
+      util.checkTemplateExportIsPossible(log);
       final String indTemp = util.getNameOfActiveIndustryTemplate();
-      if (indTemp == null) {
-        getLog().info("ERROR: There is no industry template set as development.");
-        System.exit(1);
-      }
       industryTemplate = indTemp;
 
       // util.getModulesForIndustryTemplate(industryTemplate, new
