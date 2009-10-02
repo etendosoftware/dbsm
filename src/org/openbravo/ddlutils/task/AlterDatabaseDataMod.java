@@ -306,6 +306,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     platform.enableAllTriggers(connection, dbAD, !isFailonerror());
     platform.enableNOTNULLColumns(dbAD);
 
+    DBSMOBUtil.getInstance().updateCRC(platform);
   }
 
   public String getExcludeobjects() {
