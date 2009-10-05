@@ -183,12 +183,12 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     sql = "SELECT UPPER(PG_CONSTRAINT.CONNAME::TEXT)FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE::TEXT = 'p' AND UPPER(PG_CLASS.RELNAME::TEXT) =  ?";
     _stmt_pkname = _connection.prepareStatement(sql);
     _stmt_pkname_noprefix = _connection.prepareStatement(sql
-        + " AND upper(PG_CONSTRAINT.CONNAME::TEXT) NOT LIKE 'EM_%'");
+        + " AND upper(PG_CONSTRAINT.CONNAME::TEXT) NOT LIKE 'EM\\\\_%'");
     _stmt_pkname_prefix = _connection
         .prepareStatement(sql
             + " AND (upper(PG_CONSTRAINT.CONNAME::TEXT) LIKE 'EM_"
             + _prefix
-            + "_%' OR (upper(PG_CONSTRAINT.CONNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + "\\\\_%' OR (upper(PG_CONSTRAINT.CONNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))");
     _stmt_listcolumns = _connection
         .prepareStatement("SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), "
@@ -262,7 +262,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " AND UPPER(PG_ATTRIBUTE.ATTNAME::TEXT)=UPPER(information_schema.columns.column_name) "
             + " AND UPPER(pg_class.relname::text)=UPPER(information_schema.columns.table_name) "
             + " AND upper(pg_class.relname::text) = ? "
-            + " AND upper(PG_ATTRIBUTE.ATTNAME::TEXT) NOT LIKE 'EM_%'"
+            + " AND upper(PG_ATTRIBUTE.ATTNAME::TEXT) NOT LIKE 'EM\\\\_%'"
             + " ORDER BY pg_attribute.attnum");
     _stmt_listcolumns_prefix = _connection
         .prepareStatement("SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), "
@@ -302,7 +302,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " AND upper(pg_class.relname::text) = ? "
             + " AND (upper(PG_ATTRIBUTE.ATTNAME::TEXT) LIKE 'EM_"
             + _prefix
-            + "_%' OR (UPPER(PG_ATTRIBUTE.ATTNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + "\\\\_%' OR (UPPER(PG_ATTRIBUTE.ATTNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY pg_attribute.attnum");
     _stmt_pkcolumns = _connection
         .prepareStatement("SELECT upper(pg_attribute.attname::text)"
@@ -319,7 +319,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT upper(pg_constraint.conname::text), pg_constraint.consrc"
             + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
             + " WHERE pg_constraint.contype::text = 'c' and upper(pg_class.relname::text) = ?"
-            + " AND upper(pg_constraint.conname::text) NOT LIKE 'EM_%'"
+            + " AND upper(pg_constraint.conname::text) NOT LIKE 'EM\\\\_%'"
             + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_listchecks_prefix = _connection
         .prepareStatement("SELECT upper(pg_constraint.conname::text), pg_constraint.consrc"
@@ -327,7 +327,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pg_constraint.contype::text = 'c' and upper(pg_class.relname::text) = ?"
             + " AND (upper(pg_constraint.conname::text) LIKE 'EM_"
             + _prefix
-            + "_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + "\\\\_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_listfks = _connection
         .prepareStatement("SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'"
@@ -338,7 +338,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'"
             + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid LEFT JOIN pg_class fk_table ON fk_table.oid = pg_constraint.confrelid"
             + " WHERE pg_constraint.contype::text = 'f' and upper(pg_class.relname::text) = ?"
-            + " AND upper(pg_constraint.conname::text) NOT LIKE 'EM_%'"
+            + " AND upper(pg_constraint.conname::text) NOT LIKE 'EM\\\\_%'"
             + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_listfks_prefix = _connection
         .prepareStatement("SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'"
@@ -346,7 +346,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pg_constraint.contype::text = 'f' and upper(pg_class.relname::text) = ?"
             + " AND (upper(pg_constraint.conname::text) LIKE 'EM_"
             + _prefix
-            + "_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + "\\\\_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_fkcolumns = _connection
         .prepareStatement("SELECT upper(pa1.attname), upper(pa2.attname)"
@@ -379,7 +379,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text "
             + "    FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
             + "    WHERE pg_constraint.contype::text = 'u')"
-            + " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM_%'" + " ORDER BY UPPER(PG_CLASS.RELNAME)");
+            + " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM\\\\_%'"
+            + " ORDER BY UPPER(PG_CLASS.RELNAME)");
     _stmt_listindexes_prefix = _connection
         .prepareStatement("SELECT UPPER(PG_CLASS.RELNAME), CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END"
             + " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE"
@@ -395,7 +396,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + "    WHERE pg_constraint.contype::text = 'u')"
             + " AND (upper(PG_CLASS.RELNAME) LIKE 'EM_"
             + _prefix
-            + "_%' OR (UPPER(PG_CLASS.RELNAME::TEXT)||UPPER(PG_CLASS1.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + "\\\\_%' OR (UPPER(PG_CLASS.RELNAME::TEXT)||UPPER(PG_CLASS1.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY UPPER(PG_CLASS.RELNAME)");
     _stmt_indexcolumns = _connection.prepareStatement("SELECT upper(pg_attribute.attname::text) "
         + "FROM pg_index, pg_class, pg_namespace, pg_attribute"
@@ -413,7 +414,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT upper(pg_constraint.conname::text)"
             + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
             + " WHERE pg_constraint.contype::text = 'u' AND upper(pg_class.relname::text) = ?"
-            + " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM_%'"
+            + " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM\\\\_%'"
             + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_listuniques_prefix = _connection
         .prepareStatement("SELECT upper(pg_constraint.conname::text)"
@@ -421,7 +422,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pg_constraint.contype::text = 'u' AND upper(pg_class.relname::text) = ?"
             + " AND (upper(pg_constraint.conname::text) LIKE 'EM_"
             + _prefix
-            + "_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + "\\\\_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_uniquecolumns = _connection
         .prepareStatement("SELECT upper(pg_attribute.attname::text)"
@@ -441,7 +442,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     if (_prefix != null) {
       sql += " AND (upper(viewname) LIKE '"
           + _prefix
-          + "_%' OR (upper(viewname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+          + "\\\\_%' OR (upper(viewname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     }
     _stmt_listviews = _connection.prepareStatement(sql);
@@ -453,7 +454,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
           + getListObjects(_filter.getExcludedSequences()) + ")";
     }
     if (_prefix != null) {
-      sql += " AND upper(relname) LIKE '" + _prefix + "_%'";
+      sql += " AND upper(relname) LIKE '" + _prefix + "\\\\_%'";
     }
     _stmt_listsequences = _connection.prepareStatement(sql);
 
@@ -500,7 +501,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     if (_prefix != null) {
       sql += "AND (upper(trg.tgname) LIKE '"
           + _prefix
-          + "_%' OR (upper(trg.tgname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+          + "\\\\_%' OR (upper(trg.tgname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     }
     _stmt_listtriggers = _connection.prepareStatement(sql);
@@ -520,7 +521,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     if (_prefix != null) {
       sql += " AND (upper(proname) LIKE '"
           + _prefix
-          + "_%' OR (upper(proname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+          + "\\\\_%' OR (upper(proname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     }
     _stmt_listfunctions = _connection.prepareStatement(sql);
