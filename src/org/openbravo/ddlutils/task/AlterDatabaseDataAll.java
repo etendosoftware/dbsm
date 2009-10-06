@@ -207,7 +207,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(db, !isFailonerror());
-      getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
+      getLog().info("Executing update final script (NOT NULLs and dropping temporary tables");
       platform.alterTablesPostScript(oldModel, db, !isFailonerror());
 
       platform.executeOnCreateDefaultForMandatoryColumns(db);
