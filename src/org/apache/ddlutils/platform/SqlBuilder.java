@@ -748,9 +748,6 @@ public abstract class SqlBuilder {
         processChange(currentModel, desiredModel, params, ((AddCheckChange) change));
       }
     }
-    _PLSQLFunctionTranslation = new NullTranslation();
-    _PLSQLTriggerTranslation = new NullTranslation();
-    _SQLTranslation = new NullTranslation();
   }
 
   public boolean willBeRecreated(Table table, Vector<TableChange> changes) {
@@ -3596,7 +3593,6 @@ public abstract class SqlBuilder {
    *          The view
    */
   protected void createView(View view) throws IOException {
-
     if (getPlatformInfo().isViewsSupported()) {
       if (view.getName() == null) {
         _log.warn("Cannot write unnamed view " + view);
