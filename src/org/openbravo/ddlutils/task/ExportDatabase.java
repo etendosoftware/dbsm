@@ -73,11 +73,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
   public void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
-    final BasicDataSource ds = new BasicDataSource();
-    ds.setDriverClassName(getDriver());
-    ds.setUrl(getUrl());
-    ds.setUsername(getUser());
-    ds.setPassword(getPassword());
+    final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
+        getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // platform.setDelimitedIdentifierModeOn(true);
@@ -91,6 +88,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
     }
 
     // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
+    System.out.println(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
         .getAbsolutePath())) {
       getLog()
@@ -206,7 +204,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (dataSetCode.equalsIgnoreCase("ADRD") && !rd)
           continue;
         final DataSet dataSet = datasetService.getDataSetByValue(dataSetCode);
-        System.out.println(dataSet);
         final List<DataSetTable> tableList = dataSet.getDataSetTableList();
         for (int i = 0; i < util.getActiveModuleCount(); i++) {
           if (module == null || module.equals("%")

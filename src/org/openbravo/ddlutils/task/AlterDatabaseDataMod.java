@@ -80,16 +80,8 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
               "This task requires a module name to be passed as parameter. Example: ant update.database.mod -Dmodule=modulename");
       throw new BuildException("No module name provided.");
     }
-    final BasicDataSource ds = new BasicDataSource();
-    ds.setDriverClassName(getDriver());
-    ds.setUrl(getUrl());
-    ds.setUsername(getUser());
-    ds.setPassword(getPassword());
-    if (getDriver().contains("Oracle"))
-      ds.setValidationQuery("SELECT 1 FROM DUAL");
-    else
-      ds.setValidationQuery("SELECT 1");
-    ds.setTestOnBorrow(true);
+    final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
+        getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);

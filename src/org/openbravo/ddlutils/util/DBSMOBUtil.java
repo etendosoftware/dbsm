@@ -11,12 +11,14 @@ import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.task.DatabaseUtils;
@@ -100,7 +102,7 @@ public class DBSMOBUtil {
     getInclusiveDependencies(platform);
     final String sql = "SELECT * FROM AD_MODULE";
 
-    final Connection connection = platform.borrowConnection();
+    Connection connection = platform.borrowConnection();
     ResultSet resultSet = null;
     try {
       final PreparedStatement statement = connection.prepareStatement(sql);
@@ -111,6 +113,7 @@ public class DBSMOBUtil {
         throw new BuildException("Module information not found in database: table AD_MODULE empty.");
       }
     } catch (final Exception e) {
+      platform.returnConnection(connection);
       throw new BuildException(
           "Module information not found in database (error while trying to read table AD_MODULE).");
     }
@@ -197,6 +200,8 @@ public class DBSMOBUtil {
       e.printStackTrace();
       throw new BuildException("Error while trying to fetch module information from database: "
           + e.getMessage());
+    } finally {
+      platform.returnConnection(connection);
     }
   }
 
@@ -563,6 +568,7 @@ public class DBSMOBUtil {
       statement.execute();
       statement = connection.prepareStatement(sql2);
       statement.execute();
+      ((ModelBasedResultSetIterator) itCheck).cleanUp();
     } catch (Exception e) {
       System.out.println("There was a problem when deleting install table content.");
       e.printStackTrace();
@@ -579,6 +585,7 @@ public class DBSMOBUtil {
         // Install tables do not exist. We shouldn't try to move the module data from them.
         return;
       }
+      ((ModelBasedResultSetIterator) itCheck).cleanUp();
       final StringTokenizer st = new StringTokenizer(modulePackages, ",");
       Table[] db_prefinst = { database.findTable("AD_MODULE_DBPREFIX_INSTALL") };
       Table[] mod_dep = { database.findTable("AD_MODULE_DEPENDENCY_INST") };
@@ -602,6 +609,7 @@ public class DBSMOBUtil {
         moduleIds.add(moduleId);
         moduleRows.add(moduleRow);
       }
+      ((ModelBasedResultSetIterator) it).cleanUp();
       for (String moduleId : moduleIds) {
         Iterator itPref = platform.query(database,
             "SELECT * FROM AD_MODULE_DBPREFIX_INSTALL WHERE AD_MODULE_ID='" + moduleId + "'",
@@ -610,6 +618,7 @@ public class DBSMOBUtil {
           SqlDynaBean prefRow = (SqlDynaBean) itPref.next();
           prefRows.add(prefRow);
         }
+        ((ModelBasedResultSetIterator) itPref).cleanUp();
         Iterator itDep = platform.query(database,
             "SELECT * FROM AD_MODULE_DEPENDENCY_INST WHERE AD_MODULE_ID='" + moduleId + "'",
             mod_dep);
@@ -617,6 +626,7 @@ public class DBSMOBUtil {
           SqlDynaBean depRow = (SqlDynaBean) itDep.next();
           depRows.add(depRow);
         }
+        ((ModelBasedResultSetIterator) itDep).cleanUp();
       }
 
       for (SqlDynaBean moduleRow : moduleRows) {
@@ -676,5 +686,22 @@ public class DBSMOBUtil {
     String newCS = cs.calculateCheckSumWithoutSaving("md5.db.all");
     return newCS.equals(oldCS);
 
+  }
+
+  public static BasicDataSource getDataSource(String driver, String url, String user,
+      String password) {
+    BasicDataSource ds = new BasicDataSource();
+    ds.setDriverClassName(driver);
+    ds.setUrl(url);
+    ds.setUsername(user);
+    ds.setPassword(password);
+    if (driver.contains("Oracle"))
+      ds.setValidationQuery("SELECT 1 FROM DUAL");
+    else
+      ds.setValidationQuery("SELECT 1");
+    ds.setTestOnBorrow(true);
+    ds.setMaxWait(10000);
+
+    return ds;
   }
 }

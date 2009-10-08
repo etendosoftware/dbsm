@@ -68,11 +68,8 @@ public class ExportConfigScript extends BaseDalInitializingTask {
         throw new BuildException("No industry template was specified.");
       }
 
-      final BasicDataSource ds = new BasicDataSource();
-      ds.setDriverClassName(getDriver());
-      ds.setUrl(getUrl());
-      ds.setUsername(getUser());
-      ds.setPassword(getPassword());
+      final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
+          getPassword());
 
       final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
       final DBSMOBUtil util = DBSMOBUtil.getInstance();

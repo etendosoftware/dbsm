@@ -58,11 +58,8 @@ public class CreateDatabase extends BaseDatabaseTask {
   @Override
   public void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
-    final BasicDataSource ds = new BasicDataSource();
-    ds.setDriverClassName(getDriver());
-    ds.setUrl(getUrl());
-    ds.setUsername(getUser());
-    ds.setPassword(getPassword());
+    final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
+        getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // platform.setDelimitedIdentifierModeOn(true);
