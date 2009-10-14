@@ -670,12 +670,26 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void alterTablesPostScript(Database currentModel, Database desiredModel,
+      boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException {
+
+    Connection connection = borrowConnection();
+
+    try {
+      alterTablesPostScript(connection, currentModel, desiredModel, continueOnError, changes,
+          fullModel);
+    } finally {
+      returnConnection(connection);
+    }
+
+  }
+
+  public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException {
 
     Connection connection = borrowConnection();
 
     try {
-      alterTablesPostScript(connection, currentModel, desiredModel, continueOnError);
+      return alterTablesRecreatePKs(connection, currentModel, desiredModel, continueOnError);
     } finally {
       returnConnection(connection);
     }
@@ -683,6 +697,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void alterTablesPostScript(Connection connection, Database currentModel,
+      Database desiredModel, boolean continueOnError, List changes, Database fullModel)
+      throws DatabaseOperationException {
+    String sql = null;
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null, changes, fullModel);
+      sql = buffer.toString();
+    } catch (IOException ex) {
+      // won't happen because we're using a string writer
+    }
+    evaluateBatch(connection, sql, continueOnError);
+
+  }
+
+  public List alterTablesRecreatePKs(Connection connection, Database currentModel,
       Database desiredModel, boolean continueOnError) throws DatabaseOperationException {
     String sql = null;
 
@@ -690,12 +722,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
 
       getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null);
+      List changes = getSqlBuilder().alterDatabaseRecreatePKs(currentModel, desiredModel, null);
       sql = buffer.toString();
+      evaluateBatch(connection, sql, continueOnError);
+
+      return changes;
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
-    evaluateBatch(connection, sql, continueOnError);
+    return null;
 
   }
 

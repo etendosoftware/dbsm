@@ -95,7 +95,7 @@ public class AlterDatabase extends BaseDatabaseTask {
       }
 
       platform.alterTables(originaldb, db, !isFailonerror());
-      platform.alterTablesPostScript(originaldb, db, !isFailonerror());
+      platform.alterTablesPostScript(originaldb, db, !isFailonerror(), null, null);
 
       // execute the post-script
       if (getPostscript() == null) {

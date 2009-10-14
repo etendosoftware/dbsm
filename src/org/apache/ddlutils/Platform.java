@@ -570,6 +570,9 @@ public interface Platform {
    * @throws DatabaseOperationException
    */
   public void alterTablesPostScript(Database currentModel, Database desiredModel,
+      boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException;
+
+  public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException;
 
   /**

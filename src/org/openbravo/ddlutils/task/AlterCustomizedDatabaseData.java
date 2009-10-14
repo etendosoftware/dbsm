@@ -283,7 +283,7 @@ public class AlterCustomizedDatabaseData extends BaseDatabaseTask {
     getLog().debug("Removing invalid rows.");
     platform.deleteInvalidConstraintRows(newDb, !isFailonerror());
     getLog().debug("Executing update final script (NOT NULLs and dropping temporal tables");
-    platform.alterTablesPostScript(currentcloneddb, newDb, !isFailonerror());
+    platform.alterTablesPostScript(currentcloneddb, newDb, !isFailonerror(), null, null);
     getLog().debug("Enabling Foreign Keys and Triggers");
     platform.enableAllFK(connection, currentdb, !isFailonerror());
     platform.enableAllTriggers(connection, newDb, !isFailonerror()); // <-

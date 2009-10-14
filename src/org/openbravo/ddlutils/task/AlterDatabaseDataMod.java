@@ -14,6 +14,8 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -284,13 +286,20 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     getLog().info("Disabling triggers");
     platform.disableAllTriggers(connection, dbAD, !isFailonerror());
     platform.disableNOTNULLColumns(dbAD);
+    ArrayList<List> changes = new ArrayList<List>();
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Updating database data for module " + moduleRows.get(i).name);
       platform.alterData(connection, dbAD, dataChanges.get(i));
       getLog().info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
+      getLog().info("Recreating Primary Keys");
+      changes.add(platform.alterTablesRecreatePKs(moduleOldModels.get(i), moduleModels.get(i),
+          !isFailonerror()));
+    }
+    for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
-      platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror());
+      platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror(),
+          changes.get(i), dbXML);
     }
     platform.executeOnCreateDefaultForMandatoryColumns(dbAD);
     getLog().info("Enabling Foreign Keys and Triggers");

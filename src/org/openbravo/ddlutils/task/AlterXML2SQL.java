@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.sql.Connection;
+import java.util.List;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
@@ -127,8 +128,10 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       getLog().info("Removing invalid rows.");
       platform.getSqlBuilder().setWriter(w);
       platform.getSqlBuilder().deleteInvalidConstraintRows(db);
+      getLog().info("Recreating Primary Keys");
+      List changes = platform.getSqlBuilder().alterDatabaseRecreatePKs(oldModel, db, null);
       getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
-      platform.getSqlBuilder().alterDatabasePostScript(oldModel, db, null);
+      platform.getSqlBuilder().alterDatabasePostScript(oldModel, db, null, changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");
       platform.enableAllFK(originaldb, !isFailonerror(), w);

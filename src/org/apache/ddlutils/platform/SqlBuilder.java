@@ -162,6 +162,8 @@ public abstract class SqlBuilder {
   private Translation _SQLTranslation = new NullTranslation();
   private boolean script = false;
   private ArrayList<String> recreatedTables = new ArrayList<String>();
+  private ArrayList<String> createdTables = new ArrayList<String>();
+  private ArrayList<String> recreatedFKs = new ArrayList<String>();
 
   //
   // Configuration
@@ -609,12 +611,49 @@ public abstract class SqlBuilder {
     }
   }
 
-  public void alterDatabasePostScript(Database currentModel, Database desiredModel,
+  public List alterDatabaseRecreatePKs(Database currentModel, Database desiredModel,
       CreationParameters params) throws IOException {
 
     ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
         .isDelimitedIdentifierModeOn());
     List changes = comparator.compare(currentModel, desiredModel);
+    Predicate predicate = new MultiInstanceofPredicate(new Class[] { RemovePrimaryKeyChange.class,
+        AddPrimaryKeyChange.class, PrimaryKeyChange.class, RemoveColumnChange.class,
+        AddColumnChange.class, ColumnOrderChange.class, ColumnAutoIncrementChange.class,
+        ColumnDefaultValueChange.class, ColumnOnCreateDefaultValueChange.class,
+        ColumnRequiredChange.class, ColumnDataTypeChange.class, ColumnSizeChange.class });
+    Collection tableChanges = CollectionUtils.select(changes, predicate);
+    for (int i = 0; i < desiredModel.getTableCount(); i++) {
+      boolean recreated = false;
+      boolean newColumn = false;
+      Iterator itChanges = tableChanges.iterator();
+      Vector<AddColumnChange> newColumnsThisTable = new Vector<AddColumnChange>();
+      Vector<TableChange> changesOfTable = new Vector<TableChange>();
+      while (itChanges.hasNext()) {
+        TableChange currentChange = (TableChange) itChanges.next();
+
+        if (currentChange.getChangedTable().getName().equalsIgnoreCase(
+            desiredModel.getTable(i).getName())) {
+          if (currentChange instanceof AddColumnChange) {
+            newColumnsThisTable.add((AddColumnChange) currentChange);
+            newColumn = true;
+          }
+          changesOfTable.add(currentChange);
+        }
+
+      }
+      recreated = willBeRecreated(desiredModel.getTable(i), changesOfTable);
+      if (recreated) {
+        writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i)
+            .getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
+        writeExternalIndicesCreateStmt(desiredModel.getTable(i));
+      }
+    }
+    return changes;
+  }
+
+  public void alterDatabasePostScript(Database currentModel, Database desiredModel,
+      CreationParameters params, List changes, Database fullModel) throws IOException {
     Iterator it = changes.iterator();
 
     Vector<AddColumnChange> newColumns = new Vector<AddColumnChange>();
@@ -636,6 +675,7 @@ public abstract class SqlBuilder {
         ColumnRequiredChange.class, ColumnDataTypeChange.class, ColumnSizeChange.class });
 
     Collection tableChanges = CollectionUtils.select(changes, predicate);
+    ArrayList<String> recreatedTables = new ArrayList<String>();
     for (int i = 0; i < desiredModel.getTableCount(); i++) {
       boolean recreated = false;
       boolean newColumn = false;
@@ -669,13 +709,25 @@ public abstract class SqlBuilder {
         }
       }
       if (recreated) {
-        writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i)
-            .getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
-        writeExternalIndicesCreateStmt(desiredModel.getTable(i));
+        recreatedTables.add(desiredModel.getTable(i).getName());
         if (newColumn) {
           Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
           dropTemporaryTable(desiredModel, tempTable);
 
+          if (fullModel != null) {
+            // We have the full model. We will activate foreign keys pointing to recreated tables
+            Table recreatedTable = desiredModel.getTable(i);
+            for (int idxTable = 0; idxTable < fullModel.getTableCount(); idxTable++) {
+              for (int idxFk = 0; idxFk < fullModel.getTable(idxTable).getForeignKeyCount(); idxFk++) {
+                ForeignKey fk = fullModel.getTable(idxTable).getForeignKey(idxFk);
+                if (recreatedTable.getName().equalsIgnoreCase(fk.getForeignTableName())
+                    && !recreatedFKs.contains(fk.getName())) {
+                  recreatedFKs.add(fk.getName());
+                  writeExternalForeignKeyCreateStmt(fullModel, fullModel.getTable(idxTable), fk);
+                }
+              }
+            }
+          }
         }
       } else {
         Iterator it2 = changes.iterator();
@@ -731,7 +783,11 @@ public abstract class SqlBuilder {
       Table targetTable = desiredModel.findTable((String) entry.getKey(), caseSensitive);
 
       for (Iterator fkIt = ((List) entry.getValue()).iterator(); fkIt.hasNext();) {
-        writeExternalForeignKeyCreateStmt(desiredModel, targetTable, (ForeignKey) fkIt.next());
+        ForeignKey fk = (ForeignKey) fkIt.next();
+        if (!recreatedFKs.contains(fk.getName())) {
+          recreatedFKs.add(fk.getName());
+          writeExternalForeignKeyCreateStmt(desiredModel, targetTable, fk);
+        }
       }
     }
 
@@ -740,14 +796,19 @@ public abstract class SqlBuilder {
       Object change = it.next();
 
       if (change instanceof AddForeignKeyChange) {
-        writeExternalForeignKeyCreateStmt(desiredModel, ((AddForeignKeyChange) change)
-            .getChangedTable(), ((AddForeignKeyChange) change).getNewForeignKey());
+        ForeignKey fk = ((AddForeignKeyChange) change).getNewForeignKey();
+        if (!recreatedFKs.contains(fk.getName())) {
+          recreatedFKs.add(fk.getName());
+          writeExternalForeignKeyCreateStmt(desiredModel, ((AddForeignKeyChange) change)
+              .getChangedTable(), ((AddForeignKeyChange) change).getNewForeignKey());
+        }
       } else if (change instanceof AddUniqueChange) {
         processChange(currentModel, desiredModel, params, ((AddUniqueChange) change));
       } else if (change instanceof AddCheckChange) {
         processChange(currentModel, desiredModel, params, ((AddCheckChange) change));
       }
     }
+
   }
 
   public boolean willBeRecreated(Table table, Vector<TableChange> changes) {
@@ -1057,6 +1118,7 @@ public abstract class SqlBuilder {
         change.getNewTable().getPrimaryKeyColumns());
     writeExternalIndicesCreateStmt(change.getNewTable());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    createdTables.add(change.getNewTable().getName());
   }
 
   /**
@@ -1352,7 +1414,8 @@ public abstract class SqlBuilder {
       Table targetTable = desiredModel.findTable((String) entry.getKey(), caseSensitive);
 
       for (Iterator fkIt = ((List) entry.getValue()).iterator(); fkIt.hasNext();) {
-        writeExternalForeignKeyDropStmt(targetTable, (ForeignKey) fkIt.next());
+        ForeignKey fk = (ForeignKey) fkIt.next();
+        writeExternalForeignKeyDropStmt(targetTable, fk);
       }
     }
 

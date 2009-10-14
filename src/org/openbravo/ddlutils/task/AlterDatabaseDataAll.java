@@ -14,6 +14,7 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -199,8 +200,10 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(db, !isFailonerror());
+      getLog().info("Recreating Primary Keys");
+      List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables");
-      platform.alterTablesPostScript(oldModel, db, !isFailonerror());
+      platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
 
       platform.executeOnCreateDefaultForMandatoryColumns(db);
       platform.enableNOTNULLColumns(db);
