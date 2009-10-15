@@ -290,12 +290,12 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Updating database data for module " + moduleRows.get(i).name);
       platform.alterData(connection, dbAD, dataChanges.get(i));
-      getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
       getLog().info("Recreating Primary Keys");
       changes.add(platform.alterTablesRecreatePKs(moduleOldModels.get(i), moduleModels.get(i),
           !isFailonerror()));
     }
+    getLog().info("Removing invalid rows.");
+    platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
       platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror(),
