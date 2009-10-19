@@ -229,9 +229,10 @@ public abstract class ModelLoaderBase implements ModelLoader {
       db.addFunctions(readFunctions());
     }
 
-    _log.info("Sorting foreign keys and checks...");
+    _log.info("Sorting foreign keys, indexes and checks...");
     for (int tableIdx = 0; tableIdx < db.getTableCount(); tableIdx++) {
       db.getTable(tableIdx).sortForeignKeys(false);
+      db.getTable(tableIdx).sortIndices(false);
       db.getTable(tableIdx).sortChecks(false);
     }
     return db;
