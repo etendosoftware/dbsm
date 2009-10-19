@@ -164,9 +164,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
       }
       comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--";
     }
-    if (!comment.equals(""))
-      println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
-          + "';");
+    println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
+        + "';");
   }
 
   /**
