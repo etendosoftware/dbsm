@@ -147,6 +147,8 @@ public class DatabaseIO {
           new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
       writer.enablePrettyPrint();
+      // always use linux style line endings
+      writer.setEndOfLine("\n");
 
       return writer;
     } catch (Exception ex) {
@@ -172,6 +174,8 @@ public class DatabaseIO {
           new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
       writer.enablePrettyPrint();
+      // always use linux style line endings
+      writer.setEndOfLine("\n");
 
       return writer;
     } catch (Exception ex) {
