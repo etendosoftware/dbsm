@@ -541,7 +541,6 @@ public abstract class SqlBuilder {
 
   public void alterDatabase(Database currentModel, Database desiredModel,
       CreationParameters params, List changes) throws IOException {
-
     _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
     _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
     _SQLTranslation = createSQLTranslation(desiredModel);
@@ -710,6 +709,7 @@ public abstract class SqlBuilder {
       }
       if (recreated) {
         recreatedTables.add(desiredModel.getTable(i).getName());
+        enableAllNOTNULLColumns(desiredModel.getTable(i));
         if (newColumn) {
           Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
           dropTemporaryTable(desiredModel, tempTable);
@@ -1622,13 +1622,14 @@ public abstract class SqlBuilder {
         Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
 
         createTemporaryTable(desiredModel, tempTable, parameters);
-        // disableTempNOTNULLColumns(newColumns);
+        disableTempNOTNULLColumns(newColumns);
         writeCopyDataStatement(sourceTable, tempTable);
         // Note that we don't drop the indices here because the DROP
         // TABLE will take care of that
         // Likewise, foreign keys have already been dropped as necessary
         dropTable(sourceTable);
         createTable(desiredModel, realTargetTable, parameters);
+        disableAllNOTNULLColumns(realTargetTable);
         writeCopyDataStatement(tempTable, targetTable);
         if (!newColumn)
           dropTemporaryTable(desiredModel, tempTable);
