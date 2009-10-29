@@ -1622,7 +1622,7 @@ public abstract class SqlBuilder {
         Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
 
         createTemporaryTable(desiredModel, tempTable, parameters);
-        disableTempNOTNULLColumns(newColumns);
+        disableAllNOTNULLColumns(tempTable);
         writeCopyDataStatement(sourceTable, tempTable);
         // Note that we don't drop the indices here because the DROP
         // TABLE will take care of that
