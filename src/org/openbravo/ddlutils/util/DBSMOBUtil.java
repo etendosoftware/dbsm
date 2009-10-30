@@ -374,9 +374,9 @@ public class DBSMOBUtil {
       System.exit(1);
     }
     for (final ModuleRow row : allModules) {
-      if ("T".equals(row.type) && isDependant(row, rowT)) {
+      if ("T".equals(row.type) && isDependant(rowT, row)) {
         log
-            .error("The Industry Template being developed depends on another template. Only the script of a template which doesn't depend on another template is allowed to be exported.");
+            .error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
         System.exit(1);
       }
     }
