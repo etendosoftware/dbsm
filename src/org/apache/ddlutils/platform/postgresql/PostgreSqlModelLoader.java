@@ -476,7 +476,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
           + "END AS trigger_event, "
           + "p.prosrc AS function_code "
           + "FROM pg_trigger trg, pg_class tbl, pg_proc p "
-          + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'";
+          + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
+          + " AND upper(trg.tgname) NOT LIKE 'AU\\\\_%' ";
     } else {
       sql = "SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, "
           + "CASE trg.tgtype & cast(3 as int2) "
@@ -495,7 +496,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
           + "END AS trigger_event, "
           + "p.prosrc AS function_code "
           + "FROM pg_trigger trg, pg_class tbl, pg_proc p "
-          + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI' AND upper(trg.tgname) NOT IN ("
+          + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
+          + " AND upper(trg.tgname) NOT LIKE 'AU\\\\_%'" + " AND upper(trg.tgname) NOT IN ("
           + getListObjects(_filter.getExcludedTriggers()) + ")";
     }
     if (_prefix != null) {

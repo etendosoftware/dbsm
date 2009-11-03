@@ -146,9 +146,9 @@ public class OracleModelLoader extends ModelLoaderBase {
     _stmt_listsequences = _connection.prepareStatement(sql);
 
     if (_filter.getExcludedTriggers().length == 0) {
-      sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS";
+      sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE UPPER(TRIGGER_NAME) NOT LIKE 'AU\\_%' ESCAPE '\\'";
     } else {
-      sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE TRIGGER_NAME NOT IN ("
+      sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE UPPER(TRIGGER_NAME) NOT LIKE 'AU\\_%' ESCAPE '\\' AND TRIGGER_NAME NOT IN ("
           + getListObjects(_filter.getExcludedTriggers()) + ")";
     }
     if (_prefix != null) {
