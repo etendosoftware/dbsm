@@ -144,7 +144,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
     append(new ByLineTranslation(new ReplacePatTranslation(
         "^(.+?)([\\s|\\t|\\(]+?)([Nn][Ee][Xx][Tt][Vv][Aa][Ll])\\('([^\\s|\\t|\\(]+?)'\\)(.+?)$",
         "$1$2$4.$3$5")));
-
+    append(new ReplacePatTranslation("RAISE '(.*)'", "RAISE NO_DATA_FOUND"));
   }
 
   private String generateStringPat(String in) {
