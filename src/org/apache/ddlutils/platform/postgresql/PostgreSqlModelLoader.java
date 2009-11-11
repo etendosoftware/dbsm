@@ -507,12 +507,12 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     _stmt_listtriggers = _connection.prepareStatement(sql);
 
     if (_filter.getExcludedFunctions().length == 0) {
-      sql = "select distinct upper(proname) from pg_proc p, pg_namespace n "
+      sql = "select distinct proname from pg_proc p, pg_namespace n "
           + "where  pronamespace = n.oid " + "and n.nspname=current_schema() "
           + "and p.oid not in (select tgfoid " + "from pg_trigger) "
           + "and p.proname <> 'temp_findinarray'";
     } else {
-      sql = "select distinct upper(proname) from pg_proc p, pg_namespace n "
+      sql = "select distinct proname from pg_proc p, pg_namespace n "
           + "where  pronamespace = n.oid " + "and n.nspname=current_schema() "
           + "and p.oid not in (select tgfoid " + "from pg_trigger) "
           + "and p.proname <> 'temp_findinarray'" + "AND upper(p.proname) NOT IN ("
@@ -541,7 +541,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
         + "     AND NOT pg_proc.proisagg"
         + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
-        + "     AND upper(pg_proc.proname) = ?"
+        + "     AND pg_proc.proname = ?"
         + "         ORDER BY pg_proc.pronargs DESC, length(pg_proc.prosrc) DESC");
     // we order by pronargs to get the correct source when a function is
     // overridden by DBSourceManager
@@ -560,7 +560,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
         + "     AND NOT pg_proc.proisagg"
         + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
-        + "     AND (upper(pg_proc.proname) = ? )" + "         ORDER BY pg_proc.pronargs ASC");
+        + "     AND pg_proc.proname = ? ORDER BY pg_proc.pronargs ASC");
 
     _stmt_functiondefaults0 = _connection.prepareStatement("  SELECT "
         + "         pg_proc.proname," + "         pg_proc.proargtypes,"
@@ -572,12 +572,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
         + "     AND NOT pg_proc.proisagg"
         + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
-        + "     AND (upper(pg_proc.proname) = ? )" + "         ORDER BY pg_proc.proargtypes ASC");
+        + "     AND pg_proc.proname = ? ORDER BY pg_proc.proargtypes ASC");
 
     _stmt_paramtypes = _connection.prepareStatement("SELECT pg_catalog.format_type(?, NULL)");
 
-    _stmt_oids_funcs = _connection
-        .prepareStatement("SELECT oid FROM pg_proc WHERE upper(proname) = ?");
+    _stmt_oids_funcs = _connection.prepareStatement("SELECT oid FROM pg_proc WHERE proname = ?");
 
     _stmt_comments_funcs = _connection.prepareStatement("SELECT obj_description(?,'pg_proc')");
 
@@ -610,7 +609,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected Function readFunction(String name) throws SQLException {
 
     final Function f = new Function();
-    f.setName(name);
+    f.setName(name.toUpperCase());
 
     final FinalBoolean firststep = new FinalBoolean();
 
