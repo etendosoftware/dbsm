@@ -92,8 +92,8 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
       if (database.getFunction(i).getTypeCode() == Types.NULL) {
         append(new ReplacePatTranslation("[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
-            + generateStringPat(database.getFunction(i).getName()) + "\\(", database.getFunction(i)
-            .getName()
+            + generateStringPat(database.getFunction(i).getName()) + "[\\s]*\\(", database
+            .getFunction(i).getName()
             + "("));
       }
 
