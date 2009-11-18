@@ -1157,9 +1157,6 @@ public interface Platform {
   public Database loadModelFromDatabase(ExcludeFilter filter, String prefix,
       boolean loadCompleteTables, String moduleId) throws DatabaseOperationException;
 
-  public Database loadModelFromDatabase(ExcludeFilter filter, String datasetName)
-      throws DatabaseOperationException;
-
   /**
    * Reads the database model from the live database as specified by the data source set for this
    * platform.

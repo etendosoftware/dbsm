@@ -44,8 +44,6 @@ import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
-import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.dataset.DataSetService;
 
 /**
  * 
@@ -124,23 +122,6 @@ public abstract class ModelLoaderBase implements ModelLoader {
       initMetadataSentences();
 
       return readDatabase();
-
-    } finally {
-      closeMetadataSentences();
-    }
-  }
-
-  public Database getDatabase(Connection connection, ExcludeFilter filter, String datasetName)
-      throws SQLException {
-
-    _filter = filter == null ? new ExcludeFilter() : filter;
-
-    try {
-      _connection = connection;
-
-      initMetadataSentences();
-
-      return readDatabase(datasetName);
 
     } finally {
       closeMetadataSentences();
@@ -234,22 +215,6 @@ public abstract class ModelLoaderBase implements ModelLoader {
       db.getTable(tableIdx).sortForeignKeys(false);
       db.getTable(tableIdx).sortIndices(false);
       db.getTable(tableIdx).sortChecks(false);
-    }
-    return db;
-  }
-
-  protected Database readDatabase(String datasetName) throws SQLException {
-    Database db = new Database();
-    DataSetService ds = DataSetService.getInstance();
-    List tablenames = readTableNames();
-    List<DataSetTable> tables = ds.getDataSetByValue(datasetName).getDataSetTableList();
-    for (DataSetTable table : tables) {
-      Iterator it = tablenames.iterator();
-      while (it.hasNext()) {
-        String tablename = (String) it.next();
-        if (tablename.equalsIgnoreCase(table.getTable().getDBTableName()))
-          db.addTable(readTable(tablename, false));
-      }
     }
     return db;
   }

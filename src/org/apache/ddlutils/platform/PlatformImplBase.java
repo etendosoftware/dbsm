@@ -2217,21 +2217,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  public Database loadModelFromDatabase(ExcludeFilter filter, String datasetName)
-      throws DatabaseOperationException {
-
-    Connection connection = borrowConnection();
-    try {
-      getModelLoader().setLog(_log);
-      return getModelLoader().getDatabase(connection, filter, datasetName);
-    } catch (SQLException ex) {
-      ex.printStackTrace();
-      throw new DatabaseOperationException(ex);
-    } finally {
-      returnConnection(connection);
-    }
-  }
-
   /**
    * {@inheritDoc}
    */

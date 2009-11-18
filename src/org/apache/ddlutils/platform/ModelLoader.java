@@ -29,9 +29,6 @@ public interface ModelLoader {
   public Database getDatabase(Connection connection, ExcludeFilter filter, String prefix,
       boolean loadCompleteTables, String moduleId) throws SQLException;
 
-  public Database getDatabase(Connection connection, ExcludeFilter filter, String datasetName)
-      throws SQLException;
-
   public void setLog(Log log);
 
   public Log getLog();
