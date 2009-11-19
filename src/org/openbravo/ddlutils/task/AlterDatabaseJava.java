@@ -29,6 +29,7 @@ public class AlterDatabaseJava {
     ada.setDatafilter(args[14]);
     ada.setUserId(args[15]);
     ada.setPropertiesFile(args[16]);
+    ada.setAdminMode(true);
     String force = args[17];
     if (force.equalsIgnoreCase("yes"))
       force = "true";
