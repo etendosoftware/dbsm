@@ -1620,7 +1620,7 @@ public abstract class SqlBuilder {
       // it's not possible, the user will notice the error
       {
         Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
-
+        recreatedTables.add(sourceTable.getName());
         createTemporaryTable(desiredModel, tempTable, parameters);
         disableAllNOTNULLColumns(tempTable);
         writeCopyDataStatement(sourceTable, tempTable);
@@ -1742,7 +1742,8 @@ public abstract class SqlBuilder {
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()
+          && !recreatedTables.contains(table.getName())) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NULL");
         printEndOfStatement();
@@ -1766,7 +1767,8 @@ public abstract class SqlBuilder {
   protected void enableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()
+          && !recreatedTables.contains(table.getName())) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NOT NULL");
         printEndOfStatement();
