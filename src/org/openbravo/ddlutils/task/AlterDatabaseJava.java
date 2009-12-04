@@ -29,6 +29,13 @@ public class AlterDatabaseJava {
     ada.setDatafilter(args[14]);
     ada.setUserId(args[15]);
     ada.setPropertiesFile(args[16]);
+    try {
+      ada.setAdminMode(true);
+    } catch (Throwable t) {
+      // normally only NoSuchMethodError can occur when upgrading
+      // cause then the setAdminMode method is not yet present
+      // for safety reasons catch them all
+    }
     String force = args[17];
     if (force.equalsIgnoreCase("yes"))
       force = "true";

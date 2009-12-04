@@ -92,8 +92,8 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
       if (database.getFunction(i).getTypeCode() == Types.NULL) {
         append(new ReplacePatTranslation("[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
-            + generateStringPat(database.getFunction(i).getName()) + "\\(", database.getFunction(i)
-            .getName()
+            + generateStringPat(database.getFunction(i).getName()) + "[\\s]*\\(", database
+            .getFunction(i).getName()
             + "("));
       }
 
@@ -144,7 +144,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
     append(new ByLineTranslation(new ReplacePatTranslation(
         "^(.+?)([\\s|\\t|\\(]+?)([Nn][Ee][Xx][Tt][Vv][Aa][Ll])\\('([^\\s|\\t|\\(]+?)'\\)(.+?)$",
         "$1$2$4.$3$5")));
-
+    append(new ReplacePatTranslation("RAISE '(.*)'", "RAISE NO_DATA_FOUND"));
   }
 
   private String generateStringPat(String in) {

@@ -541,7 +541,6 @@ public abstract class SqlBuilder {
 
   public void alterDatabase(Database currentModel, Database desiredModel,
       CreationParameters params, List changes) throws IOException {
-
     _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
     _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
     _SQLTranslation = createSQLTranslation(desiredModel);
@@ -710,6 +709,7 @@ public abstract class SqlBuilder {
       }
       if (recreated) {
         recreatedTables.add(desiredModel.getTable(i).getName());
+        enableAllNOTNULLColumns(desiredModel.getTable(i));
         if (newColumn) {
           Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
           dropTemporaryTable(desiredModel, tempTable);
@@ -1620,15 +1620,16 @@ public abstract class SqlBuilder {
       // it's not possible, the user will notice the error
       {
         Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
-
+        recreatedTables.add(sourceTable.getName());
         createTemporaryTable(desiredModel, tempTable, parameters);
-        // disableTempNOTNULLColumns(newColumns);
+        disableAllNOTNULLColumns(tempTable);
         writeCopyDataStatement(sourceTable, tempTable);
         // Note that we don't drop the indices here because the DROP
         // TABLE will take care of that
         // Likewise, foreign keys have already been dropped as necessary
         dropTable(sourceTable);
         createTable(desiredModel, realTargetTable, parameters);
+        disableAllNOTNULLColumns(realTargetTable);
         writeCopyDataStatement(tempTable, targetTable);
         if (!newColumn)
           dropTemporaryTable(desiredModel, tempTable);
@@ -1741,7 +1742,8 @@ public abstract class SqlBuilder {
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()
+          && !recreatedTables.contains(table.getName())) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NULL");
         printEndOfStatement();
@@ -1765,7 +1767,8 @@ public abstract class SqlBuilder {
   protected void enableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
+      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()
+          && !recreatedTables.contains(table.getName())) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NOT NULL");
         printEndOfStatement();

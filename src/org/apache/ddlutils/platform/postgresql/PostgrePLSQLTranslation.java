@@ -31,6 +31,7 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
 
   /** Creates a new instance of ProcedureTranslation */
   public PostgrePLSQLTranslation(Database database) {
+    append(new ReplaceStrTranslation(" RAISE NO_DATA_FOUND", " RAISE 'NO_DATA_FOUND'"));
 
     // Here goes the common translations for triggers and functions
     // append(............
