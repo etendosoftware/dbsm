@@ -119,6 +119,8 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       }
     }
     getLog().info("Executing full update.database");
+
+    DBSMOBUtil.setStatus(platform, 12, getLog());
     try {
       // execute the pre-script
       if (getPrescript() == null) {
@@ -146,7 +148,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         originaldb = DatabaseUtils.readDatabase(getModel());
         getLog().info("Original model loaded from file.");
       }
-
+      DBSMOBUtil.setStatus(platform, 13, getLog());
       Database db = null;
       db = readDatabaseModel();
       final DatabaseData databaseOrgData = new DatabaseData(db);
@@ -161,10 +163,12 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       OBDal.getInstance().commitAndClose();
 
       final Database oldModel = (Database) originaldb.clone();
+      DBSMOBUtil.setStatus(platform, 14, getLog());
       getLog().info("Updating database model...");
       platform.alterTables(originaldb, db, !isFailonerror());
       getLog().info("Model update complete.");
 
+      DBSMOBUtil.setStatus(platform, 15, getLog());
       getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
       platform.disableAllFK(connection, originaldb, !isFailonerror());

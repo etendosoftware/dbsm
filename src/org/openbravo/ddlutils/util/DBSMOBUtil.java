@@ -704,4 +704,24 @@ public class DBSMOBUtil {
 
     return ds;
   }
+
+  public static void setStatus(Connection connection, int status, Logger log) {
+    try {
+      PreparedStatement ps = connection
+          .prepareStatement("UPDATE ad_system_info SET system_status=?");
+      ps.setString(1, "RB" + status);
+      ps.executeUpdate();
+      PreparedStatement ps2 = connection
+          .prepareStatement("DELETE FROM ad_error_log where system_status=(select system_status from ad_system_info)");
+      ps2.executeUpdate();
+    } catch (Exception e) {
+      log.warn("Couldn't update system status");
+    }
+  }
+
+  public static void setStatus(Platform platform, int status, Logger log) {
+    Connection connection = platform.borrowConnection();
+    setStatus(connection, status, log);
+    platform.returnConnection(connection);
+  }
 }
