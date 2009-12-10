@@ -101,6 +101,8 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     }
     // platform.setDelimitedIdentifierModeOn(true);
 
+    DBSMOBUtil.setStatus(platform, 12, getLog());
+
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
     if (basedir == null) {
@@ -186,6 +188,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       ada.doExecute();
       return;
     }
+    DBSMOBUtil.setStatus(platform, 13, getLog());
     Database originaldb = null;
     final StringTokenizer st = new StringTokenizer(module, ",");
     while (st.hasMoreElements()) {
@@ -248,6 +251,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
           }
         }
 
+        DBSMOBUtil.setStatus(platform, 14, getLog());
         final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
             .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
         dataComparator.compareUsingDALToUpdate(dbAD, platform, databaseOrgData, "AD", row.idMod);
@@ -273,6 +277,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       }
     }
 
+    DBSMOBUtil.setStatus(platform, 15, getLog());
     getLog().info("Updating database data...");
 
     if (originaldb != null) {

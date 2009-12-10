@@ -68,7 +68,7 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
         .toUpperCase();
 
-    props.setProperty("log4j.rootCategory", level + ",A");
+    props.setProperty("log4j.rootCategory", level + ",A,O2");
     props.setProperty("log4j.appender.A", "org.openbravo.utils.OBLogAppender");
     // "org.apache.log4j.ConsoleAppender");
     props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
@@ -77,6 +77,10 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
     props.setProperty("log4j.logger.org.hibernate", "WARN");
 
+    // Adding properties for log of Improved Upgrade Process
+    props.setProperty("log4j.appender.O2", "org.openbravo.utils.OBRebuildAppender");
+    props.setProperty("log4j.appender.O2.layout", "org.apache.log4j.PatternLayout");
+    props.setProperty("log4j.appender.O2.layout.ConversionPattern", "%-4r [%t] %-5p %c - %m%n");
     LogManager.resetConfiguration();
     PropertyConfigurator.configure(props);
 
