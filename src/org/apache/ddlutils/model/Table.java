@@ -21,7 +21,6 @@ package org.apache.ddlutils.model;
 
 import java.io.Serializable;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -264,10 +263,6 @@ public class Table implements StructureObject, Serializable, Cloneable {
   public void addColumns(Collection columns) throws SQLException {
     for (Iterator it = columns.iterator(); it.hasNext();) {
       Column c = (Column) it.next();
-      if (c.getTypeCode() == Types.OTHER) {
-        throw new SQLException("Unsupported column data type for column " + c.getName()
-            + " in table " + _name);
-      }
       addColumn(c);
     }
   }

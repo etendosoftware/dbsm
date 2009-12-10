@@ -20,6 +20,7 @@ package org.apache.ddlutils.model;
  */
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1578,5 +1579,18 @@ public class Database implements Serializable, Cloneable {
     // _functions=new ArrayList();
     _sequences = new ArrayList();
     _modifiedTables = new ArrayList();
+  }
+
+  public void checkDataTypes() throws SQLException {
+    for (int i = 0; i < this.getTableCount(); i++) {
+      Table t = this.getTable(i);
+      for (int j = 0; j < t.getColumnCount(); j++) {
+        Column c = t.getColumn(j);
+        if (c.getTypeCode() == Types.OTHER) {
+          throw new SQLException("Unsupported column data type for column " + c.getName()
+              + " in table " + t.getName());
+        }
+      }
+    }
   }
 }

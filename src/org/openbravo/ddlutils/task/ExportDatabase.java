@@ -111,7 +111,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
       }
       Database db;
       db = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
-
+      db.checkDataTypes();
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         getLog().info("Exporting module: " + util.getActiveModule(i).name);
         Database dbI = null;
