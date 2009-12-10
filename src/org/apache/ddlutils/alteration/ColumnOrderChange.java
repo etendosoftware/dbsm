@@ -77,7 +77,12 @@ public class ColumnOrderChange extends TableChangeImplBase {
     for (int idx = 0; idx < table.getColumnCount(); idx++) {
       table.removeColumn(idx);
     }
-    table.addColumns(newColumns);
+    try {
+      table.addColumns(newColumns);
+    } catch (Exception e) {
+      // Will only happen when the column type is unsupported, which should never happen at this
+      // point
+    }
   }
 
   @Override

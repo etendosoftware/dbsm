@@ -245,7 +245,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     } else if ("BLOB".equalsIgnoreCase(nativeType)) {
       return Types.BLOB;
     } else {
-      return Types.VARCHAR;
+      return Types.OTHER;
     }
   }
 

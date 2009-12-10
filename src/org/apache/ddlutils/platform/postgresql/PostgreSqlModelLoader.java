@@ -995,10 +995,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       return Types.CLOB;
     } else if ("BYTEA".equalsIgnoreCase(nativeType)) {
       return Types.BLOB;
-    } else if ("OID".equalsIgnoreCase(nativeType)) {
-      return Types.OTHER;
     } else {
-      return Types.VARCHAR;
+      return Types.OTHER;
     }
   }
 
