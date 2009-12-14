@@ -577,28 +577,43 @@ public abstract class SqlBuilder {
           ForeignKey fk = fksTable[j];
           Table parentTable = fk.getForeignTable();
           if (fk.getOnDelete() != null && fk.getOnDelete().contains("cascade")) {
-            print("DELETE FROM " + table.getName() + " WHERE ");
-            boolean first = true;
+            ArrayList<String> localColumns = new ArrayList<String>();
             for (int k = 0; k < table.getColumnCount(); k++) {
               if (fk.hasLocalColumn(table.getColumn(k))) {
-                if (!first)
-                  print(",");
-                first = false;
-                print(table.getColumn(k).getName());
+                localColumns.add(table.getColumn(k).getName());
               }
             }
-            print(" NOT IN (SELECT ");
-            first = true;
+            ArrayList<String> foreignColumns = new ArrayList<String>();
             for (int k = 0; k < parentTable.getColumnCount(); k++) {
               if (fk.hasForeignColumn(parentTable.getColumn(k))) {
-                if (!first)
-                  print(",");
-                first = false;
-                print(parentTable.getColumn(k).getName());
+                foreignColumns.add(parentTable.getColumn(k).getName());
               }
             }
+            print("DELETE FROM " + table.getName() + " WHERE ");
+            print("NOT EXISTS (SELECT ");
+            for (int indC = 0; indC < localColumns.size(); indC++) {
+              if (indC > 0) {
+                print(",");
+              }
+              print(localColumns.get(indC));
+            }
+            print(" FROM " + parentTable.getName());
+            print(" WHERE ");
+            for (int indC = 0; indC < localColumns.size(); indC++) {
+              if (indC > 0) {
+                print(" AND ");
+              }
+              print(table.getName() + "." + localColumns.get(indC) + "=" + parentTable.getName()
+                  + "." + foreignColumns.get(indC));
+            }
+            print(") AND ");
 
-            print(" FROM " + parentTable.getName() + ")");
+            for (int indC = 0; indC < localColumns.size(); indC++) {
+              if (indC > 0) {
+                print(" AND ");
+              }
+              print(table.getName() + "." + localColumns.get(indC) + " IS NOT NULL");
+            }
             printEndOfStatement();
           }
         }
