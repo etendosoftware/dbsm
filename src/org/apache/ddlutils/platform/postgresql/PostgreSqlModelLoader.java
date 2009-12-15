@@ -993,8 +993,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       return Types.TIMESTAMP;
     } else if ("TEXT".equalsIgnoreCase(nativeType)) {
       return Types.CLOB;
-    } else if ("BYTEA".equalsIgnoreCase(nativeType)) {
-      return Types.BLOB;
     } else {
       return Types.OTHER;
     }
