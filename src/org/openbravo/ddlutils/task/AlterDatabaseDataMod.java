@@ -312,6 +312,21 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     platform.enableAllTriggers(connection, dbAD, !isFailonerror());
     platform.enableNOTNULLColumns(dbAD);
 
+    try {
+      // execute the post-script
+      if (getPostscript() == null) {
+        // try to execute the default prescript
+        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+        if (fpost.exists()) {
+          getLog().info("Executing default postscript");
+          platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
+        }
+      } else {
+        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
+      }
+    } catch (Exception e) {
+      log.error("Error while executing postscript: ", e);
+    }
     DBSMOBUtil.getInstance().updateCRC(platform);
   }
 
