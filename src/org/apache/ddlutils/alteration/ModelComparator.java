@@ -89,8 +89,8 @@ public class ModelComparator {
       Trigger targetTrigger = findCorrespondingTrigger(targetModel, sourceTrigger);
 
       if (targetTrigger == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Trigger " + sourceTrigger + " (removed from database "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Trigger " + sourceTrigger + " (removed from database "
               + sourceModel.getName() + ")");
         }
         changes.add(new RemoveTriggerChange(sourceTrigger));
@@ -102,8 +102,8 @@ public class ModelComparator {
       Trigger sourceTrigger = findCorrespondingTrigger(sourceModel, targetTrigger);
 
       if (sourceTrigger == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Trigger " + targetTrigger + " (created for the database "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Trigger " + targetTrigger + " (created for the database "
               + sourceModel.getName() + ")");
         }
         changes.add(new AddTriggerChange(targetTrigger));
@@ -115,8 +115,8 @@ public class ModelComparator {
       Table sourceTable = sourceModel.findTable(targetTable.getName(), _caseSensitive);
 
       if (sourceTable == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Table " + targetTable.getName() + " (added)");
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Table " + targetTable.getName() + " (added)");
         }
         changes.add(new AddTableChange(targetTable));
         for (int fkIdx = 0; fkIdx < targetTable.getForeignKeyCount(); fkIdx++) {
@@ -135,8 +135,8 @@ public class ModelComparator {
 
       if ((targetTable == null) && (sourceTable.getName() != null)
           && (sourceTable.getName().length() > 0)) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Table " + sourceTable.getName() + " (removed)");
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Table " + sourceTable.getName() + " (removed)");
         }
         changes.add(new RemoveTableChange(sourceTable));
         // we assume that the target model is sound, ie. that there are
@@ -157,8 +157,8 @@ public class ModelComparator {
       Sequence targetSequence = findCorrespondingSequence(targetModel, sourceSequence);
 
       if (targetSequence == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Sequence " + sourceSequence + " (removed in "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Sequence " + sourceSequence + " (removed in "
               + sourceModel.getName() + ")");
         }
         changes.add(new RemoveSequenceChange(sourceSequence));
@@ -170,8 +170,8 @@ public class ModelComparator {
       Sequence sourceSequence = findCorrespondingSequence(sourceModel, targetSequence);
 
       if (sourceSequence == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Sequence " + targetSequence + " (created in "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Sequence " + targetSequence + " (created in "
               + sourceModel.getName() + ")");
         }
         changes.add(new AddSequenceChange(targetSequence));
@@ -194,8 +194,8 @@ public class ModelComparator {
         // statement if the view will not be
         // recreated
         // {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing View " + sourceView + " (removed from database "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing View " + sourceView + " (removed from database "
               + sourceModel.getName() + ")");
         }
         changes.add(new RemoveViewChange(sourceView));
@@ -208,8 +208,8 @@ public class ModelComparator {
       View sourceView = findCorrespondingView(sourceModel, targetView);
 
       if (sourceView == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing View " + targetView + " (created for the database "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing View " + targetView + " (created for the database "
               + sourceModel.getName() + ")");
         }
         changes.add(new AddViewChange(targetView));
@@ -221,8 +221,8 @@ public class ModelComparator {
       Function targetFunction = findCorrespondingFunction(targetModel, sourceFunction);
 
       if (targetFunction == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Function " + sourceFunction + " (removed from database "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Function " + sourceFunction + " (removed from database "
               + sourceModel.getName() + ")");
         }
         changes.add(new RemoveFunctionChange(sourceFunction));
@@ -234,8 +234,8 @@ public class ModelComparator {
       Function sourceFunction = findCorrespondingFunction(sourceModel, targetFunction);
 
       if (sourceFunction == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Function " + targetFunction + " (created for the database "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Function " + targetFunction + " (created for the database "
               + sourceModel.getName() + ")");
         }
         changes.add(new AddFunctionChange(targetFunction));
@@ -268,8 +268,8 @@ public class ModelComparator {
       ForeignKey targetFk = findCorrespondingForeignKey(targetTable, sourceFk);
 
       if (targetFk == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Foreign key " + sourceFk + " (removed from table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Foreign key " + sourceFk + " (removed from table "
               + sourceTable.getName() + ")");
         }
         changes.add(new RemoveForeignKeyChange(sourceTable, sourceFk));
@@ -281,8 +281,8 @@ public class ModelComparator {
       ForeignKey sourceFk = findCorrespondingForeignKey(sourceTable, targetFk);
 
       if (sourceFk == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Foreign key " + targetFk + " (created for table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Foreign key " + targetFk + " (created for table "
               + sourceTable.getName() + ")");
         }
         // we have to use the target table here because the foreign key
@@ -297,8 +297,8 @@ public class ModelComparator {
       Check targetCh = findCorrespondingCheck(targetTable, sourceCh);
 
       if (targetCh == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Check " + sourceCh + " (removed from table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Check " + sourceCh + " (removed from table "
               + sourceTable.getName() + ")");
         }
         changes.add(new RemoveCheckChange(sourceTable, sourceCh));
@@ -310,8 +310,8 @@ public class ModelComparator {
       Check sourceCh = findCorrespondingCheck(sourceTable, targetCh);
 
       if (sourceCh == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Check " + targetCh + " (created for the table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Check " + targetCh + " (created for the table "
               + sourceTable.getName() + ")");
         }
         changes.add(new AddCheckChange(targetTable, targetCh));
@@ -323,8 +323,8 @@ public class ModelComparator {
       Unique targetUnique = findCorrespondingUnique(targetTable, sourceUnique);
 
       if (targetUnique == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Unique " + sourceUnique.getName() + " (removed from table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Unique " + sourceUnique.getName() + " (removed from table "
               + sourceTable.getName() + ")");
         }
         changes.add(new RemoveUniqueChange(sourceTable, sourceUnique));
@@ -335,8 +335,8 @@ public class ModelComparator {
       Unique sourceUnique = findCorrespondingUnique(sourceTable, targetUnique);
 
       if (sourceUnique == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Unique " + targetUnique.getName() + " (created for table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Unique " + targetUnique.getName() + " (created for table "
               + sourceTable.getName() + ")");
         }
         // we have to use the target table here because the unique might
@@ -350,8 +350,8 @@ public class ModelComparator {
       Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex);
 
       if (targetIndex == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Index " + sourceIndex.getName() + " (removed from table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Index " + sourceIndex.getName() + " (removed from table "
               + sourceTable.getName() + ")");
         }
         changes.add(new RemoveIndexChange(sourceTable, sourceIndex));
@@ -362,8 +362,8 @@ public class ModelComparator {
       Index sourceIndex = findCorrespondingIndex(sourceTable, targetIndex);
 
       if (sourceIndex == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Index " + targetIndex.getName() + " (created for table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Index " + targetIndex.getName() + " (created for table "
               + sourceTable.getName() + ")");
         }
         // we have to use the target table here because the index might
@@ -379,8 +379,8 @@ public class ModelComparator {
       Column sourceColumn = sourceTable.findColumn(targetColumn.getName(), _caseSensitive);
 
       if (sourceColumn == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Column " + targetColumn.getName() + " (created for table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Column " + targetColumn.getName() + " (created for table "
               + sourceTable.getName() + ")");
         }
 
@@ -413,16 +413,16 @@ public class ModelComparator {
     Column[] targetPK = targetTable.getPrimaryKeyColumns();
 
     if ((sourcePK.length == 0) && (targetPK.length > 0)) {
-      if (_log.isInfoEnabled()) {
-        _log.info("A primary key will be added to the table " + sourceTable.getName());
+      if (_log.isDebugEnabled()) {
+        _log.debug("A primary key will be added to the table " + sourceTable.getName());
       }
       // we have to use the target table here because the primary key
       // might
       // reference a new column
       changes.add(new AddPrimaryKeyChange(targetTable, targetTable.getPrimaryKey(), targetPK));
     } else if ((targetPK.length == 0) && (sourcePK.length > 0)) {
-      if (_log.isInfoEnabled()) {
-        _log.info("The primary key will be removed from the table " + sourceTable.getName());
+      if (_log.isDebugEnabled()) {
+        _log.debug("The primary key will be removed from the table " + sourceTable.getName());
       }
       changes.add(new RemovePrimaryKeyChange(sourceTable, sourcePK));
     } else if ((sourcePK.length > 0) && (targetPK.length > 0)) {
@@ -443,8 +443,8 @@ public class ModelComparator {
         }
       }
       if (changePK) {
-        if (_log.isInfoEnabled()) {
-          _log.info("The primary key of table " + sourceTable.getName() + " will be changed");
+        if (_log.isDebugEnabled()) {
+          _log.debug("The primary key of table " + sourceTable.getName() + " will be changed");
         }
         changes.add(new PrimaryKeyChange(sourceTable, targetTable.getPrimaryKey(), sourcePK,
             targetPK));
@@ -459,8 +459,8 @@ public class ModelComparator {
       Column targetColumn = targetTable.findColumn(sourceColumn.getName(), _caseSensitive);
 
       if (targetColumn == null) {
-        if (_log.isInfoEnabled()) {
-          _log.info("Processing Column " + sourceColumn.getName() + " (removed from table "
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Column " + sourceColumn.getName() + " (removed from table "
               + sourceTable.getName() + ")");
         }
         changes.add(new RemoveColumnChange(sourceTable, sourceColumn));
@@ -503,8 +503,8 @@ public class ModelComparator {
     // if (targetColumn.getTypeCode() != sourceColumn.getTypeCode())
     if (_platformInfo.getComparerJDBCType(targetColumn.getTypeCode()) != _platformInfo
         .getComparerJDBCType(sourceColumn.getTypeCode())) {
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the type)");
       }
       changes.add(new ColumnDataTypeChange(sourceTable, sourceColumn, targetColumn.getTypeCode()));
@@ -515,8 +515,8 @@ public class ModelComparator {
 
     if (sizeMatters && !StringUtils.equals(sourceColumn.getSize(), targetColumn.getSize())) {
 
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the size)");
       }
       changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(),
@@ -526,8 +526,8 @@ public class ModelComparator {
         && (!StringUtils.equals(sourceColumn.getSize(), targetColumn.getSize())
             || (sourceColumn.getScale() == null && targetColumn.getScale() != null) || (sourceColumn
             .getScale() != null && !sourceColumn.getScale().equals(targetColumn.getScale())))) {
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the scale)");
       }
       changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(),
@@ -539,8 +539,8 @@ public class ModelComparator {
 
     if (((sourceDefaultValue == null) && (targetDefaultValue != null))
         || ((sourceDefaultValue != null) && !sourceDefaultValue.equals(targetDefaultValue))) {
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the default value)");
       }
       changes.add(new ColumnDefaultValueChange(sourceTable, sourceColumn, targetColumn
@@ -551,8 +551,8 @@ public class ModelComparator {
     String targetOnCreateDefault = targetColumn.getOnCreateDefault();
     if ((sourceOnCreateDefault == null && targetOnCreateDefault != null)
         || ((sourceOnCreateDefault != null) && !sourceOnCreateDefault.equals(targetOnCreateDefault))) {
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the onCreateDefault value)");
       }
       changes.add(new ColumnOnCreateDefaultValueChange(sourceTable, targetColumn, targetColumn
@@ -560,15 +560,15 @@ public class ModelComparator {
     }
 
     if (sourceColumn.isRequired() != targetColumn.isRequired()) {
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the required attribute)");
       }
       changes.add(new ColumnRequiredChange(sourceTable, sourceColumn));
     }
     if (sourceColumn.isAutoIncrement() != targetColumn.isAutoIncrement()) {
-      if (_log.isInfoEnabled()) {
-        _log.info("Processing Column " + sourceColumn.getName() + " of table "
+      if (_log.isDebugEnabled()) {
+        _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the autoincrement attribute)");
       }
       changes.add(new ColumnAutoIncrementChange(sourceTable, sourceColumn));
