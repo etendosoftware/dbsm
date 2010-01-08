@@ -164,6 +164,7 @@ public abstract class SqlBuilder {
   private ArrayList<String> recreatedTables = new ArrayList<String>();
   private ArrayList<String> createdTables = new ArrayList<String>();
   private ArrayList<String> recreatedFKs = new ArrayList<String>();
+  private ArrayList<String> recreatedPKs = new ArrayList<String>();
 
   //
   // Configuration
@@ -657,10 +658,11 @@ public abstract class SqlBuilder {
 
       }
       recreated = willBeRecreated(desiredModel.getTable(i), changesOfTable);
-      if (recreated) {
+      if (recreated && !recreatedPKs.contains(desiredModel.getTable(i).getName())) {
         writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i)
             .getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
         writeExternalIndicesCreateStmt(desiredModel.getTable(i));
+        recreatedPKs.add(desiredModel.getTable(i).getName());
       }
     }
     return changes;
@@ -2034,8 +2036,11 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       AddPrimaryKeyChange change) throws IOException {
-    writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getprimaryKeyName(), change
-        .getPrimaryKeyColumns());
+    if (!recreatedPKs.contains(change.getChangedTable().getName())) {
+      writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getprimaryKeyName(),
+          change.getPrimaryKeyColumns());
+      recreatedPKs.add(change.getChangedTable().getName());
+    }
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
