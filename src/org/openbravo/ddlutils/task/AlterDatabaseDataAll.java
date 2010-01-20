@@ -207,10 +207,10 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables");
-      platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
-
       platform.executeOnCreateDefaultForMandatoryColumns(db);
       platform.enableNOTNULLColumns(db);
+      platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
+
       getLog().info("Enabling Foreign Keys and Triggers");
       platform.enableAllFK(connection, originaldb, !isFailonerror());
       platform.enableAllTriggers(connection, db, !isFailonerror());

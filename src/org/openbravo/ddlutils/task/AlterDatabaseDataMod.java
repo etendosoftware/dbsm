@@ -308,9 +308,9 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     }
     platform.executeOnCreateDefaultForMandatoryColumns(dbAD);
     getLog().info("Enabling Foreign Keys and Triggers");
+    platform.enableNOTNULLColumns(dbAD);
     platform.enableAllFK(connection, dbAD, !isFailonerror());
     platform.enableAllTriggers(connection, dbAD, !isFailonerror());
-    platform.enableNOTNULLColumns(dbAD);
 
     try {
       // execute the post-script
