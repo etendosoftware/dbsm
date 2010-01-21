@@ -134,11 +134,6 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
         platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
       }
 
-      Database db = null;
-      db = readDatabaseModel();
-      final DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
-      loadDataStructures(platform, databaseOrgData, null, db);
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
@@ -156,6 +151,11 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
       if (!secondPass) {
         DBSMOBUtil.setStatus(platform, 13, getLog());
       }
+      Database db = null;
+      db = readDatabaseModel();
+      final DatabaseData databaseOrgData = new DatabaseData(db);
+      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
+      loadDataStructures(platform, databaseOrgData, originaldb, db);
 
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
