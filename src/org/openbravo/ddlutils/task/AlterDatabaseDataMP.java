@@ -134,6 +134,11 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
         platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
       }
 
+      Database db = null;
+      db = readDatabaseModel();
+      final DatabaseData databaseOrgData = new DatabaseData(db);
+      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
+      loadDataStructures(platform, databaseOrgData, null, db);
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
@@ -151,11 +156,6 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
       if (!secondPass) {
         DBSMOBUtil.setStatus(platform, 13, getLog());
       }
-      Database db = null;
-      db = readDatabaseModel();
-      final DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
-      loadDataStructures(platform, databaseOrgData, originaldb, db);
 
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
@@ -302,10 +302,6 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
       for (int i = 0; i < fileArray.length; i++) {
         files.add(fileArray[i]);
       }
-      File configScript = new File(dirFolder.getParentFile(), "configScript.xml");
-      if (configScript.exists()) {
-        configScripts.add(configScript);
-      }
     }
     final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
     getLog().info("Loading data from XML files");
@@ -325,16 +321,27 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
     }
 
     getLog().info("Loading and applying configuration scripts");
-    DatabaseIO dbIO = new DatabaseIO();
-    for (File f : configScripts) {
-      getLog().info("Loading configuration script: " + f.getAbsolutePath());
-      Vector<Change> changes = dbIO.readChanges(f);
-      for (Change change : changes) {
-        if (change instanceof ModelChange)
-          ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-        else if (change instanceof DataChange)
-          ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
-        getLog().debug(change);
+    List<String> sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
+    for (String template : sortedTemplates) {
+
+      File configScript = new File(new File(basedir), "/" + template
+          + "/src-db/database/configScript.xml");
+      if (configScript.exists()) {
+        configScripts.add(configScript);
+        DatabaseIO dbIO = new DatabaseIO();
+        getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
+        Vector<Change> changes = dbIO.readChanges(configScript);
+        for (Change change : changes) {
+          if (change instanceof ModelChange)
+            ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
+          else if (change instanceof DataChange)
+            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+          getLog().debug(change);
+        }
+      } else {
+        getLog().info(
+            "Couldn't find configuration script for template: " + template + " (file: "
+                + configScript.getAbsolutePath() + ")");
       }
     }
   }

@@ -8,14 +8,17 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
@@ -93,6 +96,16 @@ public class DBSMOBUtil {
           if (isDependant(row, targetRow))
             return true;
       }
+    }
+    return false;
+  }
+
+  public boolean moduleDependsOnTemplate(String module) {
+    ModuleRow targetRow = getRowFromDir(module);
+    for (ModuleRow row : allModules) {
+      if (row.type.equalsIgnoreCase("T"))
+        if (isDependant(row, targetRow))
+          return true;
     }
     return false;
   }
@@ -723,5 +736,70 @@ public class DBSMOBUtil {
     Connection connection = platform.borrowConnection();
     setStatus(connection, status, log);
     platform.returnConnection(connection);
+  }
+
+  public List<String> getSortedTemplates(DatabaseData databaseData) {
+    Vector<DynaBean> moduleDBs = databaseData.getRowsFromTable("AD_MODULE");
+    Vector<DynaBean> moduleDepDBs = databaseData.getRowsFromTable("AD_MODULE_DEPENDENCY");
+    Vector<String> modules = new Vector<String>();
+    HashMap<String, String> modIds = new HashMap<String, String>();
+    HashMap<String, Boolean> isTemplate = new HashMap<String, Boolean>();
+    HashMap<String, Vector<String>> directTemplateDependencies = new HashMap<String, Vector<String>>();
+
+    for (DynaBean mod : moduleDBs) {
+      final ModuleRow modRow = new ModuleRow();
+      // modRow.value=readStringFromRS(resultSet, "DB_PREFIX");
+      modRow.prefixes = new Vector<String>();
+      modRow.exceptions = new Vector<ExceptionRow>();
+      modRow.othersexceptions = new Vector<ExceptionRow>();
+      modRow.name = readPropertyFromDynaBean(mod, "NAME");
+      modRow.isInDevelopment = readPropertyFromDynaBean(mod, "ISINDEVELOPMENT");
+      modRow.dir = readPropertyFromDynaBean(mod, "JAVAPACKAGE");
+      modRow.idMod = readPropertyFromDynaBean(mod, "AD_MODULE_ID");
+      modRow.type = readPropertyFromDynaBean(mod, "TYPE");
+      if (modRow.isInDevelopment != null && modRow.isInDevelopment.equalsIgnoreCase("Y")) {
+        activeModules.add(modRow);
+      }
+      allModules.add(modRow);
+    }
+    for (DynaBean dep : moduleDepDBs) {
+      final String ad_module_id = readPropertyFromDynaBean(dep, "AD_MODULE_ID");
+      final String ad_dependent_module_id = readPropertyFromDynaBean(dep, "AD_DEPENDENT_MODULE_ID");
+      if (!dependencies.containsKey(ad_dependent_module_id))
+        dependencies.put(ad_dependent_module_id, new Vector<String>());
+      dependencies.get(ad_dependent_module_id).add(ad_module_id);
+    }
+
+    Vector<ModuleRow> templates = new Vector<ModuleRow>();
+    for (int i = 0; i < allModules.size(); i++) {
+      if (allModules.get(i).type.equals("T")) {
+        templates.add(allModules.get(i));
+      }
+    }
+    Vector<String> sortedTemplates = new Vector<String>();
+    while (templates.size() > 0) {
+      // We try to add one template
+      ModuleRow template = null;
+      for (int i = 0; i < templates.size(); i++) {
+        if (!moduleDependsOnTemplate(templates.get(i).dir)) {
+          template = templates.get(i);
+          break;
+        }
+      }
+      if (template == null) {
+        System.out.println("Circular dependency found when loading configuration scripts.");
+        break;
+      } else {
+        System.out.println(template.dir);
+        sortedTemplates.add(template.dir);
+        template.type = "M";
+        templates.remove(template);
+      }
+    }
+    return sortedTemplates;
+  }
+
+  private static String readPropertyFromDynaBean(DynaBean db, String property) {
+    return db.get(property) == null ? null : db.get(property).toString();
   }
 }
