@@ -740,7 +740,13 @@ public class DBSMOBUtil {
 
   public List<String> getSortedTemplates(DatabaseData databaseData) {
     Vector<DynaBean> moduleDBs = databaseData.getRowsFromTable("AD_MODULE");
+    if (moduleDBs == null) {
+      moduleDBs = new Vector<DynaBean>();
+    }
     Vector<DynaBean> moduleDepDBs = databaseData.getRowsFromTable("AD_MODULE_DEPENDENCY");
+    if (moduleDepDBs == null) {
+      moduleDepDBs = new Vector<DynaBean>();
+    }
     Vector<String> modules = new Vector<String>();
     HashMap<String, String> modIds = new HashMap<String, String>();
     HashMap<String, Boolean> isTemplate = new HashMap<String, Boolean>();
