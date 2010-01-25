@@ -2037,7 +2037,7 @@ public abstract class SqlBuilder {
     if (!recreatedPKs.contains(change.getChangedTable().getName())) {
       writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getprimaryKeyName(),
           change.getPrimaryKeyColumns());
-      // recreatedPKs.add(change.getChangedTable().getName());
+      recreatedPKs.add(change.getChangedTable().getName());
     }
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
