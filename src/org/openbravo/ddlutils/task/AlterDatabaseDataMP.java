@@ -104,17 +104,20 @@ public class AlterDatabaseDataMP extends BaseDalInitializingTask {
     // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
         .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);
-    if (hasBeenModified) {
-      if (force)
-        getLog()
-            .info(
-                "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-      else {
-        getLog()
-            .info(
-                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes in the application dictionary if you do it)");
-        throw new BuildException("Database has local changes. Update.database not done.");
+
+    if (!secondPass) {
+      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);
+      if (hasBeenModified) {
+        if (force)
+          getLog()
+              .info(
+                  "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+        else {
+          getLog()
+              .info(
+                  "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes in the application dictionary if you do it)");
+          throw new BuildException("Database has local changes. Update.database not done.");
+        }
       }
     }
     getLog().info("Executing full update.database");
