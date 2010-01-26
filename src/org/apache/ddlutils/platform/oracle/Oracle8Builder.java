@@ -673,12 +673,4 @@ public class Oracle8Builder extends SqlBuilder {
     printEndOfStatement();
   }
 
-  protected void processChange(Database currentModel, Database desiredModel,
-      AddPrimaryKeyChange change) throws IOException {
-    if (!recreatedPKs.contains(change.getChangedTable().getName())) {
-      writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getprimaryKeyName(),
-          change.getPrimaryKeyColumns());
-    }
-    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-  }
 }
