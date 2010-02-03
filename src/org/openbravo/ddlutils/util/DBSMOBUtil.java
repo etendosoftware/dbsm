@@ -15,8 +15,15 @@ import java.util.Vector;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.DataChange;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
+import org.apache.ddlutils.io.DataReader;
+import org.apache.ddlutils.io.DataToArraySink;
+import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
@@ -24,6 +31,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.service.dataset.DataSetService;
 import org.openbravo.utils.CheckSum;
@@ -807,5 +815,80 @@ public class DBSMOBUtil {
 
   private static String readPropertyFromDynaBean(DynaBean db, String property) {
     return db.get(property) == null ? null : db.get(property).toString();
+  }
+
+  public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
+      Database originaldb, Database db, String basedir, String datafilter, File input) {
+    final DatabaseDataIO dbdio = new DatabaseDataIO();
+    dbdio.setEnsureFKOrder(false);
+    dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
+        "com.openbravo.db.OpenbravoMetadataFilter", originaldb));
+
+    final Vector<File> files = new Vector<File>();
+    final File[] sourceFiles = DatabaseUtils.readFileArray(input);
+    for (int i = 0; i < sourceFiles.length; i++) {
+      files.add(sourceFiles[i]);
+    }
+
+    final String token = datafilter;
+    final DirectoryScanner dirScanner = new DirectoryScanner();
+    dirScanner.setBasedir(new File(basedir));
+    final String[] dirFilterA = { token };
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    final String[] incDirs = dirScanner.getIncludedDirectories();
+    Vector<File> configScripts = new Vector<File>();
+    for (int j = 0; j < incDirs.length; j++) {
+      final File dirFolder = new File(basedir, incDirs[j] + "/");
+      final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+      for (int i = 0; i < fileArray.length; i++) {
+        files.add(fileArray[i]);
+      }
+    }
+    final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
+    getLog().info("Loading data from XML files");
+    for (int i = 0; i < files.size(); i++) {
+      try {
+        dataReader.getSink().start();
+        final String tablename = files.get(i).getName().substring(0,
+            files.get(i).getName().length() - 4);
+        final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
+            .getVector();
+        dataReader.parse(files.get(i));
+        databaseOrgData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
+        dataReader.getSink().end();
+      } catch (final Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    getLog().info("Loading and applying configuration scripts");
+    List<String> sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
+    for (String template : sortedTemplates) {
+
+      File configScript = new File(new File(basedir), "/" + template
+          + "/src-db/database/configScript.xml");
+      if (configScript.exists()) {
+        configScripts.add(configScript);
+        DatabaseIO dbIO = new DatabaseIO();
+        getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
+        Vector<Change> changes = dbIO.readChanges(configScript);
+        for (Change change : changes) {
+          if (change instanceof ModelChange)
+            ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
+          else if (change instanceof DataChange)
+            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+          getLog().debug(change);
+        }
+      } else {
+        getLog().info(
+            "Couldn't find configuration script for template: " + template + " (file: "
+                + configScript.getAbsolutePath() + ")");
+      }
+    }
+  }
+
+  private Logger getLog() {
+    return Logger.getLogger(getClass());
   }
 }

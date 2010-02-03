@@ -43,12 +43,7 @@ import org.apache.ddlutils.io.converters.SqlTypeConverter;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
-import org.openbravo.base.model.Property;
-import org.openbravo.base.structure.BaseOBObject;
-import org.openbravo.dal.core.DalUtil;
-import org.openbravo.model.ad.utility.DataSetColumn;
-import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.dataset.DataSetService;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * Writes dyna beans matching a specified database model into an XML file.
@@ -350,51 +345,31 @@ public class DataWriter {
    * @param bean
    *          The bean to write
    */
-  public void write(Database db, DataSetService datasetService, DataSetTable datasetTable,
-      List<DataSetColumn> datasetColumns, BaseOBObject object) throws DataWriterException {
+  public void write(Database db, OBDatasetTable datasetTable, DynaBean bean)
+      throws DataWriterException {
+
+    SqlDynaClass dynaClass = (SqlDynaClass) bean.getDynaClass();
+    Table table = dynaClass.getTable();
     Vector subElements = new Vector();
     Vector elementValues = new Vector();
-    List<Property> pkProperties = object.getEntity().getIdProperties();
-    Table table = db.findTable(datasetTable.getTable().getDBTableName());
-
+    Column[] pks = table.getPrimaryKeyColumns();
     String comment = "";
-    for (int i = 0; i < pkProperties.size(); i++) {
+    for (int i = 0; i < pks.length; i++) {
       if (i > 0)
         comment += " ";
-      comment += object.get(pkProperties.get(i).getName()).toString();
+      comment += bean.get(pks[i].getName()).toString();
     }
 
-    List<Property> exportableColumns = datasetService.getExportableProperties(object, datasetTable,
-        datasetColumns); // object.getEntity().
-    // getProperties();
     try {
       _writer.writeComment(comment);
       // indentIfPrettyPrinting(5);
       _writer.writeStartElement(table.getName());
       for (int i = 0; i < table.getColumnCount(); i++) {
-        Property prop = null;
-        for (int j = 0; j < exportableColumns.size(); j++)
-          if (exportableColumns.get(j).getColumnName() != null
-              && exportableColumns.get(j).getColumnName().equalsIgnoreCase(
-                  table.getColumn(i).getName()))
-            prop = exportableColumns.get(j);
-        if (prop != null) {
-          Column column = table.findColumn(prop.getColumnName());
-          Object primValue = object.get(prop.getName());
-          Object value;
-          if (primValue instanceof BaseOBObject)
-            value = DalUtil.getReferencedPropertyValue(prop, primValue);
-          else
-            value = primValue;
-          if (value instanceof Boolean) {
-            if (((Boolean) value).booleanValue())
-              value = "Y";
-            else
-              value = "N";
-          } else if (value instanceof String) {
-            if (value != null && value.equals(""))
-              value = null;
-          }
+        String prop = table.getColumn(i).getName();
+        if (datasetTable.includesColumn(prop)) {
+          Column column = table.findColumn(prop);
+          Object primValue = bean.get(prop);
+          Object value = bean.get(column.getName());
 
           SqlTypeConverter converter = _converterConf.getRegisteredConverter(table, column);
           String valueAsText = null;
@@ -551,30 +526,6 @@ public class DataWriter {
           _log.warn("Cannot write normal dyna beans (type: " + bean.getDynaClass().getName() + ")");
         }
       }
-    } catch (ConversionException ex) {
-      throw new DataWriterException(ex);
-    }
-  }
-
-  public boolean write(Database db, DataSetService datasetService, DataSetTable datasetTable,
-      String moduleID) throws DataWriterException {
-    try {
-      List<DataSetColumn> datasetColumns = datasetTable.getDataSetColumnList();
-      List<BaseOBObject> objectList = null;
-      boolean b = false;
-      try {
-        objectList = datasetService.getExportableObjects(datasetTable, moduleID);
-      } catch (Exception e) {
-        _log.error("Table " + datasetTable.getTable().getDBTableName()
-            + " not found in runtime model");
-        e.printStackTrace();
-        return b;
-      }
-      for (BaseOBObject object : objectList) {
-        write(db, datasetService, datasetTable, datasetColumns, object);
-        b = true; // we wrote something
-      }
-      return b;
     } catch (ConversionException ex) {
       throw new DataWriterException(ex);
     }

@@ -26,22 +26,29 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
-import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
-import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.dataset.DataSetService;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * Provides basic live database data <-> XML functionality.
@@ -72,6 +79,7 @@ public class DatabaseDataIO {
   private String _schemaPattern;
 
   private DatabaseFilter _databasefilter = null;
+  private final Log _log = LogFactory.getLog(DatabaseDataIO.class);
 
   /**
    * Registers a converter.
@@ -277,145 +285,6 @@ public class DatabaseDataIO {
   }
 
   /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given output stream (which won't be closed by this method).
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param path
-   *          The path of the output file
-   * @param xmlEncoding
-   *          The encoding to use for the XML
-   */
-  public void writeDataToXML(Platform platform, String path, String xmlEncoding)
-      throws DdlUtilsException {
-    writeDataToXML(platform, getConfiguredDataWriter(path, xmlEncoding));
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given output stream (which won't be closed by this method).
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param model
-   *          The model for which to retrieve and write the data
-   * @param path
-   *          The path of the output file
-   * @param xmlEncoding
-   *          The encoding to use for the XML
-   */
-  public void writeDataToXML(Platform platform, Database model, String path, String xmlEncoding) {
-    writeDataToXML(platform, model, getConfiguredDataWriter(path, xmlEncoding));
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given output stream (which won't be closed by this method).
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param output
-   *          The output stream
-   * @param xmlEncoding
-   *          The encoding to use for the XML
-   */
-  public void writeDataToXML(Platform platform, OutputStream output, String xmlEncoding) {
-    writeDataToXML(platform, getConfiguredDataWriter(output, xmlEncoding));
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given output stream (which won't be closed by this method).
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param model
-   *          The model for which to retrieve and write the data
-   * @param output
-   *          The output stream
-   * @param xmlEncoding
-   *          The encoding to use for the XML
-   */
-  public void writeDataToXML(Platform platform, Database model, OutputStream output,
-      String xmlEncoding) {
-    writeDataToXML(platform, model, getConfiguredDataWriter(output, xmlEncoding));
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given output writer (which won't be closed by this method).
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param output
-   *          The output writer (which needs to be openend with the specified encoding)
-   * @param xmlEncoding
-   *          The encoding to use for the XML
-   */
-  public void writeDataToXML(Platform platform, Writer output, String xmlEncoding) {
-    writeDataToXML(platform, getConfiguredDataWriter(output, xmlEncoding));
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given output writer (which won't be closed by this method).
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param model
-   *          The model for which to retrieve and write the data
-   * @param output
-   *          The output writer (which needs to be openend with the specified encoding)
-   * @param xmlEncoding
-   *          The encoding to use for the XML
-   */
-  public void writeDataToXML(Platform platform, Database model, Writer output, String xmlEncoding) {
-    writeDataToXML(platform, model, getConfiguredDataWriter(output, xmlEncoding));
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given data writer.
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param writer
-   *          The data writer
-   */
-  public void writeDataToXML(Platform platform, DataWriter writer) {
-    writeDataToXML(platform, platform.readModelFromDatabase("unnamed"), writer);
-  }
-
-  /**
-   * Writes the data contained in the database to which the given platform is connected, as XML to
-   * the given data writer.
-   * 
-   * @param platform
-   *          The platform; needs to be connected to a live database
-   * @param model
-   *          The model for which to retrieve and write the data
-   * @param writer
-   *          The data writer
-   */
-  public void writeDataToXML(Platform platform, Database model, DataWriter writer) {
-
-    registerConverters(writer.getConverterConfiguration());
-
-    writer.writeDocumentStart();
-
-    String[] tablenames = _databasefilter.getTableNames();
-    for (int i = 0; i < tablenames.length; i++) {
-      Table t = model.findTable(tablenames[i]);
-      if (t != null) {
-        writeDataForTableToXML(platform, model, t, writer, _databasefilter.getTableFilter(t
-            .getName()));
-      }
-    }
-    writer.writeDocumentEnd();
-  }
-
-  /**
    * Sorts the given table according to their foreign key order.
    * 
    * @param tables
@@ -477,138 +346,23 @@ public class DatabaseDataIO {
     return result;
   }
 
-  public boolean writeDataForTableToXML(Database model, DataSetService datasetService,
-      String datasetName, DataSetTable table, OutputStream output, String xmlEncoding,
-      String moduleID) {
+  public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
+      OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
     boolean b = false;
-    b = writer.write(model, datasetService, table, moduleID);
+    Table table = model.findTable(dsTable.getName());
+    Connection con = platform.borrowConnection();
+    Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
+        moduleID);
+    for (DynaBean row : rows) {
+      writer.write(model, dsTable, row);
+      b = true;
+    }
+    platform.returnConnection(con);
     writer.writeDocumentEnd();
     return b;
-  }
-
-  /**
-   * Writes the data contained in a single table to XML.
-   * 
-   * @param platform
-   *          The platform
-   * @param model
-   *          The database model
-   * @param table
-   *          The table
-   * @param writer
-   *          The data writer
-   * @param filter
-   *          The table SQL filter, if null, no data will be written.
-   */
-  private void writeDataForTableToXML(Platform platform, Database model, Table table,
-      DataWriter writer, String filter) {
-    if (filter != null) {
-      Table[] tables = { table };
-      StringBuffer query = new StringBuffer();
-      String alternativeQuery = "";
-
-      query.append("SELECT ");
-
-      Connection connection = null;
-      String schema = null;
-
-      if (_determineSchema) {
-        try {
-          // TODO: Remove this once we have full support for schemas
-          connection = platform.borrowConnection();
-          schema = platform.getModelReader().determineSchemaOf(connection, _schemaPattern,
-              tables[0]);
-        } catch (SQLException ex) {
-          // ignored
-        } finally {
-          if (connection != null) {
-            try {
-              connection.close();
-            } catch (SQLException ex) {
-              // ignored
-            }
-          }
-        }
-      }
-
-      Column[] columns = tables[0].getColumns();
-
-      for (int columnIdx = 0; columnIdx < columns.length; columnIdx++) {
-        if (columnIdx > 0) {
-          query.append(",");
-        }
-        if (platform.isDelimitedIdentifierModeOn()) {
-          query.append(platform.getPlatformInfo().getDelimiterToken());
-        }
-        query.append(columns[columnIdx].getName());
-        if (platform.isDelimitedIdentifierModeOn()) {
-          query.append(platform.getPlatformInfo().getDelimiterToken());
-        }
-      }
-
-      Column[] pkcolumns = tables[0].getPrimaryKeyColumns();
-      int i = 0;
-      while (i < pkcolumns.length && !pkcolumns[i].isOfNumericType())
-        i++;
-      String numPKColumn = null;
-      if (i < pkcolumns.length && pkcolumns[i].isOfNumericType()) {
-        numPKColumn = pkcolumns[i].getName();
-      }
-
-      query.append(" FROM ");
-      if (platform.isDelimitedIdentifierModeOn()) {
-        query.append(platform.getPlatformInfo().getDelimiterToken());
-      }
-      if (schema != null) {
-        query.append(schema);
-        query.append(".");
-      }
-      query.append(tables[0].getName());
-      if (platform.isDelimitedIdentifierModeOn()) {
-        query.append(platform.getPlatformInfo().getDelimiterToken());
-      }
-
-      // adds the filter
-      if (!"".equals(filter)) {
-        query.append(" WHERE ");
-        query.append(filter);
-      }
-
-      // Order by PK
-      if (pkcolumns.length > 0) {
-        query.append(" ORDER BY ");
-
-        alternativeQuery = query.toString();
-        for (int columnIdx = 0; columnIdx < pkcolumns.length; columnIdx++) {
-          if (columnIdx > 0) {
-            query.append(",");
-            alternativeQuery += ",";
-          }
-          query.append("HEX_TO_INT(");
-          if (platform.isDelimitedIdentifierModeOn()) {
-            query.append(platform.getPlatformInfo().getDelimiterToken());
-            alternativeQuery += platform.getPlatformInfo().getDelimiterToken();
-          }
-          query.append(pkcolumns[columnIdx].getName());
-          alternativeQuery += pkcolumns[columnIdx].getName();
-          if (platform.isDelimitedIdentifierModeOn()) {
-            query.append(platform.getPlatformInfo().getDelimiterToken());
-          }
-          query.append(")");
-        }
-      }
-
-      Iterator it = platform.query(model, query.toString(), tables);
-      if (it == null) {
-        System.out.println("Exception while trying to read data from table " + table.getName()
-            + ". We'll try alternative query.");
-        it = platform.query(model, alternativeQuery, tables);
-      }
-      writer.write(it);
-    }
   }
 
   /**
@@ -932,6 +686,96 @@ public class DatabaseDataIO {
       dataReader.parse(input);
     } catch (Exception ex) {
       throw new DdlUtilsException(ex);
+    }
+  }
+
+  public Vector<DynaBean> readRowsFromTableList(Connection connection, Platform platform,
+      Database model, Table table, OBDatasetTable dsTable, String moduleId) {
+    String fullwhereclause = dsTable.getWhereclause(moduleId);
+    Table[] atables = { table };
+    Statement statement = null;
+    ResultSet resultSet = null;
+    String sqlstatement = "";
+    try {
+      statement = connection.createStatement();
+      sqlstatement = "SELECT * FROM " + table.getName();
+      if (fullwhereclause != null) {
+        sqlstatement += " WHERE " + fullwhereclause;
+      }
+      sqlstatement += " ORDER BY ";
+      for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
+        if (j > 0)
+          sqlstatement += ",";
+        sqlstatement += table.getPrimaryKeyColumns()[j].getName();
+      }
+      resultSet = statement.executeQuery(sqlstatement);
+      Iterator it = platform.createResultSetIterator(model, resultSet, atables);
+      Vector<DynaBean> dbs = new Vector<DynaBean>();
+      while (it.hasNext()) {
+        dbs.add((DynaBean) it.next());
+      }
+      Collections.sort(dbs, new BaseDynaBeanIDHexComparator(table.getPrimaryKeyColumns()[0]
+          .getName()));
+      return dbs;
+    } catch (SQLException ex) {
+      _log.error("SQL command to read rows from table failed: " + sqlstatement);
+      return null;
+    }
+  }
+
+  public Iterator readRowsFromTable(Connection connection, Platform platform, Database model,
+      Table table, DatabaseFilter filter) {
+    if (table.getPrimaryKeyColumns() == null || table.getPrimaryKeyColumns().length == 0) {
+      _log.error("Table " + table.getName() + " cannot be read because it has no primary key.");
+      return null;
+    }
+    Table[] atables = { table };
+    Statement statement = null;
+    ResultSet resultSet = null;
+    try {
+      statement = connection.createStatement();
+      String sqlstatement = "SELECT * FROM " + table.getName();
+      if (filter != null && filter.getTableFilter(table.getName()) != null) {
+        sqlstatement += " WHERE " + filter.getTableFilter(table.getName()) + " ";
+        sqlstatement += " ORDER BY ";
+        for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
+          if (j > 0)
+            sqlstatement += ",";
+          sqlstatement += table.getPrimaryKeyColumns()[j].getName();
+        }
+        resultSet = statement.executeQuery(sqlstatement);
+        return platform.createResultSetIterator(model, resultSet, atables);
+      } else
+        return null;
+    } catch (SQLException ex) {
+      _log.error(ex.getLocalizedMessage());
+      return null;
+      // throw new DatabaseOperationException("Error while performing a
+      // query", ex);
+    }
+  }
+
+  private class BaseDynaBeanIDHexComparator implements Comparator<Object> {
+    String pkName;
+
+    public BaseDynaBeanIDHexComparator(String pkName) {
+      this.pkName = pkName;
+    }
+
+    public int compare(Object o1, Object o2) {
+      if (!(o1 instanceof DynaBean) || !(o2 instanceof DynaBean)) {
+        return 0;
+      }
+      final DynaBean bob1 = (DynaBean) o1;
+      final DynaBean bob2 = (DynaBean) o2;
+      try {
+        final BigInteger bd1 = new BigInteger(bob1.get(pkName).toString(), 32);
+        final BigInteger bd2 = new BigInteger(bob2.get(pkName).toString(), 32);
+        return bd1.compareTo(bd2);
+      } catch (final NumberFormatException n) {
+        System.out.println("problem: " + n.getMessage());
+        return 0;
+      }
     }
   }
 }

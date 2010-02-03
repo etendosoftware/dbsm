@@ -57,6 +57,7 @@ import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.alteration.RemoveRowDALChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
@@ -739,8 +740,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     for (Change change : changes) {
       if (change instanceof AddRowChange) {
         upsert(connection, model, ((AddRowChange) change).getRow());
-      } else if (change instanceof RemoveRowDALChange) {
-        delete(connection, model, (RemoveRowDALChange) change);
+      } else if (change instanceof RemoveRowChange) {
+        delete(connection, model, (RemoveRowChange) change);
       } else if (change instanceof ColumnDataChange) {
         update(connection, model, (ColumnDataChange) change);
       }
@@ -773,11 +774,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           writer.append(getSqlBuilder().getInsertSql(table, map, false));
           getSqlBuilder().printEndOfStatement("");
         } else if (change instanceof RemoveRowDALChange) {
-          RemoveRowDALChange removeChange = (RemoveRowDALChange) change;
+          RemoveRowChange removeChange = (RemoveRowChange) change;
           HashMap map = new HashMap();
           Table table = removeChange.getTable();
           for (int i = 0; i < table.getPrimaryKeyColumns().length; i++)
-            map.put(table.getPrimaryKeyColumns()[i].getName(), removeChange.getRow().getId());
+            map.put(table.getPrimaryKeyColumns()[i].getName(), removeChange.getRow().get(
+                table.getPrimaryKeyColumns()[i].getName()).toString());
           writer.append(getSqlBuilder().getDeleteSql(table, map, false));
           getSqlBuilder().printEndOfStatement("");
         } else if (change instanceof ColumnDataChange) {
@@ -2158,7 +2160,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  public void delete(Connection connection, Database model, RemoveRowDALChange change)
+  public void delete(Connection connection, Database model, RemoveRowChange change)
       throws DatabaseOperationException {
     PreparedStatement statement = null;
 
@@ -2166,7 +2168,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       Table table = change.getTable();
       Column[] pk = table.getPrimaryKeyColumns();
       HashMap pkValues = new HashMap();
-      pkValues.put(pk[0].getName(), change.getRow().getId());
+      pkValues.put(pk[0].getName(), change.getRow().get(pk[0].getName()).toString());
       String sql = getSqlBuilder().getDeleteSql(change.getTable(), pkValues, true);
       // createDeleteSql(model, dynaClass, primaryKeys, null);
 
@@ -2175,9 +2177,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
 
       statement = connection.prepareStatement(sql);
-
       for (int idx = 0; idx < pk.length; idx++) {
-        setObject(statement, idx + 1, change.getRow().getId(), pk[idx]);
+        setObject(statement, idx + 1, change.getRow().get(pk[idx].getName()).toString(), pk[idx]);
       }
 
       int count = statement.executeUpdate();

@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -37,7 +36,8 @@ import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaException;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.util.ExtTypes;
-import org.openbravo.model.ad.utility.DataSetTable;
+import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.service.dataset.DataSetService;
 
 /**
@@ -1555,15 +1555,15 @@ public class Database implements Serializable, Cloneable {
     _tables = new ArrayList();
   }
 
-  public void filterByDataset(String datasetName) {
+  public void filterByDataset(OBDataset dataset) {
     ArrayList oldTables = _tables;
     _tables = new ArrayList();
     DataSetService ds = DataSetService.getInstance();
-    List<DataSetTable> tables = ds.getDataSetByValue(datasetName).getDataSetTableList();
-    for (DataSetTable table : tables) {
+    Vector<OBDatasetTable> tables = dataset.getTableList();
+    for (OBDatasetTable table : tables) {
       for (int i = 0; i < oldTables.size(); i++) {
         Table t = (Table) oldTables.get(i);
-        if (t.getName().equalsIgnoreCase(table.getTable().getDBTableName())) {
+        if (t.getName().equalsIgnoreCase(table.getName())) {
           _tables.add(t);
         }
       }

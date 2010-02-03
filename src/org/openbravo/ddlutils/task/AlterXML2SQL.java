@@ -27,6 +27,8 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.OBDataset;
 
 /**
  * 
@@ -41,7 +43,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
   }
 
   @Override
-  public void doExecute() {
+  public void execute() {
 
     try {
       getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
@@ -82,22 +84,16 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       }
 
       final DatabaseData databaseOrgData = new DatabaseData(db);
-      loadDataStructures(platform, databaseOrgData, originaldb, db);
+      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
+          basedir, datafilter, input);
 
       getLog().info("Comparing databases to find differences");
 
-      final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparatorDS.compareUsingDALToUpdate(db, platform, databaseOrgData, "DS", null);
-      if (dataComparatorDS.getChanges().size() > 0) {
-        String message = "The Dataset DS definition was changed. The update.database.script will need to be run a second time (after the script has been run in the database) to get the second part of the script update. Both scripts will need to be executed in the final database to obtain the desired result.";
-        getLog().info(message);
-        w.append("-- " + message + "\n\n");
-      }
+      OBDataset ad = new OBDataset(databaseOrgData, "AD");
 
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
+      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
 
       getLog().info("Data changes we will perform: ");
       for (final Change change : dataComparator.getChanges())

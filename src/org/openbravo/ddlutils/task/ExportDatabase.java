@@ -15,7 +15,6 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -34,12 +33,11 @@ import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.ddlutils.util.ValidateAPIData;
 import org.openbravo.ddlutils.util.ValidateAPIModel;
 import org.openbravo.model.ad.module.Module;
-import org.openbravo.model.ad.utility.DataSet;
-import org.openbravo.model.ad.utility.DataSetTable;
-import org.openbravo.service.dataset.DataSetService;
 import org.openbravo.service.system.SystemService;
 import org.openbravo.service.system.SystemValidationResult;
 
@@ -68,7 +66,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
   }
 
   @Override
-  public void doExecute() {
+  public void execute() {
+    super.execute();
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
@@ -153,14 +152,15 @@ public class ExportDatabase extends BaseDalInitializingTask {
       for (String dataset : datasetArray)
         datasets.add(dataset);
 
-      final DataSetService datasetService = DataSetService.getInstance();
+      DatabaseData databaseOrgData = new DatabaseData(db);
+      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
+          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
       int datasetI = 0;
-
       for (final String dataSetCode : datasets) {
         if (dataSetCode.equalsIgnoreCase("ADRD") && !rd)
           continue;
-        final DataSet dataSet = datasetService.getDataSetByValue(dataSetCode);
-        final List<DataSetTable> tableList = dataSet.getDataSetTableList();
+        OBDataset dataset = new OBDataset(databaseOrgData, dataSetCode);
+        final Vector<OBDatasetTable> tableList = dataset.getTableList();
         for (int i = 0; i < util.getActiveModuleCount(); i++) {
           getLog().info("Exporting module: " + util.getActiveModule(i).name);
           getLog().info(db.toString());
@@ -203,13 +203,14 @@ public class ExportDatabase extends BaseDalInitializingTask {
               }
             }
 
+            OBDataset ad = new OBDataset(databaseXMLData, "AD");
             final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
                 .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
             dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
                 "com.openbravo.db.OpenbravoMetadataFilter", db));
             getLog().info("Comparing models");
-            dataComparator.compareUsingDAL(db, db, platform, databaseXMLData, "AD", util
-                .getActiveModule(i).idMod);
+            dataComparator.compare(db, db, platform, databaseXMLData, ad,
+                util.getActiveModule(i).idMod);
 
             validateAPIForModel(dataComparator.getChanges());
 
@@ -228,15 +229,14 @@ public class ExportDatabase extends BaseDalInitializingTask {
                   filedelete.delete();
               }
             }
-            for (final DataSetTable table : tableList) {
+            for (final OBDatasetTable table : tableList) {
               getLog().info(
-                  "Exporting table: " + table.getTable().getDBTableName() + " to module "
+                  "Exporting table: " + table.getName() + " to module "
                       + util.getActiveModule(i).name);
-              final File tableFile = new File(path, table.getTable().getDBTableName().toUpperCase()
-                  + ".xml");
+              final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
               final OutputStream out = new FileOutputStream(tableFile);
-              final boolean b = dbdio.writeDataForTableToXML(db, datasetService, dataSetCode,
-                  table, out, getEncoding(), util.getActiveModule(i).idMod);
+              final boolean b = dbdio.writeDataForTableToXML(platform, db, table, out,
+                  getEncoding(), util.getActiveModule(i).idMod);
               if (!b)
                 tableFile.delete();
               out.flush();

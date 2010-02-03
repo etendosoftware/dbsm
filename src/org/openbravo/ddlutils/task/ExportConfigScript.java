@@ -34,6 +34,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.OBDataset;
 
 /**
  * 
@@ -62,7 +63,8 @@ public class ExportConfigScript extends BaseDalInitializingTask {
   }
 
   @Override
-  public void doExecute() {
+  public void execute() {
+    super.execute();
     try {
       if (industryTemplate == null) {
         throw new BuildException("No industry template was specified.");
@@ -193,11 +195,12 @@ public class ExportConfigScript extends BaseDalInitializingTask {
         getLog().info("Module added to comparison: " + mod);
         modIds.add(mod);
       }
+
+      OBDataset ad = new OBDataset(databaseOrgData, "AD");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), currentdb));
-      dataComparator.compareUsingDAL(xmlModel, databaseModel, platform, databaseOrgData, "ADCS",
-          null);
+      dataComparator.compare(xmlModel, databaseModel, platform, databaseOrgData, ad, null);
       final Vector<Change> dataChanges = new Vector<Change>();
       dataChanges.addAll(dataComparator.getChanges());
       final Vector<Change> finalChanges = new Vector<Change>();

@@ -17,28 +17,17 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Vector;
 
-import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
-import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
-import org.apache.ddlutils.alteration.ModelChange;
-import org.apache.ddlutils.io.DataReader;
-import org.apache.ddlutils.io.DataToArraySink;
-import org.apache.ddlutils.io.DatabaseDataIO;
-import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.ProjectHelper;
-import org.openbravo.base.model.ModelProvider;
-import org.openbravo.dal.core.DalLayerInitializer;
-import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.utils.CheckSum;
 
 /**
@@ -75,6 +64,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
   }
 
   public void execute() {
+    super.execute();
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");
@@ -91,11 +81,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         System.out.println("Database files were changed. Initiating database update process.");
       }
     }
-    super.execute();
-  }
 
-  @Override
-  public void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
@@ -105,7 +91,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
     // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
         .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);
+    boolean hasBeenModified = false;// DBSMOBUtil.getInstance().hasBeenModified(platform, false);
     if (hasBeenModified) {
       if (force)
         getLog()
@@ -153,14 +139,8 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       db = readDatabaseModel();
       final DatabaseData databaseOrgData = new DatabaseData(db);
       DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
-      loadDataStructures(platform, databaseOrgData, originaldb, db);
-
-      getLog().info("Comparing databases to find differences");
-      final DataComparator dataComparatorDS = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparatorDS.compareUsingDALToUpdate(db, platform, databaseOrgData, "DS", null);
-
-      OBDal.getInstance().commitAndClose();
+      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
+          basedir, datafilter, input);
 
       final Database oldModel = (Database) originaldb.clone();
       DBSMOBUtil.setStatus(platform, 14, getLog());
@@ -175,31 +155,15 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db);
-      if (dataComparatorDS.getChanges().size() > 0) {
-        getLog().info("Dataset DS has changed. We need to update it.");
-        platform.alterData(connection, db, dataComparatorDS.getChanges());
-        getLog().info("Generating entities...");
-        try {
-          Project project = new Project();
-          project.init();
-          File op = new File(basedir, "/../");
-          project.setBasedir(op.getAbsolutePath());
-          ProjectHelper.getProjectHelper().parse(project, new File(op, "/build.xml"));
-          project.executeTarget("generate.entities");
-        } catch (Exception e) {
-          getLog().error("generate.entities process failed: ", e);
-        }
-        getLog().info("Dataset DS updated succesfully. Reinitializing DAL");
-        ModelProvider.setInstance(null);
-        DalLayerInitializer.getInstance().setInitialized(false);
-        DalLayerInitializer.getInstance().initialize(true);
 
-      }
-
+      OBDataset ad = new OBDataset(databaseOrgData, "AD");
+      getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.compareUsingDALToUpdate(db, platform, databaseOrgData, "ADCS", null);
-      OBDal.getInstance().commitAndClose();
+      dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), db));
+      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
+      for (Change change : dataComparator.getChanges())
+        System.out.println(change);
       getLog().info("Updating database data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
@@ -264,76 +228,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       db = DatabaseUtils.readDatabase(fileArray);
     }
     return db;
-  }
-
-  protected void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db) {
-    final DatabaseDataIO dbdio = new DatabaseDataIO();
-    dbdio.setEnsureFKOrder(false);
-    dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
-
-    final Vector<File> files = new Vector<File>();
-    final File[] sourceFiles = DatabaseUtils.readFileArray(getInput());
-    for (int i = 0; i < sourceFiles.length; i++) {
-      files.add(sourceFiles[i]);
-    }
-
-    final String token = datafilter;
-    final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(basedir));
-    final String[] dirFilterA = { token };
-    dirScanner.setIncludes(dirFilterA);
-    dirScanner.scan();
-    final String[] incDirs = dirScanner.getIncludedDirectories();
-    Vector<File> configScripts = new Vector<File>();
-    for (int j = 0; j < incDirs.length; j++) {
-      final File dirFolder = new File(basedir, incDirs[j] + "/");
-      final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
-      for (int i = 0; i < fileArray.length; i++) {
-        files.add(fileArray[i]);
-      }
-    }
-    final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
-    getLog().info("Loading data from XML files");
-    for (int i = 0; i < files.size(); i++) {
-      try {
-        dataReader.getSink().start();
-        final String tablename = files.get(i).getName().substring(0,
-            files.get(i).getName().length() - 4);
-        final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
-            .getVector();
-        dataReader.parse(files.get(i));
-        databaseOrgData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
-        dataReader.getSink().end();
-      } catch (final Exception e) {
-        e.printStackTrace();
-      }
-    }
-
-    getLog().info("Loading and applying configuration scripts");
-    List<String> sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
-    for (String template : sortedTemplates) {
-
-      File configScript = new File(new File(basedir), "/" + template
-          + "/src-db/database/configScript.xml");
-      if (configScript.exists()) {
-        configScripts.add(configScript);
-        DatabaseIO dbIO = new DatabaseIO();
-        getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
-        Vector<Change> changes = dbIO.readChanges(configScript);
-        for (Change change : changes) {
-          if (change instanceof ModelChange)
-            ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange)
-            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
-          getLog().debug(change);
-        }
-      } else {
-        getLog().info(
-            "Couldn't find configuration script for template: " + template + " (file: "
-                + configScript.getAbsolutePath() + ")");
-      }
-    }
   }
 
   public String getExcludeobjects() {

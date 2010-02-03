@@ -29,9 +29,7 @@ public class AlterDatabaseModJava {
     ada.setDatadir(args[14]);
     ada.setDatafilter(args[15]);
     ada.setModule(args[16]);
-    ada.setUserId(args[17]);
-    ada.setPropertiesFile(args[18]);
-    String force = args[19];
+    String force = args[17];
     if (force.equalsIgnoreCase("yes"))
       force = "true";
     ada.setForce(new Boolean(force).booleanValue());

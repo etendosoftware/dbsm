@@ -32,9 +32,9 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
+import org.openbravo.ddlutils.util.OBDataset;
 
 /**
  * 
@@ -72,8 +72,8 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
   }
 
   @Override
-  public void doExecute() {
-
+  public void execute() {
+    super.execute();
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     if (module == null || module.equals("")) {
@@ -132,12 +132,20 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       dbXML = DatabaseUtils.readDatabase(fileArray);
     }
 
+    final DBSMOBUtil util = DBSMOBUtil.getInstance();
+    DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
+    util.getModules(platform, excludeobjects);
+
+    DatabaseData databaseFullData = new DatabaseData(dbXML);
+    DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
+        "*/src-db/database/sourcedata", input);
+    OBDataset ad = new OBDataset(databaseFullData, "AD");
     Database completedb = null;
     Database dbAD = null;
     try {
       completedb = (Database) dbXML.clone();
       dbAD = (Database) dbXML.clone();
-      dbAD.filterByDataset("ADCS");
+      dbAD.filterByDataset(ad);
     } catch (final Exception e) {
       e.printStackTrace();
     }
@@ -147,9 +155,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     final Vector<Database> moduleOldModels = new Vector<Database>();
     final Vector<ModuleRow> moduleRows = new Vector<ModuleRow>();
 
-    final DBSMOBUtil util = DBSMOBUtil.getInstance();
-    DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, completedb, module);
-    util.getModules(platform, excludeobjects);
     boolean fullUpdate = false;
 
     if (module.toUpperCase().contains("CORE") || module.equals("%")) {
@@ -181,25 +186,24 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       ada.setDirFilter(dirFilter);
       ada.setDatadir(datadir);
       ada.setDatafilter(datafilter);
-      ada.setUserId(userId);
-      ada.setPropertiesFile(propertiesFile);
       ada.setLog(getLog());
       ada.setForce(isForce());
-      ada.doExecute();
+      ada.execute();
       return;
     }
     DBSMOBUtil.setStatus(platform, 13, getLog());
     Database originaldb = null;
     final StringTokenizer st = new StringTokenizer(module, ",");
-    while (st.hasMoreElements()) {
-      final String modName = st.nextToken().trim();
-      getLog().info("Updating module: " + modName);
-      final ModuleRow row = util.getRowFromDir(modName);
-      moduleRows.add(row);
-      if (row == null)
-        throw new BuildException("Module " + modName + " not found in AD_MODULE table.");
-      Database db = null;
-      try {
+    try {
+      while (st.hasMoreElements()) {
+        final String modName = st.nextToken().trim();
+        getLog().info("Updating module: " + modName);
+        final ModuleRow row = util.getRowFromDir(modName);
+        System.out.println(row);
+        moduleRows.add(row);
+        if (row == null)
+          throw new BuildException("Module " + modName + " not found in AD_MODULE table.");
+        Database db = null;
         if (row.prefixes.size() == 0) {
           getLog().info("Module doesn't have dbprefix. We will not update database model.");
           moduleModels.add(new Database());
@@ -222,10 +226,26 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
           moduleModels.add(db);
           moduleOldModels.add(olddb);
         }
-        final DatabaseDataIO dbdio = new DatabaseDataIO();
-        dbdio.setEnsureFKOrder(false);
-        dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), dbAD));
 
+        DBSMOBUtil.setStatus(platform, 14, getLog());
+
+        getLog().info("Updating database model...");
+
+        if (row.prefixes.size() > 0)
+          platform.alterTables(originaldb, db, !isFailonerror());
+        /*
+         * StringWriter sw=new StringWriter(); platform.getSqlBuilder().setWriter(sw);
+         * platform.getSqlBuilder().alterDatabase(originaldb, db, null);
+         * System.out.println(sw.toString());
+         */
+        getLog().info("Model update complete.");
+
+      }
+
+      final DatabaseDataIO dbdio = new DatabaseDataIO();
+      dbdio.setEnsureFKOrder(false);
+      dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), dbAD));
+      for (ModuleRow row : moduleRows) {
         getLog().info("Loading data from XML files");
         final Vector<File> files = new Vector<File>();
         final File fsourcedata = new File(basedir, "/" + row.dir + "/src-db/database/sourcedata/");
@@ -251,32 +271,18 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
           }
         }
 
-        DBSMOBUtil.setStatus(platform, 14, getLog());
         final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
             .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-        dataComparator.compareUsingDALToUpdate(dbAD, platform, databaseOrgData, "AD", row.idMod);
+        dataComparator.compareToUpdate(dbXML, platform, databaseOrgData, ad, row.idMod);
         getLog().info("Comparing databases to find data differences");
         dataChanges.add(dataComparator.getChanges());
-        OBDal.getInstance().commitAndClose();
-
-        getLog().info("Updating database model...");
-
-        if (row.prefixes.size() > 0)
-          platform.alterTables(originaldb, db, !isFailonerror());
-        /*
-         * StringWriter sw=new StringWriter(); platform.getSqlBuilder().setWriter(sw);
-         * platform.getSqlBuilder().alterDatabase(originaldb, db, null);
-         * System.out.println(sw.toString());
-         */
-        getLog().info("Model update complete.");
-
-      } catch (final Exception e) {
-        // log(e.getLocalizedMessage());
-        e.printStackTrace();
-        throw new BuildException(e);
       }
-    }
 
+    } catch (final Exception e) {
+      // log(e.getLocalizedMessage());
+      e.printStackTrace();
+      throw new BuildException(e);
+    }
     DBSMOBUtil.setStatus(platform, 15, getLog());
     getLog().info("Updating database data...");
 

@@ -27,7 +27,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.openbravo.dal.core.DalInitializingTask;
-import org.openbravo.utils.OBLogAppender;
 
 /**
  * This is the base class for the database ant tasks. It provides logging and other base
@@ -54,22 +53,14 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
    */
   protected void initLogging() {
     log = Logger.getLogger(getClass());
-    if (getProject() != null) {
-      OBLogAppender.setProject(getProject());
-    } else {
-      OBLogAppender.setOutputStream(System.out);
-      OBLogAppender.setLevel(Level.INFO);
-    }
   }
 
-  @Override
   public void execute() {
     final Properties props = new Properties();
     final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
         .toUpperCase();
-
     props.setProperty("log4j.rootCategory", level + ",A,O2");
-    props.setProperty("log4j.appender.A", "org.openbravo.utils.OBLogAppender");
+    props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
     // "org.apache.log4j.ConsoleAppender");
     props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
     props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
@@ -85,7 +76,6 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     PropertyConfigurator.configure(props);
 
     initLogging();
-    super.execute();
   }
 
   /**
