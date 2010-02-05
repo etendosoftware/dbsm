@@ -67,6 +67,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   @Override
   public void execute() {
+    initLogging();
     super.execute();
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
@@ -75,15 +76,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // platform.setDelimitedIdentifierModeOn(true);
-
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, true);
-    if (!hasBeenModified && !force) {
-      getLog()
-          .info(
-              "Database doesn't have local changes. We will not export changes. If you want to force the export, do: ant export.database -Dforce=yes");
-      return;
-    }
-
     // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
         .getAbsolutePath())) {
@@ -218,7 +210,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
           final DatabaseDataIO dbdio = new DatabaseDataIO();
           dbdio.setEnsureFKOrder(false);
-
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);
             path.mkdirs();

@@ -64,7 +64,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
   }
 
   public void execute() {
-    super.execute();
+    initLogging();
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");
@@ -91,19 +91,7 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
     // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
         .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
-    boolean hasBeenModified = false;// DBSMOBUtil.getInstance().hasBeenModified(platform, false);
-    if (hasBeenModified) {
-      if (force)
-        getLog()
-            .info(
-                "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-      else {
-        getLog()
-            .info(
-                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes in the application dictionary if you do it)");
-        throw new BuildException("Database has local changes. Update.database not done.");
-      }
-    }
+
     getLog().info("Executing full update.database");
 
     DBSMOBUtil.setStatus(platform, 12, getLog());
@@ -141,6 +129,20 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
           basedir, datafilter, input);
+      OBDataset ad = new OBDataset(databaseOrgData, "AD");
+      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
+      if (hasBeenModified) {
+        if (force)
+          getLog()
+              .info(
+                  "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+        else {
+          getLog()
+              .info(
+                  "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes in the application dictionary if you do it)");
+          throw new BuildException("Database has local changes. Update.database not done.");
+        }
+      }
 
       final Database oldModel = (Database) originaldb.clone();
       DBSMOBUtil.setStatus(platform, 14, getLog());
@@ -156,7 +158,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db);
 
-      OBDataset ad = new OBDataset(databaseOrgData, "AD");
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());

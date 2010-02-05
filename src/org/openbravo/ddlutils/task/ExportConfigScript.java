@@ -64,7 +64,7 @@ public class ExportConfigScript extends BaseDalInitializingTask {
 
   @Override
   public void execute() {
-    super.execute();
+    initLogging();
     try {
       if (industryTemplate == null) {
         throw new BuildException("No industry template was specified.");
@@ -236,6 +236,7 @@ public class ExportConfigScript extends BaseDalInitializingTask {
       for (final Change c : comparatorChanges) {
         getLog().info(c);
       }
+      DBSMOBUtil.getInstance().updateCRC(platform);
     } catch (Exception e) {
       e.printStackTrace();
     }

@@ -73,7 +73,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
   @Override
   public void execute() {
-    super.execute();
+    initLogging();
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     if (module == null || module.equals("")) {
@@ -86,19 +86,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, false);
-    if (hasBeenModified) {
-      if (force)
-        getLog()
-            .info(
-                "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-      else {
-        getLog()
-            .info(
-                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes if you do it)");
-        throw new BuildException("Database has local changes. Update.database not done.");
-      }
-    }
     // platform.setDelimitedIdentifierModeOn(true);
 
     DBSMOBUtil.setStatus(platform, 12, getLog());
@@ -140,6 +127,20 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
         "*/src-db/database/sourcedata", input);
     OBDataset ad = new OBDataset(databaseFullData, "AD");
+
+    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
+    if (hasBeenModified) {
+      if (force)
+        getLog()
+            .info(
+                "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+      else {
+        getLog()
+            .info(
+                "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes if you do it)");
+        throw new BuildException("Database has local changes. Update.database not done.");
+      }
+    }
     Database completedb = null;
     Database dbAD = null;
     try {
@@ -199,7 +200,6 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
         final String modName = st.nextToken().trim();
         getLog().info("Updating module: " + modName);
         final ModuleRow row = util.getRowFromDir(modName);
-        System.out.println(row);
         moduleRows.add(row);
         if (row == null)
           throw new BuildException("Module " + modName + " not found in AD_MODULE table.");

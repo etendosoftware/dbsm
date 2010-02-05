@@ -52,10 +52,6 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
    * Initializes the logging.
    */
   protected void initLogging() {
-    log = Logger.getLogger(getClass());
-  }
-
-  public void execute() {
     final Properties props = new Properties();
     final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
         .toUpperCase();
@@ -74,8 +70,7 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     props.setProperty("log4j.appender.O2.layout.ConversionPattern", "%-4r [%t] %-5p %c - %m%n");
     LogManager.resetConfiguration();
     PropertyConfigurator.configure(props);
-
-    initLogging();
+    log = Logger.getLogger(getClass());
   }
 
   /**

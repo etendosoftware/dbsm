@@ -33,7 +33,6 @@ import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.task.DatabaseUtils;
-import org.openbravo.service.dataset.DataSetService;
 import org.openbravo.utils.CheckSum;
 
 public class DBSMOBUtil {
@@ -511,7 +510,7 @@ public class DBSMOBUtil {
     return null;
   }
 
-  public boolean hasBeenModified(Platform platform, boolean updateCRC) {
+  public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
     final Connection connection = platform.borrowConnection();
     try {
       PreparedStatement statementDate = connection
@@ -537,8 +536,7 @@ public class DBSMOBUtil {
         return true;
 
       System.out.println("Checking if data has changed in the application dictionary.");
-      boolean datachange = DataSetService.getInstance().hasChanged(
-          DataSetService.getInstance().getDataSetByValue("ADCS"), date);
+      boolean datachange = dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
 
       if (datachange)
         return true;
@@ -747,6 +745,8 @@ public class DBSMOBUtil {
   }
 
   public List<String> getSortedTemplates(DatabaseData databaseData) {
+    Vector<ModuleRow> allModulesc = new Vector<ModuleRow>();
+    HashMap<String, Vector<String>> dependencies = new HashMap<String, Vector<String>>();
     Vector<DynaBean> moduleDBs = databaseData.getRowsFromTable("AD_MODULE");
     if (moduleDBs == null) {
       moduleDBs = new Vector<DynaBean>();
@@ -771,10 +771,7 @@ public class DBSMOBUtil {
       modRow.dir = readPropertyFromDynaBean(mod, "JAVAPACKAGE");
       modRow.idMod = readPropertyFromDynaBean(mod, "AD_MODULE_ID");
       modRow.type = readPropertyFromDynaBean(mod, "TYPE");
-      if (modRow.isInDevelopment != null && modRow.isInDevelopment.equalsIgnoreCase("Y")) {
-        activeModules.add(modRow);
-      }
-      allModules.add(modRow);
+      allModulesc.add(modRow);
     }
     for (DynaBean dep : moduleDepDBs) {
       final String ad_module_id = readPropertyFromDynaBean(dep, "AD_MODULE_ID");
@@ -785,9 +782,9 @@ public class DBSMOBUtil {
     }
 
     Vector<ModuleRow> templates = new Vector<ModuleRow>();
-    for (int i = 0; i < allModules.size(); i++) {
-      if (allModules.get(i).type.equals("T")) {
-        templates.add(allModules.get(i));
+    for (int i = 0; i < allModulesc.size(); i++) {
+      if (allModulesc.get(i).type.equals("T")) {
+        templates.add(allModulesc.get(i));
       }
     }
     Vector<String> sortedTemplates = new Vector<String>();
@@ -804,7 +801,6 @@ public class DBSMOBUtil {
         System.out.println("Circular dependency found when loading configuration scripts.");
         break;
       } else {
-        System.out.println(template.dir);
         sortedTemplates.add(template.dir);
         template.type = "M";
         templates.remove(template);

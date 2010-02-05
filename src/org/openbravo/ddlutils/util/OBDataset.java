@@ -1,11 +1,15 @@
 package org.openbravo.ddlutils.util;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
+import org.apache.log4j.Logger;
 
 public class OBDataset {
   Vector<OBDatasetTable> tables = new Vector<OBDatasetTable>();
@@ -93,5 +97,26 @@ public class OBDataset {
       sb.append(table.toString() + "\n");
     }
     return sb.toString();
+  }
+
+  public boolean hasChanged(Connection connection, Logger log) {
+    try {
+      for (OBDatasetTable table : tables) {
+        PreparedStatement ps = connection.prepareStatement("SELECT count(*) FROM "
+            + table.getName() + " WHERE UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)");
+        ps.execute();
+        ResultSet rs = ps.getResultSet();
+        rs.next();
+        if (rs.getInt(1) > 0) {
+          log.warn("Change detected in table: " + table.getName());
+          return true;
+        }
+      }
+      return false;
+    } catch (Exception e) {
+      e.printStackTrace();
+      log.warn("Error while checking changes in the application dictionary.");
+      return false;
+    }
   }
 }
