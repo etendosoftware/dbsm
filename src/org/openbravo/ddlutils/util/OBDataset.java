@@ -15,7 +15,7 @@ public class OBDataset {
   Vector<OBDatasetTable> tables = new Vector<OBDatasetTable>();
 
   public OBDataset(DatabaseData databaseData, String name) {
-    String allModuleIds = "SELECT AD_MODULE_ID FROM AD_MODULE";
+    String allModuleIds = "AD_MODULE_ID";
     Database database = databaseData.getDatabase();
     DynaBean dataset = searchDynaBean(databaseData.getRowsFromTable("AD_DATASET"), name, "NAME");
     Vector<DynaBean> alldsTables = databaseData.getRowsFromTable("AD_DATASET_TABLE");
@@ -25,7 +25,8 @@ public class OBDataset {
     for (DynaBean dsTable : dsTables) {
       OBDatasetTable table = new OBDatasetTable();
       tables.add(table);
-      table.setWhereclause(dsTable.get("WHERECLAUSE")==null?null:dsTable.get("WHERECLAUSE").toString());
+      table.setWhereclause(dsTable.get("WHERECLAUSE") == null ? null : dsTable.get("WHERECLAUSE")
+          .toString());
       table.setIncludeAllColumns(dsTable.get("INCLUDEALLCOLUMNS").toString().equals("Y"));
       table.setExcludeAuditInfo(dsTable.get("EXCLUDEAUDITINFO").toString().equals("Y"));
       table.setAllModuleIds(allModuleIds);
@@ -100,8 +101,8 @@ public class OBDataset {
   }
 
   public boolean hasChanged(Connection connection, Logger log) {
-    try {
-      for (OBDatasetTable table : tables) {
+    for (OBDatasetTable table : tables) {
+      try {
         PreparedStatement ps = connection.prepareStatement("SELECT count(*) FROM "
             + table.getName() + " WHERE UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)");
         ps.execute();
@@ -111,12 +112,13 @@ public class OBDataset {
           log.warn("Change detected in table: " + table.getName());
           return true;
         }
+      } catch (Exception e) {
+        // We do nothing if the select fails in one table. This can happen if a new table has been
+        // added to the dataset AD, but it still doesn't exist in the model. In any case, if
+        // something fails here, there shouldn't be a warning
       }
-      return false;
-    } catch (Exception e) {
-      e.printStackTrace();
-      log.warn("Error while checking changes in the application dictionary.");
-      return false;
     }
+    return false;
   }
+
 }
