@@ -25,7 +25,7 @@ public class OBDataset {
     for (DynaBean dsTable : dsTables) {
       OBDatasetTable table = new OBDatasetTable();
       tables.add(table);
-      table.setWhereclause(dsTable.get("WHERECLAUSE").toString());
+      table.setWhereclause(dsTable.get("WHERECLAUSE")==null?null:dsTable.get("WHERECLAUSE").toString());
       table.setIncludeAllColumns(dsTable.get("INCLUDEALLCOLUMNS").toString().equals("Y"));
       table.setExcludeAuditInfo(dsTable.get("EXCLUDEAUDITINFO").toString().equals("Y"));
       table.setAllModuleIds(allModuleIds);

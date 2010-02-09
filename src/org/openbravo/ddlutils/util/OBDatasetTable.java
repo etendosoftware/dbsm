@@ -44,6 +44,8 @@ public class OBDatasetTable {
   }
 
   public String getWhereclause(String moduleId) {
+    if(whereclause==null)
+      return null;
     if (moduleId != null) {
       return whereclause.replace(":moduleid", "'" + moduleId + "'");
     } else {
