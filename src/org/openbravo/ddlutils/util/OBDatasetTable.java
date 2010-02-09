@@ -44,10 +44,11 @@ public class OBDatasetTable {
   }
 
   public String getWhereclause(String moduleId) {
-    if(whereclause==null)
+    if (whereclause == null)
       return null;
     if (moduleId != null) {
-      return whereclause.replace(":moduleid", "'" + moduleId + "'");
+      return whereclause.replace("'AD_MODULE_ID'", "'0'").replace("':moduleid'", ":moduleid")
+          .replace(":moduleid", "'" + moduleId + "'");
     } else {
       return whereclause.replace(":moduleid", allModuleIds);
     }
