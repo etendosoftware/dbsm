@@ -119,9 +119,8 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       dbXML = DatabaseUtils.readDatabase(fileArray);
     }
 
-    final DBSMOBUtil util = DBSMOBUtil.getInstance();
     DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
-    util.getModules(platform, excludeobjects);
+    DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
@@ -164,7 +163,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
               "You've either specified a list that contains Core, or module specified is %. Complete update.database will be performed.");
       fullUpdate = true;
     }
-    if (util.listDependsOnTemplate(module)) {
+    if (DBSMOBUtil.getInstance().listDependsOnTemplate(module)) {
       getLog()
           .info(
               "One of the modules you've specified either is an industry template or depends on an industry template. Complete update.database will be performed.");
@@ -194,12 +193,14 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     }
     DBSMOBUtil.setStatus(platform, 13, getLog());
     Database originaldb = null;
+    DBSMOBUtil.resetInstance();
+    DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
     final StringTokenizer st = new StringTokenizer(module, ",");
     try {
       while (st.hasMoreElements()) {
         final String modName = st.nextToken().trim();
         getLog().info("Updating module: " + modName);
-        final ModuleRow row = util.getRowFromDir(modName);
+        final ModuleRow row = DBSMOBUtil.getInstance().getRowFromDir(modName);
         moduleRows.add(row);
         if (row == null)
           throw new BuildException("Module " + modName + " not found in AD_MODULE table.");

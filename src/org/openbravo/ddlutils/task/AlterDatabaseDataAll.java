@@ -20,7 +20,6 @@ import java.util.Vector;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
@@ -163,8 +162,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), db));
       dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
-      for (Change change : dataComparator.getChanges())
-        System.out.println(change);
       getLog().info("Updating database data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");

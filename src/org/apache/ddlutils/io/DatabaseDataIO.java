@@ -692,6 +692,16 @@ public class DatabaseDataIO {
   public Vector<DynaBean> readRowsFromTableList(Connection connection, Platform platform,
       Database model, Table table, OBDatasetTable dsTable, String moduleId) {
     String fullwhereclause = dsTable.getWhereclause(moduleId);
+    // VERY SPECIAL CASE FOR TABLE AD_TREENODE
+    // This whereclause has to be hardcoded due to optional parameters not well defined
+    // in current dataset model. This will be fixed once optional parameters are implemented
+    if (table.getName().equalsIgnoreCase("AD_TREENODE")) {
+      if (moduleId == null) {
+        fullwhereclause = "ad_tree_id='10' OR ad_tree_id='50'";
+      } else if (moduleId.equals("0")) {
+        fullwhereclause += " OR (ad_tree_id='10' and parent_id is null) OR (ad_tree_id='50')";
+      }
+    }
     Table[] atables = { table };
     Statement statement = null;
     ResultSet resultSet = null;

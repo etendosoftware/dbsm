@@ -15,7 +15,6 @@ public class OBDataset {
   Vector<OBDatasetTable> tables = new Vector<OBDatasetTable>();
 
   public OBDataset(DatabaseData databaseData, String name) {
-    String allModuleIds = "AD_MODULE_ID";
     Database database = databaseData.getDatabase();
     DynaBean dataset = searchDynaBean(databaseData.getRowsFromTable("AD_DATASET"), name, "NAME");
     Vector<DynaBean> alldsTables = databaseData.getRowsFromTable("AD_DATASET_TABLE");
@@ -29,7 +28,6 @@ public class OBDataset {
           .toString());
       table.setIncludeAllColumns(dsTable.get("INCLUDEALLCOLUMNS").toString().equals("Y"));
       table.setExcludeAuditInfo(dsTable.get("EXCLUDEAUDITINFO").toString().equals("Y"));
-      table.setAllModuleIds(allModuleIds);
       DynaBean adTable = searchDynaBean(adTables, dsTable.get("AD_TABLE_ID").toString(),
           "AD_TABLE_ID");
       table.setName(adTable.get("TABLENAME").toString());
@@ -103,13 +101,20 @@ public class OBDataset {
   public boolean hasChanged(Connection connection, Logger log) {
     for (OBDatasetTable table : tables) {
       try {
-        PreparedStatement ps = connection.prepareStatement("SELECT count(*) FROM "
-            + table.getName() + " WHERE UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)");
+        String sql = "SELECT count(*) FROM " + table.getName() + " WHERE 1=1 ";
+        if (table.getName().equals("AD_TREENODE")) {
+          // VERY SPECIAL CASE FOR TABLE AD_TREENODE
+          // This whereclause has to be hardcoded due to optional parameters not well defined
+          // in current dataset model. This will be fixed once optional parameters are implemented
+          sql += "AND ad_tree_id='10' OR ad_tree_id='50'";
+        }
+        PreparedStatement ps = connection.prepareStatement(sql
+            + " AND UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)");
         ps.execute();
         ResultSet rs = ps.getResultSet();
         rs.next();
         if (rs.getInt(1) > 0) {
-          log.warn("Change detected in table: " + table.getName());
+          log.info("Change detected in table: " + table.getName());
           return true;
         }
       } catch (Exception e) {

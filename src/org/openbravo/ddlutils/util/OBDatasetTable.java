@@ -9,7 +9,6 @@ public class OBDatasetTable {
   String whereclause;
   boolean includeAllColumns;
   Vector<String> includedColumns = new Vector<String>();
-  String allModuleIds;
 
   public String toString() {
     String cols = "";
@@ -47,10 +46,9 @@ public class OBDatasetTable {
     if (whereclause == null)
       return null;
     if (moduleId != null) {
-      return whereclause.replace("'AD_MODULE_ID'", "'0'").replace("':moduleid'", ":moduleid")
-          .replace(":moduleid", "'" + moduleId + "'");
+      return whereclause.replace(":moduleid", "'" + moduleId + "'");
     } else {
-      return whereclause.replace(":moduleid", allModuleIds);
+      return "1=1";
     }
   }
 
@@ -72,14 +70,6 @@ public class OBDatasetTable {
 
   public void setIncludedColumns(Vector<String> includedColumns) {
     this.includedColumns = includedColumns;
-  }
-
-  public String getAllModuleIds() {
-    return allModuleIds;
-  }
-
-  public void setAllModuleIds(String allModuleIds) {
-    this.allModuleIds = allModuleIds;
   }
 
 }

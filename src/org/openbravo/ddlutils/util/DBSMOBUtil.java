@@ -33,7 +33,6 @@ import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.task.DatabaseUtils;
-import org.openbravo.utils.CheckSum;
 
 public class DBSMOBUtil {
 
@@ -53,6 +52,10 @@ public class DBSMOBUtil {
     if (instance == null)
       instance = new DBSMOBUtil();
     return instance;
+  }
+
+  public static void resetInstance() {
+    instance = new DBSMOBUtil();
   }
 
   public ModuleRow getModule(int i) {
@@ -686,12 +689,12 @@ public class DBSMOBUtil {
   }
 
   public static void writeCheckSumInfo(String obDir) {
-    CheckSum cs = new CheckSum(obDir);
+    org.openbravo.utils.CheckSum cs = new org.openbravo.utils.CheckSum(obDir);
     cs.calculateCheckSum("md5.db.all");
   }
 
   private static String readCheckSumInfo(String obDir) {
-    CheckSum cs = new CheckSum(obDir);
+    org.openbravo.utils.CheckSum cs = new org.openbravo.utils.CheckSum(obDir);
     return cs.getCheckSum("md5.db.all");
   }
 
@@ -701,7 +704,7 @@ public class DBSMOBUtil {
       System.out.println("CheckSum value not found in properties file. CheckSum test not done.");
       return true;
     }
-    CheckSum cs = new CheckSum(obDir);
+    org.openbravo.utils.CheckSum cs = new org.openbravo.utils.CheckSum(obDir);
     String newCS = cs.calculateCheckSumWithoutSaving("md5.db.all");
     return newCS.equals(oldCS);
 
@@ -745,8 +748,8 @@ public class DBSMOBUtil {
   }
 
   public List<String> getSortedTemplates(DatabaseData databaseData) {
-    Vector<ModuleRow> allModulesc = new Vector<ModuleRow>();
-    HashMap<String, Vector<String>> dependencies = new HashMap<String, Vector<String>>();
+    allModules = new Vector<ModuleRow>();
+    dependencies = new HashMap<String, Vector<String>>();
     Vector<DynaBean> moduleDBs = databaseData.getRowsFromTable("AD_MODULE");
     if (moduleDBs == null) {
       moduleDBs = new Vector<DynaBean>();
@@ -755,10 +758,6 @@ public class DBSMOBUtil {
     if (moduleDepDBs == null) {
       moduleDepDBs = new Vector<DynaBean>();
     }
-    Vector<String> modules = new Vector<String>();
-    HashMap<String, String> modIds = new HashMap<String, String>();
-    HashMap<String, Boolean> isTemplate = new HashMap<String, Boolean>();
-    HashMap<String, Vector<String>> directTemplateDependencies = new HashMap<String, Vector<String>>();
 
     for (DynaBean mod : moduleDBs) {
       final ModuleRow modRow = new ModuleRow();
@@ -771,7 +770,7 @@ public class DBSMOBUtil {
       modRow.dir = readPropertyFromDynaBean(mod, "JAVAPACKAGE");
       modRow.idMod = readPropertyFromDynaBean(mod, "AD_MODULE_ID");
       modRow.type = readPropertyFromDynaBean(mod, "TYPE");
-      allModulesc.add(modRow);
+      allModules.add(modRow);
     }
     for (DynaBean dep : moduleDepDBs) {
       final String ad_module_id = readPropertyFromDynaBean(dep, "AD_MODULE_ID");
@@ -782,9 +781,9 @@ public class DBSMOBUtil {
     }
 
     Vector<ModuleRow> templates = new Vector<ModuleRow>();
-    for (int i = 0; i < allModulesc.size(); i++) {
-      if (allModulesc.get(i).type.equals("T")) {
-        templates.add(allModulesc.get(i));
+    for (int i = 0; i < allModules.size(); i++) {
+      if (allModules.get(i).type.equals("T")) {
+        templates.add(allModules.get(i));
       }
     }
     Vector<String> sortedTemplates = new Vector<String>();
