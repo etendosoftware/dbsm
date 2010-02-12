@@ -209,6 +209,17 @@ public class CreateDatabase extends BaseDatabaseTask {
                   + f.getAbsolutePath());
         }
       }
+      // execute the post-script
+      if (getPostscript() == null) {
+        // try to execute the default prescript
+        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+        if (fpost.exists()) {
+          getLog().info("Executing default postscript");
+          platform.evaluateBatch(DatabaseUtils.readFile(fpost), !isFailonerror());
+        }
+      } else {
+        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
+      }
 
     } catch (final Exception e) {
       e.printStackTrace();
