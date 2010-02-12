@@ -102,14 +102,14 @@ public class OBDataset {
     for (OBDatasetTable table : tables) {
       try {
         String sql = "SELECT count(*) FROM " + table.getName() + " WHERE 1=1 ";
-        if (table.getName().equals("AD_TREENODE")) {
+        if (table.getName().equalsIgnoreCase("AD_TREENODE")) {
           // VERY SPECIAL CASE FOR TABLE AD_TREENODE
           // This whereclause has to be hardcoded due to optional parameters not well defined
           // in current dataset model. This will be fixed once optional parameters are implemented
-          sql += "AND ad_tree_id='10' OR ad_tree_id='50'";
+          sql += "AND (ad_tree_id='10' OR ad_tree_id='50')";
         }
-        PreparedStatement ps = connection.prepareStatement(sql
-            + " AND UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)");
+        sql += " AND UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)";
+        PreparedStatement ps = connection.prepareStatement(sql);
         ps.execute();
         ResultSet rs = ps.getResultSet();
         rs.next();
