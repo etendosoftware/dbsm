@@ -119,14 +119,10 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
       dbXML = DatabaseUtils.readDatabase(fileArray);
     }
 
-    DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
-    DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
-
     DatabaseData databaseFullData = new DatabaseData(dbXML);
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
         "*/src-db/database/sourcedata", input);
     OBDataset ad = new OBDataset(databaseFullData, "AD");
-
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
     if (hasBeenModified) {
       if (force)
@@ -140,6 +136,10 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
         throw new BuildException("Database has local changes. Update.database not done.");
       }
     }
+    DBSMOBUtil.resetInstance();
+    DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
+    DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
+
     Database completedb = null;
     Database dbAD = null;
     try {
