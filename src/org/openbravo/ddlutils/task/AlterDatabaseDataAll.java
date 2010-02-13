@@ -95,17 +95,6 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
 
     DBSMOBUtil.setStatus(platform, 12, getLog());
     try {
-      // execute the pre-script
-      if (getPrescript() == null) {
-        // try to execute the default prescript
-        final File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
-        if (fpre.exists()) {
-          getLog().info("Executing default prescript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
-      }
 
       Database originaldb;
       if (getOriginalmodel() == null) {
@@ -143,6 +132,17 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
         }
       }
 
+      // execute the pre-script
+      if (getPrescript() == null) {
+        // try to execute the default prescript
+        final File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
+        if (fpre.exists()) {
+          getLog().info("Executing default prescript");
+          platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
+        }
+      } else {
+        platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
+      }
       final Database oldModel = (Database) originaldb.clone();
       DBSMOBUtil.setStatus(platform, 14, getLog());
       getLog().info("Updating database model...");
