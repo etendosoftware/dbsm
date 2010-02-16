@@ -195,7 +195,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
               }
             }
 
-            OBDataset ad = new OBDataset(databaseXMLData, "AD");
+            OBDataset ad = new OBDataset(databaseOrgData, "AD");
             final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
                 .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
             dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
