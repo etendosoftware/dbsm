@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SL 
- * All portions are Copyright (C) 2009 Openbravo SL 
+ * All portions are Copyright (C) 2009-2010 Openbravo SL 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -108,10 +108,11 @@ public class ValidateAPIModel extends ValidateAPI {
         Column oldCol = validDB.findTable(c.getChangedTable().getName()).findColumn(
             c.getNewColumn().getName());
         if (oldCol == null && c.getNewColumn().isRequired()
-            && c.getNewColumn().getOnCreateDefault() == null) {
+            && c.getNewColumn().getOnCreateDefault() == null
+            && c.getNewColumn().getDefaultValue() == null) {
           // it is a real creation, not a re-creation
-          errors.add("Added mandatory column without onCreateDefault: " + tablename + "."
-              + c.getNewColumn().getName());
+          errors.add("Added mandatory column without default or onCreateDefault: " + tablename
+              + "." + c.getNewColumn().getName());
         }
       } else if (change instanceof AddForeignKeyChange) {
         AddForeignKeyChange c = (AddForeignKeyChange) change;
