@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SL 
- * All portions are Copyright (C) 2009 Openbravo SL 
+ * All portions are Copyright (C) 2009-2010 Openbravo SL 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -87,9 +87,6 @@ public class ValidateAPIData extends ValidateAPI {
               .equals("AD_WINDOW_ID")));
       error = error
           || (tableName.equals("AD_COLUMN") && columnName.equals("ISMANDATORY")
-              && c.getOldValue().equals("N") && c.getNewValue().equals("Y"));
-      error = error
-          || (tableName.equals("AD_PROCESS_PARA") && columnName.equals("ISMANDATORY")
               && c.getOldValue().equals("N") && c.getNewValue().equals("Y"));
       if (error) {
         errors.add("Changed column value " + tableName + "." + columnName + " -ID:" + c.getPkRow()
