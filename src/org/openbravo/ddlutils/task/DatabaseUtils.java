@@ -112,20 +112,23 @@ public class DatabaseUtils {
   private static Database readDatabase_noChecks(File f) {
 
     if (f.isDirectory()) {
+      if (f.getAbsolutePath().contains(".svn") || f.getAbsolutePath().contains(".hg")) {
+        return new Database();
+      } else {
+        // create an empty database
+        Database d = new Database();
+        d.setName(f.getName());
 
-      // create an empty database
-      Database d = new Database();
-      d.setName(f.getName());
+        // gets the list and sort
+        File[] filelist = f.listFiles(new XMLFiles());
+        Arrays.sort(filelist, new FilesComparator());
 
-      // gets the list and sort
-      File[] filelist = f.listFiles(new XMLFiles());
-      Arrays.sort(filelist, new FilesComparator());
+        for (File file : filelist) {
+          d.mergeWith(readDatabase_noChecks(file));
+        }
 
-      for (File file : filelist) {
-        d.mergeWith(readDatabase_noChecks(file));
+        return d;
       }
-
-      return d;
     } else {
       DatabaseIO dbIO = new DatabaseIO();
       dbIO.setValidateXml(false);
