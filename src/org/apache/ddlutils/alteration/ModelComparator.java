@@ -219,13 +219,23 @@ public class ModelComparator {
     for (int fnIdx = 0; fnIdx < sourceModel.getFunctionCount(); fnIdx++) {
       Function sourceFunction = sourceModel.getFunction(fnIdx);
       Function targetFunction = findCorrespondingFunction(targetModel, sourceFunction);
-
       if (targetFunction == null) {
-        if (_log.isDebugEnabled()) {
-          _log.debug("Processing Function " + sourceFunction + " (removed from database "
-              + sourceModel.getName() + ")");
+        boolean foundFunctionWithSameName = false;
+        int i = 0;
+        while (i < targetModel.getFunctionCount() && !foundFunctionWithSameName) {
+          if (targetModel.getFunction(i).getName().equalsIgnoreCase(sourceFunction.getName()))
+            foundFunctionWithSameName = true;
+          i++;
         }
-        changes.add(new RemoveFunctionChange(sourceFunction));
+        if (!foundFunctionWithSameName) // We will only generate a drop function statement if the
+        // view will not be recreated
+        {
+          if (_log.isDebugEnabled()) {
+            _log.debug("Processing Function " + sourceFunction + " (removed from database "
+                + sourceModel.getName() + ")");
+          }
+          changes.add(new RemoveFunctionChange(sourceFunction));
+        }
       }
     }
 

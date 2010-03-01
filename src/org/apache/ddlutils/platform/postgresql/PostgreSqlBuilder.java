@@ -386,7 +386,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
    */
   @Override
   protected void writeCreateFunctionStmt(Function function) throws IOException {
-    print("CREATE FUNCTION ");
+    print("CREATE OR REPLACE FUNCTION ");
     printIdentifier(getStructureObjectName(function));
   }
 
