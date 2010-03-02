@@ -58,7 +58,6 @@ import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
-import org.apache.ddlutils.alteration.RemoveRowDALChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
@@ -773,7 +772,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
           writer.append(getSqlBuilder().getInsertSql(table, map, false));
           getSqlBuilder().printEndOfStatement("");
-        } else if (change instanceof RemoveRowDALChange) {
+        } else if (change instanceof RemoveRowChange) {
           RemoveRowChange removeChange = (RemoveRowChange) change;
           HashMap map = new HashMap();
           Table table = removeChange.getTable();
