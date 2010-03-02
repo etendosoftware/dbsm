@@ -26,7 +26,6 @@ import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
-import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -98,8 +97,6 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       getLog().info("Data changes we will perform: ");
       for (final Change change : dataComparator.getChanges())
         getLog().info(change);
-
-      OBDal.getInstance().commitAndClose();
 
       // execute the pre-script
       // try to execute the default prescript
