@@ -51,27 +51,11 @@ public class DataComparator {
     public int compare(Change o1, Change o2) {
       if (o1 instanceof RemoveRowChange && o2 instanceof AddRowChange)
         return -1;
-      else if (o1 instanceof RemoveRowDALChange && o2 instanceof AddRowChange)
-        return -1;
-      else if (o1 instanceof RemoveRowDALChange && o2 instanceof AddRowDALChange)
-        return -1;
-      else if (o1 instanceof RemoveRowChange && o2 instanceof AddRowDALChange)
-        return -1;
       else if (o1 instanceof AddRowChange && o2 instanceof RemoveRowChange)
-        return 1;
-      else if (o1 instanceof AddRowDALChange && o2 instanceof RemoveRowChange)
-        return 1;
-      else if (o1 instanceof AddRowChange && o2 instanceof RemoveRowDALChange)
-        return 1;
-      else if (o1 instanceof AddRowDALChange && o2 instanceof RemoveRowDALChange)
         return 1;
       else if (o1 instanceof RemoveRowChange && o2 instanceof ColumnDataChange)
         return -1;
-      else if (o1 instanceof RemoveRowDALChange && o2 instanceof ColumnDataChange)
-        return -1;
       else if (o1 instanceof AddRowChange && o2 instanceof ColumnDataChange)
-        return 1;
-      else if (o1 instanceof AddRowDALChange && o2 instanceof ColumnDataChange)
         return 1;
       else
         return 0;

@@ -22,7 +22,6 @@ package org.openbravo.ddlutils.util;
 import java.util.List;
 
 import org.apache.ddlutils.alteration.AddRowChange;
-import org.apache.ddlutils.alteration.AddRowDALChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
@@ -91,12 +90,6 @@ public class ValidateAPIData extends ValidateAPI {
       if (error) {
         errors.add("Changed column value " + tableName + "." + columnName + " -ID:" + c.getPkRow()
             + " from [" + c.getOldValue() + "] to [" + c.getNewValue() + "]");
-      }
-    } else if (change instanceof AddRowDALChange) {
-      AddRowDALChange c = (AddRowDALChange) change;
-      if (c.getTable().getName().equalsIgnoreCase("AD_PROCESS_PARA")) {
-        errors.add("Not Allowed insertions in " + c.getTable().getName() + " table. ID: "
-            + c.getRow().getId() + " - " + c.getRow().getIdentifier());
       }
     } else if (change instanceof AddRowChange) {
       AddRowChange c = (AddRowChange) change;
