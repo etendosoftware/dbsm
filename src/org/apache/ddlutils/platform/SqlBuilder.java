@@ -80,7 +80,6 @@ import org.apache.ddlutils.alteration.RemoveFunctionChange;
 import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
-import org.apache.ddlutils.alteration.RemoveRowDALChange;
 import org.apache.ddlutils.alteration.RemoveSequenceChange;
 import org.apache.ddlutils.alteration.RemoveTableChange;
 import org.apache.ddlutils.alteration.RemoveTriggerChange;
@@ -557,8 +556,8 @@ public abstract class SqlBuilder {
     for (Change change : changes) {
       if (change instanceof AddRowChange) {
         printAddRowChangeChange(model, (AddRowChange) change);
-      } else if (change instanceof RemoveRowDALChange) {
-        printRemoveRowDALChange(model, (RemoveRowDALChange) change);
+      } else if (change instanceof RemoveRowChange) {
+        printRemoveRowChange(model, (RemoveRowChange) change);
       } else if (change instanceof ColumnDataChange) {
         printColumnDataChange(model, (ColumnDataChange) change);
       }
@@ -4317,12 +4316,12 @@ public abstract class SqlBuilder {
     printEndOfStatement();
   }
 
-  public void printRemoveRowDALChange(Database model, RemoveRowDALChange change) throws IOException {
+  public void printRemoveRowChange(Database model, RemoveRowChange change) throws IOException {
     Table table = change.getTable();
     Column[] pk = table.getPrimaryKeyColumns();
-    BaseOBObject object = change.getRow();
+    DynaBean object = change.getRow();
     HashMap pkValues = new HashMap();
-    pkValues.put(pk[0].getName(), object.getId());
+    pkValues.put(pk[0].getName(), object.get(pk[0].getName()));
     println(getDeleteSql(table, pkValues, false));
     printEndOfStatement();
   }
