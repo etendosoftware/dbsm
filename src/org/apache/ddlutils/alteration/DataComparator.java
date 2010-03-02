@@ -20,8 +20,6 @@ import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
-import org.openbravo.base.model.Property;
-import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
@@ -324,24 +322,6 @@ public class DataComparator {
       while (indOrg < rowsOrg.size())
         dataChanges.add(new RemoveRowChange(tableOrg, rowsOrg.get(indOrg++)));
     }
-  }
-
-  private int comparePKs(Database model, BaseOBObject db1, DynaBean db2,
-      SqlDynaProperty[] primaryKeys, List<Property> properties) {
-    BaseOBIDHexComparator comparator = new BaseOBIDHexComparator();
-    for (int i = 0; i < primaryKeys.length; i++) {
-      String pk1 = "";
-      String pk2 = db2.get(primaryKeys[i].getName()).toString();
-      for (Property property : properties)
-        if (property.getColumnName() != null
-            && property.getColumnName().equalsIgnoreCase(primaryKeys[i].getName()))
-          pk1 = db1.get(property.getName()).toString();
-      int c = comparator.compare(pk1, pk2.toString());
-      if (c != 0)
-        return c;
-    }
-    return 0;
-
   }
 
   private int comparePKs(Table tableOrg, Table tableNew, DynaBean db1, DynaBean db2) {

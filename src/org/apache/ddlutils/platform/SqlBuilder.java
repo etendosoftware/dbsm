@@ -112,7 +112,6 @@ import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
-import org.openbravo.base.structure.BaseOBObject;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop
