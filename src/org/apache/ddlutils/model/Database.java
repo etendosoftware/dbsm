@@ -38,7 +38,6 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.util.ExtTypes;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
-import org.openbravo.service.dataset.DataSetService;
 
 /**
  * Represents the database model, ie. the tables in the database. It also contains the corresponding
@@ -1558,7 +1557,6 @@ public class Database implements Serializable, Cloneable {
   public void filterByDataset(OBDataset dataset) {
     ArrayList oldTables = _tables;
     _tables = new ArrayList();
-    DataSetService ds = DataSetService.getInstance();
     Vector<OBDatasetTable> tables = dataset.getTableList();
     for (OBDatasetTable table : tables) {
       for (int i = 0; i < oldTables.size(); i++) {
