@@ -3795,9 +3795,9 @@ public abstract class SqlBuilder {
    */
   protected void writeCreateFunctionStmt(Function function) throws IOException {
     if (function.getTypeCode() == Types.NULL) {
-      print("CREATE PROCEDURE ");
+      print("CREATE OR REPLACE PROCEDURE ");
     } else {
-      print("CREATE FUNCTION ");
+      print("CREATE OR REPLACE FUNCTION ");
     }
     printIdentifier(getStructureObjectName(function));
   }
