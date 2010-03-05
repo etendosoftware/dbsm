@@ -865,15 +865,8 @@ public abstract class SqlBuilder {
     }
     String oncreatedefault = col.getOnCreateDefault();
     if (oncreatedefault != null && !oncreatedefault.equals("")) {
-      if (recreated) {
-        print("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
-            + ") WHERE EXISTS (SELECT 1 FROM " + tempTable.getName() + " WHERE " + pk + ") AND "
-            + col.getName() + " IS NULL");
-      } else {
-        print("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault + ")");
-        if (onlyForNullRows)
-          print(" WHERE " + col.getName() + " IS NULL");
-      }
+      print("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
+          + ") WHERE " + col.getName() + " IS NULL");
       println();
       printEndOfStatement();
     }
