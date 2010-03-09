@@ -185,18 +185,18 @@ public class DataComparator {
       if (table.includesColumn(nonprimaryKeys[i].getName())) {
         Object v1 = db1.get(nonprimaryKeys[i].getName());
         Object v2 = db2.get(nonprimaryKeys[i].getName());
-        if ((v1 == null && v2 != null) || (v1 != null && v2 == null)
-            || (v1 != null && v2 != null && !v1.equals(v2))) {
-          String val1;
-          if (v1 == null)
-            val1 = null;
-          else
-            val1 = v1.toString();
-          String val2;
-          if (v2 == null)
-            val2 = null;
-          else
-            val2 = v2.toString();
+        String val1;
+        if (v1 == null)
+          val1 = null;
+        else
+          val1 = v1.toString();
+        String val2;
+        if (v2 == null)
+          val2 = null;
+        else
+          val2 = v2.toString();
+        if ((val1 == null && val2 != null) || (val1 != null && val2 == null)
+            || (val1 != null && val2 != null && !val1.equals(val2))) {
           dataChanges.add(new ColumnDataChange(dynaClass.getTable(), nonprimaryKeys[i].getColumn(),
               val1, val2, pkVal));
           // System.out.println("Column change:
