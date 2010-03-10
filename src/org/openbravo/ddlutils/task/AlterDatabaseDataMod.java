@@ -297,7 +297,7 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     platform.disableAllFK(connection, dbAD, !isFailonerror());
     getLog().info("Disabling triggers");
     platform.disableAllTriggers(connection, dbAD, !isFailonerror());
-    platform.disableNOTNULLColumns(dbAD);
+    platform.disableNOTNULLColumns(dbXML);
     ArrayList<List> changes = new ArrayList<List>();
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Updating database data for module " + moduleRows.get(i).name);
@@ -308,14 +308,14 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
     }
     getLog().info("Removing invalid rows.");
     platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
+    platform.enableNOTNULLColumns(dbXML);
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
       platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror(),
           changes.get(i), dbXML);
     }
-    platform.executeOnCreateDefaultForMandatoryColumns(dbAD);
+    platform.executeOnCreateDefaultForMandatoryColumns(dbXML);
     getLog().info("Enabling Foreign Keys and Triggers");
-    platform.enableNOTNULLColumns(dbAD);
     platform.enableAllFK(connection, dbAD, !isFailonerror());
     platform.enableAllTriggers(connection, dbAD, !isFailonerror());
 

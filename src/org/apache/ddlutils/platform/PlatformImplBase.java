@@ -2808,6 +2808,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           filteredDatabase.addFunction(func2);
         }
       }
+      for (int i = 0; i < fullXMLDatabase.getTriggerCount(); i++) {
+        Trigger trigger = fullXMLDatabase.getTrigger(i);
+        Trigger trigger1 = (Trigger) trigger.clone();
+        Trigger trigger2 = (Trigger) trigger.clone();
+        if (loadedDatabase.findTrigger(trigger.getName()) == null
+            && filteredDatabase.findTrigger(trigger.getName()) == null) {
+          loadedDatabase.addTrigger(trigger1);
+          filteredDatabase.addTrigger(trigger2);
+        }
+      }
     } catch (Exception e) {
       // won't happen
     }
