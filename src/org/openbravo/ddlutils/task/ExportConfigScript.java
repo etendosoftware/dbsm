@@ -40,7 +40,7 @@ import org.openbravo.ddlutils.util.OBDataset;
  * 
  * @author adrian
  */
-public class ExportConfigScript extends BaseDalInitializingTask {
+public class ExportConfigScript extends BaseDatabaseTask {
 
   private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
@@ -58,13 +58,11 @@ public class ExportConfigScript extends BaseDalInitializingTask {
   private String codeRevision;
   private String industryTemplate;
 
-  /** Creates a new instance of WriteDataXML */
   public ExportConfigScript() {
   }
 
   @Override
-  public void execute() {
-    initLogging();
+  protected void doExecute() {
     try {
       if (industryTemplate == null) {
         throw new BuildException("No industry template was specified.");

@@ -33,7 +33,7 @@ import org.openbravo.utils.CheckSum;
  * 
  * @author adrian
  */
-public class AlterDatabaseDataAll extends BaseDalInitializingTask {
+public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
@@ -57,13 +57,12 @@ public class AlterDatabaseDataAll extends BaseDalInitializingTask {
   protected boolean force = false;
   protected boolean onlyIfModified = false;
 
-  /** Creates a new instance of ReadDataXML */
   public AlterDatabaseDataAll() {
     super();
   }
 
-  public void execute() {
-    initLogging();
+  @Override
+  protected void doExecute() {
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");

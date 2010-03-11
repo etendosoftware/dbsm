@@ -40,8 +40,12 @@ public class CreateXML2SQL extends BaseDatabaseTask {
   public CreateXML2SQL() {
   }
 
-  @Override
   public void doExecute() {
+
+  }
+
+  @Override
+  public void execute() {
 
     Platform pl;
     if (platform == null) {

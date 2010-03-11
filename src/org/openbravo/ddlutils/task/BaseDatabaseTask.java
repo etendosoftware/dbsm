@@ -29,6 +29,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.Task;
 import org.openbravo.utils.OBLogAppender;
 
+
 /**
  * This is the base class for the database ant tasks. It provides logging and other base
  * functionality.
@@ -44,33 +45,40 @@ public abstract class BaseDatabaseTask extends Task {
 
   protected Logger log;
   private VerbosityLevel verbosity = null;
+  protected boolean doOBRebuildAppender = true;
 
-  /** Creates a new instance of CreateDatabase */
   public BaseDatabaseTask() {
   }
 
   /**
    * Initializes the logging.
    */
-  private void initLogging() {
+  protected void initLogging() {
     final Properties props = new Properties();
     final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
         .toUpperCase();
-
-    props.setProperty("log4j.rootCategory", level + ",A");
-    props.setProperty("log4j.appender.A", "org.openbravo.utils.OBLogAppender");
+    if (doOBRebuildAppender) {
+      props.setProperty("log4j.rootCategory", level + ",A,O2");
+      props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
+    } else {
+      props.setProperty("log4j.rootCategory", level + ",A");
+      props.setProperty("log4j.appender.A", "org.openbravo.utils.OBLogAppender");
+      OBLogAppender.setProject(getProject());
+    }
     // "org.apache.log4j.ConsoleAppender");
     props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
+    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-4r %-5p - %m%n");
     // we don't want debug logging from Digester/Betwixt
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
     props.setProperty("log4j.logger.org.hibernate", "WARN");
 
+    // Adding properties for log of Improved Upgrade Process
+    props.setProperty("log4j.appender.O2", "org.openbravo.utils.OBRebuildAppender");
+    props.setProperty("log4j.appender.O2.layout", "org.apache.log4j.PatternLayout");
+    props.setProperty("log4j.appender.O2.layout.ConversionPattern", "%-4r [%t] %-5p %c - %m%n");
     LogManager.resetConfiguration();
     PropertyConfigurator.configure(props);
-
     log = Logger.getLogger(getClass());
-    OBLogAppender.setProject(getProject());
   }
 
   @Override
@@ -91,6 +99,10 @@ public abstract class BaseDatabaseTask extends Task {
    */
   public void setVerbosity(VerbosityLevel level) {
     verbosity = level;
+  }
+
+  public VerbosityLevel getVerbosity() {
+    return verbosity;
   }
 
   public Logger getLog() {

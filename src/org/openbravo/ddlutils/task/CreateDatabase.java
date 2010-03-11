@@ -53,6 +53,7 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   /** Creates a new instance of CreateDatabase */
   public CreateDatabase() {
+    doOBRebuildAppender = false;
   }
 
   @Override

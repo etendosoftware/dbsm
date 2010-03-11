@@ -41,7 +41,7 @@ import org.openbravo.ddlutils.util.ValidateAPIModel;
  * application dictionary
  * 
  */
-public class CheckAPI extends BaseDalInitializingTask {
+public class CheckAPI extends BaseDatabaseTask {
   File stableDBdir;
   File testDBdir;
 
@@ -61,6 +61,7 @@ public class CheckAPI extends BaseDalInitializingTask {
     this.testDBdir = testDBdir;
   }
 
+  @Override
   public void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 

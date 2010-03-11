@@ -40,7 +40,7 @@ import org.openbravo.ddlutils.util.OBDataset;
  * 
  * @author adrian
  */
-public class AlterDatabaseDataMod extends BaseDalInitializingTask {
+public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
   private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
@@ -66,14 +66,12 @@ public class AlterDatabaseDataMod extends BaseDalInitializingTask {
 
   private boolean customLogging = true;
 
-  /** Creates a new instance of ReadDataXML */
   public AlterDatabaseDataMod() {
     super();
   }
 
   @Override
-  public void execute() {
-    initLogging();
+  protected void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     if (module == null || module.equals("")) {
