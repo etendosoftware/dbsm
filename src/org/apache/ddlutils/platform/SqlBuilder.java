@@ -1752,7 +1752,7 @@ public abstract class SqlBuilder {
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()
+      if (column.isRequired() && !column.isPrimaryKey()
           && !recreatedTables.contains(table.getName())) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NULL");
@@ -1777,7 +1777,7 @@ public abstract class SqlBuilder {
   protected void enableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && column.getOnCreateDefault() != null && !column.isPrimaryKey()) {
+      if (column.isRequired() && !column.isPrimaryKey()) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NOT NULL");
         printEndOfStatement();
