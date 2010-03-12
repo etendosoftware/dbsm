@@ -725,8 +725,6 @@ public abstract class SqlBuilder {
       if (recreated) {
         recreatedTables.add(desiredModel.getTable(i).getName());
         if (newColumn) {
-          Table tempTable = getTemporaryTableFor(desiredModel, desiredModel.getTable(i));
-          dropTemporaryTable(desiredModel, tempTable);
 
           if (fullModel != null) {
             // We have the full model. We will activate foreign keys pointing to recreated tables
@@ -1640,8 +1638,7 @@ public abstract class SqlBuilder {
         createTable(desiredModel, realTargetTable, parameters);
         disableAllNOTNULLColumns(realTargetTable);
         writeCopyDataStatement(tempTable, targetTable);
-        if (!newColumn)
-          dropTemporaryTable(desiredModel, tempTable);
+        dropTemporaryTable(desiredModel, tempTable);
         recreatedTables.add(sourceTable.getName());
       } else {
         dropTable(sourceTable);
