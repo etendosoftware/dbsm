@@ -300,7 +300,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
 
     sql =
-      "SELECT UPPER(PG_CLASS.RELNAME), CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END"
+      "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END"
           + " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE"
           + " WHERE PG_INDEX.indexrelid = PG_CLASS.OID"
           + " AND PG_INDEX.indrelid = PG_CLASS1.OID"
@@ -308,10 +308,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
           + " AND PG_CLASS1.RELNAMESPACE = PG_NAMESPACE.OID"
           + " AND PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA()"
           + " AND PG_INDEX.INDISPRIMARY ='f'"
-          + " AND UPPER(PG_CLASS1.RELNAME) = ?"
+          + " AND PG_CLASS1.RELNAME = ?"
           + " AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text "
           + "    FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
-          + "    WHERE pg_constraint.contype::text = 'u')";
+          + "    WHERE pg_constraint.contype = 'u')";
     _stmt_listindexes = _connection
         .prepareStatement(sql
             + " ORDER BY UPPER(PG_CLASS.RELNAME)");
@@ -333,7 +333,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + " AND pg_attribute.attrelid = pg_index.indrelid"
         + " AND pg_attribute.attnum = ANY (indkey)"
         + " AND pg_class.relnamespace = pg_namespace.oid"
-        + " AND pg_namespace.nspname = current_schema()" + " AND upper(pg_class.relname::text) = ?"
+        + " AND pg_namespace.nspname = current_schema()" + " AND pg_class.relname = ?"
         + " ORDER BY temp_findinarray(pg_index.indkey, pg_attribute.attnum)");
 
     sql = "SELECT pg_constraint.conname"

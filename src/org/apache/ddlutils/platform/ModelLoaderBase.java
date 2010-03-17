@@ -322,7 +322,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     t.addForeignKeys(readForeignKeys(tablename, usePrefix));
 
     // Indexes
-    t.addIndices(readIndexes(tablename, usePrefix));
+    t.addIndices(readIndexes(tableRealName, usePrefix));
 
     // Uniques
     t.adduniques(readUniques(tableRealName, usePrefix));
@@ -494,13 +494,15 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Index readIndex(ResultSet rs) throws SQLException {
+    String indexRealName = rs.getString(1);
+    String indexName = indexRealName.toUpperCase();
 
     final Index inx = new Index();
 
-    inx.setName(rs.getString(1));
+    inx.setName(indexName);
     inx.setUnique(translateUniqueness(rs.getString(2)));
 
-    _stmt_indexcolumns.setString(1, inx.getName());
+    _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
         IndexColumn inxcol = new IndexColumn();
