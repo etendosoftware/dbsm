@@ -188,7 +188,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
               + ")" + " ORDER BY UPPER(TABLENAME)");
     }
 
-    sql = "SELECT UPPER(PG_CONSTRAINT.CONNAME::TEXT)FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE::TEXT = 'p' AND UPPER(PG_CLASS.RELNAME::TEXT) =  ?";
+    sql = "SELECT UPPER(PG_CONSTRAINT.CONNAME::TEXT) FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE = 'p' AND PG_CLASS.RELNAME =  ?";
     _stmt_pkname = _connection.prepareStatement(sql);
     _stmt_pkname_noprefix = _connection.prepareStatement(sql
         + " AND upper(PG_CONSTRAINT.CONNAME::TEXT) NOT LIKE 'EM\\\\_%'");
@@ -198,6 +198,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + _prefix
             + "\\\\_%' OR (upper(PG_CONSTRAINT.CONNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))");
+
     sql = "SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), "
             + " CASE PG_TYPE.TYPNAME"
             + "     WHEN 'varchar'::name THEN pg_attribute.atttypmod - 4"

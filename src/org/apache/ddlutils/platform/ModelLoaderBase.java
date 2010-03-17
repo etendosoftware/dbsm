@@ -269,7 +269,11 @@ public abstract class ModelLoaderBase implements ModelLoader {
     // with the tablename having the same case as the table has in the database.
     // To get same behavior in rest of dbsm which expects the name in uppercase
     // we use the uppercase name in the Table object
+
+    // is in correct case (like in db) on postgres, and in upperCase on oracle 
     String tableRealName = tablename;
+
+    // is always in upperCase on both oracle & postgres
     tablename = tableRealName.toUpperCase();
 
     final Table t = new Table();
@@ -277,21 +281,21 @@ public abstract class ModelLoaderBase implements ModelLoader {
     t.setName(tablename);
 
     if (_prefix == null || !usePrefix) {
-      _stmt_pkname.setString(1, tablename);
+      _stmt_pkname.setString(1, tableRealName);
       fillRow(_stmt_pkname, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
           t.setPrimaryKey(r.getString(1));
         }
       });
     } else if (_filter.compliesWithNamingRuleObject(tablename)) {
-      _stmt_pkname_noprefix.setString(1, tablename);
+      _stmt_pkname_noprefix.setString(1, tableRealName);
       fillRow(_stmt_pkname_noprefix, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
           t.setPrimaryKey(r.getString(1));
         }
       });
     } else {
-      _stmt_pkname_prefix.setString(1, tablename);
+      _stmt_pkname_prefix.setString(1, tableRealName);
       fillRow(_stmt_pkname_prefix, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
           t.setPrimaryKey(r.getString(1));
