@@ -275,9 +275,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " ORDER BY upper(pg_constraint.conname::text)");
 
     sql =
-      "SELECT upper(pg_constraint.conname::text) AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'"
+      "SELECT pg_constraint.conname AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'"
             + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid LEFT JOIN pg_class fk_table ON fk_table.oid = pg_constraint.confrelid"
-            + " WHERE pg_constraint.contype::text = 'f' and upper(pg_class.relname::text) = ?";
+            + " WHERE pg_constraint.contype = 'f' and pg_class.relname = ?";
     _stmt_listfks = _connection
         .prepareStatement(sql
             + " ORDER BY upper(pg_constraint.conname::text)");
@@ -296,7 +296,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     _stmt_fkcolumns = _connection
         .prepareStatement("SELECT upper(pa1.attname), upper(pa2.attname)"
             + " FROM pg_constraint pc, pg_class pc1, pg_attribute pa1, pg_class pc2, pg_attribute pa2"
-            + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and upper(pc.conname) = upper(?) and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
+            + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and pc.conname = ? and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
             + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
 
     sql =

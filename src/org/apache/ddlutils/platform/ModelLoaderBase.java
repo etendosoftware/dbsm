@@ -319,7 +319,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     t.addChecks(readChecks(tableRealName, usePrefix));
 
     // FKS
-    t.addForeignKeys(readForeignKeys(tablename, usePrefix));
+    t.addForeignKeys(readForeignKeys(tableRealName, usePrefix));
 
     // Indexes
     t.addIndices(readIndexes(tableRealName, usePrefix));
@@ -447,15 +447,17 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected ForeignKey readForeignKey(ResultSet rs) throws SQLException {
+    String fkRealName = rs.getString(1);
+    String fkName = fkRealName.toUpperCase();
 
     final ForeignKey fk = new ForeignKey();
 
-    fk.setName(rs.getString(1));
+    fk.setName(fkName);
     fk.setForeignTableName(rs.getString(2));
     fk.setOnDeleteCode(translateFKEvent(rs.getString(3)));
     fk.setOnUpdateCode(translateFKEvent(rs.getString(4)));
 
-    _stmt_fkcolumns.setString(1, fk.getName());
+    _stmt_fkcolumns.setString(1, fkRealName);
     fillList(_stmt_fkcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
         Reference ref = new Reference();
