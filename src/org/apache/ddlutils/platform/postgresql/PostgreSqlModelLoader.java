@@ -188,7 +188,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
               + ")" + " ORDER BY UPPER(TABLENAME)");
     }
 
-    sql = "SELECT UPPER(PG_CONSTRAINT.CONNAME::TEXT) FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE = 'p' AND PG_CLASS.RELNAME =  ?";
+    sql = "SELECT PG_CONSTRAINT.CONNAME FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE = 'p' AND PG_CLASS.RELNAME =  ?";
     _stmt_pkname = _connection.prepareStatement(sql);
     _stmt_pkname_noprefix = _connection.prepareStatement(sql
         + " AND upper(PG_CONSTRAINT.CONNAME::TEXT) NOT LIKE 'EM\\\\_%'");
@@ -253,7 +253,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT upper(pg_attribute.attname::text)"
             + " FROM pg_constraint, pg_class, pg_attribute"
             + " WHERE pg_constraint.conrelid = pg_class.oid AND pg_attribute.attrelid = pg_constraint.conrelid AND (pg_attribute.attnum = ANY (pg_constraint.conkey))"
-            + " AND upper(pg_constraint.conname::text) = ?"
+            + " AND pg_constraint.conname = ?"
             + " ORDER BY pg_attribute.attnum::integer");
 
     sql = "SELECT upper(pg_constraint.conname::text), pg_constraint.consrc"

@@ -277,6 +277,8 @@ public abstract class ModelLoaderBase implements ModelLoader {
     tablename = tableRealName.toUpperCase();
 
     final Table t = new Table();
+    // final object just to hold the real-case sensitive name of the primaryKeyName
+    final StringBuilder pkNameHolder = new StringBuilder();
 
     t.setName(tablename);
 
@@ -284,21 +286,24 @@ public abstract class ModelLoaderBase implements ModelLoader {
       _stmt_pkname.setString(1, tableRealName);
       fillRow(_stmt_pkname, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
-          t.setPrimaryKey(r.getString(1));
+          t.setPrimaryKey(r.getString(1).toUpperCase());
+          pkNameHolder.append(r.getString(1));
         }
       });
     } else if (_filter.compliesWithNamingRuleObject(tableRealName)) {
       _stmt_pkname_noprefix.setString(1, tableRealName);
       fillRow(_stmt_pkname_noprefix, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
-          t.setPrimaryKey(r.getString(1));
+          t.setPrimaryKey(r.getString(1).toUpperCase());
+          pkNameHolder.append(r.getString(1));
         }
       });
     } else {
       _stmt_pkname_prefix.setString(1, tableRealName);
       fillRow(_stmt_pkname_prefix, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
-          t.setPrimaryKey(r.getString(1));
+          t.setPrimaryKey(r.getString(1).toUpperCase());
+          pkNameHolder.append(r.getString(1));
         }
       });
     }
@@ -307,7 +312,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 
     // PKS
     if (t.getPrimaryKey() != null && !t.getPrimaryKey().equals("")) {
-      _stmt_pkcolumns.setString(1, t.getPrimaryKey());
+      _stmt_pkcolumns.setString(1, pkNameHolder.toString());
       fillList(_stmt_pkcolumns, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
           t.findColumn(r.getString(1)).setPrimaryKey(true);
