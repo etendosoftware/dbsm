@@ -66,6 +66,7 @@ public class ExcludeFilter {
     this.otherActivePrefixes.addAll(otherActivePrefixes);
   }
 
+  // does case-insensitive matching on name, so case of name can be arbitrary
   public boolean compliesWithNamingRuleObject(String name) {
     if (isInOthersExceptionsObject(name))
       return false;

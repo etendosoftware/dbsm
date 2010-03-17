@@ -258,7 +258,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     sql = "SELECT upper(pg_constraint.conname::text), pg_constraint.consrc"
             + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
-            + " WHERE pg_constraint.contype::text = 'c' and upper(pg_class.relname::text) = ?";
+            + " WHERE pg_constraint.contype = 'c' and pg_class.relname = ?";
     _stmt_listchecks = _connection
         .prepareStatement(sql
             + " ORDER BY upper(pg_constraint.conname::text)");

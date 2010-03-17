@@ -287,7 +287,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
           t.setPrimaryKey(r.getString(1));
         }
       });
-    } else if (_filter.compliesWithNamingRuleObject(tablename)) {
+    } else if (_filter.compliesWithNamingRuleObject(tableRealName)) {
       _stmt_pkname_noprefix.setString(1, tableRealName);
       fillRow(_stmt_pkname_noprefix, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
@@ -316,7 +316,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     }
 
     // Checks
-    t.addChecks(readChecks(tablename, usePrefix));
+    t.addChecks(readChecks(tableRealName, usePrefix));
 
     // FKS
     t.addForeignKeys(readForeignKeys(tablename, usePrefix));
