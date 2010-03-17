@@ -336,9 +336,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + " AND pg_namespace.nspname = current_schema()" + " AND upper(pg_class.relname::text) = ?"
         + " ORDER BY temp_findinarray(pg_index.indkey, pg_attribute.attnum)");
 
-    sql = "SELECT upper(pg_constraint.conname::text)"
+    sql = "SELECT pg_constraint.conname"
         + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
-        + " WHERE pg_constraint.contype::text = 'u' AND upper(pg_class.relname::text) = ?";
+        + " WHERE pg_constraint.contype = 'u' AND pg_class.relname = ?";
     _stmt_listuniques = _connection.prepareStatement(sql
         + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_listuniques_noprefix = _connection
@@ -357,7 +357,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT upper(pg_attribute.attname::text)"
             + " FROM pg_constraint, pg_class, pg_attribute"
             + " WHERE pg_constraint.conrelid = pg_class.oid AND pg_attribute.attrelid = pg_constraint.conrelid AND (pg_attribute.attnum = ANY (pg_constraint.conkey))"
-            + " AND upper(pg_constraint.conname::text) = ?"
+            + " AND pg_constraint.conname = ?"
             + " ORDER BY temp_findinarray(pg_constraint.conkey, pg_attribute.attnum)");
 
     if (_filter.getExcludedViews().length == 0) {

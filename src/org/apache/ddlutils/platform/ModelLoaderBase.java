@@ -325,7 +325,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     t.addIndices(readIndexes(tablename, usePrefix));
 
     // Uniques
-    t.adduniques(readUniques(tablename, usePrefix));
+    t.adduniques(readUniques(tableRealName, usePrefix));
 
     return t;
   }
@@ -538,12 +538,15 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Unique readUnique(ResultSet rs) throws SQLException {
+    // similar to readTable, see there for definition of both (regarding case)
+    String constraintRealName = rs.getString(1);
+    String constraintName = constraintRealName.toUpperCase();
 
     final Unique uni = new Unique();
 
-    uni.setName(rs.getString(1));
+    uni.setName(constraintName);
 
-    _stmt_uniquecolumns.setString(1, uni.getName());
+    _stmt_uniquecolumns.setString(1, constraintRealName);
     fillList(_stmt_uniquecolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
         IndexColumn inxcol = new IndexColumn();
