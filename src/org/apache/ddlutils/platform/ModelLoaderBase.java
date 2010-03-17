@@ -265,9 +265,17 @@ public abstract class ModelLoaderBase implements ModelLoader {
 
   protected Table readTable(String tablename, boolean usePrefix) throws SQLException {
 
+    // on postgres this readTable gets called from the PostgreSqlModelLoader
+    // with the tablename having the same case as the table has in the database.
+    // To get same behavior in rest of dbsm which expects the name in uppercase
+    // we use the uppercase name in the Table object
+    String tableRealName = tablename;
+    tablename = tableRealName.toUpperCase();
+
     final Table t = new Table();
 
     t.setName(tablename);
+
     if (_prefix == null || !usePrefix) {
       _stmt_pkname.setString(1, tablename);
       fillRow(_stmt_pkname, new RowFiller() {

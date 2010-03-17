@@ -511,7 +511,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     _stmt_comments_funcs = _connection.prepareStatement("SELECT obj_description(?,'pg_proc')");
 
     _stmt_oids_tables = _connection
-        .prepareStatement("SELECT oid FROM pg_class WHERE upper(relname) = ?");
+        .prepareStatement("SELECT oid, relname FROM pg_class WHERE upper(relname) = ?");
 
     _stmt_comments_tables = _connection.prepareStatement("SELECT col_description(?,?)");
 
@@ -717,21 +717,24 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   int oidTable;
+  // tablename from readTable with the exact case like in the database
+  String tableRealName;
   String commentCol;
 
   @Override
   protected Table readTable(String tablename, boolean usePrefix) throws SQLException {
-    // We'll change the types of NVarchar columns (which should have a
-    // comment in the database)
-    Table t = super.readTable(tablename, usePrefix);
-
     _stmt_oids_tables.setString(1, tablename);
     fillList(_stmt_oids_tables, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
         oidTable = r.getInt(1);
+        tableRealName = r.getString(2);
       }
     });
 
+    Table t = super.readTable(tableRealName, usePrefix);
+
+    // We'll change the types of NVarchar columns (which should have a
+    // comment in the database)
     for (int i = 0; i < t.getColumnCount(); i++) {
       _stmt_comments_tables.setInt(1, oidTable);
       _stmt_comments_tables.setInt(2, i + 1);
