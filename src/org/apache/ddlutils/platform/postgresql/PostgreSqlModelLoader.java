@@ -231,9 +231,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " END"
             + " FROM pg_class, pg_namespace, pg_attribute, pg_type,information_schema.columns"
             + " WHERE pg_attribute.attrelid = pg_class.oid AND pg_attribute.atttypid = pg_type.oid AND pg_class.relnamespace = pg_namespace.oid AND pg_namespace.nspname = current_schema() AND pg_attribute.attnum > 0 "
-            + " AND UPPER(PG_ATTRIBUTE.ATTNAME::TEXT)=UPPER(information_schema.columns.column_name) "
-            + " AND UPPER(pg_class.relname::text)=UPPER(information_schema.columns.table_name) "
-            + " AND upper(pg_class.relname::text) = ? ";
+            + " AND PG_ATTRIBUTE.ATTNAME = information_schema.columns.column_name"
+            + " AND pg_class.relname = information_schema.columns.table_name"
+            + " AND pg_class.relname = ? ";
     _stmt_listcolumns = _connection
     .prepareStatement(sql 
         + " ORDER BY pg_attribute.attnum");

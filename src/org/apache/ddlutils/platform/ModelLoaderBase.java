@@ -303,7 +303,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     }
     // Columns
-    t.addColumns(readColumns(tablename, usePrefix));
+    t.addColumns(readColumns(tableRealName, usePrefix));
 
     // PKS
     if (t.getPrimaryKey() != null && !t.getPrimaryKey().equals("")) {
