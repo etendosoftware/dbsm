@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -36,7 +37,11 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.PlatformImplBase;
+import org.apache.ddlutils.translation.CommentFilter;
+import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.util.ExtTypes;
 
 /**
@@ -444,30 +449,50 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       throw new DatabaseOperationException("Error while enabling triggers ", e);
     }
   }
-  // /**
-  // * {@inheritDoc}
-  // */
-  // public void deleteAllDataFromTables(Connection connection, Database
-  // model, boolean continueOnError) throws DatabaseOperationException {
-  //        
-  // try {
-  // PreparedStatement pstmt =
-  // connection.prepareStatement("SELECT 'DELETE FROM '|| TABLENAME  as SQL_STR FROM PG_TABLES WHERE TABLEOWNER="+connection.getMetaData().getUserName()
-  // );
-  // ResultSet rs=pstmt.executeQuery();
-  // while (rs.next ()) {
-  // // System.out.println (rs.getString("SQL_STR"));
-  // PreparedStatement
-  // pstmtd=connection.prepareStatement(rs.getString("SQL_STR"));
-  // pstmtd.executeQuery();
-  // pstmtd.close();
-  // }
-  // rs.close();
-  // pstmt.close();
-  // } catch (SQLException e) {
-  // e.printStackTrace();
-  // throw new DatabaseOperationException("Error while truncating tables ",
-  // e);
-  // }
-  // }
+
+  public ArrayList checkTranslationConsistency(Database database) {
+    ArrayList inconsistentObjects = new ArrayList();
+
+    for (int i = 0; i < database.getFunctionCount(); i++) {
+      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(database);
+      Function f = database.getFunction(i);
+      if (f.getOriginalBody() != null) {
+        LiteralFilter litFilter1 = new LiteralFilter();
+        CommentFilter comFilter1 = new CommentFilter();
+        String s1 = litFilter1.removeLiterals(f.getBody());
+        s1 = comFilter1.removeComments(s1);
+        s1 = funcTrans.exec(s1);
+        s1 = comFilter1.restoreComments(s1);
+        s1 = litFilter1.restoreLiterals(s1);
+        s1 = s1.replaceAll("\\s", "");
+        String s2 = f.getOriginalBody();
+        s2 = s2.replaceAll("\\s", "");
+        if (!s1.equals(s2)) {
+          inconsistentObjects.add(f);
+        }
+      }
+    }
+
+    for (int i = 0; i < database.getTriggerCount(); i++) {
+      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(database);
+      Trigger trg = database.getTrigger(i);
+      if (trg.getOriginalBody() != null) {
+        LiteralFilter litFilter1 = new LiteralFilter();
+        CommentFilter comFilter1 = new CommentFilter();
+        String s1 = litFilter1.removeLiterals(trg.getBody());
+        s1 = comFilter1.removeComments(s1);
+        s1 = triggerTrans.exec(s1);
+        s1 = comFilter1.restoreComments(s1);
+        s1 = litFilter1.restoreLiterals(s1);
+        s1 = s1.replaceAll("\\s", "");
+        String s2 = trg.getOriginalBody();
+        s2 = s2.replaceAll("\\s", "");
+        if (!s1.equals(s2)) {
+          inconsistentObjects.add(trg);
+        }
+      }
+    }
+
+    return inconsistentObjects;
+  }
 }

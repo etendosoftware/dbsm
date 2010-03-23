@@ -44,6 +44,7 @@ public class Function implements StructureObject, Cloneable {
   private int _typeCode;
   /** The body of the function. */
   private String _body;
+  private String _originalBody;
   /** The translation object of the function */
   private Translation _translation = new NullTranslation();
 
@@ -323,6 +324,10 @@ public class Function implements StructureObject, Cloneable {
     return _body;
   }
 
+  public String getOriginalBody() {
+    return _originalBody;
+  }
+
   /**
    * Sets the body of this function.
    * 
@@ -331,6 +336,10 @@ public class Function implements StructureObject, Cloneable {
    */
   public void setBody(String body) {
     _body = body;
+  }
+
+  public void setOriginalBody(String body) {
+    _originalBody = body;
   }
 
   public boolean hasOutputParameters() {

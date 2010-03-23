@@ -26,12 +26,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.PlatformImplBase;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionStandarization;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLStandarization;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerStandarization;
+import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerTranslation;
+import org.apache.ddlutils.translation.CommentFilter;
+import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.util.ExtTypes;
 
 /**
@@ -310,29 +320,68 @@ public class Oracle8Platform extends PlatformImplBase {
       throw new DatabaseOperationException("Error while enabling triggers ", e);
     }
   }
-  // /**
-  // * {@inheritDoc}
-  // */
-  // public void deleteAllDataFromTables(Connection connection, Database
-  // model, boolean continueOnError) throws DatabaseOperationException {
-  //        
-  // try {
-  // PreparedStatement pstmt =
-  // connection.prepareStatement(" SELECT 'TRUNCATE TABLE '|| TABLE_NAME || ' REUSE STORAGE'   SQL_STR  FROM USER_TABLES");
-  // ResultSet rs = pstmt.executeQuery();
-  // while (rs.next ()) {
-  // // System.out.println (rs.getString("SQL_STR"));
-  // PreparedStatement pstmtd =
-  // connection.prepareStatement(rs.getString("SQL_STR"));
-  // pstmtd.executeQuery();
-  // pstmtd.close();
-  // }
-  // rs.close();
-  // pstmt.close();
-  // } catch (SQLException e) {
-  // e.printStackTrace();
-  // throw new DatabaseOperationException("Error while truncating tables ",
-  // e);
-  // }
-  // }
+
+  public ArrayList checkTranslationConsistency(Database database) {
+    ArrayList inconsistentObjects = new ArrayList();
+    PostgrePLSQLStandarization.generateOutPatterns(database);
+    for (int i = 0; i < database.getFunctionCount(); i++) {
+      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(database);
+      PostgrePLSQLFunctionStandarization funcStand = new PostgrePLSQLFunctionStandarization(
+          database, i);
+      Function f = database.getFunction(i);
+      LiteralFilter litFilter1 = new LiteralFilter();
+      CommentFilter comFilter1 = new CommentFilter();
+      LiteralFilter litFilter2 = new LiteralFilter();
+      CommentFilter comFilter2 = new CommentFilter();
+      String s1 = litFilter1.removeLiterals(f.getBody());
+      s1 = comFilter1.removeComments(s1);
+      s1 = funcTrans.exec(s1);
+      s1 = comFilter1.restoreComments(s1);
+      s1 = litFilter1.restoreLiterals(s1);
+      s1 = litFilter2.removeLiterals(s1);
+      s1 = comFilter2.removeComments(s1);
+      s1 = funcStand.exec(s1);
+      s1 = comFilter2.restoreComments(s1);
+      s1 = litFilter2.restoreLiterals(s1);
+      String s2 = f.getBody();
+      String s1R = s1.replaceAll("\\s", "");
+      String s2R = s2.replaceAll("\\s", "");
+      if (!s1R.equals(s2R)) {
+        inconsistentObjects.add(f);
+      }
+    }
+
+    for (int i = 0; i < database.getTriggerCount(); i++) {
+      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(database);
+      PostgrePLSQLTriggerStandarization triggerStand = new PostgrePLSQLTriggerStandarization(
+          database, i);
+      Trigger trg = database.getTrigger(i);
+      if (trg.getOriginalBody() != null) {
+        LiteralFilter litFilter1 = new LiteralFilter();
+        CommentFilter comFilter1 = new CommentFilter();
+        LiteralFilter litFilter2 = new LiteralFilter();
+        CommentFilter comFilter2 = new CommentFilter();
+        String s1 = litFilter1.removeLiterals(trg.getBody());
+        s1 = comFilter1.removeComments(s1);
+        s1 = triggerTrans.exec(s1);
+        s1 = comFilter1.restoreComments(s1);
+        s1 = litFilter1.restoreLiterals(s1);
+        s1 = litFilter2.removeLiterals(s1);
+        s1 = comFilter2.removeComments(s1);
+        s1 = triggerStand.exec(s1);
+        s1 = comFilter2.restoreComments(s1);
+        s1 = litFilter2.restoreLiterals(s1);
+        String s2 = trg.getBody();
+        String s1R = s1.replaceAll("\\s", "");
+        String s2R = s2.replaceAll("\\s", "");
+        if (s1R.equals(s2R)) {
+          trg.setBody(s1);
+        } else {
+          inconsistentObjects.add(trg);
+        }
+      }
+    }
+
+    return inconsistentObjects;
+  }
 }

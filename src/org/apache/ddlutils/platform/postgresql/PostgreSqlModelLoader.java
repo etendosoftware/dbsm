@@ -31,6 +31,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
@@ -75,9 +76,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     _log.info("Starting function and trigger standardization.");
     PostgrePLSQLStandarization.generateOutPatterns(db);
     for (int i = 0; i < db.getFunctionCount(); i++) {
+      Function f = db.getFunction(i);
+      f.setOriginalBody(f.getBody());
       PostgrePLSQLFunctionStandarization functionStandarization = new PostgrePLSQLFunctionStandarization(
           db, i);
-      String body = db.getFunction(i).getBody();
+      String body = f.getBody();
 
       LiteralFilter litFilter = new LiteralFilter();
       CommentFilter comFilter = new CommentFilter();
@@ -92,12 +95,14 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       while (standardizedBody.charAt(standardizedBody.length() - 1) == '\n'
           || standardizedBody.charAt(standardizedBody.length() - 1) == ' ')
         standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
-      db.getFunction(i).setBody(standardizedBody + "\n");// initialBlanks+initialComments+
+      f.setBody(standardizedBody + "\n");// initialBlanks+initialComments+
     }
     for (int i = 0; i < db.getTriggerCount(); i++) {
+      Trigger trg = db.getTrigger(i);
+      trg.setOriginalBody(trg.getBody());
       PostgrePLSQLTriggerStandarization triggerStandarization = new PostgrePLSQLTriggerStandarization(
           db, i);
-      String body = db.getTrigger(i).getBody();
+      String body = trg.getBody();
 
       LiteralFilter litFilter = new LiteralFilter();
       CommentFilter comFilter = new CommentFilter();
@@ -114,14 +119,13 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       while (standardizedBody.charAt(standardizedBody.length() - 1) == '\n'
           || standardizedBody.charAt(standardizedBody.length() - 1) == ' ')
         standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
-      db.getTrigger(i).setBody(standardizedBody + '\n');// initialBlanks+initialComments+
+      trg.setBody(standardizedBody + '\n');// initialBlanks+initialComments+
     }
     for (int i = 0; i < db.getViewCount(); i++) {
       PostgreSQLStandarization viewStandarization = new PostgreSQLStandarization();
       String body = db.getView(i).getStatement();
 
       String standardizedBody = viewStandarization.exec(body);
-
       db.getView(i).setStatement(standardizedBody);
     }
 

@@ -53,6 +53,7 @@ public class Trigger implements StructureObject, Cloneable {
   private int _foreachCode;
   /** The body of the trigger. */
   private String _body;
+  private String _originalBody;
   /** The translation object used to translate the trigger body */
   private Translation _translation = new NullTranslation();
 
@@ -272,6 +273,10 @@ public class Trigger implements StructureObject, Cloneable {
     return _body;
   }
 
+  public String getOriginalBody() {
+    return _originalBody;
+  }
+
   /**
    * Sets the body of this function.
    * 
@@ -280,6 +285,10 @@ public class Trigger implements StructureObject, Cloneable {
    */
   public void setBody(String body) {
     _body = body;
+  }
+
+  public void setOriginalBody(String body) {
+    _originalBody = body;
   }
 
   /**

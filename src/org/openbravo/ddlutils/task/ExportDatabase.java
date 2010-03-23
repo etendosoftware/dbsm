@@ -15,6 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -58,6 +59,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private boolean validateModel = true;
   private boolean testAPI = false;
   private String datasetList;
+  private boolean checkTranslationConsistency = true;
 
   private boolean rd;
 
@@ -113,6 +115,16 @@ public class ExportDatabase extends BaseDalInitializingTask {
           return;
         }
         dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
+        if (checkTranslationConsistency) {
+          ArrayList inconsistentObjects = platform.checkTranslationConsistency(dbI);
+          if (inconsistentObjects.size() > 0) {
+            log
+                .warn("Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
+            for (int numObj = 0; numObj < inconsistentObjects.size(); numObj++) {
+              log.warn(inconsistentObjects.get(numObj).toString());
+            }
+          }
+        }
         getLog().info(db.toString());
         final DatabaseIO io = new DatabaseIO();
         String strPath;
@@ -364,5 +376,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   public void setRd(boolean rd) {
     this.rd = rd;
+  }
+
+  public boolean isCheckTranslationConsistency() {
+    return checkTranslationConsistency;
+  }
+
+  public void setCheckTranslationConsistency(boolean checkTranslationConsistency) {
+    this.checkTranslationConsistency = checkTranslationConsistency;
   }
 }

@@ -22,6 +22,7 @@ package org.apache.ddlutils;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -1354,4 +1355,6 @@ public interface Platform {
   public void enableNOTNULLColumns(Database database);
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
+
+  public ArrayList checkTranslationConsistency(Database database);
 }
