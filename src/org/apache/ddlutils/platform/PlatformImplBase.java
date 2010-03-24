@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -72,6 +73,9 @@ import org.apache.ddlutils.util.ExtTypes;
 import org.apache.ddlutils.util.Jdbc3Utils;
 import org.apache.ddlutils.util.JdbcSupport;
 import org.apache.ddlutils.util.SqlTokenizer;
+import org.apache.ddlutils.util.diff_match_patch;
+import org.apache.ddlutils.util.diff_match_patch.Diff;
+import org.apache.ddlutils.util.diff_match_patch.Operation;
 
 /**
  * Base class for platform implementations.
@@ -2942,5 +2946,39 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public ArrayList checkTranslationConsistency(Database database) {
     return new ArrayList();
+  }
+
+  protected void printDiff(String s1, String s2) {
+    getLog().warn("********************************************************");
+    diff_match_patch diffClass = new diff_match_patch();
+    LinkedList<Diff> diffs = diffClass.diff_main(s1, s2);
+    boolean initial = true;
+    String fullDiff = "";
+    for (Diff diff : diffs) {
+      if (diff.operation.equals(Operation.EQUAL)) {
+        String[] lines = diff.text.split("\n");
+        if (lines.length == 1) {
+          fullDiff += lines[0];
+        } else {
+          if (initial) {
+            initial = false;
+            if (lines.length > 1)
+              fullDiff += lines[lines.length - 2] + "\n";
+            fullDiff += lines[lines.length - 1];
+          } else {
+            initial = true;
+            fullDiff += "\n" + lines[0] + "\n";
+            if (lines.length > 1)
+              fullDiff += lines[1] + "\n";
+          }
+        }
+      } else if (diff.operation.equals(Operation.INSERT)) {
+        fullDiff += "[" + diff.text + "+]";
+      } else if (diff.operation.equals(Operation.DELETE)) {
+        fullDiff += "[" + diff.text + "]";
+      }
+    }
+    getLog().warn(fullDiff);
+    getLog().warn("********************************************************");
   }
 }

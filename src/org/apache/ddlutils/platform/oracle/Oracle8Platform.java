@@ -346,7 +346,10 @@ public class Oracle8Platform extends PlatformImplBase {
       String s2 = f.getBody();
       String s1R = s1.replaceAll("\\s", "");
       String s2R = s2.replaceAll("\\s", "");
+
       if (!s1R.equals(s2R)) {
+        getLog().warn("Found differences in " + f.getName());
+        printDiff(s1, s2);
         inconsistentObjects.add(f);
       }
     }
@@ -377,6 +380,8 @@ public class Oracle8Platform extends PlatformImplBase {
         if (s1R.equals(s2R)) {
           trg.setBody(s1);
         } else {
+          getLog().warn("Found differences in " + trg.getName());
+          printDiff(s1, s2);
           inconsistentObjects.add(trg);
         }
       }

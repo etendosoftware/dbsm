@@ -464,10 +464,12 @@ public class PostgreSqlPlatform extends PlatformImplBase {
         s1 = funcTrans.exec(s1);
         s1 = comFilter1.restoreComments(s1);
         s1 = litFilter1.restoreLiterals(s1);
-        s1 = s1.replaceAll("\\s", "");
+        String s1r = s1.replaceAll("\\s", "");
         String s2 = f.getOriginalBody();
-        s2 = s2.replaceAll("\\s", "");
-        if (!s1.equals(s2)) {
+        String s2r = s2.replaceAll("\\s", "");
+        if (!s1r.equals(s2r)) {
+          getLog().warn("Found differences in " + f.getName());
+          printDiff(s1, s2);
           inconsistentObjects.add(f);
         }
       }
@@ -484,10 +486,12 @@ public class PostgreSqlPlatform extends PlatformImplBase {
         s1 = triggerTrans.exec(s1);
         s1 = comFilter1.restoreComments(s1);
         s1 = litFilter1.restoreLiterals(s1);
-        s1 = s1.replaceAll("\\s", "");
+        String s1r = s1.replaceAll("\\s", "");
         String s2 = trg.getOriginalBody();
-        s2 = s2.replaceAll("\\s", "");
-        if (!s1.equals(s2)) {
+        String s2r = s2.replaceAll("\\s", "");
+        if (!s1r.equals(s2r)) {
+          getLog().warn("Found differences in " + trg.getName());
+          printDiff(s1, s2);
           inconsistentObjects.add(trg);
         }
       }
