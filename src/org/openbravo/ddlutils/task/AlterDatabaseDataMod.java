@@ -15,6 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -35,6 +36,7 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.modulescript.*;
 
 /**
  * 
@@ -296,6 +298,20 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     getLog().info("Disabling triggers");
     platform.disableAllTriggers(connection, dbAD, !isFailonerror());
     platform.disableNOTNULLColumns(dbXML);
+
+    // Executing ModuleScripts
+    List<String> sortedModRows = new ArrayList<String>();
+    for (ModuleRow row : moduleRows) {
+      sortedModRows.add(row.dir);
+    }
+    Collections.sort(sortedModRows);
+    for (String row : sortedModRows) {
+      ModuleScriptHandler hd = new ModuleScriptHandler();
+      hd.setBasedir(new File(basedir + "/../"));
+      hd.setModuleJavaPackage(row);
+      hd.execute();
+    }
+
     ArrayList<List> changes = new ArrayList<List>();
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Updating database data for module " + moduleRows.get(i).name);
