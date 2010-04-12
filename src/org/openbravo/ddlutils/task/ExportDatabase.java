@@ -116,6 +116,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         }
         dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
         if (checkTranslationConsistency) {
+          log.info("Checking translation consistency");
           ArrayList inconsistentObjects = platform.checkTranslationConsistency(dbI);
           if (inconsistentObjects.size() > 0) {
             log
@@ -123,6 +124,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
             for (int numObj = 0; numObj < inconsistentObjects.size(); numObj++) {
               log.warn(inconsistentObjects.get(numObj).toString());
             }
+          } else {
+            log.info("Translation consistency check finished succesfully");
           }
         }
         getLog().info(db.toString());
