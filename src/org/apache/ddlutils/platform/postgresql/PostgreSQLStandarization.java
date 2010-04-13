@@ -12,6 +12,7 @@
 
 package org.apache.ddlutils.platform.postgresql;
 
+import org.apache.ddlutils.translation.ByLineTranslation;
 import org.apache.ddlutils.translation.CombinedTranslation;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
 import org.apache.ddlutils.translation.ReplaceStrTranslation;
@@ -55,6 +56,10 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     append(new ReplacePatTranslation(
         "[Ss][Uu][Mm]\\s*\\(\\s*[Cc][Aa][Ss][Tt]\\s*\\((.*)\\s*[Aa][Ss]\\s*[Nn][Uu][Mm][Ee][Rr][Ii][Cc]\\)\\s*\\)",
         "SUM($1)"));
+
+    // blank spaces added in PostgreSQL 8.4
+    append(new ByLineTranslation(new ReplacePatTranslation("^[ ]*(.*)", "$1")));
+    append(new ReplacePatTranslation("\\([ ]*", "("));
 
     // removes the caracter ";" at the end of sql sentence
     append(new ReplaceStrTranslation(";", ""));
