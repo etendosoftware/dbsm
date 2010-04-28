@@ -77,6 +77,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     PostgrePLSQLStandarization.generateOutPatterns(db);
     for (int i = 0; i < db.getFunctionCount(); i++) {
       Function f = db.getFunction(i);
+      _log.debug("Translating function: " + f.getName());
       f.setOriginalBody(f.getBody());
       PostgrePLSQLFunctionStandarization functionStandarization = new PostgrePLSQLFunctionStandarization(
           db, i);
@@ -99,6 +100,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     }
     for (int i = 0; i < db.getTriggerCount(); i++) {
       Trigger trg = db.getTrigger(i);
+      _log.debug("Translating trigger: " + trg.getName());
       trg.setOriginalBody(trg.getBody());
       PostgrePLSQLTriggerStandarization triggerStandarization = new PostgrePLSQLTriggerStandarization(
           db, i);
