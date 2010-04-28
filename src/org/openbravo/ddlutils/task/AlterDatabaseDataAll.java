@@ -146,15 +146,15 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       final Database oldModel = (Database) originaldb.clone();
       DBSMOBUtil.setStatus(platform, 14, getLog());
       getLog().info("Updating database model...");
-      platform.alterTables(originaldb, db, !isFailonerror());
+      platform.alterTables(originaldb, db, false);
       getLog().info("Model update complete.");
 
       DBSMOBUtil.setStatus(platform, 15, getLog());
       getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
-      platform.disableAllFK(connection, originaldb, !isFailonerror());
+      platform.disableAllFK(connection, originaldb, true);
       getLog().info("Disabling triggers");
-      platform.disableAllTriggers(connection, db, !isFailonerror());
+      platform.disableAllTriggers(connection, db, true);
       platform.disableNOTNULLColumns(db);
 
       //Executing modulescripts
@@ -173,11 +173,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(db, !isFailonerror());
       getLog().info("Recreating Primary Keys");
-      List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
+      List changes = platform.alterTablesRecreatePKs(oldModel, db, true);
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables");
       platform.executeOnCreateDefaultForMandatoryColumns(db);
       platform.enableNOTNULLColumns(db);
-      platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
+      platform.alterTablesPostScript(oldModel, db, true, changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");
       platform.enableAllFK(connection, originaldb, !isFailonerror());

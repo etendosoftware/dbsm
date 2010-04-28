@@ -233,7 +233,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         getLog().info("Updating database model...");
 
         if (row.prefixes.size() > 0)
-          platform.alterTables(originaldb, db, !isFailonerror());
+          platform.alterTables(originaldb, db, false);
         /*
          * StringWriter sw=new StringWriter(); platform.getSqlBuilder().setWriter(sw);
          * platform.getSqlBuilder().alterDatabase(originaldb, db, null);
@@ -294,9 +294,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     }
     getLog().info("Disabling foreign keys");
     final Connection connection = platform.borrowConnection();
-    platform.disableAllFK(connection, dbAD, !isFailonerror());
+    platform.disableAllFK(connection, dbAD, true);
     getLog().info("Disabling triggers");
-    platform.disableAllTriggers(connection, dbAD, !isFailonerror());
+    platform.disableAllTriggers(connection, dbAD, true);
     platform.disableNOTNULLColumns(dbXML);
 
     // Executing ModuleScripts
@@ -318,20 +318,20 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       platform.alterData(connection, dbAD, dataChanges.get(i));
       getLog().info("Recreating Primary Keys");
       changes.add(platform.alterTablesRecreatePKs(moduleOldModels.get(i), moduleModels.get(i),
-          !isFailonerror()));
+          true));
     }
     getLog().info("Removing invalid rows.");
     platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
     for (int i = 0; i < dataChanges.size(); i++) {
       getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
-      platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror(),
+      platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), true,
           changes.get(i), dbXML);
     }
     platform.executeOnCreateDefaultForMandatoryColumns(dbXML);
     getLog().info("Enabling Foreign Keys and Triggers");
     platform.enableNOTNULLColumns(dbXML);
-    platform.enableAllFK(connection, dbAD, !isFailonerror());
-    platform.enableAllTriggers(connection, dbAD, !isFailonerror());
+    platform.enableAllFK(connection, dbAD, true);
+    platform.enableAllTriggers(connection, dbAD, true);
 
     try {
       // execute the post-script

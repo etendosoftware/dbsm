@@ -367,7 +367,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
         connection.clearWarnings();
       }
-      _log.info("Executed " + commandCount + " SQL command(s) with " + errors + " error(s)");
+      String errorNumber = "";
+      if (errors > 0)
+        errorNumber = " with " + errors + " error(s)";
+      else
+        errorNumber = " successfully";
+      if (commandCount > 0)
+        _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
 
       // execute the forced commands
       int loops = 0;
@@ -400,8 +406,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             errors++;
           }
         }
-        _log.info("Executed " + commandCount + " forced SQL command(s) with " + errors
-            + " error(s)");
+        String errorNumber2 = "";
+        if (errors > 0)
+          errorNumber2 = " with " + errors + " error(s)";
+        else
+          errorNumber = " successfully";
+        if (commandCount > 0)
+          _log.info("Executed " + commandCount + " forced SQL command(s)" + errorNumber2);
       }
 
       if (!aForcedCommands.isEmpty()) {
