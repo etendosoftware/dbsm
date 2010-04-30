@@ -161,6 +161,7 @@ public abstract class SqlBuilder {
   private boolean script = false;
   protected ArrayList<String> recreatedTables = new ArrayList<String>();
   protected ArrayList<String> createdTables = new ArrayList<String>();
+  protected ArrayList<String> recreatedTablesTwice = new ArrayList<String>();
   protected ArrayList<String> recreatedFKs = new ArrayList<String>();
   protected ArrayList<String> recreatedPKs = new ArrayList<String>();
 
@@ -1639,6 +1640,9 @@ public abstract class SqlBuilder {
         disableAllNOTNULLColumns(realTargetTable);
         writeCopyDataStatement(tempTable, targetTable);
         dropTemporaryTable(desiredModel, tempTable);
+        if (recreatedTables.contains(sourceTable.getName())) {
+          recreatedTablesTwice.add(sourceTable.getName());
+        }
         recreatedTables.add(sourceTable.getName());
       } else {
         dropTable(sourceTable);
@@ -1774,7 +1778,8 @@ public abstract class SqlBuilder {
   protected void enableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && !column.isPrimaryKey()) {
+      if (column.isRequired() && !column.isPrimaryKey()
+          && !recreatedTablesTwice.contains(table.getName())) {
         println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
             + getSqlType(column) + " NOT NULL");
         printEndOfStatement();
