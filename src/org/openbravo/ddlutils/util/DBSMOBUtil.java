@@ -820,11 +820,12 @@ public class DBSMOBUtil {
         "com.openbravo.db.OpenbravoMetadataFilter", originaldb));
 
     final Vector<File> files = new Vector<File>();
-    final File[] sourceFiles = DatabaseUtils.readFileArray(input);
+    File[] sourceFiles = input.listFiles();
     for (int i = 0; i < sourceFiles.length; i++) {
-      files.add(sourceFiles[i]);
+      if (sourceFiles[i].isFile()) {
+        files.add(sourceFiles[i]);
+      }
     }
-
     final String token = datafilter;
     final DirectoryScanner dirScanner = new DirectoryScanner();
     dirScanner.setBasedir(new File(basedir));

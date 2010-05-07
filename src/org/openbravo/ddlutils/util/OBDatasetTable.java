@@ -7,6 +7,7 @@ public class OBDatasetTable {
   String name;
   boolean excludeAuditInfo;
   String whereclause;
+  String secondarywhereclause;
   boolean includeAllColumns;
   Vector<String> includedColumns = new Vector<String>();
 
@@ -46,7 +47,7 @@ public class OBDatasetTable {
     if (whereclause == null)
       return null;
     if (moduleId != null) {
-      return whereclause.replace(":moduleid", "'" + moduleId + "'");
+      return "(" + whereclause.replace(":moduleid", "'" + moduleId + "'") + ")";
     } else {
       return "1=1";
     }
@@ -70,6 +71,14 @@ public class OBDatasetTable {
 
   public void setIncludedColumns(Vector<String> includedColumns) {
     this.includedColumns = includedColumns;
+  }
+
+  public String getSecondarywhereclause() {
+    return secondarywhereclause;
+  }
+
+  public void setSecondarywhereclause(String secondarywhereclause) {
+    this.secondarywhereclause = secondarywhereclause;
   }
 
 }

@@ -26,6 +26,8 @@ public class OBDataset {
       tables.add(table);
       table.setWhereclause(dsTable.get("WHERECLAUSE") == null ? null : dsTable.get("WHERECLAUSE")
           .toString());
+      table.setSecondarywhereclause(dsTable.get("SECONDARYWHERECLAUSE") == null ? null : dsTable
+          .get("SECONDARYWHERECLAUSE").toString());
       table.setIncludeAllColumns(dsTable.get("INCLUDEALLCOLUMNS").toString().equals("Y"));
       table.setExcludeAuditInfo(dsTable.get("EXCLUDEAUDITINFO").toString().equals("Y"));
       DynaBean adTable = searchDynaBean(adTables, dsTable.get("AD_TABLE_ID").toString(),
@@ -102,11 +104,8 @@ public class OBDataset {
     for (OBDatasetTable table : tables) {
       try {
         String sql = "SELECT count(*) FROM " + table.getName() + " WHERE 1=1 ";
-        if (table.getName().equalsIgnoreCase("AD_TREENODE")) {
-          // VERY SPECIAL CASE FOR TABLE AD_TREENODE
-          // This whereclause has to be hardcoded due to optional parameters not well defined
-          // in current dataset model. This will be fixed once optional parameters are implemented
-          sql += "AND (ad_tree_id='10' OR ad_tree_id='50')";
+        if (table.getSecondarywhereclause() != null) {
+          sql += " AND " + table.getSecondarywhereclause() + " ";
         }
         sql += " AND UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)";
         PreparedStatement ps = connection.prepareStatement(sql);
