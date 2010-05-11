@@ -3945,7 +3945,6 @@ public abstract class SqlBuilder {
       if (trigger.getName() == null) {
         _log.warn("Cannot write unnamed trigger " + trigger);
       } else {
-
         writeCreateTriggerFunction(trigger);
 
         printStartOfStatement("TRIGGER", getStructureObjectName(trigger));
@@ -4004,6 +4003,9 @@ public abstract class SqlBuilder {
     print("DECLARE");
 
     String body = trigger.getBody();
+    if (!body.substring(0, 1).equals("\n")) {
+      body = "\n" + body;
+    }
     LiteralFilter litFilter = new LiteralFilter();
     CommentFilter comFilter = new CommentFilter();
     body = litFilter.removeLiterals(body);
