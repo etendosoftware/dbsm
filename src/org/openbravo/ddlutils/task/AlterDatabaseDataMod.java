@@ -24,19 +24,23 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.AddForeignKeyChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Table;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 import org.openbravo.ddlutils.util.OBDataset;
-import org.openbravo.modulescript.*;
+import org.openbravo.modulescript.ModuleScriptHandler;
 
 /**
  * 
@@ -232,8 +236,29 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
         getLog().info("Updating database model...");
 
-        if (row.prefixes.size() > 0)
+        if (row.prefixes.size() > 0) {
+          ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(), platform
+              .isDelimitedIdentifierModeOn());
+          List changes = comparator.compare(originaldb, db);
+          for (int i = 0; i < changes.size(); i++) {
+            if (changes.get(i) instanceof AddForeignKeyChange) {
+              AddForeignKeyChange change = (AddForeignKeyChange) changes.get(i);
+              Table table = dbAD.findTable(change.getChangedTable().getName());
+              if (table != null) {
+                ForeignKey fk = null;
+                for (int j = 0; j < table.getForeignKeyCount() && fk == null; j++) {
+                  if (table.getForeignKey(j).getName().equals(change.getNewForeignKey().getName())) {
+                    fk = table.getForeignKey(j);
+                  }
+                }
+                if (fk != null) {
+                  table.removeForeignKey(fk);
+                }
+              }
+            }
+          }
           platform.alterTables(originaldb, db, !isFailonerror());
+        }
         /*
          * StringWriter sw=new StringWriter(); platform.getSqlBuilder().setWriter(sw);
          * platform.getSqlBuilder().alterDatabase(originaldb, db, null);
