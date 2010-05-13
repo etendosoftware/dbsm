@@ -410,7 +410,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         if (errors > 0)
           errorNumber2 = " with " + errors + " error(s)";
         else
-          errorNumber = " successfully";
+          errorNumber2 = " successfully";
         if (commandCount > 0)
           _log.info("Executed " + commandCount + " forced SQL command(s)" + errorNumber2);
       }
