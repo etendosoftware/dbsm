@@ -291,6 +291,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public int evaluateBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
+    return evaluateBatch(connection, sql, continueOnError, false);
+  }
+
+  public int evaluateBatch(Connection connection, String sql, boolean continueOnError,
+      boolean logAsError) throws DatabaseOperationException {
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;
@@ -341,8 +346,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             // on level warn, and the exception itself on level
             // debug
             if (!command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
-              _log.warn("SQL Command failed with: " + ex.getMessage());
-              _log.warn(command);
+              String message = "SQL Command failed with: " + ex.getMessage();
+              if (logAsError) {
+                _log.error(message);
+                _log.error(command);
+              } else {
+                _log.warn(message);
+                _log.warn(command);
+              }
               if (_log.isDebugEnabled()) {
                 _log.debug(ex);
               }
@@ -398,8 +409,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             }
             it.remove();
           } catch (SQLException ex) {
-
-            _log.warn("SQL Command failed with: " + ex.getMessage());
+            if (loops == MAX_LOOPS_OF_FORCED) {
+              _log.info("SQL Command failed with: " + ex.getMessage());
+              _log.info(command);
+            }
             if (_log.isDebugEnabled()) {
               _log.debug(ex);
             }
@@ -416,8 +429,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
 
       if (!aForcedCommands.isEmpty()) {
-        _log.info("There are still " + aForcedCommands.size()
-            + " forced commands not executed sucessfully.");
+        String message = "There are still " + aForcedCommands.size()
+            + " forced commands not executed sucessfully.";
+        if (logAsError) {
+          _log.error(message);
+        } else {
+          _log.info(message);
+        }
       }
 
     } catch (SQLException ex) {
@@ -665,7 +683,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       // won't happen because we're using a string writer
     }
 
-    evaluateBatch(connection, sql, continueOnError);
+    evaluateBatch(connection, sql, continueOnError, true);
   }
 
   public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError,
