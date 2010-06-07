@@ -92,7 +92,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // platform.setDelimitedIdentifierModeOn(true);
 
-    DBSMOBUtil.setStatus(platform, 12, getLog());
 
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
@@ -195,7 +194,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       ada.execute();
       return;
     }
-    DBSMOBUtil.setStatus(platform, 13, getLog());
     Database originaldb = null;
     DBSMOBUtil.resetInstance();
     DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
@@ -232,7 +230,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
           moduleOldModels.add(olddb);
         }
 
-        DBSMOBUtil.setStatus(platform, 14, getLog());
 
         getLog().info("Updating database model...");
 
@@ -309,7 +306,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       e.printStackTrace();
       throw new BuildException(e);
     }
-    DBSMOBUtil.setStatus(platform, 15, getLog());
     getLog().info("Updating database data...");
 
     if (originaldb != null) {
