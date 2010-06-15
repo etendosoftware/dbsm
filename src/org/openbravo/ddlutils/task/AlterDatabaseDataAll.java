@@ -27,8 +27,8 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.modulescript.ModuleScriptHandler;
 import org.openbravo.utils.CheckSum;
-import org.openbravo.modulescript.*;
 
 /**
  * 
@@ -153,12 +153,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db);
 
-      //Executing modulescripts
+      // Executing modulescripts
 
       ModuleScriptHandler hd = new ModuleScriptHandler();
-      hd.setBasedir(new File(basedir+"/../"));
+      hd.setBasedir(new File(basedir + "/../"));
       hd.execute();
-      
+
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
