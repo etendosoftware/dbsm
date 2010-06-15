@@ -92,7 +92,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // platform.setDelimitedIdentifierModeOn(true);
 
-
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
     if (basedir == null) {
@@ -230,7 +229,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
           moduleOldModels.add(olddb);
         }
 
-
         getLog().info("Updating database model...");
 
         if (row.prefixes.size() > 0) {
@@ -300,76 +298,76 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         getLog().info("Comparing databases to find data differences");
         dataChanges.add(dataComparator.getChanges());
       }
+      getLog().info("Updating database data...");
+
+      if (originaldb != null) {
+        // First we fix the dbAD model, removing the foreign keys that have been removed in the
+        // database by the model upgrade process
+        platform.removeDeletedFKTriggers(originaldb, dbAD);
+      }
+      getLog().info("Disabling foreign keys");
+      final Connection connection = platform.borrowConnection();
+      platform.disableAllFK(connection, dbAD, !isFailonerror());
+      getLog().info("Disabling triggers");
+      platform.disableAllTriggers(connection, dbAD, !isFailonerror());
+      platform.disableNOTNULLColumns(dbXML);
+
+      // Executing ModuleScripts
+      List<String> sortedModRows = new ArrayList<String>();
+      for (ModuleRow row : moduleRows) {
+        sortedModRows.add(row.dir);
+      }
+      Collections.sort(sortedModRows);
+      for (String row : sortedModRows) {
+        ModuleScriptHandler hd = new ModuleScriptHandler();
+        hd.setBasedir(new File(basedir + "/../"));
+        hd.setModuleJavaPackage(row);
+        hd.execute();
+      }
+
+      ArrayList<List> changes = new ArrayList<List>();
+      for (int i = 0; i < dataChanges.size(); i++) {
+        getLog().info("Updating database data for module " + moduleRows.get(i).name);
+        platform.alterData(connection, dbAD, dataChanges.get(i));
+        getLog().info("Recreating Primary Keys");
+        changes.add(platform.alterTablesRecreatePKs(moduleOldModels.get(i), moduleModels.get(i),
+            !isFailonerror()));
+      }
+      getLog().info("Removing invalid rows.");
+      platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
+      for (int i = 0; i < dataChanges.size(); i++) {
+        getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
+        platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i),
+            !isFailonerror(), changes.get(i), dbXML);
+      }
+      platform.executeOnCreateDefaultForMandatoryColumns(dbXML);
+      getLog().info("Enabling Foreign Keys and Triggers");
+      platform.enableNOTNULLColumns(dbXML);
+      platform.enableAllFK(connection, dbAD, !isFailonerror());
+      platform.enableAllTriggers(connection, dbAD, !isFailonerror());
+
+      try {
+        // execute the post-script
+        if (getPostscript() == null) {
+          // try to execute the default prescript
+          final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+          if (fpost.exists()) {
+            getLog().info("Executing default postscript");
+            platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
+          }
+        } else {
+          platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
+        }
+      } catch (Exception e) {
+        log.error("Error while executing postscript: ", e);
+      }
+      DBSMOBUtil.getInstance().updateCRC(platform);
 
     } catch (final Exception e) {
       // log(e.getLocalizedMessage());
       e.printStackTrace();
       throw new BuildException(e);
     }
-    getLog().info("Updating database data...");
-
-    if (originaldb != null) {
-      // First we fix the dbAD model, removing the foreign keys that have been removed in the
-      // database by the model upgrade process
-      platform.removeDeletedFKTriggers(originaldb, dbAD);
-    }
-    getLog().info("Disabling foreign keys");
-    final Connection connection = platform.borrowConnection();
-    platform.disableAllFK(connection, dbAD, !isFailonerror());
-    getLog().info("Disabling triggers");
-    platform.disableAllTriggers(connection, dbAD, !isFailonerror());
-    platform.disableNOTNULLColumns(dbXML);
-
-    // Executing ModuleScripts
-    List<String> sortedModRows = new ArrayList<String>();
-    for (ModuleRow row : moduleRows) {
-      sortedModRows.add(row.dir);
-    }
-    Collections.sort(sortedModRows);
-    for (String row : sortedModRows) {
-      ModuleScriptHandler hd = new ModuleScriptHandler();
-      hd.setBasedir(new File(basedir + "/../"));
-      hd.setModuleJavaPackage(row);
-      hd.execute();
-    }
-
-    ArrayList<List> changes = new ArrayList<List>();
-    for (int i = 0; i < dataChanges.size(); i++) {
-      getLog().info("Updating database data for module " + moduleRows.get(i).name);
-      platform.alterData(connection, dbAD, dataChanges.get(i));
-      getLog().info("Recreating Primary Keys");
-      changes.add(platform.alterTablesRecreatePKs(moduleOldModels.get(i), moduleModels.get(i),
-          !isFailonerror()));
-    }
-    getLog().info("Removing invalid rows.");
-    platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
-    for (int i = 0; i < dataChanges.size(); i++) {
-      getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
-      platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i), !isFailonerror(),
-          changes.get(i), dbXML);
-    }
-    platform.executeOnCreateDefaultForMandatoryColumns(dbXML);
-    getLog().info("Enabling Foreign Keys and Triggers");
-    platform.enableNOTNULLColumns(dbXML);
-    platform.enableAllFK(connection, dbAD, !isFailonerror());
-    platform.enableAllTriggers(connection, dbAD, !isFailonerror());
-
-    try {
-      // execute the post-script
-      if (getPostscript() == null) {
-        // try to execute the default prescript
-        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
-        if (fpost.exists()) {
-          getLog().info("Executing default postscript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
-      }
-    } catch (Exception e) {
-      log.error("Error while executing postscript: ", e);
-    }
-    DBSMOBUtil.getInstance().updateCRC(platform);
   }
 
   public String getExcludeobjects() {
