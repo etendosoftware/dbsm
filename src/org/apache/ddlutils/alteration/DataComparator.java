@@ -413,4 +413,24 @@ public class DataComparator {
     return modelChanges;
   }
 
+  public void generateConfigScript(Vector<Change> finalChanges, Vector<Change> notExportedChanges) {
+
+    notExportedChanges.addAll(this.getModelChangesList());
+    for (final Object change : this.getModelChangesList())
+      if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange) {
+        finalChanges.add((Change) change);
+        notExportedChanges.remove(change);
+      }
+
+    Vector<Change> dataChangesL = new Vector<Change>();
+    dataChangesL.addAll(dataChanges);
+    for (final Change change : dataChanges)
+      if (change instanceof ColumnDataChange) {
+        finalChanges.add((change));
+        dataChangesL.remove(change);
+      }
+
+    notExportedChanges.addAll(dataChangesL);
+  }
+
 }

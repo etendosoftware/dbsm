@@ -102,4 +102,13 @@ public class ColumnDataChange implements DataChange {
   public void setNewValue(String newValue) {
     _newValue = newValue;
   }
+
+  public boolean equals(ColumnDataChange otherChange) {
+
+    return this._tablename.equals(otherChange._tablename)
+        && this._columnname.equals(otherChange._columnname)
+        && ((_oldValue == null && otherChange._oldValue == null) || (_oldValue != null
+            && otherChange._oldValue != null && this._oldValue.equals(otherChange._oldValue)))
+        && this._newValue.equals(otherChange._newValue) && this._pkRow.equals(otherChange._pkRow);
+  }
 }

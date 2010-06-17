@@ -31,6 +31,7 @@ import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.ForeignKey;
@@ -264,6 +265,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
 
       final DatabaseDataIO dbdio = new DatabaseDataIO();
+      final DatabaseData databaseOrgData = new DatabaseData(dbAD);
       dbdio.setEnsureFKOrder(false);
       dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), dbAD));
       for (ModuleRow row : moduleRows) {
@@ -276,7 +278,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
             files.add(datafiles[i]);
 
         final DataReader dataReader = dbdio.getConfiguredCompareDataReader(dbAD);
-        final DatabaseData databaseOrgData = new DatabaseData(dbAD);
         for (int i = 0; i < files.size(); i++) {
           try {
             dataReader.getSink().start();
@@ -362,7 +363,21 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         log.error("Error while executing postscript: ", e);
       }
       DBSMOBUtil.getInstance().updateCRC(platform);
+      DatabaseData databaseOrgData2 = new DatabaseData(dbAD);
+      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData2, dbAD, dbAD, basedir,
+          datafilter, input);
+      final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      dataComparator2.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+      dataComparator2.compare(dbXML, dbXML, platform, databaseOrgData2, ad, null);
+      Vector<Change> finalChanges = new Vector<Change>();
+      Vector<Change> notExportedChanges = new Vector<Change>();
+      dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
 
+      final DatabaseIO dbIO = new DatabaseIO();
+
+      final File configFile = new File("formalChangesScript.xml");
+      dbIO.write(configFile, finalChanges);
     } catch (final Exception e) {
       // log(e.getLocalizedMessage());
       e.printStackTrace();

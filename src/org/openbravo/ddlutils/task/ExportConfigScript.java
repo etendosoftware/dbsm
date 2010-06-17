@@ -21,11 +21,9 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
-import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
-import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
@@ -199,24 +197,9 @@ public class ExportConfigScript extends BaseDatabaseTask {
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), currentdb));
       dataComparator.compare(xmlModel, databaseModel, platform, databaseOrgData, ad, null);
-      final Vector<Change> dataChanges = new Vector<Change>();
-      dataChanges.addAll(dataComparator.getChanges());
-      final Vector<Change> finalChanges = new Vector<Change>();
-      final Vector<Change> comparatorChanges = new Vector<Change>();
-      comparatorChanges.addAll(dataComparator.getModelChangesList());
-      for (final Object change : dataComparator.getModelChangesList())
-        if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange) {
-          finalChanges.add((Change) change);
-          comparatorChanges.remove(change);
-        }
-
-      for (final Change change : dataComparator.getChanges())
-        if (change instanceof ColumnDataChange) {
-          finalChanges.add((change));
-          dataChanges.remove(change);
-        }
-
-      comparatorChanges.addAll(dataChanges);
+      Vector<Change> finalChanges = new Vector<Change>();
+      Vector<Change> notExportedChanges = new Vector<Change>();
+      dataComparator.generateConfigScript(finalChanges, notExportedChanges);
 
       final DatabaseIO dbIO = new DatabaseIO();
 
@@ -225,13 +208,30 @@ public class ExportConfigScript extends BaseDatabaseTask {
       final File folder = new File(configFile.getParent());
 
       folder.mkdirs();
+
+      getLog().info("Loading script of formal changes");
+      Vector<Change> formalChanges = dbIOs.readChanges(new File(
+          "src-db/database/formalChangesScript.xml"));
+      for (Change change : formalChanges) {
+        ColumnDataChange change2 = (ColumnDataChange) change;
+        ColumnDataChange changeToRemove = null;
+        for (Change changeS : finalChanges) {
+          if (((ColumnDataChange) changeS).equals(change2)) {
+            changeToRemove = (ColumnDataChange) changeS;
+          }
+        }
+        if (changeToRemove != null) {
+          finalChanges.remove(changeToRemove);
+        }
+      }
+
       dbIO.write(configFile, finalChanges);
 
-      if (comparatorChanges.size() > 0) {
+      if (notExportedChanges.size() > 0) {
         getLog().info("Changes that couldn't be exported to the config script:");
         getLog().info("*******************************************************");
       }
-      for (final Change c : comparatorChanges) {
+      for (final Change c : notExportedChanges) {
         getLog().info(c);
       }
       DBSMOBUtil.getInstance().updateCRC(platform);

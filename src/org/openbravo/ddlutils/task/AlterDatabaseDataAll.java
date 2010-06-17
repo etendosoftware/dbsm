@@ -20,7 +20,9 @@ import java.util.Vector;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
@@ -192,6 +194,18 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       }
       DBSMOBUtil.getInstance().updateCRC(platform);
 
+      final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      dataComparator2.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
+      dataComparator2.compare(db, db, platform, databaseOrgData, ad, null);
+      Vector<Change> finalChanges = new Vector<Change>();
+      Vector<Change> notExportedChanges = new Vector<Change>();
+      dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
+
+      final DatabaseIO dbIO = new DatabaseIO();
+
+      final File configFile = new File("formalChangesScript.xml");
+      dbIO.write(configFile, finalChanges);
     } catch (final Exception e) {
       // log(e.getLocalizedMessage());
       e.printStackTrace();
