@@ -2968,20 +2968,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     for (Diff diff : diffs) {
       if (diff.operation.equals(Operation.EQUAL)) {
         String[] lines = diff.text.split("\n");
-        if (lines.length == 1) {
-          fullDiff += lines[0];
-        } else {
-          if (initial) {
-            initial = false;
-            if (lines.length > 1)
-              fullDiff += lines[lines.length - 2] + "\n";
-            fullDiff += lines[lines.length - 1];
+        if (lines.length > 0) {
+          if (lines.length == 1) {
+            fullDiff += lines[0];
           } else {
-            initial = true;
-            fullDiff += "\n" + lines[0] + "\n";
-            if (lines.length > 1)
-              fullDiff += lines[1] + "\n";
+            if (initial) {
+              initial = false;
+              if (lines.length > 1)
+                fullDiff += lines[lines.length - 2] + "\n";
+              fullDiff += lines[lines.length - 1];
+            } else {
+              initial = true;
+              fullDiff += "\n" + lines[0] + "\n";
+              if (lines.length > 1)
+                fullDiff += lines[1] + "\n";
+            }
           }
+        } else {
+          fullDiff += diff.text;
         }
       } else if (diff.operation.equals(Operation.INSERT)) {
         fullDiff += "[" + diff.text + "+]";
