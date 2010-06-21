@@ -216,7 +216,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
         ColumnDataChange change2 = (ColumnDataChange) change;
         ColumnDataChange changeToRemove = null;
         for (Change changeS : finalChanges) {
-          if (((ColumnDataChange) changeS).equals(change2)) {
+          if (changeS instanceof ColumnDataChange && ((ColumnDataChange) changeS).equals(change2)) {
             changeToRemove = (ColumnDataChange) changeS;
           }
         }
