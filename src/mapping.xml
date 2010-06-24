@@ -218,6 +218,8 @@ under the License.
       <attribute name="columnname" property="columnname"/>
       <attribute name="newSize" property="newSize"/>
       <attribute name="newScale" property="newScale"/>
+      <attribute name="oldSize" property="oldSize"/>
+      <attribute name="oldScale" property="oldScale"/>
     </element>
   </class> 
     
@@ -225,6 +227,7 @@ under the License.
     <element name="removeCheckChange">
       <attribute name="tableName" property="tableName"/>
       <attribute name="checkName" property="checkName"/>
+      <element name="check" property="check"/>
     </element>
   </class>
   

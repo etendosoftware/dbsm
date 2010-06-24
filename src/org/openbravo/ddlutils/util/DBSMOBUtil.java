@@ -16,8 +16,11 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.ModelChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.io.DataReader;
@@ -32,6 +35,7 @@ import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.jfree.util.Log;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 
 public class DBSMOBUtil {
@@ -45,6 +49,7 @@ public class DBSMOBUtil {
   private Vector<String> idTemplates = new Vector<String>();
   private Vector<String> idModulesToExport = new Vector<String>();
   private Vector<String> idDependantModules = new Vector<String>();
+  private List<String> sortedTemplates;
 
   private static DBSMOBUtil instance = null;
 
@@ -814,6 +819,12 @@ public class DBSMOBUtil {
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input) {
+    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input, false);
+  }
+
+  public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
+      Database originaldb, Database db, String basedir, String datafilter, File input,
+      boolean strict) {
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
     dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
@@ -859,7 +870,7 @@ public class DBSMOBUtil {
     }
 
     getLog().info("Loading and applying configuration scripts");
-    List<String> sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
+    sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     for (String template : sortedTemplates) {
 
       File configScript = new File(new File(basedir), "/" + template
@@ -872,14 +883,99 @@ public class DBSMOBUtil {
         for (Change change : changes) {
           if (change instanceof ModelChange)
             ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange)
-            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+          else if (change instanceof DataChange) {
+            boolean applied = ((DataChange) change).apply(databaseOrgData, platform
+                .isDelimitedIdentifierModeOn());
+            if (strict && !applied) {
+              throw new BuildException(
+                  "Change "
+                      + change
+                      + " of the configuration script for the template "
+                      + configScript.getAbsolutePath()
+                      + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
+            }
+          }
           getLog().debug(change);
         }
       } else {
         getLog().info(
             "Couldn't find configuration script for template: " + template + " (file: "
                 + configScript.getAbsolutePath() + ")");
+      }
+    }
+  }
+
+  public void removeSortedTemplates(Platform platform, DatabaseData databaseOrgData, String basedir) {
+    for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
+      boolean isindevelopment = false;
+      for (int j = 0; j < activeModules.size(); j++) {
+        if (activeModules.get(j).dir.equals(sortedTemplates.get(i))) {
+          isindevelopment = true;
+        }
+      }
+      if (isindevelopment) {
+        continue;
+      }
+      File configScript = new File(new File(basedir), "/" + sortedTemplates.get(i)
+          + "/src-db/database/configScript.xml");
+      if (configScript.exists()) {
+        DatabaseIO dbIO = new DatabaseIO();
+        getLog().info(
+            "Reversing data part of configuration script: " + configScript.getAbsolutePath());
+        Vector<Change> changes = dbIO.readChanges(configScript);
+        for (Change change : changes) {
+          if (change instanceof ColumnDataChange) {
+            Log.info("Reversing change " + change);
+            boolean applied = ((ColumnDataChange) change).applyInReverse(databaseOrgData, platform
+                .isDelimitedIdentifierModeOn());
+            if (!applied) {
+              throw new BuildException(
+                  "Reversing the change "
+                      + ((ColumnDataChange) change)
+                      + " in configuration script for template "
+                      + sortedTemplates.get(i)
+                      + " couldn't be applied, and therefore, the export.database couldn't be completed. Fix (or remove) the configuration script, and then try the export again.");
+            }
+            getLog().debug(change);
+          }
+        }
+      } else {
+        getLog().info(
+            "Couldn't find configuration script for template: " + sortedTemplates.get(i)
+                + " (file: " + configScript.getAbsolutePath() + ")");
+      }
+    }
+  }
+
+  public void removeSortedTemplates(Platform platform, Database database, String basedir) {
+    for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
+      boolean isindevelopment = false;
+      for (int j = 0; j < activeModules.size(); j++) {
+        if (activeModules.get(j).dir.equals(sortedTemplates.get(i))) {
+          isindevelopment = true;
+        }
+      }
+      if (isindevelopment) {
+        continue;
+      }
+      File configScript = new File(new File(basedir), "/" + sortedTemplates.get(i)
+          + "/src-db/database/configScript.xml");
+      if (configScript.exists()) {
+        DatabaseIO dbIO = new DatabaseIO();
+        getLog().info(
+            "Reversing model part of configuration script: " + configScript.getAbsolutePath());
+        Vector<Change> changes = dbIO.readChanges(configScript);
+        for (Change change : changes) {
+          if (change instanceof RemoveCheckChange)
+            ((RemoveCheckChange) change).applyInReverse(database, false);
+          else if (change instanceof ColumnSizeChange)
+            ((ColumnSizeChange) change).applyInReverse(database, false);
+          getLog().debug(change);
+        }
+      } else {
+        getLog().info(
+            "Couldn't find configuration script for template: " + sortedTemplates.get(i)
+                + " (file: " + configScript.getAbsolutePath() + ")");
       }
     }
   }

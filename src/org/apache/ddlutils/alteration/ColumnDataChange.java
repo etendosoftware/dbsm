@@ -36,19 +36,26 @@ public class ColumnDataChange implements DataChange {
 
   }
 
-  public void apply(DatabaseData databaseData, boolean caseSensitive) {
+  public boolean apply(DatabaseData databaseData, boolean caseSensitive) {
     if (_table == null)
       _table = databaseData.getDatabase().findTable(_tablename);
     if (_column == null)
       _column = _table.findColumn(_columnname);
-    databaseData.changeRow(_table, _column, new Object[] { _pkRow }, _oldValue, _newValue);
+    return (databaseData.changeRow(_table, _column, new Object[] { _pkRow }, _oldValue, _newValue));
+  }
+
+  public boolean applyInReverse(DatabaseData databaseData, boolean caseSensitive) {
+    if (_table == null)
+      _table = databaseData.getDatabase().findTable(_tablename);
+    if (_column == null)
+      _column = _table.findColumn(_columnname);
+    return (databaseData.changeRowInReverse(_table, _column, _pkRow, _oldValue, _newValue));
   }
 
   @Override
   public String toString() {
-    String string = "Change in column [" + _columnname + "] in table [" + _tablename + "]: PK:"
-        + _pkRow;
-    return string + " Old Value: <" + _oldValue + "> New Value: <" + _newValue + ">";
+    return "[" + _tablename + "." + _columnname + " <" + _oldValue + "->" + _newValue + "> PK: "
+        + _pkRow + "]";
   }
 
   public Table getTable() {

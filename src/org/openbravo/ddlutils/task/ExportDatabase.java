@@ -105,6 +105,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
       Database db;
       db = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
       db.checkDataTypes();
+      DatabaseData databaseOrgData = new DatabaseData(db);
+      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
+          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
+      DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, moduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         getLog().info("Exporting module: " + util.getActiveModule(i).name);
         Database dbI = null;
@@ -159,9 +163,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
       for (String dataset : datasetArray)
         datasets.add(dataset);
 
-      DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
-          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
       int datasetI = 0;
       for (final String dataSetCode : datasets) {
         if (dataSetCode.equalsIgnoreCase("ADRD") && !rd)
@@ -227,6 +228,11 @@ public class ExportDatabase extends BaseDalInitializingTask {
           dbdio.setEnsureFKOrder(false);
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);
+            DatabaseData dataToExport = new DatabaseData(db);
+            dbdio.readRowsIntoDatabaseData(platform, db, dataToExport, dataset, util
+                .getActiveModule(i).idMod);
+            DBSMOBUtil.getInstance().removeSortedTemplates(platform, dataToExport,
+                moduledir.getAbsolutePath());
             path.mkdirs();
             if (datasetI == 0) {
               final File[] filestodelete = path.listFiles();
@@ -241,8 +247,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
                       + util.getActiveModule(i).name);
               final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
               final OutputStream out = new FileOutputStream(tableFile);
-              final boolean b = dbdio.writeDataForTableToXML(platform, db, table, out,
-                  getEncoding(), util.getActiveModule(i).idMod);
+              final boolean b = dbdio.writeDataForTableToXML(platform, db, dataToExport, table,
+                  out, getEncoding(), util.getActiveModule(i).idMod);
               if (!b)
                 tableFile.delete();
               out.flush();
@@ -255,7 +261,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
       DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
           .getAbsolutePath());
     } catch (Exception e) {
-      e.printStackTrace();
+      throw new BuildException(e);
     }
   }
 

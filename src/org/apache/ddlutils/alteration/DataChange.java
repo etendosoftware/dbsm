@@ -16,5 +16,7 @@ public interface DataChange extends Change {
    * @param caseSensitive
    *          Whether the case of names matters
    */
-  public void apply(DatabaseData databaseData, boolean caseSensitive);
+  public boolean apply(DatabaseData databaseData, boolean caseSensitive);
+
+  public boolean applyInReverse(DatabaseData databaseData, boolean caseSensitive);
 }

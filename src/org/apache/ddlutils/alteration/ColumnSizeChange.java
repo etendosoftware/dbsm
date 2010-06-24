@@ -35,6 +35,8 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
   private int _newSize;
   /** The new scale. */
   private Integer _newScale;
+  private int _oldSize = 0;
+  private Integer _oldScale;
   private String _tablename;
   private String _columnname;
 
@@ -62,6 +64,8 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
     _newScale = newScale;
     _columnname = column.getName();
     _tablename = table.getName();
+    _oldSize = column.getSizeAsInt();
+    _oldScale = column.getScale();
   }
 
   /**
@@ -114,6 +118,29 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
 
   }
 
+  public void applyInReverse(Database database, boolean caseSensitive) {
+    if (_oldSize == 0) {
+      System.out
+          .println("Error while applying a ColumnSizeChange in reverse (the old size of the column is 0). Exporting the configuration script again should fix this problem.");
+    }
+    Table table = _table;
+    if (table == null)
+      table = database.findTable(_tablename, caseSensitive);
+    if (table == null) {
+      System.out.println("Table wasn't found in database.");
+      return;
+    }
+
+    Column column = _column;
+    if (column == null)
+      column = table.findColumn(_columnname, caseSensitive);
+    if (column != null)
+      column.setSizeAndScale(_oldSize, _oldScale);
+    else
+      System.out.println("Column " + getChangedColumn().getName() + " of table "
+          + getChangedTable().getName() + " wasn't found in the database.");
+  }
+
   public String getTablename() {
     return _tablename;
   }
@@ -146,6 +173,22 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
     else
       name = _column.getName();
     return "ColumnSizeChange. Column: " + name;
+  }
+
+  public int getOldSize() {
+    return _oldSize;
+  }
+
+  public void setOldSize(int size) {
+    _oldSize = size;
+  }
+
+  public Integer getOldScale() {
+    return _oldScale;
+  }
+
+  public void setOldScale(Integer scale) {
+    _oldScale = scale;
   }
 
 }

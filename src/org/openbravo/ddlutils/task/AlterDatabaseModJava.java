@@ -33,6 +33,10 @@ public class AlterDatabaseModJava {
     if (force.equalsIgnoreCase("yes"))
       force = "true";
     ada.setForce(new Boolean(force).booleanValue());
+    String strict = args[18];
+    if (strict.equalsIgnoreCase("yes"))
+      strict = "true";
+    ada.setStrict(new Boolean(strict).booleanValue());
     ada.execute();
 
   }

@@ -15,10 +15,15 @@ public class AddRowChange implements DataChange {
     _row = row;
   }
 
-  public void apply(DatabaseData databaseData, boolean caseSensitive) {
+  public boolean apply(DatabaseData databaseData, boolean caseSensitive) {
     SqlDynaClass dynaClass = (SqlDynaClass) _row.getDynaClass();
     dynaClass.resetDynaClass(databaseData.getDatabase().findTable(_table.getName()));
-    databaseData.addRow(_table, _row, false);
+    return (databaseData.addRow(_table, _row, false));
+  }
+
+  public boolean applyInReverse(DatabaseData databaseData, boolean caseSensitive) {
+    // Not implemented, as a configuration script cannot contain this kind of change
+    return false;
   }
 
   public String toString() {

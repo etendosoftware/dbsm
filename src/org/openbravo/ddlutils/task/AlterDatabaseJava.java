@@ -31,6 +31,11 @@ public class AlterDatabaseJava {
     if (force.equalsIgnoreCase("yes"))
       force = "true";
     ada.setForce(new Boolean(force).booleanValue());
+    String strict = args[16];
+    if (strict.equalsIgnoreCase("yes"))
+      strict = "true";
+    System.out.println(strict);
+    ada.setStrict(new Boolean(strict).booleanValue());
     ada.execute();
 
   }

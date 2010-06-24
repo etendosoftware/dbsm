@@ -14,8 +14,13 @@ public class RemoveRowChange implements DataChange {
     _row = row;
   }
 
-  public void apply(DatabaseData databaseData, boolean caseSensitive) {
-    databaseData.removeRow(_table, _row);
+  public boolean apply(DatabaseData databaseData, boolean caseSensitive) {
+    return (databaseData.removeRow(_table, _row));
+  }
+
+  public boolean applyInReverse(DatabaseData databaseData, boolean caseSensitive) {
+    // Not implemented, as a configuration script cannot contain this kind of change
+    return false;
   }
 
   public String toString() {

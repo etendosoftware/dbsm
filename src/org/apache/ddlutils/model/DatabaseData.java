@@ -12,6 +12,7 @@ public class DatabaseData {
 
   protected Database _model;
   protected HashMap<String, Vector<DynaBean>> _databaseBeans;
+  private boolean strictMode = false;
 
   public DatabaseData(Database model) {
     _model = model;
@@ -34,21 +35,27 @@ public class DatabaseData {
     return _databaseBeans.keySet();
   }
 
-  public void removeRow(Table table, DynaBean row) {
+  public void setStrictMode(boolean strictMode) {
+    this.strictMode = strictMode;
+  }
+
+  public boolean removeRow(Table table, DynaBean row) {
+    boolean changeDone = false;
     System.out.println("Trying to remove row " + row + "f rom table " + table);
     Vector<DynaBean> rows = getRowsFromTable(table.getName());
     if (rows == null) {
       System.out.println("Error. Trying to remove row in table " + table.getName()
           + ". The table doesn't exist, or is empty.");
-      return;
+      return changeDone;
     }
     SqlDynaProperty[] primaryKeys = _model.getDynaClassFor(row).getPrimaryKeyProperties();
     int i = 0;
     while (i < rows.size() && !row.equals(rows.get(i)))
       i++;
-    if (i < rows.size() && row.equals(rows.get(i)))
+    if (i < rows.size() && row.equals(rows.get(i))) {
       rows.remove(i);
-    else {
+      changeDone = true;
+    } else {
       System.out
           .println("We haven't found the row we wanted to remove. We will search by just primary key.");
       i = 0;
@@ -67,6 +74,7 @@ public class DatabaseData {
         System.out
             .println("We found a row with the same Primary Key. We will remove it despite it was not exactly the same.");
         rows.remove(i - 1);
+        changeDone = true;
       } else {
         String error = "We didn't found the row that we wanted to change. Table:["
             + table.getName() + "] PK[: ";
@@ -78,10 +86,11 @@ public class DatabaseData {
         System.out.println(error + "]");
       }
     }
+    return changeDone;
   }
 
-  public void addRow(Table table, DynaBean row, boolean reorder) {
-    System.out.println("Trying to add row " + row + " in table " + table);
+  public boolean addRow(Table table, DynaBean row, boolean reorder) {
+    boolean changeDone = false;
     if (_model.findTable(table.getName()) == null) {
       System.out.println("Error: impossible to add row in table " + table
           + ", as the table doesn't exist.");
@@ -90,13 +99,16 @@ public class DatabaseData {
         _databaseBeans.put(table.getName().toUpperCase(), new Vector<DynaBean>());
       }
       _databaseBeans.get(table.getName().toUpperCase()).add(row);
+      changeDone = true;
       if (reorder)
         DataToArraySink.sortArray(_model, _databaseBeans.get(table.getName()));
     }
+    return changeDone;
   }
 
-  public void changeRow(Table table, Column column, Object[] primaryKeys, Object oldValue,
+  public boolean changeRow(Table table, Column column, Object[] primaryKeys, Object oldValue,
       Object newValue) {
+    boolean changeDone = true;
     if (table == null) {
       System.out.println("Error: impossible to change row in table, as the table doesn't exist.");
     } else {
@@ -105,6 +117,11 @@ public class DatabaseData {
             + ", as the column doesn't exist.");
       } else {
         Vector<DynaBean> rows = getRowsFromTable(table.getName());
+        if (rows == null) {
+          // we return true in this case, because this means that the row for this change doesn't
+          // belong to the module being exported
+          return true;
+        }
         int i = 0;
         boolean found = false;
         while (i < rows.size() && !found) {
@@ -137,8 +154,11 @@ public class DatabaseData {
             }
             System.out.println(error + "] Old Value found: " + currentValue
                 + " Old value expected " + oldValue);
+            if (strictMode)
+              return false;
           }
           rows.get(i - 1).set(column.getName(), newValue);
+          changeDone = true;
         } else {
           String error = "We didn't found the row that we wanted to change. Table:["
               + table.getName() + "] PK[: ";
@@ -152,6 +172,42 @@ public class DatabaseData {
 
       }
     }
+    return changeDone;
+  }
+
+  public boolean changeRowInReverse(Table table, Column column, Object primaryKeys,
+      Object oldValue, Object newValue) {
+    Vector<DynaBean> rows = getRowsFromTable(table.getName());
+    int i = 0;
+    boolean found = false;
+    boolean changeDone = true;
+    if (rows == null) {
+      // we return true in this case, because this means that the row for this change doesn't belong
+      // to the module being exported
+      return true;
+    }
+    while (i < rows.size() && !found) {
+      Column[] primaryKeysCols = table.getPrimaryKeyColumns();
+      Object primaryKeyA = rows.get(i).get(primaryKeysCols[0].getName());
+      if (primaryKeys.toString().equals(primaryKeyA.toString()))
+        found = true;
+      i++;
+    }
+    if (found) {
+      Object currentValue = rows.get(i - 1).get(column.getName());
+      if (!(newValue == null && currentValue == null)
+          && ((newValue == null && currentValue != null)
+              || (newValue != null && currentValue == null) || (!currentValue.toString().equals(
+              newValue.toString())))) {
+        // We cannot reverse this change, as the value in the database is different from the value
+        // we expected
+        changeDone = false;
+      } else {
+        rows.get(i - 1).set(column.getName(), oldValue);
+        changeDone = true;
+      }
+    }
+    return changeDone;
   }
 
   public void reorderAllTables() {

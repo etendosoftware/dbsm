@@ -70,6 +70,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
   private String datafilter;
   private String module;
   private boolean force;
+  protected boolean strict;
 
   private boolean customLogging = true;
 
@@ -123,8 +124,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);
+    databaseFullData.setStrictMode(strict);
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
-        "*/src-db/database/sourcedata", input);
+        "*/src-db/database/sourcedata", input, strict);
     OBDataset ad = new OBDataset(databaseFullData, "AD");
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
     if (hasBeenModified) {
@@ -265,7 +267,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
 
       final DatabaseDataIO dbdio = new DatabaseDataIO();
-      final DatabaseData databaseOrgData = new DatabaseData(dbAD);
       dbdio.setEnsureFKOrder(false);
       dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), dbAD));
       for (ModuleRow row : moduleRows) {
@@ -278,6 +279,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
             files.add(datafiles[i]);
 
         final DataReader dataReader = dbdio.getConfiguredCompareDataReader(dbAD);
+        final DatabaseData databaseOrgData = new DatabaseData(dbAD);
         for (int i = 0; i < files.size(); i++) {
           try {
             dataReader.getSink().start();
@@ -531,5 +533,13 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
   public void setForce(boolean force) {
     this.force = force;
+  }
+
+  public boolean isStrict() {
+    return strict;
+  }
+
+  public void setStrict(boolean strict) {
+    this.strict = strict;
   }
 }

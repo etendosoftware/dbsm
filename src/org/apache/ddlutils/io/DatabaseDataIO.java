@@ -47,7 +47,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
+import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
@@ -346,21 +348,35 @@ public class DatabaseDataIO {
     return result;
   }
 
-  public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
-      OutputStream output, String xmlEncoding, String moduleID) {
+  public void readRowsIntoDatabaseData(Platform platform, Database model,
+      DatabaseData databaseData, OBDataset dataset, String moduleID) {
+    for (OBDatasetTable dsTable : dataset.getTableList()) {
+      Connection con = platform.borrowConnection();
+      Table table = model.findTable(dsTable.getName());
+      Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
+          moduleID);
+      for (DynaBean row : rows) {
+        databaseData.addRow(table, row, false);
+      }
+      platform.returnConnection(con);
+    }
+    databaseData.reorderAllTables();
+  }
+
+  public boolean writeDataForTableToXML(Platform platform, Database model,
+      DatabaseData databaseData, OBDatasetTable dsTable, OutputStream output, String xmlEncoding,
+      String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
     boolean b = false;
-    Table table = model.findTable(dsTable.getName());
-    Connection con = platform.borrowConnection();
-    Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
-        moduleID);
-    for (DynaBean row : rows) {
-      writer.write(model, dsTable, row);
-      b = true;
+    Vector<DynaBean> rows = databaseData.getRowsFromTable(dsTable.getName().toUpperCase());
+    if (rows != null) {
+      for (DynaBean row : rows) {
+        writer.write(model, dsTable, row);
+        b = true;
+      }
     }
-    platform.returnConnection(con);
     writer.writeDocumentEnd();
     return b;
   }

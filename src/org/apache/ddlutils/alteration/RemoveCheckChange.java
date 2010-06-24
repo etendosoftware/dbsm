@@ -75,6 +75,10 @@ public class RemoveCheckChange extends TableChangeImplBase {
       _check = table.findCheck(_checkName);
   }
 
+  public void setCheck(Check check) {
+    _check = check;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -94,6 +98,21 @@ public class RemoveCheckChange extends TableChangeImplBase {
       check = table.findCheck(_checkName);
 
     table.removeCheck(check);
+  }
+
+  public void applyInReverse(Database database, boolean caseSensitive) {
+    if (_check == null) {
+      System.out
+          .println("Error while applying a RemoveCheckChange (the check wasn't found in the configuration script). Exporting the configuration script again should fix this problem.");
+      return;
+    }
+    Table table = null;
+
+    if (_tableName == null)
+      table = database.findTable(getChangedTable().getName(), caseSensitive);
+    else
+      table = database.findTable(_tableName);
+    table.addCheck(_check);
   }
 
   public String getCheckName() {

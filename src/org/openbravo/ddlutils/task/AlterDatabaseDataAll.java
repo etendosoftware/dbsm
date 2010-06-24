@@ -59,6 +59,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   protected String datafilter;
   protected boolean force = false;
   protected boolean onlyIfModified = false;
+  protected boolean strict;
 
   public AlterDatabaseDataAll() {
     super();
@@ -66,6 +67,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   @Override
   protected void doExecute() {
+    System.out.println(strict);
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");
@@ -114,9 +116,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       Database db = null;
       db = readDatabaseModel();
       final DatabaseData databaseOrgData = new DatabaseData(db);
+      databaseOrgData.setStrictMode(strict);
       DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-          basedir, datafilter, input);
+          basedir, datafilter, input, strict);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
       if (hasBeenModified) {
@@ -374,5 +377,13 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   public void setOnlyIfModified(boolean onlyIfModified) {
     this.onlyIfModified = onlyIfModified;
+  }
+
+  public boolean isStrict() {
+    return strict;
+  }
+
+  public void setStrict(boolean strict) {
+    this.strict = strict;
   }
 }
