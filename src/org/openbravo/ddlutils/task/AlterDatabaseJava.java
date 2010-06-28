@@ -34,7 +34,6 @@ public class AlterDatabaseJava {
     String strict = args[16];
     if (strict.equalsIgnoreCase("yes"))
       strict = "true";
-    System.out.println(strict);
     ada.setStrict(new Boolean(strict).booleanValue());
     ada.execute();
 

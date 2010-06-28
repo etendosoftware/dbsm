@@ -67,7 +67,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   @Override
   protected void doExecute() {
-    System.out.println(strict);
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");
