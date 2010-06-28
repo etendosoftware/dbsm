@@ -2492,7 +2492,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       typeCode = Types.CHAR;
     if (typeCode == ExtTypes.NVARCHAR)
       typeCode = Types.VARCHAR;
-    statement.setObject(sqlIndex, value, typeCode);
+    if (typeCode == Types.CLOB) {
+      if (value == null)
+        statement.setCharacterStream(sqlIndex, null, 0);
+      else
+        statement.setCharacterStream(sqlIndex, new StringReader(value.toString()), value.toString()
+            .length());
+    } else {
+      statement.setObject(sqlIndex, value, typeCode);
+    }
   }
 
   /**
