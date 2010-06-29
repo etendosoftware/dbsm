@@ -355,8 +355,10 @@ public class DatabaseDataIO {
       Table table = model.findTable(dsTable.getName());
       Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
           moduleID);
-      for (DynaBean row : rows) {
-        databaseData.addRow(table, row, false);
+      if (rows != null) {
+        for (DynaBean row : rows) {
+          databaseData.addRow(table, row, false);
+        }
       }
       platform.returnConnection(con);
     }
