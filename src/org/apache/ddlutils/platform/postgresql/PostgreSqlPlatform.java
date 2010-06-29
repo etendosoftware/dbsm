@@ -450,11 +450,11 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
   }
 
-  public ArrayList checkTranslationConsistency(Database database) {
+  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
     ArrayList inconsistentObjects = new ArrayList();
 
     for (int i = 0; i < database.getFunctionCount(); i++) {
-      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(database);
+      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
       Function f = database.getFunction(i);
       if (f.getOriginalBody() != null) {
         LiteralFilter litFilter1 = new LiteralFilter();
@@ -476,7 +476,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
 
     for (int i = 0; i < database.getTriggerCount(); i++) {
-      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(database);
+      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(fullDatabase);
       Trigger trg = database.getTrigger(i);
       if (trg.getOriginalBody() != null) {
         LiteralFilter litFilter1 = new LiteralFilter();

@@ -2963,7 +2963,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return true;
   }
 
-  public ArrayList checkTranslationConsistency(Database database) {
+  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
     return new ArrayList();
   }
 

@@ -120,8 +120,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
         }
         dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
         if (checkTranslationConsistency) {
+
           log.info("Checking translation consistency");
-          ArrayList inconsistentObjects = platform.checkTranslationConsistency(dbI);
+          ArrayList inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
           if (inconsistentObjects.size() > 0) {
             log
                 .warn("Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");

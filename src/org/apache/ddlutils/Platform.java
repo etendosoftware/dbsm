@@ -1356,5 +1356,5 @@ public interface Platform {
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
 
-  public ArrayList checkTranslationConsistency(Database database);
+  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase);
 }

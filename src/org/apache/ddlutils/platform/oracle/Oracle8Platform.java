@@ -321,14 +321,19 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
-  public ArrayList checkTranslationConsistency(Database database) {
+  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
     ArrayList inconsistentObjects = new ArrayList();
     PostgrePLSQLStandarization.generateOutPatterns(database);
     for (int i = 0; i < database.getFunctionCount(); i++) {
-      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(database);
-      PostgrePLSQLFunctionStandarization funcStand = new PostgrePLSQLFunctionStandarization(
-          database, i);
+      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
+      int indF = -1;
       Function f = database.getFunction(i);
+      for (int j = 0; indF == -1 && j < fullDatabase.getFunctionCount(); j++) {
+        if (fullDatabase.getFunction(j).equals(f))
+          indF = j;
+      }
+      PostgrePLSQLFunctionStandarization funcStand = new PostgrePLSQLFunctionStandarization(
+          fullDatabase, indF);
       LiteralFilter litFilter1 = new LiteralFilter();
       CommentFilter comFilter1 = new CommentFilter();
       LiteralFilter litFilter2 = new LiteralFilter();
@@ -355,10 +360,15 @@ public class Oracle8Platform extends PlatformImplBase {
     }
 
     for (int i = 0; i < database.getTriggerCount(); i++) {
-      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(database);
-      PostgrePLSQLTriggerStandarization triggerStand = new PostgrePLSQLTriggerStandarization(
-          database, i);
+      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(fullDatabase);
+      int indF = -1;
       Trigger trg = database.getTrigger(i);
+      for (int j = 0; indF == -1 && j < fullDatabase.getTriggerCount(); j++) {
+        if (fullDatabase.getTrigger(j).equals(trg))
+          indF = j;
+      }
+      PostgrePLSQLTriggerStandarization triggerStand = new PostgrePLSQLTriggerStandarization(
+          fullDatabase, indF);
       if (trg.getOriginalBody() != null) {
         LiteralFilter litFilter1 = new LiteralFilter();
         CommentFilter comFilter1 = new CommentFilter();
