@@ -2970,6 +2970,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   protected void printDiff(String s1, String s2) {
     getLog().warn("********************************************************");
     diff_match_patch diffClass = new diff_match_patch();
+    s1 = s1.replaceAll("\r\n", "\n");
+    s2 = s2.replaceAll("\r\n", "\n");
     LinkedList<Diff> diffs = diffClass.diff_main(s1, s2);
     boolean initial = true;
     String fullDiff = "";
