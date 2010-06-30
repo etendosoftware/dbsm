@@ -365,6 +365,26 @@ public class DatabaseDataIO {
     databaseData.reorderAllTables();
   }
 
+  public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
+      OutputStream output, String xmlEncoding, String moduleID) {
+    DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
+    registerConverters(writer.getConverterConfiguration());
+    writer.writeDocumentStart();
+    boolean b = false;
+    Table table = model.findTable(dsTable.getName());
+    Connection con = platform.borrowConnection();
+    Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
+        moduleID);
+    for (DynaBean row : rows) {
+      writer.write(model, dsTable, row);
+      b = true;
+    }
+    platform.returnConnection(con);
+    writer.writeDocumentEnd();
+    return b;
+
+  }
+
   public boolean writeDataForTableToXML(Platform platform, Database model,
       DatabaseData databaseData, OBDatasetTable dsTable, OutputStream output, String xmlEncoding,
       String moduleID) {
