@@ -243,16 +243,24 @@ public class ExportDatabase extends BaseDalInitializingTask {
               }
             }
             for (final OBDatasetTable table : tableList) {
-              getLog().info(
-                  "Exporting table: " + table.getName() + " to module "
-                      + util.getActiveModule(i).name);
-              final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
-              final OutputStream out = new FileOutputStream(tableFile);
-              final boolean b = dbdio.writeDataForTableToXML(platform, db, dataToExport, table,
-                  out, getEncoding(), util.getActiveModule(i).idMod);
-              if (!b)
-                tableFile.delete();
-              out.flush();
+              try {
+                final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
+                final OutputStream out = new FileOutputStream(tableFile);
+                final boolean b = dbdio.writeDataForTableToXML(platform, db, dataToExport, table,
+                    out, getEncoding(), util.getActiveModule(i).idMod);
+                if (!b) {
+                  tableFile.delete();
+                } else {
+                  getLog().info(
+                      "Exported table: " + table.getName() + " to module "
+                          + util.getActiveModule(i).name);
+                }
+                out.flush();
+              } catch (Exception e) {
+                getLog().error(
+                    "Error while exporting table" + table.getName() + " to module "
+                        + util.getActiveModule(i).name);
+              }
             }
           }
         }
