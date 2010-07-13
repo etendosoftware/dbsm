@@ -155,7 +155,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.disableAllFK(connection, originaldb, !isFailonerror());
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
-      platform.disableNOTNULLColumns(db);
+      platform.disableNOTNULLColumns(db, ad);
 
       // Executing modulescripts
 
@@ -168,15 +168,15 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), db));
       dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
-      getLog().info("Updating database data...");
+      getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(db, !isFailonerror());
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
-      getLog().info("Executing update final script (NOT NULLs and dropping temporary tables");
+      getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
       platform.executeOnCreateDefaultForMandatoryColumns(db);
-      platform.enableNOTNULLColumns(db);
+      platform.enableNOTNULLColumns(db, ad);
       platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");

@@ -76,6 +76,8 @@ import org.apache.ddlutils.util.SqlTokenizer;
 import org.apache.ddlutils.util.diff_match_patch;
 import org.apache.ddlutils.util.diff_match_patch.Diff;
 import org.apache.ddlutils.util.diff_match_patch.Operation;
+import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * Base class for platform implementations.
@@ -1711,8 +1713,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
         if (!identityWarningPrinted
             && (getRelevantIdentityColumns(model, curDynaClass, dynaBean).length > 0)) {
-          _log
-              .warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
+          _log.warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
           identityWarningPrinted = true;
         }
 
@@ -2889,6 +2890,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void disableNOTNULLColumns(Database database) {
+    disableNOTNULLColumns(database, null);
+  }
+
+  public void disableNOTNULLColumns(Database database, OBDataset dataset) {
     Connection connection = borrowConnection();
 
     try {
@@ -2896,7 +2901,60 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
       getSqlBuilder().setWriter(buffer);
       for (int i = 0; i < database.getTableCount(); i++) {
-        getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i));
+        Table table = database.getTable(i);
+        boolean enable = false;
+        if (dataset == null) {
+          enable = true;
+        } else {
+          for (OBDatasetTable dsTable : dataset.getTableList()) {
+            if (dsTable.getName().equalsIgnoreCase(table.getName())) {
+              enable = true;
+            }
+          }
+        }
+        if (enable) {
+          _log.debug("disabling notnulls for table " + table.getName());
+          getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i));
+        }
+      }
+      evaluateBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public void enableNOTNULLColumns(Database database, OBDataset dataset) {
+    Connection connection = borrowConnection();
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < database.getTableCount(); i++) {
+        Table table = database.getTable(i);
+        boolean enable = false;
+        if (dataset == null) {
+          enable = true;
+        } else {
+          for (OBDatasetTable dsTable : dataset.getTableList()) {
+            if (dsTable.getName().equalsIgnoreCase(table.getName())) {
+              enable = true;
+            }
+          }
+          if (!enable) {
+            for (String recTable : getSqlBuilder().recreatedTables) {
+              if (recTable.equalsIgnoreCase(table.getName())) {
+                enable = true;
+              }
+            }
+          }
+        }
+        if (enable) {
+          _log.debug("enabling not nulls for table " + table.getName());
+          getSqlBuilder().enableAllNOTNULLColumns(table);
+        }
       }
       evaluateBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
@@ -2907,21 +2965,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void enableNOTNULLColumns(Database database) {
-    Connection connection = borrowConnection();
+    enableNOTNULLColumns(database, null);
 
-    try {
-      StringWriter buffer = new StringWriter();
-
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < database.getTableCount(); i++) {
-        getSqlBuilder().enableAllNOTNULLColumns(database.getTable(i));
-      }
-      evaluateBatch(connection, buffer.toString(), true);
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      returnConnection(connection);
-    }
   }
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database) {

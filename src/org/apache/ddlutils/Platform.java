@@ -41,6 +41,7 @@ import org.apache.ddlutils.platform.JdbcModelReader;
 import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.ddlutils.platform.ModelLoader;
 import org.apache.ddlutils.platform.SqlBuilder;
+import org.openbravo.ddlutils.util.OBDataset;
 
 /**
  * A platform encapsulates the database-related functionality such as performing queries and
@@ -1352,7 +1353,11 @@ public interface Platform {
 
   public void disableNOTNULLColumns(Database database);
 
+  public void disableNOTNULLColumns(Database database, OBDataset dataset);
+
   public void enableNOTNULLColumns(Database database);
+
+  public void enableNOTNULLColumns(Database database, OBDataset dataset);
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
 

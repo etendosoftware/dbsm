@@ -313,7 +313,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       platform.disableAllFK(connection, dbAD, !isFailonerror());
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, dbAD, !isFailonerror());
-      platform.disableNOTNULLColumns(dbXML);
+      platform.disableNOTNULLColumns(dbXML, ad);
 
       // Executing ModuleScripts
       List<String> sortedModRows = new ArrayList<String>();
@@ -345,7 +345,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
       platform.executeOnCreateDefaultForMandatoryColumns(dbXML);
       getLog().info("Enabling Foreign Keys and Triggers");
-      platform.enableNOTNULLColumns(dbXML);
+      platform.enableNOTNULLColumns(dbXML, ad);
       platform.enableAllFK(connection, dbAD, !isFailonerror());
       platform.enableAllTriggers(connection, dbAD, !isFailonerror());
 
