@@ -403,8 +403,7 @@ public class DBSMOBUtil {
     }
     for (final ModuleRow row : allModules) {
       if ("T".equals(row.type) && isDependant(rowT, row)) {
-        log
-            .error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
+        log.error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
         System.exit(1);
       }
     }
@@ -856,6 +855,7 @@ public class DBSMOBUtil {
     getLog().info("Loading data from XML files");
     for (int i = 0; i < files.size(); i++) {
       try {
+        getLog().debug("Parsing file " + files.get(i).getAbsolutePath());
         dataReader.getSink().start();
         final String tablename = files.get(i).getName().substring(0,
             files.get(i).getName().length() - 4);
