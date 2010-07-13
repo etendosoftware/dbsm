@@ -264,6 +264,11 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
          */
         getLog().info("Model update complete.");
 
+        if (originaldb != null) {
+          // First we fix the dbAD model, removing the foreign keys that have been removed in the
+          // database by the model upgrade process
+          platform.removeDeletedFKTriggers(originaldb, dbAD);
+        }
       }
 
       final DatabaseDataIO dbdio = new DatabaseDataIO();
@@ -303,11 +308,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
       getLog().info("Updating database data...");
 
-      if (originaldb != null) {
-        // First we fix the dbAD model, removing the foreign keys that have been removed in the
-        // database by the model upgrade process
-        platform.removeDeletedFKTriggers(originaldb, dbAD);
-      }
       getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
       platform.disableAllFK(connection, dbAD, !isFailonerror());
