@@ -232,9 +232,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
           moduleOldModels.add(olddb);
         }
 
-        getLog().info("Updating database model...");
-
         if (row.prefixes.size() > 0) {
+          getLog().info("Updating database model...");
           ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(), platform
               .isDelimitedIdentifierModeOn());
           List changes = comparator.compare(originaldb, db);
@@ -256,18 +255,13 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
             }
           }
           platform.alterTables(originaldb, db, !isFailonerror());
-        }
-        /*
-         * StringWriter sw=new StringWriter(); platform.getSqlBuilder().setWriter(sw);
-         * platform.getSqlBuilder().alterDatabase(originaldb, db, null);
-         * System.out.println(sw.toString());
-         */
-        getLog().info("Model update complete.");
+          getLog().info("Model update complete.");
 
-        if (originaldb != null) {
-          // First we fix the dbAD model, removing the foreign keys that have been removed in the
-          // database by the model upgrade process
-          platform.removeDeletedFKTriggers(originaldb, dbAD);
+          if (originaldb != null) {
+            // First we fix the dbAD model, removing the foreign keys that have been removed in the
+            // database by the model upgrade process
+            platform.removeDeletedFKTriggers(originaldb, dbAD);
+          }
         }
       }
 
