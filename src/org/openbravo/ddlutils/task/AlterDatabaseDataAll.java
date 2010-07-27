@@ -129,7 +129,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         else {
           getLog()
               .info(
-                  "Database has local changes. Update.database will not be done. If you want to force the update.database, do: ant update.database -Dforce=true (you will lose all your changes in the application dictionary if you do it)");
+                  "Database has local changes. Update.database will not be done. You should export your modules before doing update.database, so that your Application Dictionary changes are preserved. If you don't mind losing them, you can force the update.database by doing: ant update.database -Dforce=true");
           throw new BuildException("Database has local changes. Update.database not done.");
         }
       }
