@@ -101,6 +101,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+        log.info("Checking datatypes from the model loaded from the database");
+        originaldb.checkDataTypes();
         if (originaldb == null) {
           originaldb = new Database();
           getLog().info("Original model considered empty.");
@@ -114,6 +116,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       }
       Database db = null;
       db = readDatabaseModel();
+      log.info("Checking datatypes from the model loaded from XML files");
+      db.checkDataTypes();
       final DatabaseData databaseOrgData = new DatabaseData(db);
       databaseOrgData.setStrictMode(strict);
       DBSMOBUtil.getInstance().deleteInstallTables(platform, db);

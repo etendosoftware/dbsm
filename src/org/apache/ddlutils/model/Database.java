@@ -1584,9 +1584,11 @@ public class Database implements Serializable, Cloneable {
       Table t = this.getTable(i);
       for (int j = 0; j < t.getColumnCount(); j++) {
         Column c = t.getColumn(j);
-        if (c.getTypeCode() == Types.OTHER) {
+        if (c.getTypeCode() == Types.OTHER || c.getSizeAsInt() < 0
+            || (c.getSizeAsInt() == 0 && c.getTypeCode() == Types.VARCHAR)) {
           throw new SQLException("Unsupported column data type for column " + c.getName()
-              + " in table " + t.getName());
+              + " in table " + t.getName()
+              + ". You need to change the type of the column to a supported one to continue.");
         }
       }
     }

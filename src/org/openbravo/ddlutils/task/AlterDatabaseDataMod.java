@@ -230,6 +230,10 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
           final Database olddb = (Database) originaldb.clone();
           moduleModels.add(db);
           moduleOldModels.add(olddb);
+          log.info("Checking datatypes from the model loaded from the database");
+          originaldb.checkDataTypes();
+          log.info("Checking datatypes from the model loaded from XML files");
+          db.checkDataTypes();
         }
 
         if (row.prefixes.size() > 0) {
