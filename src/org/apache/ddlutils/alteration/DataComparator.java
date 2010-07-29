@@ -3,6 +3,7 @@ package org.apache.ddlutils.alteration;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -123,6 +124,7 @@ public class DataComparator {
         // _log.error(ex.getLocalizedMessage());
       }
     }
+    Collections.sort(dataChanges, new ChangeComparator());
 
   }
 
@@ -268,6 +270,7 @@ public class DataComparator {
     for (Table table : commonTables)
       compareTables(databaseDataOrg, databaseDataNew, table.getName());
 
+    Collections.sort(dataChanges, new ChangeComparator());
   }
 
   private void compareTables(DatabaseData databaseDataOrg, DatabaseData databaseDataNew,
