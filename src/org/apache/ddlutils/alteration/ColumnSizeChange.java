@@ -102,19 +102,18 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
     Table table = _table;
     if (table == null)
       table = database.findTable(_tablename, caseSensitive);
+
+    // We will not try to apply the change if the table doesn't exist in the model
+    // This could happen in update.database.mod if a configuration script has this change
+    // which makes a reference to an object which doesn't belong to the module
     if (table == null) {
-      System.out.println("Table wasn't found in database.");
       return;
     }
-
     Column column = _column;
     if (column == null)
       column = table.findColumn(_columnname, caseSensitive);
     if (column != null)
       column.setSizeAndScale(_newSize, _newScale);
-    else
-      System.out.println("Column " + getChangedColumn().getName() + " of table "
-          + getChangedTable().getName() + " wasn't found in the database.");
 
   }
 
