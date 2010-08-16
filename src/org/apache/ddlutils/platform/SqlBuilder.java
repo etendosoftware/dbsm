@@ -167,7 +167,7 @@ public abstract class SqlBuilder {
 
   //
   // Configuration
-  //
+  //                
 
   /**
    * Creates a new sql builder.
@@ -1971,6 +1971,13 @@ public abstract class SqlBuilder {
       }
     }
 
+    for (int idx = 0; idx < targetTable.getColumnCount(); idx++) {
+      Column targetColumn = targetTable.getColumn(idx);
+      if (targetColumn.getOnCreateDefault() != null
+          && sourceTable.findColumn(targetColumn.getName()) == null) {
+        columns.put(targetColumn, null);
+      }
+    }
     print("INSERT INTO ");
     printIdentifier(getStructureObjectName(targetTable));
     print(" (");
@@ -1985,6 +1992,8 @@ public abstract class SqlBuilder {
       Map.Entry entry = (Map.Entry) columnsIt.next();
       if (entry.getValue() != null) {
         writeCastExpression((Column) entry.getKey(), (Column) entry.getValue());
+      } else {
+        print("(" + ((Column) entry.getKey()).getOnCreateDefault() + ")");
       }
       if (columnsIt.hasNext()) {
         print(",");
