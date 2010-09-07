@@ -1763,6 +1763,16 @@ public abstract class SqlBuilder {
     }
   }
 
+  protected void disableAllChecks(Table table) throws IOException {
+
+    for (int i = 0; i < table.getCheckCount(); i++) {
+      Check check = table.getCheck(i);
+      println("ALTER TABLE " + table.getName() + " DISABLE CONSTRAINT " + check.getName());
+      printEndOfStatement();
+    }
+
+  }
+
   protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {
     for (int i = 0; i < newColumns.size(); i++) {
       Column column = newColumns.get(i).getNewColumn();
@@ -1786,6 +1796,16 @@ public abstract class SqlBuilder {
       }
 
     }
+  }
+
+  protected void enableAllChecks(Table table) throws IOException {
+
+    for (int i = 0; i < table.getCheckCount(); i++) {
+      Check check = table.getCheck(i);
+      println("ALTER TABLE " + table.getName() + " ENABLE CONSTRAINT " + check.getName());
+      printEndOfStatement();
+    }
+
   }
 
   protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {

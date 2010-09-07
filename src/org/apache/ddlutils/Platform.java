@@ -1359,6 +1359,14 @@ public interface Platform {
 
   public void enableNOTNULLColumns(Database database, OBDataset dataset);
 
+  public void disableCheckConstraints(Database database);
+
+  public void disableCheckConstraints(Database database, OBDataset dataset);
+
+  public void enableCheckConstraints(Database database);
+
+  public void enableCheckConstraints(Database database, OBDataset dataset);
+
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
 
   public ArrayList checkTranslationConsistency(Database database, Database fullDatabase);

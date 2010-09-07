@@ -1713,7 +1713,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
         if (!identityWarningPrinted
             && (getRelevantIdentityColumns(model, curDynaClass, dynaBean).length > 0)) {
-          _log.warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
+          _log
+              .warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
           identityWarningPrinted = true;
         }
 
@@ -2925,6 +2926,42 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
+  public void disableCheckConstraints(Database database) {
+    disableCheckConstraints(database, null);
+  }
+
+  public void disableCheckConstraints(Database database, OBDataset dataset) {
+    Connection connection = borrowConnection();
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < database.getTableCount(); i++) {
+        Table table = database.getTable(i);
+        boolean enable = false;
+        if (dataset == null) {
+          enable = true;
+        } else {
+          for (OBDatasetTable dsTable : dataset.getTableList()) {
+            if (dsTable.getName().equalsIgnoreCase(table.getName())) {
+              enable = true;
+            }
+          }
+        }
+        if (enable) {
+          _log.debug("disabling check constraints for table " + table.getName());
+          getSqlBuilder().disableAllChecks(database.getTable(i));
+        }
+      }
+      evaluateBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
   public void enableNOTNULLColumns(Database database, OBDataset dataset) {
     Connection connection = borrowConnection();
 
@@ -2954,6 +2991,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         if (enable) {
           _log.debug("enabling not nulls for table " + table.getName());
           getSqlBuilder().enableAllNOTNULLColumns(table);
+          getSqlBuilder().enableAllChecks(table);
         }
       }
       evaluateBatch(connection, buffer.toString(), true);
@@ -2966,6 +3004,50 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void enableNOTNULLColumns(Database database) {
     enableNOTNULLColumns(database, null);
+
+  }
+
+  public void enableCheckConstraints(Database database, OBDataset dataset) {
+    Connection connection = borrowConnection();
+
+    try {
+      StringWriter buffer = new StringWriter();
+
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < database.getTableCount(); i++) {
+        Table table = database.getTable(i);
+        boolean enable = false;
+        if (dataset == null) {
+          enable = true;
+        } else {
+          for (OBDatasetTable dsTable : dataset.getTableList()) {
+            if (dsTable.getName().equalsIgnoreCase(table.getName())) {
+              enable = true;
+            }
+          }
+          if (!enable) {
+            for (String recTable : getSqlBuilder().recreatedTables) {
+              if (recTable.equalsIgnoreCase(table.getName())) {
+                enable = true;
+              }
+            }
+          }
+        }
+        if (enable) {
+          _log.debug("enabling check constraints for table " + table.getName());
+          getSqlBuilder().enableAllChecks(table);
+        }
+      }
+      evaluateBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public void enableCheckConstraints(Database database) {
+    enableCheckConstraints(database, null);
 
   }
 

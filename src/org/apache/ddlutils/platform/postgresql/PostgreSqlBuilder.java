@@ -29,6 +29,7 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
+import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
@@ -884,4 +885,25 @@ public class PostgreSqlBuilder extends SqlBuilder {
       _log.error(e.getLocalizedMessage());
     }
   }
+
+  protected void disableAllChecks(Table table) throws IOException {
+
+    for (int i = 0; i < table.getCheckCount(); i++) {
+      Check check = table.getCheck(i);
+      println("ALTER TABLE " + table.getName() + " DROP CONSTRAINT " + check.getName());
+      printEndOfStatement();
+    }
+
+  }
+
+  protected void enableAllChecks(Table table) throws IOException {
+
+    for (int i = 0; i < table.getCheckCount(); i++) {
+      Check check = table.getCheck(i);
+      writeExternalCheckCreateStmt(table, check);
+      printEndOfStatement();
+    }
+
+  }
+
 }
