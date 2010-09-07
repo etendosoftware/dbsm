@@ -2991,7 +2991,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         if (enable) {
           _log.debug("enabling not nulls for table " + table.getName());
           getSqlBuilder().enableAllNOTNULLColumns(table);
-          getSqlBuilder().enableAllChecks(table);
         }
       }
       evaluateBatch(connection, buffer.toString(), true);
