@@ -28,7 +28,7 @@ public class FunctionWithOutputTranslation extends ReplacePatTranslation {
   public FunctionWithOutputTranslation(Function f) {
 
     StringBuffer strPattern = new StringBuffer();
-    strPattern.append("(");
+    strPattern.append("([\\s])(");
     addPattern(strPattern, f.getName());
     strPattern.append(")(\\s|\\t)*\\(");
 
@@ -55,14 +55,14 @@ public class FunctionWithOutputTranslation extends ReplacePatTranslation {
           strInto.append(",");
         }
         strInto.append("$");
-        strInto.append(3 + i);
+        strInto.append(4 + i);
       } else {
         // Build the parameters clause
         if (strParams.length() > 0) {
           strParams.append(",");
         }
         strParams.append("$");
-        strParams.append(3 + i);
+        strParams.append(4 + i);
       }
     }
 
@@ -72,9 +72,9 @@ public class FunctionWithOutputTranslation extends ReplacePatTranslation {
 
     // The replace string
     StringBuffer strReplace = new StringBuffer();
-    strReplace.append("SELECT * INTO ");
+    strReplace.append("$1SELECT * INTO ");
     strReplace.append(strInto);
-    strReplace.append(" FROM $1(");
+    strReplace.append(" FROM $2(");
     strReplace.append(strParams);
     strReplace.append(")");
     _replaceStr = strReplace.toString();
