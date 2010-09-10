@@ -209,22 +209,23 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       folder.mkdirs();
 
-      getLog().info("Loading script of formal changes");
-      Vector<Change> formalChanges = dbIOs.readChanges(new File(
-          "src-db/database/formalChangesScript.xml"));
-      for (Change change : formalChanges) {
-        ColumnDataChange change2 = (ColumnDataChange) change;
-        ColumnDataChange changeToRemove = null;
-        for (Change changeS : finalChanges) {
-          if (changeS instanceof ColumnDataChange && ((ColumnDataChange) changeS).equals(change2)) {
-            changeToRemove = (ColumnDataChange) changeS;
+      File formalChangesf = new File("src-db/database/formalChangesScript.xml");
+      if (formalChangesf.exists()) {
+        getLog().info("Loading script of formal changes");
+        Vector<Change> formalChanges = dbIOs.readChanges(formalChangesf);
+        for (Change change : formalChanges) {
+          ColumnDataChange change2 = (ColumnDataChange) change;
+          ColumnDataChange changeToRemove = null;
+          for (Change changeS : finalChanges) {
+            if (changeS instanceof ColumnDataChange && ((ColumnDataChange) changeS).equals(change2)) {
+              changeToRemove = (ColumnDataChange) changeS;
+            }
+          }
+          if (changeToRemove != null) {
+            finalChanges.remove(changeToRemove);
           }
         }
-        if (changeToRemove != null) {
-          finalChanges.remove(changeToRemove);
-        }
       }
-
       dbIO.write(configFile, finalChanges);
 
       if (notExportedChanges.size() > 0) {
