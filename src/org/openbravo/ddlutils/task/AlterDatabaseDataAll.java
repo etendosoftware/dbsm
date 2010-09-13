@@ -25,6 +25,7 @@ import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -61,12 +62,17 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   protected boolean onlyIfModified = false;
   protected boolean strict;
 
+  private ExcludeFilter excludeFilter;
+
   public AlterDatabaseDataAll() {
     super();
   }
 
   @Override
   protected void doExecute() {
+    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(model.getAbsolutePath() + "/../../../"));
+
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");
@@ -100,7 +106,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       Database originaldb;
       if (getOriginalmodel() == null) {
-        originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+        originaldb = platform.loadModelFromDatabase(excludeFilter);
         log.info("Checking datatypes from the model loaded from the database");
         originaldb.checkDataTypes();
         if (originaldb == null) {

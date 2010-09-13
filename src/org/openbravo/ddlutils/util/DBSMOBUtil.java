@@ -126,6 +126,14 @@ public class DBSMOBUtil {
   }
 
   public void getModules(Platform platform, String excludeobjects) {
+    final ExcludeFilter filter = DatabaseUtils.getExcludeFilter(excludeobjects);
+    getLog()
+        .warn(
+            "The getModules(Platform, String) method is outdated and will not work with modules which add excluded filters to the model. The getModules(Platform, ExcludeFilter) method should be used instead.");
+    getModules(platform, filter);
+  }
+
+  public void getModules(Platform platform, ExcludeFilter filterO) {
     getDependencies(platform);
     getInclusiveDependencies(platform);
     final String sql = "SELECT * FROM AD_MODULE";
@@ -201,7 +209,7 @@ public class DBSMOBUtil {
       } while (resultSet.next());
 
       for (int i = 0; i < allModules.size(); i++) {
-        final ExcludeFilter filter = DatabaseUtils.getExcludeFilter(excludeobjects);
+        final ExcludeFilter filter = filterO.clone();
         for (final String s : allModules.get(i).prefixes)
           filter.addPrefix(s);
         final Vector<String> otherMods = new Vector<String>();
@@ -403,7 +411,8 @@ public class DBSMOBUtil {
     }
     for (final ModuleRow row : allModules) {
       if ("T".equals(row.type) && isDependant(rowT, row)) {
-        log.error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
+        log
+            .error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
         System.exit(1);
       }
     }
@@ -978,6 +987,25 @@ public class DBSMOBUtil {
                 + " (file: " + configScript.getAbsolutePath() + ")");
       }
     }
+  }
+
+  public ExcludeFilter getExcludeFilter(File rootDir) {
+    ExcludeFilter ex = new ExcludeFilter();
+    try {
+      ex.fillFromFile(new File(rootDir, "src-db/database/model/excludeFilter.xml"));
+      File f = new File(rootDir, "modules");
+      File[] mods = f.listFiles();
+      for (File mod : mods) {
+        File fex = new File(mod, "src-db/database/model/excludeFilter.xml");
+        if (fex.exists()) {
+          ex.fillFromFile(fex);
+        }
+      }
+
+    } catch (Exception e) {
+      getLog().error("Error while reading excludeFilter file", e);
+    }
+    return ex;
   }
 
   private Logger getLog() {

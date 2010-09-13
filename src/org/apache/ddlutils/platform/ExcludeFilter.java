@@ -12,16 +12,23 @@
 
 package org.apache.ddlutils.platform;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Vector;
 
+import org.apache.ddlutils.io.DatabaseIO;
+import org.apache.ddlutils.platform.modelexclusion.ExcludedFunction;
+import org.apache.ddlutils.platform.modelexclusion.ExcludedTable;
+import org.apache.ddlutils.platform.modelexclusion.ExcludedTrigger;
+import org.apache.ddlutils.platform.modelexclusion.ExcludedView;
+import org.apache.log4j.Logger;
 import org.openbravo.ddlutils.util.ExceptionRow;
 
 /**
  * 
  * @author adrian
  */
-public class ExcludeFilter {
+public class ExcludeFilter implements Cloneable {
   Vector<String> prefixes = new Vector<String>();
   Vector<String> rejectedPrefixes = new Vector<String>();
   Vector<String> othersPrefixes = new Vector<String>();
@@ -34,12 +41,122 @@ public class ExcludeFilter {
   Vector<ExceptionRow> exceptions = new Vector<ExceptionRow>();
   Vector<ExceptionRow> othersexceptions = new Vector<ExceptionRow>();
 
+  Vector<String> excludedTables = new Vector<String>();
+  Vector<String> excludedFunctions = new Vector<String>();
+  Vector<String> excludedTriggers = new Vector<String>();
+  Vector<String> excludedViews = new Vector<String>();
+
+  private Logger log4j = Logger.getLogger(getClass());
+
+  public String toString() {
+    StringBuffer sb = new StringBuffer();
+    sb.append("***Filtered tables: " + "\n");
+    for (String s : excludedTables) {
+      sb.append("  -" + s + "\n");
+    }
+    sb.append("***Filtered views: " + "\n");
+    for (String s : excludedViews) {
+      sb.append("  -" + s + "\n");
+    }
+    sb.append("***Filtered triggers: " + "\n");
+    for (String s : excludedTriggers) {
+      sb.append("  -" + s + "\n");
+    }
+    sb.append("***Filtered functions: " + "\n");
+    for (String s : excludedFunctions) {
+      sb.append("  -" + s + "\n");
+    }
+    return sb.toString();
+  }
+
+  public ExcludeFilter clone() {
+    ExcludeFilter filter = new ExcludeFilter();
+
+    filter.prefixes.addAll(prefixes);
+    filter.rejectedPrefixes.addAll(rejectedPrefixes);
+    filter.othersPrefixes.addAll(othersPrefixes);
+    filter.otherActivePrefixes.addAll(otherActivePrefixes);
+
+    for (String prefDep : prefixDependencies.keySet()) {
+      Vector<String> dep = new Vector<String>();
+      dep.addAll(prefixDependencies.get(prefDep));
+      filter.prefixDependencies.put(prefDep, dep);
+    }
+
+    filter.excludedTables.addAll(excludedTables);
+    filter.excludedViews.addAll(excludedViews);
+    filter.excludedTriggers.addAll(excludedTriggers);
+    filter.excludedFunctions.addAll(excludedFunctions);
+
+    for (ExceptionRow row : exceptions) {
+      filter.exceptions.add((ExceptionRow) row.clone());
+    }
+    for (ExceptionRow row : othersexceptions) {
+      filter.othersexceptions.add((ExceptionRow) row.clone());
+    }
+    return filter;
+  }
+
+  public void fillFromFile(File file) {
+
+    try {
+      DatabaseIO dbIO = new DatabaseIO();
+      Vector<Object> list = dbIO.readExcludedObjects(file);
+
+      for (Object obj : list) {
+        if (obj instanceof ExcludedTable) {
+          excludedTables.add(((ExcludedTable) obj).getName());
+        } else if (obj instanceof ExcludedView) {
+          excludedViews.add(((ExcludedView) obj).getName());
+        } else if (obj instanceof ExcludedFunction) {
+          excludedFunctions.add(((ExcludedFunction) obj).getName());
+        } else if (obj instanceof ExcludedTrigger) {
+          excludedTriggers.add(((ExcludedTrigger) obj).getName());
+        }
+      }
+    } catch (Exception e) {
+      log4j.error("ExcludeFilter file couldn't be read: " + file.getAbsolutePath(), e);
+    }
+  }
+
+  public void exportToFile(File file) {
+
+    try {
+      Vector<Object> v = new Vector<Object>();
+
+      String[] tables = getExcludedTables();
+      for (String table : tables) {
+        v.add(new ExcludedTable(table));
+      }
+
+      String[] views = getExcludedViews();
+      for (String view : views) {
+        v.add(new ExcludedView(view));
+      }
+
+      String[] functions = getExcludedFunctions();
+      for (String function : functions) {
+        v.add(new ExcludedFunction(function));
+      }
+
+      String[] triggers = getExcludedTriggers();
+      for (String trigger : triggers) {
+        v.add(new ExcludedTrigger(trigger));
+      }
+
+      DatabaseIO dbIO = new DatabaseIO();
+      dbIO.writeExcludedObjects(file, v);
+    } catch (Exception e) {
+      log4j.error("Error while writing file", e);
+    }
+  }
+
   public String[] getExcludedTables() {
-    return new String[0];
+    return excludedTables.toArray(new String[0]);
   }
 
   public String[] getExcludedViews() {
-    return new String[0];
+    return excludedViews.toArray(new String[0]);
   }
 
   public String[] getExcludedSequences() {
@@ -47,11 +164,11 @@ public class ExcludeFilter {
   }
 
   public String[] getExcludedFunctions() {
-    return new String[0];
+    return excludedFunctions.toArray(new String[0]);
   }
 
   public String[] getExcludedTriggers() {
-    return new String[0];
+    return excludedTriggers.toArray(new String[0]);
   }
 
   public void addPrefix(String prefix) {

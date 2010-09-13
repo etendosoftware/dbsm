@@ -30,6 +30,7 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
@@ -55,12 +56,15 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
   private String codeRevision;
   private String industryTemplate;
+  private ExcludeFilter excludeFilter;
 
   public ExportConfigScript() {
   }
 
   @Override
   protected void doExecute() {
+    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(model.getAbsolutePath() + "/../../../"));
     try {
       if (industryTemplate == null) {
         throw new BuildException("No industry template was specified.");
@@ -71,7 +75,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      util.getModules(platform, excludeobjects);
+      util.getModules(platform, excludeFilter);
       util.checkTemplateExportIsPossible(log);
       final String indTemp = util.getNameOfActiveIndustryTemplate();
       industryTemplate = indTemp;
@@ -157,8 +161,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       }
 
       getLog().info("Loading complete model from current database");
-      final Database currentdb = platform.loadModelFromDatabase(DatabaseUtils
-          .getExcludeFilter(excludeobjects));
+      final Database currentdb = platform.loadModelFromDatabase(excludeFilter);
 
       getLog().info("Creating submodels for modules");
 

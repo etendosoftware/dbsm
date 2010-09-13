@@ -36,6 +36,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -143,7 +144,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     }
     DBSMOBUtil.resetInstance();
     DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
-    DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(model.getAbsolutePath() + "/../../../"));
+    DBSMOBUtil.getInstance().getModules(platform, excludeFilter);
 
     Database completedb = null;
     Database dbAD = null;
@@ -198,7 +201,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     }
     Database originaldb = null;
     DBSMOBUtil.resetInstance();
-    DBSMOBUtil.getInstance().getModules(platform, excludeobjects);
+    DBSMOBUtil.getInstance().getModules(platform, excludeFilter);
     final StringTokenizer st = new StringTokenizer(module, ",");
     try {
       while (st.hasMoreElements()) {

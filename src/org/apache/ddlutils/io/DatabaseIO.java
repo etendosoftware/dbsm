@@ -294,8 +294,9 @@ public class DatabaseIO {
       File[] directoryfiles = f.listFiles(new FileFilter() {
         public boolean accept(File pathname) {
           return !pathname.isHidden()
-              && (pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(
-                  ".xml")));
+              && (pathname.isDirectory() || (pathname.isFile()
+                  && pathname.getName().endsWith(".xml") && !pathname.getName().equals(
+                  "excludeFilter.xml")));
         }
       });
 
@@ -535,5 +536,35 @@ public class DatabaseIO {
       e.printStackTrace();
     }
     return null;
+  }
+
+  public Vector<Object> readExcludedObjects(File file) {
+    try {
+      BeanReader reader = getReader();
+      reader.setValidating(false);
+      reader.registerBeanClass("vector", java.util.Vector.class);
+
+      Vector<Object> objects = (Vector<Object>) reader.parse(file);
+      return objects;
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public void writeExcludedObjects(File file, Vector<Object> changes) {
+    try {
+
+      BeanWriter writer = getWriter(new FileOutputStream(file));
+      writer.writeXmlDeclaration("<?xml version=\"1.0\"?>");
+      writer.flush();
+
+      writer.write(changes);
+      writer.flush();
+
+      writer.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

@@ -231,4 +231,28 @@ under the License.
     </element>
   </class>
   
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedTable">
+    <element name="excludedTable">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedView">
+    <element name="excludedView">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedFunction">
+    <element name="excludedFunction">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedTrigger">
+    <element name="excludedTrigger">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
+  
 </betwixt-config>

@@ -130,6 +130,9 @@ public class DatabaseUtils {
         return d;
       }
     } else {
+      if (f.getName().equals("excludeFilter.xml")) {
+        return new Database();
+      }
       DatabaseIO dbIO = new DatabaseIO();
       dbIO.setValidateXml(false);
       Database db = dbIO.readplain(f);

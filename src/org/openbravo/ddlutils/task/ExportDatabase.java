@@ -30,6 +30,7 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
@@ -62,6 +63,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private boolean checkTranslationConsistency = true;
 
   private boolean rd;
+  private ExcludeFilter excludeFilter;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
@@ -69,6 +71,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   @Override
   public void execute() {
+    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(model.getAbsolutePath() + "/../../../"));
     initLogging();
     super.execute();
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
@@ -95,7 +99,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
     }
     try {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      util.getModules(platform, excludeobjects);
+      util.getModules(platform, excludeFilter);
       if (util.getActiveModuleCount() == 0) {
         getLog()
             .info(
@@ -103,7 +107,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         return;
       }
       Database db;
-      db = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+      db = platform.loadModelFromDatabase(excludeFilter);
       db.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,

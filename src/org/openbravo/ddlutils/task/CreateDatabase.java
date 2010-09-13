@@ -24,6 +24,7 @@ import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -50,6 +51,7 @@ public class CreateDatabase extends BaseDatabaseTask {
   private String dirFilter;
   private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
   private String input;
+  private ExcludeFilter excludeFilter;
 
   /** Creates a new instance of CreateDatabase */
   public CreateDatabase() {
@@ -58,6 +60,8 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
+    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(model.getAbsolutePath() + "/../../../"));
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
     final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
         getPassword());
@@ -192,7 +196,7 @@ public class CreateDatabase extends BaseDatabaseTask {
       dataReader.getSink().end();
 
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      util.getModules(platform, "org.apache.ddlutils.platform.ExcludeFilter");
+      util.getModules(platform, excludeFilter);
       util.generateIndustryTemplateTree();
       for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
         final ModuleRow temp = util.getIndustryTemplateId(i);
