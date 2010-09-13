@@ -62,10 +62,10 @@ public class ChangeFunction2Translation implements Translation {
         String patternStr4 = "^/$";
         Pattern pattern4 = Pattern.compile(patternStr4);
         Matcher matcher4 = pattern4.matcher(inputStr);
-        String patternStr5 = "(.+)(DBMS_OUTPUT.PUT_LINE)(\\s|\\t)*(\\()(.+?)(\\))(\\s|\\t)*;(.+)*$";
+        String patternStr5 = "(.*)(DBMS_OUTPUT.PUT_LINE)(\\s|\\t)*(\\()(.+?)(\\))(\\s|\\t)*;(.+)*$";
         Pattern pattern5 = Pattern.compile(patternStr5);
         Matcher matcher5 = pattern5.matcher(inputStr);
-        String patternStr5a = "(.+)(DBMS_OUTPUT.PUT)(\\s|\\t)*(\\()(.+?)(\\))(\\s|\\t)*;(.+)*$";
+        String patternStr5a = "(.*)(DBMS_OUTPUT.PUT)(\\s|\\t)*(\\()(.+?)(\\))(\\s|\\t)*;(.+)*$";
         Pattern pattern5a = Pattern.compile(patternStr5a);
         Matcher matcher5a = pattern5a.matcher(inputStr);
         String patternStr6 = "(.+)CURSOR(\\s|\\t)([^\\s|\\t|\\(]+)([\\s|\\t|\\(])(.+)*(\\s|\\t)*(IS)";
