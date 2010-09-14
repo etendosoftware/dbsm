@@ -89,7 +89,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
           final File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/model/");
-          System.out.println(dirF.getAbsolutePath());
           if (dirF.exists()) {
             dirs.add(dirF);
           }
@@ -117,7 +116,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
           final File dirF = new File(moduledir, util.getModule(j).dir
               + "/src-db/database/sourcedata/");
-          System.out.println(dirF.getAbsolutePath());
           if (dirF.exists()) {
             dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
           }
@@ -191,7 +189,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
       final Vector<String> modIds = new Vector<String>();
       for (int i = 0; i < util.getModuleCount(); i++) {
         final String mod = util.getModule(i).idMod;
-        getLog().info("Module added to comparison: " + mod);
         modIds.add(mod);
       }
 
