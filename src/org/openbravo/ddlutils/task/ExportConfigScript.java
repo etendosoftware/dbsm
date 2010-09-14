@@ -96,7 +96,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       }
       final File[] fileArray = new File[dirs.size()];
       for (int i = 0; i < dirs.size(); i++) {
-        getLog().info("Loading model for module. Path: " + dirs.get(i).getAbsolutePath());
+        getLog().debug("Loading model for module. Path: " + dirs.get(i).getAbsolutePath());
         fileArray[i] = dirs.get(i);
       }
       final Database xmlModel = DatabaseUtils.readDatabase(fileArray);
