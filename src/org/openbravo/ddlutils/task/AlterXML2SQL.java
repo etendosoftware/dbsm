@@ -45,6 +45,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
   public void execute() {
 
     try {
+      excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+          new File(model.getAbsolutePath() + "/../../../"));
       getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
       final BasicDataSource ds = new BasicDataSource();
@@ -69,7 +71,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
 
       Database originaldb;
       if (getOriginalmodel() == null) {
-        originaldb = platform.loadModelFromDatabase(DatabaseUtils.getExcludeFilter(excludeobjects));
+        originaldb = platform.loadModelFromDatabase(excludeFilter);
         if (originaldb == null) {
           originaldb = new Database();
           getLog().info("Original model considered empty.");

@@ -62,7 +62,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   protected boolean onlyIfModified = false;
   protected boolean strict;
 
-  private ExcludeFilter excludeFilter;
+  protected ExcludeFilter excludeFilter;
 
   public AlterDatabaseDataAll() {
     super();
