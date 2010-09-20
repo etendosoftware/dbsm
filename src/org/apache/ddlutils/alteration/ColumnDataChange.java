@@ -116,6 +116,8 @@ public class ColumnDataChange implements DataChange {
         && this._columnname.equals(otherChange._columnname)
         && ((_oldValue == null && otherChange._oldValue == null) || (_oldValue != null
             && otherChange._oldValue != null && this._oldValue.equals(otherChange._oldValue)))
-        && this._newValue.equals(otherChange._newValue) && this._pkRow.equals(otherChange._pkRow);
+        && ((_newValue == null && otherChange._newValue == null) || (_newValue != null
+            && otherChange._newValue != null && this._newValue.equals(otherChange._newValue)))
+        && this._pkRow.equals(otherChange._pkRow);
   }
 }
