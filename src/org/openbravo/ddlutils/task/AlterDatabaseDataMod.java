@@ -81,6 +81,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
   @Override
   protected void doExecute() {
+    getLog()
+        .info(
+            "Note: this task doesn't work with modules with more than one dbprefix. You should be using the normal update.database task instead.");
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     if (module == null || module.equals("")) {
