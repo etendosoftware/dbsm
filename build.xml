@@ -43,7 +43,7 @@
     <delete dir="${build.db.docs}" failonerror="false" includeemptydirs="true" />
   </target>
 
-  <target name="compile" depends="clean, init">
+  <target name="compile" depends="init">
     <javac srcdir="${build.db.src}" destdir="${build.db.classes}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source">
       <classpath refid="db.class.path" />
     </javac>
@@ -61,17 +61,6 @@
     </jar>
   </target>
 
-  <target name="build.light.jar">
-    <jar destfile="${build.db.lib}/dbsourcemanagerlight.jar">
-      <fileset dir="${build.db.classes}">
-        <exclude name="**/ExportDataXMLMod.class" />
-      </fileset>
-      <manifest>
-        <attribute name="Built-By" value="Openbravo S.L.U." />
-      </manifest>
-    </jar>
-  </target>
-
 
   <target name="doc" depends="init" description="Generate api">
     <javadoc packagenames="*" sourcepath="${build.db.src}" destdir="${build.db.docs}" author="true" version="true" use="true" docencoding="UTF-8" encoding="UTF-8" failonerror="false" windowtitle="${ant.project.name}">
@@ -79,7 +68,7 @@
     </javadoc>
   </target>
 
-  <target name="jar" depends="compile, build.jar, build.light.jar">
+  <target name="jar" depends="compile, build.jar">
   </target>
 
   <target name="build" depends="jar, doc">
