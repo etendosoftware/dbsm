@@ -1,7 +1,6 @@
 package org.apache.ddlutils.platform.postgresql;
 
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
 
 public class PostgrePLSQLTriggerStandarization extends PostgrePLSQLStandarization {
@@ -43,9 +42,6 @@ public class PostgrePLSQLTriggerStandarization extends PostgrePLSQLStandarizatio
      * exec(String s) { int i = s.lastIndexOf("END "); return i >= 0 ? s.substring(0, i +
      * 4)+trigger.getName() : s; } });
      */
-
-    Trigger f = database.getTrigger(numTrigger);
-    String body = f.getBody();
 
     for (int i = 0; i < patternsOutFunctions.size(); i++) {
       // if(body.contains(outFunctions.get(i)))
