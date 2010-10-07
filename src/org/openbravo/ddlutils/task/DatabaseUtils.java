@@ -207,6 +207,7 @@ public class DatabaseUtils {
     }
   }
 
+  @Deprecated
   public static ExcludeFilter getExcludeFilter(String filtername) {
     try {
       return (ExcludeFilter) Class.forName(filtername).newInstance();

@@ -125,6 +125,7 @@ public class DBSMOBUtil {
     return false;
   }
 
+  @Deprecated
   public void getModules(Platform platform, String excludeobjects) {
     final ExcludeFilter filter = DatabaseUtils.getExcludeFilter(excludeobjects);
     getLog()
