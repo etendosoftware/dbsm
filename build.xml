@@ -44,7 +44,7 @@
   </target>
 
   <target name="compile" depends="init">
-    <javac srcdir="${build.db.src}" destdir="${build.db.classes}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source">
+    <javac srcdir="${build.db.src}" destdir="${build.db.classes}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
       <classpath refid="db.class.path" />
     </javac>
     <copy todir="${build.db.classes}">
