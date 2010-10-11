@@ -49,9 +49,7 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
 
     // Varchar Type
     append(new ByLineTranslation(new ReplacePatTranslation(
-        "(.*)([\\s|\\t])([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr]2)(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "(.*)([\\s|\\t])([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr])(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
+        "(.*)([\\s|\\t])([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr]2?)(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
     append(new ByLineTranslation(new ReplacePatTranslation(
         "(.*)([\\s|\\t])([Vv][Aa][Rr][Cc][Hh][Aa][Rr]2)(.*)", "$1$2VARCHAR$4 --OBTG:$3--")));
     append(new ReplaceStrTranslation(" BYTE)", ")"));

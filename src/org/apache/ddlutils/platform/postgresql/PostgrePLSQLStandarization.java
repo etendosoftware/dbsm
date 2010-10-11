@@ -32,11 +32,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
     // Varchar Type
     append(new ByLineTranslation(new ReplacePatTranslation(
-        "(.*)([\\s|\\t])VARCHAR(.*) --OBTG:([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr]2)--", "$1$2$4$3")));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "(.*)([\\s|\\t])VARCHAR(.*) --OBTG:([Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr]--)", "$1$2$4$3")));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "(.*)([\\s|\\t])VARCHAR(.*) --OBTG:([Vv][Aa][Rr][Cc][Hh][Aa][Rr]2)--", "$1$2$4$3")));
+        "(.*)([\\s|\\t])VARCHAR(.*) --OBTG:([Nn]?[Vv][Aa][Rr][Cc][Hh][Aa][Rr]2?)--", "$1$2$4$3")));
 
     // TimeStamp Type
     append(new ReplaceStrTranslation(" TIMESTAMP,", " DATE,"));
