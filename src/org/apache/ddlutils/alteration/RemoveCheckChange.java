@@ -90,6 +90,13 @@ public class RemoveCheckChange extends TableChangeImplBase {
     else
       table = database.findTable(_tableName);
 
+    // We will not try to apply the change if the table doesn't exist in the model
+    // This could happen in update.database.mod if a configuration script has this change
+    // which makes a reference to an object which doesn't belong to the module
+    if (table == null) {
+      return;
+    }
+
     Check check = null;
 
     if (_checkName == null)
