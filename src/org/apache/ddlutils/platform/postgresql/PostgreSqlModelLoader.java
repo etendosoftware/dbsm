@@ -16,7 +16,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,9 +28,12 @@ import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
+import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
@@ -154,27 +156,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   @Override
   protected void initMetadataSentences() throws SQLException {
     String sql;
-    try {
-      PreparedStatement s = _connection
-          .prepareStatement("CREATE OR REPLACE FUNCTION temp_findinarray(conkey _int4, attnum int4)  RETURNS int4 AS \n"
-              + "$BODY$\n"
-              + " DECLARE i integer; "
-              + "begin "
-              + "for i in 1..array_upper(conkey,1)"
-              + "  loop     "
-              + "     IF (conkey[i] = attnum) THEN"
-              + "	RETURN i;"
-              + "     END IF;"
-              + "  end loop;  "
-              + "  return 0;"
-              + " end; \n"
-              + "$BODY$\n"
-              + " LANGUAGE 'plpgsql' VOLATILE");
-      s.execute();
-      s.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
 
     if (_filter.getExcludedTables().length == 0) {
       _stmt_listtables = _connection
@@ -309,14 +290,15 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + "\\\\_%' OR (UPPER(PG_CLASS.RELNAME::TEXT)||UPPER(PG_CLASS1.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY UPPER(PG_CLASS.RELNAME)");
 
-    _stmt_indexcolumns = _connection.prepareStatement("SELECT upper(pg_attribute.attname::text) "
-        + "FROM pg_index, pg_class, pg_namespace, pg_attribute"
-        + " WHERE pg_index.indexrelid = pg_class.oid"
-        + " AND pg_attribute.attrelid = pg_index.indrelid"
-        + " AND pg_attribute.attnum = ANY (indkey)"
-        + " AND pg_class.relnamespace = pg_namespace.oid"
-        + " AND pg_namespace.nspname = current_schema()" + " AND pg_class.relname = ?"
-        + " ORDER BY temp_findinarray(pg_index.indkey, pg_attribute.attnum)");
+    _stmt_indexcolumns = _connection
+        .prepareStatement("SELECT upper(pg_attribute.attname::text), pg_attribute.attnum, array_to_string(pg_index.indkey,',') "
+            + "FROM pg_index, pg_class, pg_namespace, pg_attribute"
+            + " WHERE pg_index.indexrelid = pg_class.oid"
+            + " AND pg_attribute.attrelid = pg_index.indrelid"
+            + " AND pg_attribute.attnum = ANY (indkey)"
+            + " AND pg_class.relnamespace = pg_namespace.oid"
+            + " AND pg_namespace.nspname = current_schema() AND pg_class.relname = ?"
+            + " ORDER BY pg_attribute.attnum");
 
     sql = "SELECT pg_constraint.conname"
         + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
@@ -334,11 +316,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + _moduleId + "')))" + " ORDER BY upper(pg_constraint.conname::text)");
 
     _stmt_uniquecolumns = _connection
-        .prepareStatement("SELECT upper(pg_attribute.attname::text)"
+        .prepareStatement("SELECT upper(pg_attribute.attname::text), pg_attribute.attnum, array_to_string(pg_constraint.conkey,',') "
             + " FROM pg_constraint, pg_class, pg_attribute"
             + " WHERE pg_constraint.conrelid = pg_class.oid AND pg_attribute.attrelid = pg_constraint.conrelid AND (pg_attribute.attnum = ANY (pg_constraint.conkey))"
-            + " AND pg_constraint.conname = ?"
-            + " ORDER BY temp_findinarray(pg_constraint.conkey, pg_attribute.attnum)");
+            + " AND pg_constraint.conname = ?" + " ORDER BY pg_attribute.attnum");
 
     if (_filter.getExcludedViews().length == 0) {
       sql = "SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views "
@@ -420,14 +401,12 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     if (_filter.getExcludedFunctions().length == 0) {
       sql = "select distinct proname from pg_proc p, pg_namespace n "
           + "where  pronamespace = n.oid " + "and n.nspname=current_schema() "
-          + "and p.oid not in (select tgfoid " + "from pg_trigger) "
-          + "and p.proname <> 'temp_findinarray'";
+          + "and p.oid not in (select tgfoid " + "from pg_trigger) ";
     } else {
       sql = "select distinct proname from pg_proc p, pg_namespace n "
           + "where  pronamespace = n.oid " + "and n.nspname=current_schema() "
           + "and p.oid not in (select tgfoid " + "from pg_trigger) "
-          + "and p.proname <> 'temp_findinarray'" + "AND upper(p.proname) NOT IN ("
-          + getListObjects(_filter.getExcludedFunctions()) + ")";
+          + "AND upper(p.proname) NOT IN (" + getListObjects(_filter.getExcludedFunctions()) + ")";
     }
     if (_prefix != null) {
       sql += " AND (upper(proname) LIKE '"
@@ -504,9 +483,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     _stmt_functionparams.close();
     _stmt_paramtypes.close();
 
-    Statement s = _connection.createStatement();
-    s.executeUpdate("DROP FUNCTION temp_findinarray(conkey _int4, attnum int4)");
-    s.close();
   }
 
   int numDefaults;
@@ -967,4 +943,61 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     }
   }
 
+  protected Index readIndex(ResultSet rs) throws SQLException {
+    String indexRealName = rs.getString(1);
+    String indexName = indexRealName.toUpperCase();
+
+    final Index inx = new Index();
+
+    inx.setName(indexName);
+    inx.setUnique(translateUniqueness(rs.getString(2)));
+
+    final ArrayList<String> apositions = new ArrayList<String>();
+    final HashMap<String, IndexColumn> colMap = new HashMap<String, IndexColumn>();
+    _stmt_indexcolumns.setString(1, indexRealName);
+    fillList(_stmt_indexcolumns, new RowFiller() {
+      public void fillRow(ResultSet r) throws SQLException {
+        apositions.add(r.getString(3));
+        IndexColumn inxcol = new IndexColumn();
+        inxcol.setName(r.getString(1));
+        colMap.put(r.getString(2), inxcol);
+      }
+    });
+
+    if (apositions.size() > 0) {
+      for (String pos : (apositions.get(0).split(","))) {
+        inx.addColumn(colMap.get(pos));
+      }
+    }
+    return inx;
+  }
+
+  protected Unique readUnique(ResultSet rs) throws SQLException {
+    // similar to readTable, see there for definition of both (regarding case)
+    String constraintRealName = rs.getString(1);
+    String constraintName = constraintRealName.toUpperCase();
+
+    final Unique uni = new Unique();
+
+    uni.setName(constraintName);
+
+    final ArrayList<String> apositions = new ArrayList<String>();
+    final HashMap<String, IndexColumn> colMap = new HashMap<String, IndexColumn>();
+    _stmt_uniquecolumns.setString(1, constraintRealName);
+    fillList(_stmt_uniquecolumns, new RowFiller() {
+      public void fillRow(ResultSet r) throws SQLException {
+        apositions.add(r.getString(3));
+        IndexColumn inxcol = new IndexColumn();
+        inxcol.setName(r.getString(1));
+        colMap.put(r.getString(2), inxcol);
+      }
+    });
+
+    if (apositions.size() > 0) {
+      for (String pos : (apositions.get(0).split(","))) {
+        uni.addColumn(colMap.get(pos));
+      }
+    }
+    return uni;
+  }
 }
