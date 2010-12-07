@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009 Openbravo SLU 
+ * All portions are Copyright (C) 2009-2010 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -22,9 +22,9 @@ import java.io.File;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
@@ -63,15 +63,11 @@ public class CheckAPI extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
+    // create platform object without access to dbms (as not needed here)
+    final String databaseName = new PlatformUtils().determineDatabaseType(getDriver(), getUrl());
+    final Platform platform = PlatformFactory.createNewPlatformInstance(databaseName);
 
-    final BasicDataSource ds = new BasicDataSource();
-    ds.setDriverClassName(getDriver());
-    ds.setUrl(getUrl());
-    ds.setUsername(getUser());
-    ds.setPassword(getPassword());
-
-    final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    getLog().info("Using database platform: " + databaseName);
 
     File stableModel = new File(stableDBdir, "/model");
     File stableData = new File(stableDBdir, "/sourcedata");
