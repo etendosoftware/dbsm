@@ -195,7 +195,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), currentdb));
       dataComparator.compare(xmlModel, databaseModel, platform, databaseOrgData, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();

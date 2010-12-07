@@ -34,16 +34,11 @@ public class DataComparator {
   /** Whether comparison is case sensitive. */
   private boolean _caseSensitive;
   private Vector<Change> dataChanges = new Vector<Change>();
-  private DatabaseFilter _databasefilter = null;
   private List modelChanges;
 
   public DataComparator(PlatformInfo platformInfo, boolean caseSensitive) {
     _platformInfo = platformInfo;
     _caseSensitive = caseSensitive;
-  }
-
-  public void setFilter(DatabaseFilter filter) {
-    _databasefilter = filter;
   }
 
   private class ChangeComparator implements Comparator<Change> {

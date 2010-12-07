@@ -89,8 +89,6 @@ public class CheckAPI extends BaseDatabaseTask {
     getLog().info("Comparing data models");
     final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
         .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-    dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
-        "com.openbravo.db.OpenbravoMetadataFilter", dbModelStable));
     dataComparator.compare(dbDataStable, dbDataTest);
 
     getLog().info("Validating model API");

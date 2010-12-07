@@ -219,8 +219,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
             OBDataset ad = new OBDataset(databaseOrgData, "AD");
             final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
                 .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-            dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(
-                "com.openbravo.db.OpenbravoMetadataFilter", db));
             getLog().info("Comparing models");
             dataComparator.compare(db, db, platform, databaseXMLData, ad,
                 util.getActiveModule(i).idMod);

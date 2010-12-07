@@ -176,7 +176,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), db));
       dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
       getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
@@ -208,7 +207,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator2.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
       dataComparator2.compare(db, db, platform, databaseOrgData, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();

@@ -374,7 +374,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
           datafilter, input);
       final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator2.setFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), originaldb));
       dataComparator2.compare(dbXML, dbXML, platform, databaseOrgData2, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();
