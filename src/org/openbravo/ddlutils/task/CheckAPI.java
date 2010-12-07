@@ -115,8 +115,6 @@ public class CheckAPI extends BaseDatabaseTask {
 
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
-    dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
-        "com.openbravo.db.OpenbravoMetadataFilter", xmlModel));
 
     DataReader dataReader = dbdio.getConfiguredCompareDataReader(xmlModel);
 
