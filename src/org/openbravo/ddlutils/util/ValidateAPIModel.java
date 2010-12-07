@@ -267,8 +267,9 @@ public class ValidateAPIModel extends ValidateAPI {
           errors.add("Column changed to auto increment: column" + tableColumn);
         } else if (change instanceof ColumnRequiredChange) {
           ColumnRequiredChange c = (ColumnRequiredChange) change;
-          if (!validDB.findTable(tablename).findColumn(columnname).isRequired()
-              && c.getChangedColumn().isRequired()) {
+          boolean oldRequired = c.getChangedColumn().isRequired();
+          boolean newRequired = testDB.findTable(tablename).findColumn(columnname).isRequired();
+          if (!oldRequired && newRequired) {
             errors.add("Column change from not required to required: column: " + tableColumn);
           }
         } else if (change instanceof ColumnSizeChange) {
