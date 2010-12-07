@@ -3,6 +3,7 @@ package org.openbravo.ddlutils.util;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -16,10 +17,11 @@ public class OBDataset {
 
   public OBDataset(DatabaseData databaseData, String name) {
     Database database = databaseData.getDatabase();
-    DynaBean dataset = searchDynaBean(databaseData.getRowsFromTable("AD_DATASET"), name, "NAME");
+    DynaBean dataset = DatabaseData.searchDynaBean(databaseData.getRowsFromTable("AD_DATASET"),
+        name, "NAME");
     Vector<DynaBean> alldsTables = databaseData.getRowsFromTable("AD_DATASET_TABLE");
-    Vector<DynaBean> dsTables = searchDynaBeans(alldsTables, dataset.get("AD_DATASET_ID")
-        .toString(), "AD_DATASET_ID");
+    List<DynaBean> dsTables = DatabaseData.searchDynaBeans(alldsTables, dataset
+        .get("AD_DATASET_ID").toString(), "AD_DATASET_ID");
     Vector<DynaBean> adTables = databaseData.getRowsFromTable("AD_TABLE");
     for (DynaBean dsTable : dsTables) {
       OBDatasetTable table = new OBDatasetTable();
@@ -30,24 +32,24 @@ public class OBDataset {
           .get("SECONDARYWHERECLAUSE").toString());
       table.setIncludeAllColumns(dsTable.get("INCLUDEALLCOLUMNS").toString().equals("Y"));
       table.setExcludeAuditInfo(dsTable.get("EXCLUDEAUDITINFO").toString().equals("Y"));
-      DynaBean adTable = searchDynaBean(adTables, dsTable.get("AD_TABLE_ID").toString(),
-          "AD_TABLE_ID");
+      DynaBean adTable = DatabaseData.searchDynaBean(adTables, dsTable.get("AD_TABLE_ID")
+          .toString(), "AD_TABLE_ID");
       table.setName(adTable.get("TABLENAME").toString());
       if (table.isIncludeAllColumns()) {
-        Vector<DynaBean> dsCols = searchDynaBeans(databaseData
+        List<DynaBean> dsCols = DatabaseData.searchDynaBeans(databaseData
             .getRowsFromTable("AD_DATASET_COLUMN"), dsTable.get("AD_DATASET_TABLE_ID").toString(),
             "AD_DATASET_TABLE_ID");
-        Vector<DynaBean> excludedCols = searchDynaBeans(dsCols, "Y", "ISEXCLUDED");
+        List<DynaBean> excludedCols = DatabaseData.searchDynaBeans(dsCols, "Y", "ISEXCLUDED");
         for (DynaBean dsCol : dsCols) {
-          DynaBean adCol = searchDynaBean(databaseData.getRowsFromTable("AD_COLUMN"), dsCol.get(
-              "AD_COLUMN_ID").toString(), "AD_COLUMN_ID");
+          DynaBean adCol = DatabaseData.searchDynaBean(databaseData.getRowsFromTable("AD_COLUMN"),
+              dsCol.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID");
           if (adCol.get("ISTRANSIENT").toString().equals("Y")) {
             excludedCols.add(adCol);
           }
         }
         Vector<String> excludedColNames = new Vector<String>();
         for (DynaBean db : excludedCols) {
-          String colName = searchDynaBean(databaseData.getRowsFromTable("AD_COLUMN"),
+          String colName = DatabaseData.searchDynaBean(databaseData.getRowsFromTable("AD_COLUMN"),
               db.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get("COLUMNNAME").toString();
           excludedColNames.add(colName.toUpperCase());
         }
@@ -60,23 +62,6 @@ public class OBDataset {
       }
     }
 
-  }
-
-  private DynaBean searchDynaBean(Vector<DynaBean> vector, String name, String property) {
-    for (DynaBean bean : vector) {
-      if (bean.get(property).toString().equalsIgnoreCase(name))
-        return bean;
-    }
-    return null;
-  }
-
-  private Vector<DynaBean> searchDynaBeans(Vector<DynaBean> vector, String name, String property) {
-    Vector<DynaBean> dbs = new Vector<DynaBean>();
-    for (DynaBean bean : vector) {
-      if (bean.get(property).toString().equalsIgnoreCase(name))
-        dbs.add(bean);
-    }
-    return dbs;
   }
 
   public OBDatasetTable getTable(String tablename) {

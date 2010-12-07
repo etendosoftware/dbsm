@@ -1,6 +1,7 @@
 package org.apache.ddlutils.model;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -218,4 +219,44 @@ public class DatabaseData {
   public Database getDatabase() {
     return _model;
   }
+
+  /**
+   * Searches for a value of a field in a list of DynaBeans
+   * 
+   * @param vector
+   *          List to be searched
+   * @param name
+   *          Name of a field
+   * @param property
+   *          Value of the field
+   * @return The first DynaBean having this value in the specified field
+   */
+  public static DynaBean searchDynaBean(List<DynaBean> vector, String name, String property) {
+    for (DynaBean bean : vector) {
+      if (bean.get(property).toString().equalsIgnoreCase(name))
+        return bean;
+    }
+    return null;
+  }
+
+  /**
+   * Searches for a value of a field in a list of DynaBeans
+   * 
+   * @param vector
+   *          List to be searched
+   * @param name
+   *          Name of a field
+   * @param property
+   *          Value of the field
+   * @return List of all DynaBean having this value in the specified field
+   */
+  public static List<DynaBean> searchDynaBeans(List<DynaBean> vector, String name, String property) {
+    Vector<DynaBean> dbs = new Vector<DynaBean>();
+    for (DynaBean bean : vector) {
+      if (bean.get(property).toString().equalsIgnoreCase(name))
+        dbs.add(bean);
+    }
+    return dbs;
+  }
+
 }
