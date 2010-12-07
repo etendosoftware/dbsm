@@ -17,7 +17,6 @@ import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.io.DatabaseDataIO;
-import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
