@@ -943,6 +943,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     }
   }
 
+  @Override
   protected Index readIndex(ResultSet rs) throws SQLException {
     String indexRealName = rs.getString(1);
     String indexName = indexRealName.toUpperCase();
@@ -952,8 +953,22 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     inx.setName(indexName);
     inx.setUnique(translateUniqueness(rs.getString(2)));
 
+    /*
+     * Note: only element 0 of this list will ever be used.
+     * 
+     * Contains a ','-separated strings of the indices of the index-column into the positions of the
+     * corresponding columns in the table. Example if an index has the fourth,second,third column of
+     * a table this contains the string "4,2,3"
+     */
     final ArrayList<String> apositions = new ArrayList<String>();
+
+    /*
+     * This maps the columnIndex of an index-column (in the list of columns of the table) to its
+     * IndexColumn object. Example: If an IndexColumn is defined on the second column in the table
+     * this map is <2,IndexColumn>
+     */
     final HashMap<String, IndexColumn> colMap = new HashMap<String, IndexColumn>();
+
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
@@ -964,6 +979,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       }
     });
 
+    /*
+     * Re-order the IndexColumn into the correct order (based on index-definition) as they are read
+     * without ordering them from the metadata
+     */
     if (apositions.size() > 0) {
       for (String pos : (apositions.get(0).split(","))) {
         inx.addColumn(colMap.get(pos));
@@ -972,6 +991,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     return inx;
   }
 
+  @Override
   protected Unique readUnique(ResultSet rs) throws SQLException {
     // similar to readTable, see there for definition of both (regarding case)
     String constraintRealName = rs.getString(1);
@@ -981,8 +1001,22 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     uni.setName(constraintName);
 
+    /*
+     * Note: only element 0 of this list will ever be used.
+     * 
+     * Contains a ','-separated strings of the indices of the index-column into the positions of the
+     * corresponding columns in the table. Example if an index has the fourth,second,third column of
+     * a table this contains the string "4,2,3"
+     */
     final ArrayList<String> apositions = new ArrayList<String>();
+
+    /*
+     * This maps the columnIndex of an index-column (in the list of columns of the table) to its
+     * IndexColumn object. Example: If an IndexColumn is defined on the second column in the table
+     * this map is <2,IndexColumn>
+     */
     final HashMap<String, IndexColumn> colMap = new HashMap<String, IndexColumn>();
+
     _stmt_uniquecolumns.setString(1, constraintRealName);
     fillList(_stmt_uniquecolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
@@ -993,6 +1027,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       }
     });
 
+    /*
+     * Re-order the IndexColumn into the correct order (based on index-definition) as they are read
+     * without ordering them from the metadata
+     */
     if (apositions.size() > 0) {
       for (String pos : (apositions.get(0).split(","))) {
         uni.addColumn(colMap.get(pos));
