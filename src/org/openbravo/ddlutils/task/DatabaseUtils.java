@@ -24,15 +24,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.DynamicDatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
 
 public class DatabaseUtils {
+  private static final Logger log = Logger.getLogger(DatabaseUtils.class);
 
   /** Creates a new instance of DatabaseUtils */
   private DatabaseUtils() {
@@ -237,6 +241,48 @@ public class DatabaseUtils {
         return a.getName().compareTo(b.getName());
       }
     }
+  }
+
+  /**
+   * Reads the model recursively from core + modules.
+   * 
+   * @param model
+   *          should point to <erpBaseDir>/src-db/database/model
+   * @param basedir
+   *          <erpBaseDir>/modules
+   * @param dirFilter
+   *          i.e. \*\/src-db/database/model
+   * @return Database object representing the loaded model
+   */
+  // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
+  static Database readDatabaseModel(File model, String basedir, String dirFilter) {
+    Database db = null;
+    if (basedir == null) {
+      log.info("Basedir for additional files not specified. Updating database with just Core.");
+      db = DatabaseUtils.readDatabase(model);
+    } else {
+      // We read model files using the filter, obtaining a file array.
+      // The models will be merged
+      // to create a final target model.
+      final Vector<File> dirs = new Vector<File>();
+      dirs.add(model);
+      final DirectoryScanner dirScanner = new DirectoryScanner();
+      dirScanner.setBasedir(new File(basedir));
+      final String[] dirFilterA = { dirFilter };
+      dirScanner.setIncludes(dirFilterA);
+      dirScanner.scan();
+      final String[] incDirs = dirScanner.getIncludedDirectories();
+      for (int j = 0; j < incDirs.length; j++) {
+        final File dirF = new File(basedir, incDirs[j]);
+        dirs.add(dirF);
+      }
+      final File[] fileArray = new File[dirs.size()];
+      for (int i = 0; i < dirs.size(); i++) {
+        fileArray[i] = dirs.get(i);
+      }
+      db = DatabaseUtils.readDatabase(fileArray);
+    }
+    return db;
   }
 
 }
