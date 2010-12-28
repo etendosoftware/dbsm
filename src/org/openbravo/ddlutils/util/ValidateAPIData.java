@@ -45,7 +45,11 @@ public class ValidateAPIData extends ValidateAPI {
 
     if (change instanceof RemoveRowChange) {
       RemoveRowChange c = (RemoveRowChange) change;
-      if (!c.getTable().getName().equalsIgnoreCase("AD_TextInterfaces")) {
+      String tableName = c.getTable().getName();
+      boolean allowedChange = "AD_TextInterfaces".equalsIgnoreCase(tableName);
+      allowedChange |= "AD_MODULE_DEPENDENCY".equalsIgnoreCase(tableName);
+
+      if (!allowedChange) {
         errors.add("Removed row from table "
             + c.getTable().getName()
             + " - ID: "
@@ -66,8 +70,6 @@ public class ValidateAPIData extends ValidateAPI {
       error = error
           || (tableName.equals("AD_MODULE") && (columnName.equals("NAME")
               || columnName.equals("JAVAPACKAGE") || columnName.equals("TYPE")));
-      error = error || (tableName.equals("AD_MODULE_DBPREFIX"));
-      error = error || (tableName.equals("AD_MODULE_DEPENDENCY"));
       error = error || (tableName.equals("AD_MODULE_DBPREFIX"));
       error = error || (tableName.equals("AD_PACKAGE") && columnName.equals("JAVAPACKAGE"));
       error = error
