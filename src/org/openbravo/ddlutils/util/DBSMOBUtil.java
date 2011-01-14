@@ -932,8 +932,9 @@ public class DBSMOBUtil {
   }
 
   public static boolean isApplied(Platform platform, String template) {
-    Connection con = platform.borrowConnection();
+    Connection con = null;
     try {
+      con = platform.borrowConnection();
       PreparedStatement ps = con
           .prepareStatement("SELECT ISCONFIGSCRIPTAPPLIED FROM AD_MODULE WHERE JAVAPACKAGE='"
               + template + "'");
@@ -951,7 +952,9 @@ public class DBSMOBUtil {
       // we will apply the template
       return true;
     } finally {
-      platform.returnConnection(con);
+      if (con != null) {
+        platform.returnConnection(con);
+      }
     }
   }
 
