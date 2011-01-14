@@ -128,7 +128,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       databaseOrgData.setStrictMode(strict);
       DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-          basedir, datafilter, input, strict);
+          basedir, datafilter, input, strict, false);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
       if (hasBeenModified) {
@@ -172,6 +172,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       ModuleScriptHandler hd = new ModuleScriptHandler();
       hd.setBasedir(new File(basedir + "/../"));
       hd.execute();
+
+      // Now we apply the configuration scripts
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false);
 
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()

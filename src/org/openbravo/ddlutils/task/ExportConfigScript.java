@@ -121,7 +121,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
           }
           File configScript = new File(moduledir, util.getModule(j).dir
               + "/src-db/database/configScript.xml");
-          if (!util.getModule(j).dir.equals(industryTemplate) && configScript.exists())
+          if (!util.getModule(j).dir.equals(industryTemplate) && configScript.exists()
+              && DBSMOBUtil.isApplied(platform, util.getModule(j).dir))
             configScripts.add(configScript);
         }
       }

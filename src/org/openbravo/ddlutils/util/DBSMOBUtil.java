@@ -834,6 +834,13 @@ public class DBSMOBUtil {
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input,
       boolean strict) {
+    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input,
+        strict, true);
+  }
+
+  public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
+      Database originaldb, Database db, String basedir, String datafilter, File input,
+      boolean strict, boolean applyConfigScripts) {
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
     dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
@@ -853,7 +860,6 @@ public class DBSMOBUtil {
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
-    Vector<File> configScripts = new Vector<File>();
     for (int j = 0; j < incDirs.length; j++) {
       final File dirFolder = new File(basedir, incDirs[j] + "/");
       final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
@@ -878,11 +884,21 @@ public class DBSMOBUtil {
         e.printStackTrace();
       }
     }
+    if (applyConfigScripts) {
+      applyConfigScripts(platform, databaseOrgData, db, basedir, strict);
+    }
+  }
+
+  public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,
+      String basedir, boolean strict) {
 
     getLog().info("Loading and applying configuration scripts");
+    Vector<File> configScripts = new Vector<File>();
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     for (String template : sortedTemplates) {
-
+      if (!isApplied(platform, template)) {
+        continue;
+      }
       File configScript = new File(new File(basedir), "/" + template
           + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
@@ -915,6 +931,30 @@ public class DBSMOBUtil {
     }
   }
 
+  public static boolean isApplied(Platform platform, String template) {
+    Connection con = platform.borrowConnection();
+    try {
+      PreparedStatement ps = con
+          .prepareStatement("SELECT ISCONFIGSCRIPTAPPLIED FROM AD_MODULE WHERE JAVAPACKAGE='"
+              + template + "'");
+      ps.execute();
+      ResultSet rs = ps.getResultSet();
+      rs.next();
+      String st = rs.getString(1);
+      if (st.equalsIgnoreCase("N")) {
+        return false;
+      } else {
+        return true;
+      }
+    } catch (Exception e) {
+      // In case we cannot read the column (maybe it doesn't exist)
+      // we will apply the template
+      return true;
+    } finally {
+      platform.returnConnection(con);
+    }
+  }
+
   public void removeSortedTemplates(Platform platform, DatabaseData databaseOrgData, String basedir) {
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
       boolean isindevelopment = false;
@@ -924,6 +964,9 @@ public class DBSMOBUtil {
         }
       }
       if (isindevelopment) {
+        continue;
+      }
+      if (!isApplied(platform, sortedTemplates.get(i))) {
         continue;
       }
       File configScript = new File(new File(basedir), "/" + sortedTemplates.get(i)
@@ -966,6 +1009,9 @@ public class DBSMOBUtil {
         }
       }
       if (isindevelopment) {
+        continue;
+      }
+      if (!isApplied(platform, sortedTemplates.get(i))) {
         continue;
       }
       File configScript = new File(new File(basedir), "/" + sortedTemplates.get(i)
