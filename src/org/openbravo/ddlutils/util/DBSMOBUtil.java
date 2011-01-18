@@ -840,7 +840,7 @@ public class DBSMOBUtil {
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input,
-      boolean strict, boolean applyConfigScripts) {
+      boolean strict, boolean applyConfigScriptData) {
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
     dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
@@ -884,20 +884,23 @@ public class DBSMOBUtil {
         e.printStackTrace();
       }
     }
-    if (applyConfigScripts) {
-      applyConfigScripts(platform, databaseOrgData, db, basedir, strict);
-    }
+    applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
   }
 
   public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,
-      String basedir, boolean strict) {
+      String basedir, boolean strict, boolean applyConfigScriptData) {
 
     getLog().info("Loading and applying configuration scripts");
     Vector<File> configScripts = new Vector<File>();
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     for (String template : sortedTemplates) {
-      if (!isApplied(platform, template)) {
-        continue;
+      boolean isApplied = isApplied(platform, template);
+      if (isApplied) {
+        if (applyConfigScriptData) {
+          getLog().info("Applying data part of configuration script: " + template);
+        } else {
+          getLog().info("Applying structure part of configuration script: " + template);
+        }
       }
       File configScript = new File(new File(basedir), "/" + template
           + "/src-db/database/configScript.xml");
@@ -909,7 +912,7 @@ public class DBSMOBUtil {
         for (Change change : changes) {
           if (change instanceof ModelChange)
             ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange) {
+          else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
             boolean applied = ((DataChange) change).apply(databaseOrgData, platform
                 .isDelimitedIdentifierModeOn());
             if (strict && !applied) {
