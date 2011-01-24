@@ -97,6 +97,7 @@ public class CheckAPI extends BaseDatabaseTask {
 
     validateModel.printErrors(getLog());
     validateModel.printWarnings(getLog());
+    validateModel.printInfos(getLog());
     validateData.printErrors(getLog());
     validateData.printWarnings(getLog());
 

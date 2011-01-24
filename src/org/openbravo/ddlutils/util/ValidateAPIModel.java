@@ -21,6 +21,8 @@ package org.openbravo.ddlutils.util;
 
 import java.sql.Types;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddCheckChange;
@@ -53,6 +55,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.util.ExtTypes;
@@ -158,8 +161,41 @@ public class ValidateAPIModel extends ValidateAPI {
               + validCheck.getName() + " from condition: [" + validCheck.getCondition() + "] to ["
               + c.getNewCheck().getCondition() + "]");
         } else {
-          errors.add("Check Constraint addition: table: " + tablename + " - Constraint: "
-              + c.getNewCheck().getName());
+          /*
+           * check if that new check-constraint is the usual boolean constraint. and if it is also
+           * based on a newly added column. Together when adding new column + new boolean constraint
+           * in same run of api-check -> no complaint should be generated
+           */
+          boolean ignoreStdBooleanConstraintNewColumn = false;
+
+          String constraintDef = c.getNewCheck().getCondition();
+          Pattern p = Pattern.compile("^(.+) IN \\('Y', 'N'\\)$");
+          Matcher m = p.matcher(constraintDef);
+          // pattern matches usual boolean constraint?
+          if (m.find()) {
+            String columnName = m.group(1);
+            String tableName = c.getChangedTable().getName();
+
+            Table oldTable = validDB.findTable(tableName);
+            Table newTable = testDB.findTable(tableName);
+            Column oldColumn = oldTable.findColumn(columnName);
+            Column newColumn = newTable.findColumn(columnName);
+
+            // ignore, if column 'appeared' in same api-checks run
+            if (oldColumn == null && newColumn != null) {
+              ignoreStdBooleanConstraintNewColumn = true;
+            }
+          }
+          if (ignoreStdBooleanConstraintNewColumn) {
+            infos
+                .add("Ignoring Check Constraint addition as it is the 'standard' boolean check constraint for a new column added in the same api-check run");
+            infos.add("  table: " + tablename + " - Constraint: " + c.getNewCheck().getName()
+                + " defined as: " + c.getNewCheck().getCondition());
+          } else {
+            errors.add("Check Constraint addition: table: " + tablename + " - Constraint: "
+                + c.getNewCheck().getName() + " defined as: " + c.getNewCheck().getCondition());
+          }
+
         }
       } else if (change instanceof AddIndexChange) {
         AddIndexChange c = (AddIndexChange) change;
@@ -336,4 +372,5 @@ public class ValidateAPIModel extends ValidateAPI {
     }
     return rt.substring(0, rt.length() - 2);
   }
+
 }

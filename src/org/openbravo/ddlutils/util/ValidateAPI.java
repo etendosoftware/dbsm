@@ -20,6 +20,7 @@
 package org.openbravo.ddlutils.util;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -30,6 +31,7 @@ public abstract class ValidateAPI {
 
   ArrayList<String> errors;
   ArrayList<String> warnings;
+  List<String> infos;
   ValidationType valType;
 
   abstract public void execute();
@@ -37,6 +39,7 @@ public abstract class ValidateAPI {
   public ValidateAPI() {
     errors = new ArrayList<String>();
     warnings = new ArrayList<String>();
+    infos = new ArrayList<String>();
   }
 
   public boolean hasErrors() {
@@ -109,6 +112,35 @@ public abstract class ValidateAPI {
       log.warn("\n");
     else
       System.out.println("");
+  }
+
+  public void printInfos(Logger log) {
+    if (infos.size() == 0)
+      return;
+    if (log != null) {
+      log.info("\n");
+      log.info("+++++++++++++++++++++++++++++++++++++++++++++++++++");
+      log.info("  Infos in API " + (valType.equals(ValidationType.DATA) ? "data" : "model")
+          + " validation");
+      log.info("+++++++++++++++++++++++++++++++++++++++++++++++++++");
+    } else {
+      System.out.println("\n");
+      System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
+      System.out.println("  Infos in API "
+          + (valType.equals(ValidationType.DATA) ? "data" : "model") + " validation");
+      System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
+    }
+    for (String info : infos) {
+      if (log != null)
+        log.info("  " + info);
+      else
+        System.out.println("  " + info);
+    }
+    if (log != null)
+      log.info("\n");
+    else
+      System.out.println("");
+
   }
 
 }
