@@ -112,6 +112,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /** Whether read foreign keys shall be sorted alphabetically. */
   private boolean _foreignKeysSorted = true;
 
+  private boolean _ignoreWarns = true;
+
   /**
    * {@inheritDoc}
    */
@@ -400,8 +402,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             }
             it.remove();
           } catch (SQLException ex) {
-
-            _log.warn("SQL Command failed with: " + ex.getMessage());
+            String error = "SQL Command failed with: " + ex.getMessage();
+            if (!_ignoreWarns) {
+              _log.warn(error);
+            } else {
+              _log.info(error);
+            }
             if (_log.isDebugEnabled()) {
               _log.debug(ex);
             }
@@ -418,8 +424,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
 
       if (!aForcedCommands.isEmpty()) {
-        _log.info("There are still " + aForcedCommands.size()
-            + " forced commands not executed sucessfully.");
+        String error = "There are still " + aForcedCommands.size()
+            + " forced commands not executed sucessfully.";
+        if (_ignoreWarns) {
+          _log.info(error);
+        } else {
+          _log.warn(error);
+        }
       }
 
     } catch (SQLException ex) {
@@ -727,6 +738,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
+    _ignoreWarns = false;
     evaluateBatch(connection, sql, continueOnError);
 
   }
