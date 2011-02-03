@@ -589,22 +589,16 @@ public abstract class SqlBuilder {
                 foreignColumns.add(parentTable.getColumn(k).getName());
               }
             }
-            print("DELETE FROM " + table.getName() + " WHERE ");
-            print("NOT EXISTS (SELECT ");
-            for (int indC = 0; indC < localColumns.size(); indC++) {
-              if (indC > 0) {
-                print(",");
-              }
-              print(localColumns.get(indC));
-            }
+            print("DELETE FROM " + table.getName() + " t WHERE ");
+            print("NOT EXISTS (SELECT 1");
             print(" FROM " + parentTable.getName());
             print(" WHERE ");
             for (int indC = 0; indC < localColumns.size(); indC++) {
               if (indC > 0) {
                 print(" AND ");
               }
-              print(table.getName() + "." + localColumns.get(indC) + "=" + parentTable.getName()
-                  + "." + foreignColumns.get(indC));
+              print("t." + localColumns.get(indC) + "=" + parentTable.getName() + "."
+                  + foreignColumns.get(indC));
             }
             print(") AND ");
 
@@ -612,7 +606,7 @@ public abstract class SqlBuilder {
               if (indC > 0) {
                 print(" AND ");
               }
-              print(table.getName() + "." + localColumns.get(indC) + " IS NOT NULL");
+              print("t." + localColumns.get(indC) + " IS NOT NULL");
             }
             printEndOfStatement();
           }

@@ -73,6 +73,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   public void execute() {
     excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
+
     initLogging();
     super.execute();
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
