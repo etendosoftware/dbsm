@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
@@ -54,6 +55,9 @@ public class OBDataset {
           excludedColNames.add(colName.toUpperCase());
         }
         Table mTable = database.findTable(table.getName());
+        if (mTable == null) {
+          throw new DdlUtilsException("Table " + table.getName() + " not found in the database");
+        }
         for (int i = 0; i < mTable.getColumnCount(); i++) {
           String col = mTable.getColumn(i).getName();
           if (!excludedColNames.contains(col))
