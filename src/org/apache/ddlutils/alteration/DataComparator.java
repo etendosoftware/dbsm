@@ -414,8 +414,20 @@ public class DataComparator {
 
     notExportedChanges.addAll(this.getModelChangesList());
     for (final Object change : this.getModelChangesList())
-      if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange
-          || change instanceof RemoveTriggerChange) {
+      if (change instanceof RemoveTriggerChange) {
+        boolean addTriggerChange = false;
+        String triggerName = ((RemoveTriggerChange) change).getTriggerName();
+        for (Object change2 : this.getModelChangesList()) {
+          if (change2 instanceof AddTriggerChange
+              && ((AddTriggerChange) change2).getNewTrigger().getName().equals(triggerName)) {
+            addTriggerChange = true;
+          }
+        }
+        if (!addTriggerChange) {
+          finalChanges.add((Change) change);
+          notExportedChanges.remove(change);
+        }
+      } else if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange) {
         finalChanges.add((Change) change);
         notExportedChanges.remove(change);
       }
@@ -430,5 +442,4 @@ public class DataComparator {
 
     notExportedChanges.addAll(dataChangesL);
   }
-
 }

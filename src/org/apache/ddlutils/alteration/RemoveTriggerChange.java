@@ -73,6 +73,10 @@ public class RemoveTriggerChange implements ModelChange {
     database.removeTrigger(trigger);
   }
 
+  public void applyInReverse(Database database, boolean caseSensitive) {
+    // Do nothing, as there is no information about the trigger definition
+  }
+
   @Override
   public String toString() {
     return "RemoveTriggerChange. Name: " + _trigger.getName();
