@@ -24,6 +24,7 @@ import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
@@ -227,6 +228,18 @@ public class ExportConfigScript extends BaseDatabaseTask {
         }
       }
       dbIO.write(configFile, finalChanges);
+      for (Change c : finalChanges) {
+        if (c instanceof RemoveTriggerChange) {
+          log
+              .info("The trigger "
+                  + ((RemoveTriggerChange) c).getTriggerName()
+                  + " has not been found in the database, and therefore a RemoveTriggerChange has been exported to the configuration script.");
+        } else if (c instanceof ModelChange) {
+          log.info(c);
+        } else {
+          log.debug(c);
+        }
+      }
 
       if (notExportedChanges.size() > 0) {
         getLog().info("Changes that couldn't be exported to the config script:");

@@ -56,7 +56,7 @@ public class RemoveTriggerChange implements ModelChange {
   }
 
   public String getTriggerName() {
-    return _trigger.getName();
+    return _triggerName != null ? _triggerName : _trigger.getName();
   }
 
   public void setTriggerName(String triggerName) {
