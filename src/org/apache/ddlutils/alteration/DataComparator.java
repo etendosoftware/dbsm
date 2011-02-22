@@ -414,7 +414,8 @@ public class DataComparator {
 
     notExportedChanges.addAll(this.getModelChangesList());
     for (final Object change : this.getModelChangesList())
-      if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange) {
+      if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange
+          || change instanceof RemoveTriggerChange) {
         finalChanges.add((Change) change);
         notExportedChanges.remove(change);
       }

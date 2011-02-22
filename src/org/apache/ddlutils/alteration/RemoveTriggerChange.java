@@ -31,6 +31,7 @@ public class RemoveTriggerChange implements ModelChange {
 
   /** The trigger. */
   private Trigger _trigger;
+  private String _triggerName;
 
   /**
    * Creates a remove change object.
@@ -42,6 +43,9 @@ public class RemoveTriggerChange implements ModelChange {
     _trigger = trigger;
   }
 
+  public RemoveTriggerChange() {
+  }
+
   /**
    * Returns the trigger.
    * 
@@ -51,11 +55,20 @@ public class RemoveTriggerChange implements ModelChange {
     return _trigger;
   }
 
+  public String getTriggerName() {
+    return _trigger.getName();
+  }
+
+  public void setTriggerName(String triggerName) {
+    _triggerName = triggerName;
+  }
+
   /**
    * {@inheritDoc}
    */
   public void apply(Database database, boolean caseSensitive) {
-    Trigger trigger = database.findTrigger(_trigger.getName(), caseSensitive);
+    Trigger trigger = database.findTrigger(
+        _triggerName != null ? _triggerName : _trigger.getName(), caseSensitive);
 
     database.removeTrigger(trigger);
   }
