@@ -43,6 +43,14 @@
     <delete dir="${build.db.docs}" failonerror="false" includeemptydirs="true" />
   </target>
 
+  <target name="set.code.rev">
+    <exec executable="hg" outputproperty="hg.id" failifexecutionfails="false">
+      <arg value="id"/>
+      <arg value="-i"/>
+    </exec>
+    <echo message="${hg.id}" file="${build.db.classes}/rev.id"/>
+  </target>
+  
   <target name="compile" depends="init">
     <javac srcdir="${build.db.src}" destdir="${build.db.classes}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
       <classpath refid="db.class.path" />
@@ -68,7 +76,7 @@
     </javadoc>
   </target>
 
-  <target name="jar" depends="compile, build.jar">
+  <target name="jar" depends="set.code.rev, compile, build.jar">
   </target>
 
   <target name="build" depends="jar, doc">
