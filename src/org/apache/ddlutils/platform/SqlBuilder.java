@@ -962,6 +962,9 @@ public abstract class SqlBuilder {
     Predicate predicatetriggers = new MultiInstanceofPredicate(
         new Class[] { AddTriggerChange.class });
 
+    for (int i = 0; i < currentModel.getViewCount(); i++) {
+      dropView(currentModel.getView(i));
+    }
     processTableStructureChanges(currentModel, desiredModel, params, CollectionUtils.select(
         changes, predicate), CollectionUtils.select(changes, predicatetriggers));
 

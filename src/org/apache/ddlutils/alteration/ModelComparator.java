@@ -178,64 +178,15 @@ public class ModelComparator {
       }
     }
 
-    for (int viIdx = 0; viIdx < sourceModel.getViewCount(); viIdx++) {
-      View sourceView = sourceModel.getView(viIdx);
-      View targetView = findCorrespondingView(targetModel, sourceView);
-
-      if (targetView == null) {
-        boolean foundViewWithSameName = false;
-        int i = 0;
-        while (i < targetModel.getViewCount() && !foundViewWithSameName) {
-          if (targetModel.getView(i).getName().equalsIgnoreCase(sourceView.getName()))
-            foundViewWithSameName = true;
-          i++;
-        }
-        // if (!foundViewWithSameName) // We will only generate a drop view
-        // statement if the view will not be
-        // recreated
-        // {
-        if (_log.isDebugEnabled()) {
-          _log.debug("Processing View " + sourceView + " (removed from database "
-              + sourceModel.getName() + ")");
-        }
-        changes.add(new RemoveViewChange(sourceView));
-        // }
-      }
-    }
-
-    for (int viIdx = 0; viIdx < targetModel.getViewCount(); viIdx++) {
-      View targetView = targetModel.getView(viIdx);
-      View sourceView = findCorrespondingView(sourceModel, targetView);
-
-      if (sourceView == null) {
-        if (_log.isDebugEnabled()) {
-          _log.debug("Processing View " + targetView + " (created for the database "
-              + sourceModel.getName() + ")");
-        }
-        changes.add(new AddViewChange(targetView));
-      }
-    }
-
     for (int fnIdx = 0; fnIdx < sourceModel.getFunctionCount(); fnIdx++) {
       Function sourceFunction = sourceModel.getFunction(fnIdx);
       Function targetFunction = findCorrespondingFunction(targetModel, sourceFunction);
       if (targetFunction == null) {
-        boolean foundFunctionWithSameName = false;
-        int i = 0;
-        while (i < targetModel.getFunctionCount() && !foundFunctionWithSameName) {
-          if (targetModel.getFunction(i).getName().equalsIgnoreCase(sourceFunction.getName()))
-            foundFunctionWithSameName = true;
-          i++;
+        if (_log.isDebugEnabled()) {
+          _log.debug("Processing Function " + sourceFunction + " (removed from database "
+              + sourceModel.getName() + ")");
         }
-        if (!foundFunctionWithSameName) // We will only generate a drop function statement if the
-        // view will not be recreated
-        {
-          if (_log.isDebugEnabled()) {
-            _log.debug("Processing Function " + sourceFunction + " (removed from database "
-                + sourceModel.getName() + ")");
-          }
-          changes.add(new RemoveFunctionChange(sourceFunction));
-        }
+        changes.add(new RemoveFunctionChange(sourceFunction));
       }
     }
 

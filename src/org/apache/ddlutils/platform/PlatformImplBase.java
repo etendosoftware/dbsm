@@ -381,6 +381,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
       // execute the forced commands
       int loops = 0;
+      HashMap<String, String> errorMap = new HashMap<String, String>();
       while (loops < MAX_LOOPS_OF_FORCED && !aForcedCommands.isEmpty()) {
 
         loops++;
@@ -401,13 +402,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
               _log.debug("After execution, " + results + " row(s) have been changed");
             }
             it.remove();
+            if (errorMap.containsKey(command)) {
+              errorMap.remove(command);
+            }
           } catch (SQLException ex) {
             String error = "SQL Command failed with: " + ex.getMessage();
-            if (!_ignoreWarns) {
-              _log.warn(error);
-            } else {
-              _log.info(error);
-            }
+            errorMap.put(command, error);
             if (_log.isDebugEnabled()) {
               _log.debug(ex);
             }
@@ -419,10 +419,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           errorNumber2 = " with " + errors + " error(s)";
         else
           errorNumber2 = " successfully";
-        if (commandCount > 0)
+        if (commandCount > 0) {
           _log.info("Executed " + commandCount + " forced SQL command(s)" + errorNumber2);
-      }
 
+        }
+      }
+      Iterator it = errorMap.keySet().iterator();
+      while (it.hasNext()) {
+        String error = errorMap.get(it.next());
+        if (!_ignoreWarns) {
+          _log.warn(error);
+        } else {
+          _log.info(error);
+        }
+      }
       if (!aForcedCommands.isEmpty()) {
         String error = "There are still " + aForcedCommands.size()
             + " forced commands not executed sucessfully.";
