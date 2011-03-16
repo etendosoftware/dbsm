@@ -946,6 +946,10 @@ public abstract class SqlBuilder {
         RemoveUniqueChange.class, RemoveIndexChange.class, RemoveCheckChange.class },
         callbackClosure);
 
+    for (int i = 0; i < currentModel.getViewCount(); i++) {
+      dropView(currentModel.getView(i));
+    }
+
     // 2nd pass: removing tables and views and functions and triggers
     applyForSelectedChanges(changes, new Class[] { RemoveViewChange.class }, callbackClosure);
     applyForSelectedChanges(changes, new Class[] { RemoveTriggerChange.class,
@@ -962,9 +966,6 @@ public abstract class SqlBuilder {
     Predicate predicatetriggers = new MultiInstanceofPredicate(
         new Class[] { AddTriggerChange.class });
 
-    for (int i = 0; i < currentModel.getViewCount(); i++) {
-      dropView(currentModel.getView(i));
-    }
     processTableStructureChanges(currentModel, desiredModel, params, CollectionUtils.select(
         changes, predicate), CollectionUtils.select(changes, predicatetriggers));
 
