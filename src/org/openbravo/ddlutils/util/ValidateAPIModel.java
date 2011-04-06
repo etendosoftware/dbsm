@@ -202,9 +202,6 @@ public class ValidateAPIModel extends ValidateAPI {
         if (c.getNewIndex().isUnique()) {
           errors.add("Unique index addition: table: " + tablename + " - Index: "
               + c.getNewIndex().getName());
-        } else {
-          warnings.add("Non unique index addition table:" + tablename + "- Index: "
-              + c.getNewIndex().getName());
         }
       } else if (change instanceof AddPrimaryKeyChange) {
         AddPrimaryKeyChange c = (AddPrimaryKeyChange) change;
