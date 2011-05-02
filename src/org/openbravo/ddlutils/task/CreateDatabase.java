@@ -191,10 +191,6 @@ public class CreateDatabase extends BaseDatabaseTask {
         dbdio.writeDataToDatabase(dataReader, files.get(i));
       }
 
-      platform.executeOnCreateDefaultForMandatoryColumns(db);
-      platform.enableNOTNULLColumns(db);
-      dataReader.getSink().end();
-
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeFilter);
       util.generateIndustryTemplateTree();
@@ -214,6 +210,11 @@ public class CreateDatabase extends BaseDatabaseTask {
                   + f.getAbsolutePath());
         }
       }
+      platform.executeOnCreateDefaultForMandatoryColumns(db);
+      platform.enableNOTNULLColumns(db);
+      // FKs and triggers are re-activated by the sink .end() method
+      dataReader.getSink().end();
+
       // execute the post-script
       if (getPostscript() == null) {
         // try to execute the default prescript
