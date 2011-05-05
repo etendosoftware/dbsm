@@ -284,7 +284,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         final File fsourcedata = new File(basedir, "/" + row.dir + "/src-db/database/sourcedata/");
         final File[] datafiles = DatabaseUtils.readFileArray(fsourcedata);
         for (int i = 0; i < datafiles.length; i++)
-          if (datafiles[i].exists())
+          if (datafiles[i].exists() && datafiles[i].getName().endsWith(".xml"))
             files.add(datafiles[i]);
 
         final DataReader dataReader = dbdio.getConfiguredCompareDataReader(dbAD);

@@ -314,7 +314,9 @@ public class DBSMOBUtil {
       final String folder = strTokFol.nextToken();
       final File[] fileArray = DatabaseUtils.readFileArray(new File(folder));
       for (int i = 0; i < fileArray.length; i++) {
-        files.add(fileArray[i]);
+        if (fileArray[i].getName().endsWith(".xml")) {
+          files.add(fileArray[i]);
+        }
       }
     }
     return files;
@@ -849,7 +851,7 @@ public class DBSMOBUtil {
     final Vector<File> files = new Vector<File>();
     File[] sourceFiles = input.listFiles();
     for (int i = 0; i < sourceFiles.length; i++) {
-      if (sourceFiles[i].isFile()) {
+      if (sourceFiles[i].isFile() && sourceFiles[i].getName().endsWith(".xml")) {
         files.add(sourceFiles[i]);
       }
     }
@@ -864,7 +866,9 @@ public class DBSMOBUtil {
       final File dirFolder = new File(basedir, incDirs[j] + "/");
       final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
       for (int i = 0; i < fileArray.length; i++) {
-        files.add(fileArray[i]);
+        if (fileArray[i].getName().endsWith(".xml")) {
+          files.add(fileArray[i]);
+        }
       }
     }
     final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
@@ -881,6 +885,7 @@ public class DBSMOBUtil {
         databaseOrgData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
         dataReader.getSink().end();
       } catch (final Exception e) {
+        getLog().error("Error while parsing file: " + files.get(i).getAbsolutePath());
         e.printStackTrace();
       }
     }
