@@ -25,6 +25,7 @@ import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveTriggerChange;
+import org.apache.ddlutils.alteration.VersionInfo;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
@@ -200,6 +201,13 @@ public class ExportConfigScript extends BaseDatabaseTask {
       dataComparator.compare(xmlModel, databaseModel, platform, databaseOrgData, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();
+      String obVersion = DBSMOBUtil.getInstance().getOBVersion(platform);
+      if (obVersion != null) {
+        VersionInfo version = new VersionInfo();
+        version.setVersion(obVersion);
+        finalChanges.add(version);
+
+      }
       dataComparator.generateConfigScript(finalChanges, notExportedChanges);
 
       final DatabaseIO dbIO = new DatabaseIO();

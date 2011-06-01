@@ -236,6 +236,12 @@ under the License.
       <attribute name="triggerName" property="triggerName"/>
     </element>
   </class>
+    
+  <class name="org.apache.ddlutils.alteration.VersionInfo">
+    <element name="versionInfo">
+      <attribute name="version" property="version"/>
+    </element>
+  </class>
   
   <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedTable">
     <element name="excludedTable">

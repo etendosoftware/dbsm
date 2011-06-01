@@ -21,6 +21,7 @@ import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.VersionInfo;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.io.DataReader;
@@ -624,7 +625,6 @@ public class DBSMOBUtil {
         return;
       }
       ((ModelBasedResultSetIterator) itCheck).cleanUp();
-      final StringTokenizer st = new StringTokenizer(modulePackages, ",");
       Table[] db_prefinst = { database.findTable("AD_MODULE_DBPREFIX_INSTALL") };
       Table[] mod_dep = { database.findTable("AD_MODULE_DEPENDENCY_INST") };
       Table[] mod_inst = { database.findTable("AD_MODULE_INSTALL") };
@@ -633,14 +633,18 @@ public class DBSMOBUtil {
       Vector<SqlDynaBean> prefRows = new Vector<SqlDynaBean>();
       Vector<SqlDynaBean> depRows = new Vector<SqlDynaBean>();
       String modPacks = "";
-      while (st.hasMoreElements()) {
-        final String modPack = st.nextToken().trim();
-        if (!modPacks.equals(""))
-          modPacks += ",";
-        modPacks += "'" + modPack + "'";
+      String sqlmodule = "SELECT * FROM AD_MODULE_INSTALL ";
+      if (modulePackages != null) {
+        final StringTokenizer st = new StringTokenizer(modulePackages, ",");
+        while (st.hasMoreElements()) {
+          final String modPack = st.nextToken().trim();
+          if (!modPacks.equals(""))
+            modPacks += ",";
+          modPacks += "'" + modPack + "'";
+        }
+        sqlmodule += "WHERE JAVAPACKAGE IN (" + modPacks + ")";
       }
-      Iterator it = platform.query(database,
-          "SELECT * FROM AD_MODULE_INSTALL WHERE JAVAPACKAGE IN (" + modPacks + ")", mod_inst);
+      Iterator it = platform.query(database, sqlmodule, mod_inst);
       while (it.hasNext()) {
         SqlDynaBean moduleRow = (SqlDynaBean) it.next();
         String moduleId = moduleRow.get("AD_MODULE_ID").toString();
@@ -672,16 +676,6 @@ public class DBSMOBUtil {
         platform.updateinsert(connection, database, moduleRow);
       }
 
-      for (SqlDynaBean prefRow : prefRows) {
-        ((SqlDynaClass) prefRow.getDynaClass()).resetDynaClass(database
-            .findTable("AD_MODULE_DBPREFIX"));
-        platform.updateinsert(connection, database, prefRow);
-      }
-      for (SqlDynaBean depRow : depRows) {
-        ((SqlDynaClass) depRow.getDynaClass()).resetDynaClass(database
-            .findTable("AD_MODULE_DEPENDENCY"));
-        platform.updateinsert(connection, database, depRow);
-      }
       for (String moduleId : moduleIds) {
         // Deleting rows in _install tabless
         String sql = "DELETE FROM AD_MODULE_INSTALL WHERE AD_MODULE_ID='" + moduleId + "'";
@@ -914,19 +908,23 @@ public class DBSMOBUtil {
         DatabaseIO dbIO = new DatabaseIO();
         getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
+        boolean isOldConfigScript = isOldConfigScript(changes);
+        boolean isOB3 = isOB3(platform);
         for (Change change : changes) {
           if (change instanceof ModelChange)
             ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
           else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
-            boolean applied = ((DataChange) change).apply(databaseOrgData, platform
-                .isDelimitedIdentifierModeOn());
-            if (strict && !applied) {
-              throw new BuildException(
-                  "Change "
-                      + change
-                      + " of the configuration script for the template "
-                      + configScript.getAbsolutePath()
-                      + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
+            if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
+              boolean applied = ((DataChange) change).apply(databaseOrgData, platform
+                  .isDelimitedIdentifierModeOn());
+              if (strict && !applied) {
+                throw new BuildException(
+                    "Change "
+                        + change
+                        + " of the configuration script for the template "
+                        + configScript.getAbsolutePath()
+                        + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
+              }
             }
           }
           getLog().debug(change);
@@ -987,20 +985,24 @@ public class DBSMOBUtil {
         getLog().info(
             "Reversing data part of configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
+        boolean isOldConfigScript = isOldConfigScript(changes);
+        boolean isOB3 = isOB3(platform);
         for (Change change : changes) {
           if (change instanceof ColumnDataChange) {
             Log.info("Reversing change " + change);
-            boolean applied = ((ColumnDataChange) change).applyInReverse(databaseOrgData, platform
-                .isDelimitedIdentifierModeOn());
-            if (!applied) {
-              throw new BuildException(
-                  "Reversing the change "
-                      + ((ColumnDataChange) change)
-                      + " in configuration script for template "
-                      + sortedTemplates.get(i)
-                      + " couldn't be applied, and therefore, the export.database couldn't be completed. Fix (or remove) the configuration script, and then try the export again.");
+            if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
+              boolean applied = ((ColumnDataChange) change).applyInReverse(databaseOrgData,
+                  platform.isDelimitedIdentifierModeOn());
+              if (!applied) {
+                throw new BuildException(
+                    "Reversing the change "
+                        + ((ColumnDataChange) change)
+                        + " in configuration script for template "
+                        + sortedTemplates.get(i)
+                        + " couldn't be applied, and therefore, the export.database couldn't be completed. Fix (or remove) the configuration script, and then try the export again.");
+              }
+              getLog().debug(change);
             }
-            getLog().debug(change);
           }
         }
       } else {
@@ -1068,5 +1070,72 @@ public class DBSMOBUtil {
 
   private Logger getLog() {
     return Logger.getLogger(getClass());
+  }
+
+  private static boolean isOldConfigScript(Vector<Change> changes) {
+    for (Change change : changes) {
+      if (change instanceof VersionInfo) {
+        String version = ((VersionInfo) change).getVersion();
+        return !isOB3Version(version);
+      }
+    }
+    return true;
+  }
+
+  private static boolean isOB3Version(String version) {
+    int versionN = Integer.parseInt(version.substring(0, 1));
+    if (versionN >= 3) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean isOB3(Platform platform) {
+    String version = getOBVersion(platform);
+    if (version == null) {
+      return false;
+    }
+    return isOB3Version(version);
+  }
+
+  public String getOBVersion(Platform platform) {
+
+    Connection con = null;
+    try {
+      con = platform.borrowConnection();
+      PreparedStatement ps = con
+          .prepareStatement("SELECT VERSION FROM AD_MODULE WHERE AD_MODULE_ID='0'");
+      ps.execute();
+      ResultSet rs = ps.getResultSet();
+      rs.next();
+      String st = rs.getString(1);
+      return st;
+    } catch (Exception e) {
+      return null;
+    } finally {
+      if (con != null) {
+        platform.returnConnection(con);
+      }
+    }
+  }
+
+  private boolean isValidChange(Change change) {
+    if (!(change instanceof ColumnDataChange)) {
+      return true;
+    }
+    return !(((ColumnDataChange) change).getColumnname().equals("SEQNO") && ((ColumnDataChange) change)
+        .getTablename().equalsIgnoreCase("AD_FIELD"));
+  }
+
+  /**
+   * Returns true if the config script was exported in an Openbravo version earlier than OB 3 MP0
+   * 
+   * @return
+   */
+  public static boolean isOldConfigScript(File file) {
+    DatabaseIO dbIO = new DatabaseIO();
+    Vector<Change> changes = dbIO.readChanges(file);
+    return isOldConfigScript(changes);
   }
 }

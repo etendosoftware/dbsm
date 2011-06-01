@@ -125,7 +125,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       db.checkDataTypes();
       final DatabaseData databaseOrgData = new DatabaseData(db);
       databaseOrgData.setStrictMode(strict);
-      DBSMOBUtil.getInstance().deleteInstallTables(platform, db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
           basedir, datafilter, input, strict, false);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
@@ -143,6 +142,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       }
 
+      DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       // execute the pre-script
       if (getPrescript() == null) {
         // try to execute the default prescript
