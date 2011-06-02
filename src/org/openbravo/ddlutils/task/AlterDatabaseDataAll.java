@@ -142,7 +142,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       }
 
-      DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       // execute the pre-script
       if (getPrescript() == null) {
         // try to execute the default prescript
@@ -159,6 +158,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.alterTables(originaldb, db, !isFailonerror());
       getLog().info("Model update complete.");
 
+      DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
       platform.disableAllFK(connection, originaldb, !isFailonerror());
