@@ -136,7 +136,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
                   "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
         else {
           getLog()
-              .info(
+              .error(
                   "Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
           throw new BuildException("Database has local changes. Update.database not done.");
         }
