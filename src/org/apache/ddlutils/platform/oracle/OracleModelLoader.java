@@ -20,6 +20,8 @@ import java.sql.Types;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowFiller;
@@ -84,7 +86,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     _stmt_listchecks_noprefix = _connection
         .prepareStatement("SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
 
-    sql = "SELECT C.CONSTRAINT_NAME, C2.TABLE_NAME, C.DELETE_RULE, 'NO ACTION' FROM USER_CONSTRAINTS C, USER_CONSTRAINTS C2 WHERE C.R_CONSTRAINT_NAME = C2.CONSTRAINT_NAME AND C.CONSTRAINT_TYPE = 'R' AND C.TABLE_NAME = ?";
+    sql = "SELECT C.CONSTRAINT_NAME, C2.TABLE_NAME, C.DELETE_RULE, 'NO ACTION', C.R_CONSTRAINT_NAME FROM USER_CONSTRAINTS C, USER_CONSTRAINTS C2 WHERE C.R_CONSTRAINT_NAME = C2.CONSTRAINT_NAME AND C.CONSTRAINT_TYPE = 'R' AND C.TABLE_NAME = ?";
     _stmt_listfks = _connection.prepareStatement(sql + " ORDER BY C.CONSTRAINT_NAME");
     _stmt_listfks_prefix = _connection
         .prepareStatement(sql
@@ -96,7 +98,7 @@ public class OracleModelLoader extends ModelLoaderBase {
         + " AND upper(C.CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY C.CONSTRAINT_NAME");
 
     _stmt_fkcolumns = _connection
-        .prepareStatement("SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONSTRAINTS K, USER_CONS_COLUMNS C2, USER_CONSTRAINTS K2 WHERE C.CONSTRAINT_NAME = K.CONSTRAINT_NAME AND C2.CONSTRAINT_NAME = K2.CONSTRAINT_NAME AND K.R_CONSTRAINT_NAME = K2.CONSTRAINT_NAME AND C.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
+        .prepareStatement("SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONS_COLUMNS C2 WHERE C.CONSTRAINT_NAME = ? and C2.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
 
     _stmt_listindexes = _connection
         .prepareStatement("SELECT INDEX_NAME, UNIQUENESS FROM USER_INDEXES U WHERE TABLE_NAME = ? AND INDEX_TYPE = 'NORMAL' AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
@@ -317,4 +319,37 @@ public class OracleModelLoader extends ModelLoaderBase {
 
     return t;
   }
+
+  /*
+   * Overloaded version for oracle as first sql does return one more value which needs to be passed
+   * to the 2nd sql reading the columns (done this way to improve performance (issue 17796)
+   */
+  @Override
+  protected ForeignKey readForeignKey(ResultSet rs) throws SQLException {
+    String fkRealName = rs.getString(1);
+    String fkName = fkRealName.toUpperCase();
+
+    final ForeignKey fk = new ForeignKey();
+
+    fk.setName(fkName);
+    fk.setForeignTableName(rs.getString(2));
+    fk.setOnDeleteCode(translateFKEvent(rs.getString(3)));
+    fk.setOnUpdateCode(translateFKEvent(rs.getString(4)));
+
+    String r_fkName = rs.getString(5);
+
+    _stmt_fkcolumns.setString(1, fkRealName);
+    _stmt_fkcolumns.setString(2, r_fkName);
+    fillList(_stmt_fkcolumns, new RowFiller() {
+      public void fillRow(ResultSet r) throws SQLException {
+        Reference ref = new Reference();
+        ref.setLocalColumnName(r.getString(1));
+        ref.setForeignColumnName(r.getString(2));
+        fk.addReference(ref);
+      }
+    });
+
+    return fk;
+  }
+
 }
