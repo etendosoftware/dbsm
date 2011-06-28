@@ -672,7 +672,8 @@ public class DBSMOBUtil {
       }
 
       for (SqlDynaBean moduleRow : moduleRows) {
-        ((SqlDynaClass) moduleRow.getDynaClass()).resetDynaClass(database.findTable("AD_MODULE"));
+        ((SqlDynaClass) moduleRow.getDynaClass()).resetDynaClassWithoutMissingProperties(database
+            .findTable("AD_MODULE"));
         platform.updateinsert(connection, database, moduleRow);
       }
 
