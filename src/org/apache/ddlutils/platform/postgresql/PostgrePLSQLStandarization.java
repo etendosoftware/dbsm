@@ -127,9 +127,6 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
     append(new ByLineTranslation(new ReplacePatTranslation("--(.*)\\sPRAGMA EXCEPTION_INIT",
         "$1PRAGMA EXCEPTION_INIT")));
 
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "(.+?)(v_pesos|v_units|v_tens|v_hundreds|v_tenys|v_twentys)(\\[)(.+?)(\\])([^\\)]+?)$",
-        "$1$2[$4]$6")));
     append(new ByLineTranslation(new ReplacePatTranslation("(.+?)Array\\[(.+?)\\](.+?)$",
         "$1Array($2)$3")));
     // append(new ReplaceStrTranslation("Array[","Array("));
