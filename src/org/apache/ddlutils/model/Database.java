@@ -1385,9 +1385,9 @@ public class Database implements Serializable, Cloneable {
       Database other = (Database) obj;
 
       // Note that this compares case sensitive
-      return new EqualsBuilder().append(_name, other._name).append(_tables, other._tables).append(
-          _views, other._views).append(_functions, other._functions).append(_triggers,
-          other._triggers).isEquals();
+      return new EqualsBuilder().append(_name, other._name).append(_tables, other._tables)
+          .append(_views, other._views).append(_functions, other._functions)
+          .append(_triggers, other._triggers).isEquals();
     } else {
       return false;
     }
@@ -1398,8 +1398,8 @@ public class Database implements Serializable, Cloneable {
    */
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_tables).append(_views).append(
-        _functions).append(_triggers).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name).append(_tables).append(_views)
+        .append(_functions).append(_triggers).toHashCode();
   }
 
   /**
