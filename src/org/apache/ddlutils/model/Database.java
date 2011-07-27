@@ -964,11 +964,17 @@ public class Database implements Serializable, Cloneable {
       for (int idx = 0; idx < curFunction.getParameterCount(); idx++) {
         Parameter curParameter = curFunction.getParameter(idx);
 
-        if ((curParameter.getName() != null) && (curParameter.getName().length() == 0)) {
-          if (namesOfProcessedParameters.contains(curParameter.getName())) {
-            throw new ModelException("There are multiple parameters with the name "
-                + curParameter.getName() + " in the function " + curFunction.getName());
+        try {
+          if ((curParameter.getName() != null) && (curParameter.getName().length() == 0)) {
+            if (namesOfProcessedParameters.contains(curParameter.getName())) {
+              throw new ModelException("There are multiple parameters with the name "
+                  + curParameter.getName() + " in the function " + curFunction.getName());
+            }
           }
+        } catch (Exception e) {
+          throw new ModelException("There was a problem reading the parameters of function "
+              + curFunction.getName()
+              + ". Check that all the parameters have a valid name and data type.");
         }
       }
     }
