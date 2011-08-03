@@ -411,16 +411,26 @@ public class Function implements StructureObject, Cloneable {
    * @param otherFunction
    *          The other function
    * @return <code>true</code> if this function is equal (ignoring case) to the given one
+   * @throws Exception
    */
-  public boolean equalsIgnoreCase(Function otherFunction) {
+  public boolean equalsIgnoreCase(Function otherFunction) throws Exception {
 
     int typeCode2 = _typeCode;
 
     int othertypeCode2 = otherFunction._typeCode;
-
-    return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name)
-        && new EqualsBuilder().append(_parameters, otherFunction._parameters).append(_body,
-            otherFunction._body).append(typeCode2, othertypeCode2).isEquals();
+    try {
+      return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name)
+          && new EqualsBuilder().append(_parameters, otherFunction._parameters)
+              .append(_body, otherFunction._body).append(typeCode2, othertypeCode2).isEquals();
+    } catch (Exception e) {
+      throw new Exception(
+          "Error while comparing functions "
+              + this._name
+              + " and "
+              + otherFunction._name
+              + ". Check that the parameters of both functions are correctly defined in the database and in the XML files (check that the parameters are named, and have a correct datatype",
+          e);
+    }
   }
 
   /**
@@ -468,8 +478,8 @@ public class Function implements StructureObject, Cloneable {
   public int hashCode() {
     // TODO: For now we ignore catalog and schema (type should be irrelevant
     // anyways)
-    return new HashCodeBuilder(17, 37).append(_name).append(_parameters).append(_typeCode).append(
-        _body).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name).append(_parameters).append(_typeCode)
+        .append(_body).toHashCode();
   }
 
   /**
