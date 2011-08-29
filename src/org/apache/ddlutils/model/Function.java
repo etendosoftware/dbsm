@@ -413,7 +413,7 @@ public class Function implements StructureObject, Cloneable {
    * @return <code>true</code> if this function is equal (ignoring case) to the given one
    * @throws Exception
    */
-  public boolean equalsIgnoreCase(Function otherFunction) throws Exception {
+  public boolean equalsIgnoreCase(Function otherFunction) {
 
     int typeCode2 = _typeCode;
 
@@ -423,7 +423,7 @@ public class Function implements StructureObject, Cloneable {
           && new EqualsBuilder().append(_parameters, otherFunction._parameters)
               .append(_body, otherFunction._body).append(typeCode2, othertypeCode2).isEquals();
     } catch (Exception e) {
-      throw new Exception(
+      throw new RuntimeException(
           "Error while comparing functions "
               + this._name
               + " and "
