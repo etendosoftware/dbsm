@@ -43,7 +43,7 @@
     <delete dir="${build.db.docs}" failonerror="false" includeemptydirs="true" />
   </target>
 
-  <target name="set.code.rev">
+  <target name="set.code.rev" depends="init">
     <exec executable="hg" outputproperty="hg.id" failifexecutionfails="false">
       <arg value="id"/>
       <arg value="-i"/>
