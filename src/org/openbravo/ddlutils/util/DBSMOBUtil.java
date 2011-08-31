@@ -415,8 +415,7 @@ public class DBSMOBUtil {
     }
     for (final ModuleRow row : allModules) {
       if ("T".equals(row.type) && isDependant(rowT, row)) {
-        log
-            .error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
+        log.error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
         System.exit(1);
       }
     }
@@ -872,8 +871,8 @@ public class DBSMOBUtil {
       try {
         getLog().debug("Parsing file " + files.get(i).getAbsolutePath());
         dataReader.getSink().start();
-        final String tablename = files.get(i).getName().substring(0,
-            files.get(i).getName().length() - 4);
+        final String tablename = files.get(i).getName()
+            .substring(0, files.get(i).getName().length() - 4);
         final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
             .getVector();
         dataReader.parse(files.get(i));
@@ -916,8 +915,8 @@ public class DBSMOBUtil {
             ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
           else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
             if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
-              boolean applied = ((DataChange) change).apply(databaseOrgData, platform
-                  .isDelimitedIdentifierModeOn());
+              boolean applied = ((DataChange) change).apply(databaseOrgData,
+                  platform.isDelimitedIdentifierModeOn());
               if (strict && !applied) {
                 throw new BuildException(
                     "Change "
