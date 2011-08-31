@@ -315,7 +315,8 @@ public class DBSMOBUtil {
       final String folder = strTokFol.nextToken();
       final File[] fileArray = DatabaseUtils.readFileArray(new File(folder));
       for (int i = 0; i < fileArray.length; i++) {
-        if (fileArray[i].getName().endsWith(".xml")) {
+        if (fileArray[i].getName().endsWith(".xml")
+            && !fileArray[i].getAbsolutePath().contains("referencedData")) {
           files.add(fileArray[i]);
         }
       }
