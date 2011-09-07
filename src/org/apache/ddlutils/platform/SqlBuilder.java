@@ -167,7 +167,7 @@ public abstract class SqlBuilder {
 
   //
   // Configuration
-  //                
+  //
 
   /**
    * Creates a new sql builder.
@@ -564,7 +564,7 @@ public abstract class SqlBuilder {
     }
   }
 
-  public void deleteInvalidConstraintRows(Database model) {
+  public void deleteInvalidConstraintRows(Database model, boolean onlyOnDeleteCascade) {
 
     try {
       // We will now delete the rows in tables which have a foreign key
@@ -576,7 +576,8 @@ public abstract class SqlBuilder {
         for (int j = 0; j < fksTable.length; j++) {
           ForeignKey fk = fksTable[j];
           Table parentTable = fk.getForeignTable();
-          if (fk.getOnDelete() != null && fk.getOnDelete().contains("cascade")) {
+          if ((!onlyOnDeleteCascade || (fk.getOnDelete() != null && fk.getOnDelete().contains(
+              "cascade")))) {
             ArrayList<String> localColumns = new ArrayList<String>();
             for (int k = 0; k < table.getColumnCount(); k++) {
               if (fk.hasLocalColumn(table.getColumn(k))) {
@@ -640,8 +641,8 @@ public abstract class SqlBuilder {
       while (itChanges.hasNext()) {
         TableChange currentChange = (TableChange) itChanges.next();
 
-        if (currentChange.getChangedTable().getName().equalsIgnoreCase(
-            desiredModel.getTable(i).getName())) {
+        if (currentChange.getChangedTable().getName()
+            .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
           if (currentChange instanceof AddColumnChange) {
             newColumnsThisTable.add((AddColumnChange) currentChange);
             newColumn = true;
@@ -694,8 +695,8 @@ public abstract class SqlBuilder {
       while (itChanges.hasNext()) {
         TableChange currentChange = (TableChange) itChanges.next();
 
-        if (currentChange.getChangedTable().getName().equalsIgnoreCase(
-            desiredModel.getTable(i).getName())) {
+        if (currentChange.getChangedTable().getName()
+            .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
           if (currentChange instanceof AddColumnChange) {
             newColumnsThisTable.add((AddColumnChange) currentChange);
             newColumn = true;
@@ -742,8 +743,8 @@ public abstract class SqlBuilder {
           Object change = it2.next();
           if (change instanceof AddIndexChange) {
             AddIndexChange ichange = ((AddIndexChange) change);
-            if (ichange.getChangedTable().getName().equalsIgnoreCase(
-                desiredModel.getTable(i).getName()))
+            if (ichange.getChangedTable().getName()
+                .equalsIgnoreCase(desiredModel.getTable(i).getName()))
               processChange(currentModel, desiredModel, params, ichange);
           }
         }
@@ -806,8 +807,9 @@ public abstract class SqlBuilder {
         ForeignKey fk = ((AddForeignKeyChange) change).getNewForeignKey();
         if (!recreatedFKs.contains(fk.getName())) {
           recreatedFKs.add(fk.getName());
-          writeExternalForeignKeyCreateStmt(desiredModel, ((AddForeignKeyChange) change)
-              .getChangedTable(), ((AddForeignKeyChange) change).getNewForeignKey());
+          writeExternalForeignKeyCreateStmt(desiredModel,
+              ((AddForeignKeyChange) change).getChangedTable(),
+              ((AddForeignKeyChange) change).getNewForeignKey());
         }
       } else if (change instanceof AddUniqueChange) {
         processChange(currentModel, desiredModel, params, ((AddUniqueChange) change));
@@ -966,8 +968,9 @@ public abstract class SqlBuilder {
     Predicate predicatetriggers = new MultiInstanceofPredicate(
         new Class[] { AddTriggerChange.class });
 
-    processTableStructureChanges(currentModel, desiredModel, params, CollectionUtils.select(
-        changes, predicate), CollectionUtils.select(changes, predicatetriggers));
+    processTableStructureChanges(currentModel, desiredModel, params,
+        CollectionUtils.select(changes, predicate),
+        CollectionUtils.select(changes, predicatetriggers));
 
     // 4th pass: adding tables
     applyForSelectedChanges(changes, new Class[] { AddTableChange.class }, callbackClosure);
@@ -1116,8 +1119,8 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, AddTableChange change) throws IOException {
-    createTable(desiredModel, change.getNewTable(), params == null ? null : params
-        .getParametersFor(change.getNewTable()));
+    createTable(desiredModel, change.getNewTable(),
+        params == null ? null : params.getParametersFor(change.getNewTable()));
     writeExternalPrimaryKeysCreateStmt(change.getNewTable(), change.getNewTable().getPrimaryKey(),
         change.getNewTable().getPrimaryKeyColumns());
     writeExternalIndicesCreateStmt(change.getNewTable());
@@ -1292,8 +1295,8 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, AddForeignKeyChange change) throws IOException {
-    writeExternalForeignKeyCreateStmt(desiredModel, change.getChangedTable(), change
-        .getNewForeignKey());
+    writeExternalForeignKeyCreateStmt(desiredModel, change.getChangedTable(),
+        change.getNewForeignKey());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -2488,8 +2491,8 @@ public abstract class SqlBuilder {
         if (genPlaceholders) {
           buffer.append("?");
         } else {
-          buffer.append(column == null ? entry.getValue() : getValueAsString(column, entry
-              .getValue()));
+          buffer.append(column == null ? entry.getValue() : getValueAsString(column,
+              entry.getValue()));
         }
         addSep = true;
       }

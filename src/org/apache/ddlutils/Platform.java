@@ -1331,7 +1331,12 @@ public interface Platform {
 
   public void deleteInvalidConstraintRows(Database model, boolean continueOnError);
 
+  public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError);
+
   public void deleteInvalidConstraintRows(Connection connection, Database model,
+      boolean continueOnError);
+
+  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
       boolean continueOnError);
 
   public void applyConfigScript(Database database, Vector<Change> changes);
@@ -1363,9 +1368,13 @@ public interface Platform {
 
   public void disableCheckConstraints(Database database, OBDataset dataset);
 
+  public void disableCheckConstraints(Connection connection, Database database, OBDataset dataset);
+
   public void enableCheckConstraints(Database database);
 
   public void enableCheckConstraints(Database database, OBDataset dataset);
+
+  public void enableCheckConstraints(Connection connection, Database database, OBDataset dataset);
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
 

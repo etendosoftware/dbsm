@@ -805,8 +805,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             else if (table.getColumn(i).getName().equalsIgnoreCase("CREATEDBY"))
               map.put(table.getColumn(i).getName(), "0");
             else
-              map.put(table.getColumn(i).getName(), addChange.getRow().get(
-                  table.getColumn(i).getName()));
+              map.put(table.getColumn(i).getName(),
+                  addChange.getRow().get(table.getColumn(i).getName()));
           }
 
           writer.append(getSqlBuilder().getInsertSql(table, map, false));
@@ -816,8 +816,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           HashMap map = new HashMap();
           Table table = removeChange.getTable();
           for (int i = 0; i < table.getPrimaryKeyColumns().length; i++)
-            map.put(table.getPrimaryKeyColumns()[i].getName(), removeChange.getRow().get(
-                table.getPrimaryKeyColumns()[i].getName()).toString());
+            map.put(table.getPrimaryKeyColumns()[i].getName(),
+                removeChange.getRow().get(table.getPrimaryKeyColumns()[i].getName()).toString());
           writer.append(getSqlBuilder().getDeleteSql(table, map, false));
           getSqlBuilder().printEndOfStatement("");
         } else if (change instanceof ColumnDataChange) {
@@ -1735,8 +1735,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
         if (!identityWarningPrinted
             && (getRelevantIdentityColumns(model, curDynaClass, dynaBean).length > 0)) {
-          _log
-              .warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
+          _log.warn("Updating the bean properties corresponding to auto-increment columns is not supported in batch mode");
           identityWarningPrinted = true;
         }
 
@@ -2006,8 +2005,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           else if (table.getColumn(i).getName().equalsIgnoreCase("CREATED"))
             setObject(statement, sqlIndex++, date, table.findColumn(change.getColumnname()));
           else
-            setObject(statement, sqlIndex++, change.getNewValue(), table.findColumn(change
-                .getColumnname()));
+            setObject(statement, sqlIndex++, change.getNewValue(),
+                table.findColumn(change.getColumnname()));
         }
       }
 
@@ -2453,8 +2452,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     HashMap result = new HashMap();
 
     for (int idx = 0; idx < properties.length; idx++) {
-      result.put(properties[idx].getName(), bean == null ? null : bean.get(properties[idx]
-          .getName()));
+      result.put(properties[idx].getName(),
+          bean == null ? null : bean.get(properties[idx].getName()));
     }
     return result;
   }
@@ -2644,8 +2643,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       value = useIdx ? resultSet.getBigDecimal(columnIdx) : resultSet.getBigDecimal(columnName);
       break;
     case Types.BIT:
-      value = new Boolean(useIdx ? resultSet.getBoolean(columnIdx) : resultSet
-          .getBoolean(columnName));
+      value = new Boolean(useIdx ? resultSet.getBoolean(columnIdx)
+          : resultSet.getBoolean(columnName));
       break;
     case Types.TINYINT:
     case Types.SMALLINT:
@@ -2726,8 +2725,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       // special handling for Java 1.4/JDBC 3 types
       if (Jdbc3Utils.supportsJava14JdbcTypes()
           && (jdbcType == Jdbc3Utils.determineBooleanTypeCode())) {
-        value = new Boolean(useIdx ? resultSet.getBoolean(columnIdx) : resultSet
-            .getBoolean(columnName));
+        value = new Boolean(useIdx ? resultSet.getBoolean(columnIdx)
+            : resultSet.getBoolean(columnName));
       } else {
         value = useIdx ? resultSet.getObject(columnIdx) : resultSet.getObject(columnName);
       }
@@ -2794,7 +2793,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model);
+    getSqlBuilder().deleteInvalidConstraintRows(model, true);
+    evaluateBatch(connection, buffer.toString(), continueOnError);
+  }
+
+  public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError) {
+
+    Connection connection = borrowConnection();
+    deleteAllInvalidConstraintRows(connection, model, continueOnError);
+    returnConnection(connection);
+
+  }
+
+  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
+      boolean continueOnError) {
+
+    StringWriter buffer = new StringWriter();
+
+    getSqlBuilder().setWriter(buffer);
+    getSqlBuilder().deleteInvalidConstraintRows(model, false);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 
@@ -2954,6 +2971,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void disableCheckConstraints(Database database, OBDataset dataset) {
     Connection connection = borrowConnection();
+    try {
+      disableCheckConstraints(connection, database, dataset);
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public void disableCheckConstraints(Connection connection, Database database, OBDataset dataset) {
 
     try {
       StringWriter buffer = new StringWriter();
@@ -2979,8 +3004,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       evaluateBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      returnConnection(connection);
     }
   }
 
@@ -3030,6 +3053,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void enableCheckConstraints(Database database, OBDataset dataset) {
     Connection connection = borrowConnection();
+    try {
+      enableCheckConstraints(connection, database, dataset);
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
+  public void enableCheckConstraints(Connection connection, Database database, OBDataset dataset) {
 
     try {
       StringWriter buffer = new StringWriter();
@@ -3062,8 +3093,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       evaluateBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      returnConnection(connection);
     }
   }
 
