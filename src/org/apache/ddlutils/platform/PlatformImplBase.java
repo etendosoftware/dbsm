@@ -300,6 +300,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     int commandCount = 0;
 
     ArrayList<String> aForcedCommands = new ArrayList<String>();
+    ArrayList<String> iteratedCommands = new ArrayList<String>();
 
     // we tokenize the SQL along the delimiters, and we also make sure that
     // only delimiters
@@ -322,6 +323,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
         if (_log.isDebugEnabled()) {
           _log.debug("About to execute SQL " + command);
+        }
+        if (command.contains("ITERATE = TRUE")) {
+          _log.info("added: " + command);
+          iteratedCommands.add(command);
+          continue;
         }
         try {
           // int results = statement.executeUpdate(command);
@@ -371,6 +377,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
         connection.clearWarnings();
       }
+      boolean changedSomething = false;
+      do {
+        changedSomething = false;
+        for (String command : iteratedCommands) {
+          int changedRecords = statement.executeUpdate(command);
+          if (changedRecords != 0) {
+            _log.info("changed: " + changedRecords + " executed: " + command);
+            changedSomething = true;
+          }
+        }
+      } while (changedSomething);
       String errorNumber = "";
       if (errors > 0)
         errorNumber = " with " + errors + " error(s)";

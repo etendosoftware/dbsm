@@ -590,8 +590,19 @@ public abstract class SqlBuilder {
                 foreignColumns.add(parentTable.getColumn(k).getName());
               }
             }
-            print("DELETE FROM " + table.getName() + " t WHERE ");
-            print("NOT EXISTS (SELECT 1");
+            printScriptOptions("ITERATE = TRUE");
+            if (fk.getOnDelete() != null && fk.getOnDelete().contains("cascade")) {
+              print("DELETE FROM " + table.getName() + " t ");
+            } else {
+              print("UPDATE " + table.getName() + " t SET ");
+              for (int indC = 0; indC < localColumns.size(); indC++) {
+                if (indC != 0) {
+                  print(", ");
+                }
+                print(localColumns.get(indC) + "=null");
+              }
+            }
+            print(" WHERE NOT EXISTS (SELECT 1");
             print(" FROM " + parentTable.getName());
             print(" WHERE ");
             for (int indC = 0; indC < localColumns.size(); indC++) {
@@ -4070,6 +4081,12 @@ public abstract class SqlBuilder {
 
   protected void writeDropTriggerFunction(Trigger trigger) throws IOException {
   }
+
+  // abstract here as only implemented for PostgreSqlPlatform at the moment
+  public abstract void disableTrigger(Database database, Trigger trigger) throws IOException;
+
+  // abstract here as only implemented for PostgreSqlPlatform at the moment
+  public abstract void enableTrigger(Database database, Trigger trigger) throws IOException;
 
   protected Translation createPLSQLFunctionTranslation(Database database) {
     return new NullTranslation();

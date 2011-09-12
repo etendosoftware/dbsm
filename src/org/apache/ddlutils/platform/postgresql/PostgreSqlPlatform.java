@@ -327,7 +327,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
       for (int i = 0; i < model.getTriggerCount(); i++) {
-        getSqlBuilder().dropTrigger(model, model.getTrigger(i));
+        getSqlBuilder().disableTrigger(model, model.getTrigger(i));
       }
       evaluateBatch(connection, buffer.toString(), continueOnError);
       /*
@@ -353,7 +353,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
       for (int i = 0; i < model.getTriggerCount(); i++) {
-        ((PostgreSqlBuilder) getSqlBuilder()).createTrigger(model, model.getTrigger(i));
+        ((PostgreSqlBuilder) getSqlBuilder()).enableTrigger(model, model.getTrigger(i));
       }
       evaluateBatch(connection, buffer.toString(), continueOnError);
       /*

@@ -599,6 +599,31 @@ public class PostgreSqlBuilder extends SqlBuilder {
   }
 
   @Override
+  public void disableTrigger(Database database, Trigger trigger) throws IOException {
+    if (trigger.getName() == null) {
+      _log.warn("Cannot write unnamed trigger " + trigger);
+    } else {
+      printStartOfStatement("TRIGGER", getStructureObjectName(trigger));
+      print("ALTER TABLE " + trigger.getTable() + " DISABLE TRIGGER ");
+      printIdentifier(getStructureObjectName(trigger));
+      printEndOfStatement(getStructureObjectName(trigger));
+    }
+  }
+
+  @Override
+  public void enableTrigger(Database database, Trigger trigger) throws IOException {
+
+    if (trigger.getName() == null) {
+      _log.warn("Cannot write unnamed trigger " + trigger);
+    } else {
+      printStartOfStatement("TRIGGER", getStructureObjectName(trigger));
+      print("ALTER TABLE " + trigger.getTable() + " ENABLE TRIGGER ");
+      printIdentifier(getStructureObjectName(trigger));
+      printEndOfStatement(getStructureObjectName(trigger));
+    }
+  }
+
+  @Override
   protected void writeDropTriggerEndStatement(Database database, Trigger trigger)
       throws IOException {
     print(" ON ");
