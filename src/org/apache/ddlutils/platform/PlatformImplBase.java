@@ -325,7 +325,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           _log.debug("About to execute SQL " + command);
         }
         if (command.contains("ITERATE = TRUE")) {
-          _log.info("added: " + command);
           iteratedCommands.add(command);
           continue;
         }
@@ -383,7 +382,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         for (String command : iteratedCommands) {
           int changedRecords = statement.executeUpdate(command);
           if (changedRecords != 0) {
-            _log.info("changed: " + changedRecords + " executed: " + command);
+            _log.debug("changed: " + changedRecords + " executed: " + command);
             changedSomething = true;
           }
         }
