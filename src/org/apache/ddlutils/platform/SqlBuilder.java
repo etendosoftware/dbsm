@@ -4082,11 +4082,15 @@ public abstract class SqlBuilder {
   protected void writeDropTriggerFunction(Trigger trigger) throws IOException {
   }
 
-  // abstract here as only implemented for PostgreSqlPlatform at the moment
-  public abstract void disableTrigger(Database database, Trigger trigger) throws IOException;
+  // pseudo abstract here as only implemented for PostgreSqlPlatform at the moment
+  public void disableTrigger(Database database, Trigger trigger) throws IOException {
+    throw new RuntimeException("Needs to be implemented by a specific db class");
+  }
 
-  // abstract here as only implemented for PostgreSqlPlatform at the moment
-  public abstract void enableTrigger(Database database, Trigger trigger) throws IOException;
+  // pseudo abstract here as only implemented for PostgreSqlPlatform at the moment
+  public void enableTrigger(Database database, Trigger trigger) throws IOException {
+    throw new RuntimeException("Needs to be implemented by a specific db class");
+  }
 
   protected Translation createPLSQLFunctionTranslation(Database database) {
     return new NullTranslation();

@@ -122,7 +122,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.alterData(db, dataComparator.getChanges(), w);
       getLog().info("Removing invalid rows.");
       platform.getSqlBuilder().setWriter(w);
-      platform.getSqlBuilder().deleteInvalidConstraintRows(db);
+      platform.getSqlBuilder().deleteInvalidConstraintRows(db, true);
       getLog().info("Recreating Primary Keys");
       List changes = platform.getSqlBuilder().alterDatabaseRecreatePKs(oldModel, db, null);
       getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
