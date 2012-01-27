@@ -593,8 +593,8 @@ public class DBSMOBUtil {
     String sql = "DELETE FROM AD_MODULE_INSTALL";
     String sql1 = "DELETE FROM AD_MODULE_DBPREFIX_INSTALL";
     String sql2 = "DELETE FROM AD_MODULE_DEPENDENCY_INST";
+    final Connection connection = platform.borrowConnection();
     try {
-      final Connection connection = platform.borrowConnection();
       Iterator itCheck = platform.query(database,
           "SELECT * FROM AD_TABLE WHERE LOWER(TABLENAME)='ad_module_install'");
       if (!itCheck.hasNext()) {
@@ -611,6 +611,8 @@ public class DBSMOBUtil {
     } catch (Exception e) {
       System.out.println("There was a problem when deleting install table content.");
       e.printStackTrace();
+    } finally {
+      platform.returnConnection(connection);
     }
   }
 
