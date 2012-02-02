@@ -430,6 +430,9 @@ public class DataComparator {
       } else if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange) {
         finalChanges.add((Change) change);
         notExportedChanges.remove(change);
+      } else if (change instanceof ColumnRequiredChange) {
+        finalChanges.add((Change) change);
+        notExportedChanges.remove(change);
       }
 
     Vector<Change> dataChangesL = new Vector<Change>();

@@ -32,6 +32,13 @@ import org.apache.ddlutils.model.Table;
 public class ColumnRequiredChange extends TableChangeImplBase implements ColumnChange {
   /** The column. */
   private Column _column;
+  private String _columnName;
+  private String _tableName;
+  private Boolean _required;
+
+  public ColumnRequiredChange() {
+
+  }
 
   /**
    * Creates a new change object.
@@ -55,18 +62,69 @@ public class ColumnRequiredChange extends TableChangeImplBase implements ColumnC
     return _column;
   }
 
+  public String getColumnName() {
+    if (_columnName != null) {
+      return _columnName;
+    }
+    if (_column != null) {
+      return _column.getName();
+    }
+    return null;
+  }
+
+  public void setColumnName(String columnName) {
+    _columnName = columnName;
+  }
+
+  public String getTableName() {
+    if (_tableName != null) {
+      return _tableName;
+    }
+    if (_table != null) {
+      return _table.getName();
+    }
+    return null;
+  }
+
+  public void setTableName(String tableName) {
+    _tableName = tableName;
+  }
+
+  public boolean getRequired() {
+    if (_required != null) {
+      return !(_required.booleanValue());
+    }
+    return !(_column.isRequired());
+  }
+
+  public void setRequired(boolean required) {
+    _required = !required;
+  }
+
   /**
    * {@inheritDoc}
    */
   public void apply(Database database, boolean caseSensitive) {
-    Table table = database.findTable(getChangedTable().getName(), caseSensitive);
-    Column column = table.findColumn(_column.getName(), caseSensitive);
+    Table table = database.findTable(_tableName != null ? _tableName : getChangedTable().getName(),
+        caseSensitive);
+    Column column = table.findColumn(_columnName != null ? _columnName : _column.getName(),
+        caseSensitive);
 
-    column.setRequired(!_column.isRequired());
+    column.setRequired(getRequired());
   }
 
   @Override
   public String toString() {
     return "ColumnRequiredChange. Column: " + _column.getName();
+  }
+
+  public void applyInReverse(Database database, boolean caseSensitive) {
+    Table table = database.findTable(_tableName != null ? _tableName : getChangedTable().getName(),
+        caseSensitive);
+    Column column = table.findColumn(_columnName != null ? _columnName : _column.getName(),
+        caseSensitive);
+
+    column.setRequired(!getRequired());
+
   }
 }

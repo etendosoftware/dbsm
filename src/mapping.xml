@@ -231,6 +231,14 @@ under the License.
     </element>
   </class>
     
+  <class name="org.apache.ddlutils.alteration.ColumnRequiredChange">
+    <element name="columnRequiredChange">
+      <attribute name="tableName" property="tableName"/>
+      <attribute name="columnName" property="columnName"/>
+      <element name="required" property="required"/>
+    </element>
+  </class>
+    
   <class name="org.apache.ddlutils.alteration.RemoveTriggerChange">
     <element name="removeTriggerChange">
       <attribute name="triggerName" property="triggerName"/>

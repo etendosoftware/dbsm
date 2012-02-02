@@ -17,6 +17,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.ModelChange;
@@ -1042,6 +1043,8 @@ public class DBSMOBUtil {
             ((RemoveCheckChange) change).applyInReverse(database, false);
           else if (change instanceof ColumnSizeChange)
             ((ColumnSizeChange) change).applyInReverse(database, false);
+          else if (change instanceof ColumnRequiredChange)
+            ((ColumnRequiredChange) change).applyInReverse(database, false);
           getLog().debug(change);
         }
       } else {
