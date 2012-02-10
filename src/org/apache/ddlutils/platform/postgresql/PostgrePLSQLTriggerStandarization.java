@@ -34,8 +34,8 @@ public class PostgrePLSQLTriggerStandarization extends PostgrePLSQLStandarizatio
     // append(new
     // ReplacePatTranslation("((.|\\n|\\p{Cntrl})*)","$1"+database.getTrigger(numTrigger).getName()));
     // append(new ReplacePatTranslation("END(\\([\\s|\\t]*)","END "));
-    append(new ReplacePatTranslation("([.|\\n]*)(.*)([\\s|\\n]*)END([.|\\n|\\s|\\r|\\t]*)$",
-        "$1$2$3END " + database.getTrigger(numTrigger).getName() + "$4"));
+    append(new ReplacePatTranslation("END(\\s*)$",
+        "END " + database.getTrigger(numTrigger).getName() + "$1"));
     /*
      * final Database database2=database; final int numTrigger2=numTrigger;http://www.marca.com/
      * append(new Translation() { Trigger trigger=database2.getTrigger(numTrigger2); public String

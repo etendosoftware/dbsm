@@ -8,7 +8,7 @@ public class PostgrePLSQLFunctionStandarization extends PostgrePLSQLStandarizati
   public PostgrePLSQLFunctionStandarization(Database database, int numFunction) {
     super(database);
 
-    append(new ReplacePatTranslation("([.|\\n]*)(.*)[\\s|\\n]*END[\\n|\\s|\\r]*$", "$1$2\nEND "
+    append(new ReplacePatTranslation("\\s*END\\s*$", "\nEND "
         + database.getFunction(numFunction).getName()));
 
     for (int i = 0; i < patternsOutFunctions.size(); i++) {
