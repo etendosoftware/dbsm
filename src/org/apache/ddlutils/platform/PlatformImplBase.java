@@ -450,8 +450,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
       }
       if (!aForcedCommands.isEmpty()) {
-        String error = "There are still " + aForcedCommands.size()
-            + " forced commands not executed sucessfully.";
+        String error = "There are still "
+            + aForcedCommands.size()
+            + " forced commands not executed sucessfully (likely related to failed view statements).";
         if (_ignoreWarns) {
           _log.info(error);
         } else {

@@ -186,9 +186,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.deleteInvalidConstraintRows(db, !isFailonerror());
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
-      getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
+      getLog().info("Executing oncreatedefault statements for mandatory columns");
       platform.executeOnCreateDefaultForMandatoryColumns(db);
+      getLog().info("Recreating not null constraints");
       platform.enableNOTNULLColumns(db, ad);
+      getLog().info("Executing update final script (dropping temporary tables)");
       platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");
