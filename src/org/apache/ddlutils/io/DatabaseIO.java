@@ -143,8 +143,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().register(getBetwixtMapping());
       writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
       writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-      writer.getXMLIntrospector().getConfiguration().setElementNameMapper(
-          new HyphenatedNameMapper());
+      writer.getXMLIntrospector().getConfiguration()
+          .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
       writer.enablePrettyPrint();
       // always use linux style line endings
@@ -170,8 +170,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().register(getBetwixtMapping());
       writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
       writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-      writer.getXMLIntrospector().getConfiguration().setElementNameMapper(
-          new HyphenatedNameMapper());
+      writer.getXMLIntrospector().getConfiguration()
+          .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
       writer.enablePrettyPrint();
       // always use linux style line endings
@@ -329,7 +329,6 @@ public class DatabaseIO {
     File subdir;
 
     // remove all .xml files
-    dir.mkdirs();
     File[] filestodelete = readFileArray(dir);
     for (File filedelete : filestodelete) {
       filedelete.delete();
@@ -337,7 +336,9 @@ public class DatabaseIO {
 
     // Write tables
     subdir = new File(dir, "tables");
-    subdir.mkdirs();
+    if (model.getTableCount() > 0) {
+      subdir.mkdirs();
+    }
 
     for (int i = 0; i < model.getTableCount(); i++) {
       Table t = model.getTable(i);
@@ -362,7 +363,9 @@ public class DatabaseIO {
 
     // Write views
     subdir = new File(dir, "views");
-    subdir.mkdirs();
+    if (model.getViewCount() > 0) {
+      subdir.mkdirs();
+    }
 
     for (int i = 0; i < model.getViewCount(); i++) {
       View v = model.getView(i);
@@ -374,7 +377,9 @@ public class DatabaseIO {
 
     // Write sequences
     subdir = new File(dir, "sequences");
-    subdir.mkdirs();
+    if (model.getSequenceCount() > 0) {
+      subdir.mkdirs();
+    }
 
     for (int i = 0; i < model.getSequenceCount(); i++) {
       Sequence s = model.getSequence(i);
@@ -386,7 +391,9 @@ public class DatabaseIO {
 
     // Write functions
     subdir = new File(dir, "functions");
-    subdir.mkdirs();
+    if (model.getFunctionCount() > 0) {
+      subdir.mkdirs();
+    }
 
     for (int i = 0; i < model.getFunctionCount(); i++) {
       Function f = model.getFunction(i);
@@ -398,7 +405,9 @@ public class DatabaseIO {
 
     // Write trigger
     subdir = new File(dir, "triggers");
-    subdir.mkdirs();
+    if (model.getTriggerCount() > 0) {
+      subdir.mkdirs();
+    }
 
     for (int i = 0; i < model.getTriggerCount(); i++) {
       Trigger t = model.getTrigger(i);
