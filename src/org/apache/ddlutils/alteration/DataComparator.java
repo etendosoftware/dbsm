@@ -50,6 +50,10 @@ public class DataComparator {
         return -1;
       else if (o1 instanceof AddRowChange && o2 instanceof ColumnDataChange)
         return 1;
+      else if (o1 instanceof ColumnDataChange && o2 instanceof RemoveRowChange)
+        return 1;
+      else if (o1 instanceof ColumnDataChange && o2 instanceof AddRowChange)
+        return -1;
       else
         return 0;
     }
