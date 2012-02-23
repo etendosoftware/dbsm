@@ -135,8 +135,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
         // "+dataFiles.get(i).getAbsolutePath());
         try {
           dataReader.getSink().start();
-          final String tablename = dataFiles.get(i).getName().substring(0,
-              dataFiles.get(i).getName().length() - 4);
+          final String tablename = dataFiles.get(i).getName()
+              .substring(0, dataFiles.get(i).getName().length() - 4);
           final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
               .getVector();
           dataReader.parse(dataFiles.get(i));
@@ -195,7 +195,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
         modIds.add(mod);
       }
 
-      OBDataset ad = new OBDataset(databaseOrgData, "AD");
+      OBDataset ad = new OBDataset(platform, currentdb, "AD");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.compare(xmlModel, databaseModel, platform, databaseOrgData, ad, null);
@@ -238,10 +238,9 @@ public class ExportConfigScript extends BaseDatabaseTask {
       dbIO.write(configFile, finalChanges);
       for (Change c : finalChanges) {
         if (c instanceof RemoveTriggerChange) {
-          log
-              .info("The trigger "
-                  + ((RemoveTriggerChange) c).getTriggerName()
-                  + " has not been found in the database, and therefore a RemoveTriggerChange has been exported to the configuration script.");
+          log.info("The trigger "
+              + ((RemoveTriggerChange) c).getTriggerName()
+              + " has not been found in the database, and therefore a RemoveTriggerChange has been exported to the configuration script.");
         } else if (c instanceof ModelChange) {
           log.info(c);
         } else {

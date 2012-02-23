@@ -8,6 +8,8 @@ import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.DdlUtilsException;
+import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
@@ -15,15 +17,29 @@ import org.apache.log4j.Logger;
 
 public class OBDataset {
   Vector<OBDatasetTable> tables = new Vector<OBDatasetTable>();
+  DatabaseData databaseData;
+  Database database;
+  Platform platform;
+
+  public OBDataset(Platform platform, Database database, String name) {
+    this.platform = platform;
+    this.database = database;
+    DynaBean dataset = searchDynaBeans("AD_DATASET", true, name, "NAME").get(0);
+    createDataset(dataset, true);
+  }
 
   public OBDataset(DatabaseData databaseData, String name) {
-    Database database = databaseData.getDatabase();
-    DynaBean dataset = DatabaseData.searchDynaBean(databaseData.getRowsFromTable("AD_DATASET"),
-        name, "NAME");
-    Vector<DynaBean> alldsTables = databaseData.getRowsFromTable("AD_DATASET_TABLE");
-    List<DynaBean> dsTables = DatabaseData.searchDynaBeans(alldsTables, dataset
-        .get("AD_DATASET_ID").toString(), "AD_DATASET_ID");
-    Vector<DynaBean> adTables = databaseData.getRowsFromTable("AD_TABLE");
+    this.database = databaseData.getDatabase();
+    this.databaseData = databaseData;
+    DynaBean dataset = searchDynaBeans("AD_DATASET", false, name, "NAME").get(0);
+    createDataset(dataset, false);
+  }
+
+  private void createDataset(DynaBean dataset, boolean readFromDb) {
+    // Vector<DynaBean> alldsTables = getDynaBeans("AD_DATASET_TABLE", readFromDb);
+    List<DynaBean> dsTables = searchDynaBeans("AD_DATASET_TABLE", readFromDb,
+        dataset.get("AD_DATASET_ID").toString(), "AD_DATASET_ID");
+    Vector<DynaBean> adTables = getDynaBeans("AD_TABLE", readFromDb);
     for (DynaBean dsTable : dsTables) {
       OBDatasetTable table = new OBDatasetTable();
       tables.add(table);
@@ -37,21 +53,21 @@ public class OBDataset {
           .toString(), "AD_TABLE_ID");
       table.setName(adTable.get("TABLENAME").toString());
       if (table.isIncludeAllColumns()) {
-        List<DynaBean> dsCols = DatabaseData.searchDynaBeans(databaseData
-            .getRowsFromTable("AD_DATASET_COLUMN"), dsTable.get("AD_DATASET_TABLE_ID").toString(),
-            "AD_DATASET_TABLE_ID");
+        List<DynaBean> dsCols = searchDynaBeans("AD_DATASET_COLUMN", readFromDb,
+            dsTable.get("AD_DATASET_TABLE_ID").toString(), "AD_DATASET_TABLE_ID");
         List<DynaBean> excludedCols = DatabaseData.searchDynaBeans(dsCols, "Y", "ISEXCLUDED");
         for (DynaBean dsCol : dsCols) {
-          DynaBean adCol = DatabaseData.searchDynaBean(databaseData.getRowsFromTable("AD_COLUMN"),
-              dsCol.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID");
+          DynaBean adCol = searchDynaBeans("AD_COLUMN", readFromDb,
+              dsCol.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get(0);
           if (adCol.get("ISTRANSIENT").toString().equals("Y")) {
             excludedCols.add(adCol);
           }
         }
         Vector<String> excludedColNames = new Vector<String>();
         for (DynaBean db : excludedCols) {
-          String colName = DatabaseData.searchDynaBean(databaseData.getRowsFromTable("AD_COLUMN"),
-              db.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get("COLUMNNAME").toString();
+          String colName = searchDynaBeans("AD_COLUMN", readFromDb,
+              db.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get(0).get("COLUMNNAME")
+              .toString();
           excludedColNames.add(colName.toUpperCase());
         }
         Table mTable = database.findTable(table.getName());
@@ -65,7 +81,39 @@ public class OBDataset {
         }
       }
     }
+  }
 
+  private List<DynaBean> searchDynaBeans(String tablename, boolean readFromDb, String colValue,
+      String colName) {
+    if (readFromDb) {
+      Connection connection = platform.borrowConnection();
+      Table table = database.findTable(tablename);
+      DatabaseDataIO dbIO = new DatabaseDataIO();
+      OBDatasetTable dsTable = new OBDatasetTable();
+      dsTable.setWhereclause("1=1");
+      dsTable.setSecondarywhereclause(colName + "=" + "'" + colValue + "'");
+      Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, database,
+          table, dsTable, null);
+      platform.returnConnection(connection);
+      return rowsNewData;
+    } else {
+      return DatabaseData.searchDynaBeans(getDynaBeans(tablename, readFromDb), colValue, colName);
+    }
+
+  }
+
+  private Vector<DynaBean> getDynaBeans(String tablename, boolean readFromDb) {
+    if (readFromDb) {
+      Connection connection = platform.borrowConnection();
+      Table table = database.findTable(tablename);
+      DatabaseDataIO dbIO = new DatabaseDataIO();
+      Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, database,
+          table, new OBDatasetTable(), null);
+      platform.returnConnection(connection);
+      return rowsNewData;
+    } else {
+      return databaseData.getRowsFromTable(tablename);
+    }
   }
 
   public OBDatasetTable getTable(String tablename) {
