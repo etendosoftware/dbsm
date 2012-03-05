@@ -113,6 +113,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
       DatabaseData databaseOrgData = new DatabaseData(db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
           moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
+      OBDataset ad = new OBDataset(databaseOrgData, "AD");
       DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, moduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         getLog().info("Exporting module: " + util.getActiveModule(i).name);
@@ -129,8 +130,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
           log.info("Checking translation consistency");
           ArrayList inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
           if (inconsistentObjects.size() > 0) {
-            log
-                .warn("Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
+            log.warn("Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
             for (int numObj = 0; numObj < inconsistentObjects.size(); numObj++) {
               log.warn(inconsistentObjects.get(numObj).toString());
             }
@@ -154,7 +154,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (testAPI) {
           getLog().info("Reading XML model for API checking" + path);
           Database dbXML = DatabaseUtils.readDatabase(path);
-          validateAPIForModel(platform, dbI, dbXML);
+          validateAPIForModel(platform, dbI, dbXML, ad);
         }
 
         if (validateModel)
@@ -205,8 +205,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
               // "+dataFiles.get(i).getAbsolutePath());
               try {
                 dataReader.getSink().start();
-                final String tablename = dataFiles.get(j).getName().substring(0,
-                    dataFiles.get(j).getName().length() - 4);
+                final String tablename = dataFiles.get(j).getName()
+                    .substring(0, dataFiles.get(j).getName().length() - 4);
                 final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
                     .getVector();
                 dataReader.parse(dataFiles.get(j));
@@ -217,7 +217,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
               }
             }
 
-            OBDataset ad = new OBDataset(databaseOrgData, "AD");
             final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
                 .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
             getLog().info("Comparing models");
@@ -233,8 +232,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);
             DatabaseData dataToExport = new DatabaseData(db);
-            dbdio.readRowsIntoDatabaseData(platform, db, dataToExport, dataset, util
-                .getActiveModule(i).idMod);
+            dbdio.readRowsIntoDatabaseData(platform, db, dataToExport, dataset,
+                util.getActiveModule(i).idMod);
             DBSMOBUtil.getInstance().removeSortedTemplates(platform, dataToExport,
                 moduledir.getAbsolutePath());
             path.mkdirs();
@@ -290,9 +289,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
     }
   }
 
-  private void validateAPIForModel(Platform platform, Database dbDB, Database dbXml) {
+  private void validateAPIForModel(Platform platform, Database dbDB, Database dbXml,
+      OBDataset dataset) {
     getLog().info("Validating model API");
-    ValidateAPIModel validate = new ValidateAPIModel(platform, dbXml, dbDB);
+    ValidateAPIModel validate = new ValidateAPIModel(platform, dbXml, dbDB, dataset);
     validate.execute();
     validate.printErrors(getLog());
     validate.printWarnings(getLog());

@@ -64,6 +64,7 @@ public class ValidateAPIModel extends ValidateAPI {
   Database validDB;
   Database testDB;
   Platform platform;
+  OBDataset obDataset;
 
   /**
    * Creates a {@link ValidateAPIModel} object with the two {@link Database} objects to be compared
@@ -75,12 +76,13 @@ public class ValidateAPIModel extends ValidateAPI {
    * @param test
    *          Database to be tested
    */
-  public ValidateAPIModel(Platform platform, Database valid, Database test) {
+  public ValidateAPIModel(Platform platform, Database valid, Database test, OBDataset obDataset) {
     super();
     validDB = valid;
     testDB = test;
     this.platform = platform;
     valType = ValidationType.MODEL;
+    this.obDataset = obDataset;
   }
 
   /**
@@ -88,8 +90,8 @@ public class ValidateAPIModel extends ValidateAPI {
    */
   @SuppressWarnings("unchecked")
   public void execute() {
-    ModelComparator modelComparator = new ModelComparator(platform.getPlatformInfo(), platform
-        .isDelimitedIdentifierModeOn());
+    ModelComparator modelComparator = new ModelComparator(platform.getPlatformInfo(),
+        platform.isDelimitedIdentifierModeOn());
     List<ModelChange> modelChanges = modelComparator.compare(validDB, testDB);
     checkAllChanges(modelChanges);
   }
@@ -116,6 +118,12 @@ public class ValidateAPIModel extends ValidateAPI {
           // it is a real creation, not a re-creation
           errors.add("Added mandatory column without default or onCreateDefault: " + tablename
               + "." + c.getNewColumn().getName());
+        }
+        if (oldCol == null && c.getNewColumn().isRequired()
+            && c.getNewColumn().getOnCreateDefault() == null && isADTable(tablename)) {
+          errors
+              .add("Added mandatory column without onCreateDefault in a table contained in the AD dataset: "
+                  + tablename + "." + c.getNewColumn().getName());
         }
       } else if (change instanceof AddForeignKeyChange) {
         AddForeignKeyChange c = (AddForeignKeyChange) change;
@@ -293,8 +301,9 @@ public class ValidateAPIModel extends ValidateAPI {
             warnings.add("Column type change from "
                 + originalColumn.getType()
                 + " to "
-                + testDB.findTable(c.getChangedTable().getName()).findColumn(
-                    c.getChangedColumn().getName()).getType() + ": column:" + tableColumn);
+                + testDB.findTable(c.getChangedTable().getName())
+                    .findColumn(c.getChangedColumn().getName()).getType() + ": column:"
+                + tableColumn);
           }
         } else if (change instanceof ColumnAutoIncrementChange) {
           errors.add("Column changed to auto increment: column" + tableColumn);
@@ -357,6 +366,10 @@ public class ValidateAPIModel extends ValidateAPI {
       }
     }
 
+  }
+
+  private boolean isADTable(String tablename) {
+    return obDataset.getTable(tablename) != null ? true : false;
   }
 
   private String getColsNames(Column[] c) {

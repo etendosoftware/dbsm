@@ -28,6 +28,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.ValidateAPIData;
 import org.openbravo.ddlutils.util.ValidateAPIModel;
 
@@ -84,7 +85,8 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     dataComparator.compare(dbDataStable, dbDataTest);
 
     getLog().info("Validating model API");
-    ValidateAPIModel validateModel = new ValidateAPIModel(platform, dbModelStable, dbModelTest);
+    ValidateAPIModel validateModel = new ValidateAPIModel(platform, dbModelStable, dbModelTest,
+        new OBDataset(dbDataTest, "AD"));
     validateModel.execute();
 
     getLog().info("Validating data API");
