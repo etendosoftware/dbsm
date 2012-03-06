@@ -1767,8 +1767,14 @@ public abstract class SqlBuilder {
       Column column = table.getColumn(i);
       if (column.isRequired() && !column.isPrimaryKey()
           && !recreatedTables.contains(table.getName())) {
-        println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
-            + getSqlType(column) + " NULL");
+        if (getSqlType(column).equalsIgnoreCase("CLOB")) {
+          // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
+          // the null/not null constraint
+          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + "  NULL");
+        } else {
+          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
+              + getSqlType(column) + " NULL");
+        }
         printEndOfStatement();
       }
 
@@ -1789,8 +1795,15 @@ public abstract class SqlBuilder {
     for (int i = 0; i < newColumns.size(); i++) {
       Column column = newColumns.get(i).getNewColumn();
       if (column.isRequired() && !column.isPrimaryKey()) {
-        println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + "_ MODIFY "
-            + getColumnName(column) + " " + getSqlType(column) + " NULL");
+        if (getSqlType(column).equalsIgnoreCase("CLOB")) {
+          // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
+          // the null/not null constraint
+          println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + "_ MODIFY "
+              + getColumnName(column) + " NULL");
+        } else {
+          println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + "_ MODIFY "
+              + getColumnName(column) + " " + getSqlType(column) + " NULL");
+        }
         printEndOfStatement();
       }
 
@@ -1802,8 +1815,15 @@ public abstract class SqlBuilder {
       Column column = table.getColumn(i);
       if (column.isRequired() && !column.isPrimaryKey()
           && !recreatedTablesTwice.contains(table.getName())) {
-        println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
-            + getSqlType(column) + " NOT NULL");
+        if (getSqlType(column).equalsIgnoreCase("CLOB")) {
+          // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
+          // the null/not null constraint
+          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column)
+              + " NOT NULL");
+        } else {
+          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
+              + getSqlType(column) + " NOT NULL");
+        }
         printEndOfStatement();
       }
 
