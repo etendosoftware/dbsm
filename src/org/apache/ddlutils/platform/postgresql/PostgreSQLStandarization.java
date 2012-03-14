@@ -65,6 +65,7 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     append(new ReplaceStrTranslation(";", ""));
     // append(new ByLineTranslation(new
     // ReplacePatTranslation("^[\\s]*(.*?)[\\s]*","$1")));
+    append(new ReplaceStrTranslation("~~", "LIKE"));
   }
 
 }
