@@ -3054,7 +3054,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
     Connection connection = borrowConnection();
     try {
-      evaluateBatchRealBatch(connection, disableNOTNULLColumnsSql(database, dataset), true);
+      evaluateBatch(connection, disableNOTNULLColumnsSql(database, dataset), true);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
