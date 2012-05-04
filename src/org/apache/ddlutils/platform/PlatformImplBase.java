@@ -469,6 +469,106 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return errors;
   }
 
+  public int evaluateBatchRealBatch(Connection connection, String sql, boolean continueOnError)
+      throws DatabaseOperationException {
+    Statement statement = null;
+    int errors = 0;
+    int commandCount = 0;
+
+    // we tokenize the SQL along the delimiters, and we also make sure that
+    // only delimiters
+    // at the end of a line or the end of the string are used (row mode)
+    try {
+      statement = connection.createStatement();
+
+      SqlTokenizer tokenizer = new SqlTokenizer(sql);
+
+      while (tokenizer.hasMoreStatements()) {
+        String command = tokenizer.getNextStatement();
+
+        // ignore whitespace
+        command = command.trim();
+        if (command.length() == 0) {
+          continue;
+        }
+
+        commandCount++;
+
+        if (_log.isDebugEnabled()) {
+          _log.debug("About to execute SQL " + command);
+        }
+
+        try {
+          statement.addBatch(command);
+
+        } catch (SQLException ex) {
+
+          if (continueOnError) {
+            // Since the user deciced to ignore this error, we log
+            // the error
+            // on level warn, and the exception itself on level
+            // debug
+            _log.warn("SQL Command failed with: " + ex.getMessage());
+            _log.warn(command);
+            if (_log.isDebugEnabled()) {
+              _log.debug(ex);
+            }
+            errors++;
+
+          } else {
+            throw new DatabaseOperationException("Error while executing SQL " + command, ex);
+          }
+        }
+
+        // lets display any warnings
+        SQLWarning warning = connection.getWarnings();
+
+        while (warning != null) {
+          _log.warn(warning.toString());
+          warning = warning.getNextWarning();
+        }
+        connection.clearWarnings();
+      }
+
+      // everything added to batch
+      try {
+        int[] results = statement.executeBatch();
+        for (int result : results) {
+          switch (result) {
+          case 0:
+          case Statement.SUCCESS_NO_INFO:
+            ; // all ok
+            break;
+          case Statement.EXECUTE_FAILED:
+            _log.error("res -> EXECUTE_FAILED");
+            break;
+          default:
+            _log.error("res -> other value: " + result);
+            break;
+          }
+        }
+      } catch (Exception e) {
+
+        _log.warn("SQL Command failed with: " + e.getMessage());
+      }
+
+      String errorNumber = "";
+      if (errors > 0)
+        errorNumber = " with " + errors + " error(s)";
+      else
+        errorNumber = " successfully";
+      if (commandCount > 0)
+        _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
+
+    } catch (SQLException ex) {
+      throw new DatabaseOperationException("Error while executing SQL", ex);
+    } finally {
+      closeStatement(statement);
+    }
+
+    return errors;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -2951,35 +3051,43 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void disableNOTNULLColumns(Database database, OBDataset dataset) {
+
     Connection connection = borrowConnection();
-
     try {
-      StringWriter buffer = new StringWriter();
-
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < database.getTableCount(); i++) {
-        Table table = database.getTable(i);
-        boolean enable = false;
-        if (dataset == null) {
-          enable = true;
-        } else {
-          for (OBDatasetTable dsTable : dataset.getTableList()) {
-            if (dsTable.getName().equalsIgnoreCase(table.getName())) {
-              enable = true;
-            }
-          }
-        }
-        if (enable) {
-          _log.debug("disabling notnulls for table " + table.getName());
-          getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i));
-        }
-      }
-      evaluateBatch(connection, buffer.toString(), true);
+      evaluateBatchRealBatch(connection, disableNOTNULLColumnsSql(database, dataset), true);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
       returnConnection(connection);
     }
+  }
+
+  protected String disableNOTNULLColumnsSql(Database database, OBDataset dataset) {
+    StringWriter buffer = new StringWriter();
+
+    getSqlBuilder().setWriter(buffer);
+    for (int i = 0; i < database.getTableCount(); i++) {
+      Table table = database.getTable(i);
+      boolean enable = false;
+      if (dataset == null) {
+        enable = true;
+      } else {
+        for (OBDatasetTable dsTable : dataset.getTableList()) {
+          if (dsTable.getName().equalsIgnoreCase(table.getName())) {
+            enable = true;
+          }
+        }
+      }
+      if (enable) {
+        _log.debug("disabling notnulls for table " + table.getName());
+        try {
+          getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i));
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    return buffer.toString();
   }
 
   public void disableCheckConstraints(Database database) {
@@ -3025,42 +3133,51 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void enableNOTNULLColumns(Database database, OBDataset dataset) {
+
     Connection connection = borrowConnection();
 
     try {
-      StringWriter buffer = new StringWriter();
-
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < database.getTableCount(); i++) {
-        Table table = database.getTable(i);
-        boolean enable = false;
-        if (dataset == null) {
-          enable = true;
-        } else {
-          for (OBDatasetTable dsTable : dataset.getTableList()) {
-            if (dsTable.getName().equalsIgnoreCase(table.getName())) {
-              enable = true;
-            }
-          }
-          if (!enable) {
-            for (String recTable : getSqlBuilder().recreatedTables) {
-              if (recTable.equalsIgnoreCase(table.getName())) {
-                enable = true;
-              }
-            }
-          }
-        }
-        if (enable) {
-          _log.debug("enabling not nulls for table " + table.getName());
-          getSqlBuilder().enableAllNOTNULLColumns(table);
-        }
-      }
-      evaluateBatch(connection, buffer.toString(), true);
+      evaluateBatch(connection, enableNOTNULLColumnsSql(database, dataset), true);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
       returnConnection(connection);
     }
+  }
+
+  protected String enableNOTNULLColumnsSql(Database database, OBDataset dataset) {
+    StringWriter buffer = new StringWriter();
+
+    getSqlBuilder().setWriter(buffer);
+    for (int i = 0; i < database.getTableCount(); i++) {
+      Table table = database.getTable(i);
+      boolean enable = false;
+      if (dataset == null) {
+        enable = true;
+      } else {
+        for (OBDatasetTable dsTable : dataset.getTableList()) {
+          if (dsTable.getName().equalsIgnoreCase(table.getName())) {
+            enable = true;
+          }
+        }
+        if (!enable) {
+          for (String recTable : getSqlBuilder().recreatedTables) {
+            if (recTable.equalsIgnoreCase(table.getName())) {
+              enable = true;
+            }
+          }
+        }
+      }
+      if (enable) {
+        _log.debug("enabling not nulls for table " + table.getName());
+        try {
+          getSqlBuilder().enableAllNOTNULLColumns(table);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    return buffer.toString();
   }
 
   public void enableNOTNULLColumns(Database database) {

@@ -254,6 +254,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
+      log.info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray);
     }
     return db;
