@@ -25,6 +25,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.sql.BatchUpdateException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -295,6 +296,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public int evaluateBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
+    List<String> commands = new ArrayList<String>();
+    SqlTokenizer tokenizer = new SqlTokenizer(sql);
+
+    while (tokenizer.hasMoreStatements()) {
+      commands.add(tokenizer.getNextStatement());
+    }
+    return evaluateBatch(connection, commands, continueOnError);
+  }
+
+  public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError)
+      throws DatabaseOperationException {
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;
@@ -308,10 +320,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       statement = connection.createStatement();
 
-      SqlTokenizer tokenizer = new SqlTokenizer(sql);
-
-      while (tokenizer.hasMoreStatements()) {
-        String command = tokenizer.getNextStatement();
+      for (String command : sql) {
 
         // ignore whitespace
         command = command.trim();
@@ -471,6 +480,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public int evaluateBatchRealBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
+    ArrayList<String> commands = new ArrayList<String>();
+    SqlTokenizer tokenizer = new SqlTokenizer(sql);
+
+    while (tokenizer.hasMoreStatements()) {
+      commands.add(tokenizer.getNextStatement());
+    }
+    return evaluateBatchRealBatch(connection, commands, continueOnError);
+  }
+
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
+      throws DatabaseOperationException {
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;
@@ -479,12 +499,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     // only delimiters
     // at the end of a line or the end of the string are used (row mode)
     try {
+
       statement = connection.createStatement();
 
-      SqlTokenizer tokenizer = new SqlTokenizer(sql);
-
-      while (tokenizer.hasMoreStatements()) {
-        String command = tokenizer.getNextStatement();
+      for (String command : sql) {
 
         // ignore whitespace
         command = command.trim();
@@ -532,24 +550,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
       // everything added to batch
       try {
-        int[] results = statement.executeBatch();
-        for (int result : results) {
-          switch (result) {
-          case 0:
-          case Statement.SUCCESS_NO_INFO:
-            ; // all ok
-            break;
-          case Statement.EXECUTE_FAILED:
-            _log.error("res -> EXECUTE_FAILED");
-            break;
-          default:
-            _log.error("res -> other value: " + result);
-            break;
-          }
-        }
-      } catch (Exception e) {
-
-        _log.warn("SQL Command failed with: " + e.getMessage());
+        statement.executeBatch();
+      } catch (BatchUpdateException e) {
+        errors++;
+        // The batch failed. We will execute all commands again using the old method
+        return evaluateBatch(connection, sql, continueOnError);
+      } finally {
+        closeStatement(statement);
       }
 
       String errorNumber = "";
@@ -562,8 +569,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while executing SQL", ex);
-    } finally {
-      closeStatement(statement);
     }
 
     return errors;
@@ -3062,7 +3067,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  protected String disableNOTNULLColumnsSql(Database database, OBDataset dataset) {
+  public String disableNOTNULLColumnsSql(Database database, OBDataset dataset) {
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
@@ -3145,7 +3150,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  protected String enableNOTNULLColumnsSql(Database database, OBDataset dataset) {
+  public String enableNOTNULLColumnsSql(Database database, OBDataset dataset) {
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);

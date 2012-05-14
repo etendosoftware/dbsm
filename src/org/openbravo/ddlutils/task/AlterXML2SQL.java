@@ -118,6 +118,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.disableAllFK(originaldb, !isFailonerror(), w);
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(db, !isFailonerror(), w);
+      w.write(platform.enableNOTNULLColumnsSql(db, ad));
       getLog().info("Updating database data...");
       platform.alterData(db, dataComparator.getChanges(), w);
       getLog().info("Removing invalid rows.");
@@ -125,6 +126,9 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.getSqlBuilder().deleteInvalidConstraintRows(db, true);
       getLog().info("Recreating Primary Keys");
       List changes = platform.getSqlBuilder().alterDatabaseRecreatePKs(oldModel, db, null);
+      getLog().info("Recreating not null constraints");
+      w.write(platform.enableNOTNULLColumnsSql(db, ad));
+      platform.enableNOTNULLColumns(db, ad);
       getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
       platform.getSqlBuilder().alterDatabasePostScript(oldModel, db, null, changes, null);
 

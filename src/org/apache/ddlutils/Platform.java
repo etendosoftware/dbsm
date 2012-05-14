@@ -1379,4 +1379,8 @@ public interface Platform {
   public void executeOnCreateDefaultForMandatoryColumns(Database database);
 
   public ArrayList checkTranslationConsistency(Database database, Database fullDatabase);
+
+  public String disableNOTNULLColumnsSql(Database database, OBDataset dataset);
+
+  public String enableNOTNULLColumnsSql(Database database, OBDataset dataset);
 }
