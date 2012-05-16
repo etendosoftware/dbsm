@@ -118,7 +118,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.disableAllFK(originaldb, !isFailonerror(), w);
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(db, !isFailonerror(), w);
-      w.write(platform.enableNOTNULLColumnsSql(db, ad));
+      w.write(platform.disableNOTNULLColumnsSql(db, ad));
       getLog().info("Updating database data...");
       platform.alterData(db, dataComparator.getChanges(), w);
       getLog().info("Removing invalid rows.");

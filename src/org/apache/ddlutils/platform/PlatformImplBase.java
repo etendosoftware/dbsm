@@ -555,8 +555,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         errors++;
         // The batch failed. We will execute all commands again using the old method
         return evaluateBatch(connection, sql, continueOnError);
-      } finally {
-        closeStatement(statement);
       }
 
       String errorNumber = "";
@@ -569,6 +567,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while executing SQL", ex);
+    } finally {
+      if (statement != null) {
+        closeStatement(statement);
+      }
     }
 
     return errors;
