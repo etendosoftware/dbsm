@@ -296,7 +296,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
    * {@inheritDoc}
    */
   @Override
-  public void enableAllFK(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
 
     try {
@@ -305,7 +305,11 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       for (int i = 0; i < model.getTableCount(); i++) {
         getSqlBuilder().createExternalForeignKeys(model, model.getTable(i));
       }
-      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      if (numErrors > 0) {
+        return false;
+      }
+      return true;
       /*
        * PreparedStatementpstmt=connection.prepareStatement(
        * "update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())"
@@ -346,7 +350,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
    * {@inheritDoc}
    */
   @Override
-  public void enableAllTriggers(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
 
     try {
@@ -356,7 +360,11 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       for (int i = 0; i < model.getTriggerCount(); i++) {
         ((PostgreSqlBuilder) getSqlBuilder()).enableTrigger(model, model.getTrigger(i));
       }
-      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      if (numErrors > 0) {
+        return false;
+      }
+      return true;
       /*
        * PreparedStatementpstmt=connection.prepareStatement(
        * "update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())"

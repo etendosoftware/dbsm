@@ -571,7 +571,7 @@ public interface Platform {
    * @param continueOnError
    * @throws DatabaseOperationException
    */
-  public void alterTablesPostScript(Database currentModel, Database desiredModel,
+  public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
       boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException;
 
   public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
@@ -1156,6 +1156,8 @@ public interface Platform {
 
   public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
 
+  public Database loadTablesFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
+
   public Database loadModelFromDatabase(ExcludeFilter filter, String prefix,
       boolean loadCompleteTables, String moduleId) throws DatabaseOperationException;
 
@@ -1253,7 +1255,7 @@ public interface Platform {
    * @param continueOnError
    *          Whether to continue executing the sql commands when an error occurred
    */
-  public void enableAllTriggers(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
 
   /**
@@ -1279,7 +1281,7 @@ public interface Platform {
    * @param continueOnError
    *          Whether to continue executing the sql commands when an error occurred
    */
-  public void enableAllFK(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)

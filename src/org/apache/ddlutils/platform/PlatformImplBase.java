@@ -352,6 +352,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
            * " row(s) have been changed"); }
            */
         } catch (SQLException ex) {
+          if (command.contains("SCRIPT OPTIONS (CRITICAL = TRUE)")) {
+            throw new DatabaseOperationException(
+                "Error while executing a critical SQL to recreate a database table: "
+                    + command
+                    + ".\nYou should recover a backup of the database if possible. If it's not, take into account that there is an auxiliary table which still contains the original data, which can be recovered from it. For more information, visit the page: http://wiki.openbravo.com/wiki/Update_Tips",
+                ex);
+          }
 
           if (continueOnError) {
             // Since the user deciced to ignore this error, we log
@@ -407,11 +414,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       // execute the forced commands
       int loops = 0;
       HashMap<String, String> errorMap = new HashMap<String, String>();
+      int previousErrors = errors;
       while (loops < MAX_LOOPS_OF_FORCED && !aForcedCommands.isEmpty()) {
 
         loops++;
         commandCount = 0;
-        errors = 0;
+        errors = previousErrors;
 
         for (Iterator<String> it = aForcedCommands.iterator(); it.hasNext();) {
 
@@ -831,14 +839,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     evaluateBatch(sql, continueOnError);
   }
 
-  public void alterTablesPostScript(Database currentModel, Database desiredModel,
+  public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
       boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException {
 
     Connection connection = borrowConnection();
 
     try {
-      alterTablesPostScript(connection, currentModel, desiredModel, continueOnError, changes,
-          fullModel);
+      return alterTablesPostScript(connection, currentModel, desiredModel, continueOnError,
+          changes, fullModel);
     } finally {
       returnConnection(connection);
     }
@@ -858,7 +866,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   }
 
-  public void alterTablesPostScript(Connection connection, Database currentModel,
+  public boolean alterTablesPostScript(Connection connection, Database currentModel,
       Database desiredModel, boolean continueOnError, List changes, Database fullModel)
       throws DatabaseOperationException {
     String sql = null;
@@ -873,8 +881,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       // won't happen because we're using a string writer
     }
     _ignoreWarns = false;
-    evaluateBatch(connection, sql, continueOnError);
-
+    int numErrors = evaluateBatch(connection, sql, continueOnError);
+    if (numErrors > 0) {
+      return false;
+    }
+    return true;
   }
 
   public List alterTablesRecreatePKs(Connection connection, Database currentModel,
@@ -2351,6 +2362,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
+  public Database loadTablesFromDatabase(ExcludeFilter filter) throws DatabaseOperationException {
+
+    Connection connection = borrowConnection();
+    try {
+      getModelLoader().setLog(_log);
+      getModelLoader().setOnlyLoadTableColumns(true);
+      return getModelLoader().getDatabase(connection, filter);
+    } catch (SQLException ex) {
+      throw new DatabaseOperationException(ex);
+    } finally {
+      returnConnection(connection);
+    }
+  }
+
   public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException {
 
     Connection connection = borrowConnection();
@@ -2467,7 +2492,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void enableAllFK(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
     throw new DatabaseOperationException("Error: Operation not supported");
   }
@@ -2475,7 +2500,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void enableAllTriggers(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
     throw new DatabaseOperationException("Error: Operation not supported");
   }

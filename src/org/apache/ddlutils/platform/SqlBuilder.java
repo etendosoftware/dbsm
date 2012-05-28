@@ -2030,6 +2030,7 @@ public abstract class SqlBuilder {
         columns.put(targetColumn, null);
       }
     }
+    printScriptOptions("CRITICAL = TRUE");
     print("INSERT INTO ");
     printIdentifier(getStructureObjectName(targetTable));
     print(" (");
@@ -2710,6 +2711,7 @@ public abstract class SqlBuilder {
   protected void writeTableCreationStmt(Database database, Table table, Map parameters)
       throws IOException {
     printStartOfStatement("TABLE", getStructureObjectName(table));
+    printScriptOptions("CRITICAL = TRUE");
 
     print("CREATE TABLE ");
     printlnIdentifier(getStructureObjectName(table));

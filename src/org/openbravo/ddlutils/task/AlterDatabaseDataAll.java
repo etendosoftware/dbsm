@@ -191,12 +191,33 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Recreating not null constraints");
       platform.enableNOTNULLColumns(db, ad);
       getLog().info("Executing update final script (dropping temporary tables)");
-      platform.alterTablesPostScript(oldModel, db, !isFailonerror(), changes, null);
+      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, db, !isFailonerror(),
+          changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");
-      platform.enableAllFK(connection, originaldb, !isFailonerror());
-      platform.enableAllTriggers(connection, db, !isFailonerror());
+      boolean fksEnabled = platform.enableAllFK(connection, originaldb, !isFailonerror());
+      boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
 
+      if (!triggersEnabled) {
+        getLog()
+            .error(
+                "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct. If that is the case, please remove/uninstall its module, or recover the sources backup and initiate the rebuild again");
+      }
+      if (!fksEnabled) {
+        getLog()
+            .error(
+                "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references, or recover the backup of your sources.");
+      }
+      if (!postscriptCorrect) {
+        getLog()
+            .error(
+                "Not all the commands in the final update step were executed correctly. This likely means at least one foreign key was not activated successfully. Please review which one, and fix the missing references, or recover the backup of your sources.");
+      }
+      if (!triggersEnabled || !fksEnabled || !postscriptCorrect) {
+        throw new Exception(
+            "There were serious problems while updating the database. Please review and fix them before continuing with the application rebuild");
+
+      }
       // execute the post-script
       if (getPostscript() == null) {
         // try to execute the default prescript

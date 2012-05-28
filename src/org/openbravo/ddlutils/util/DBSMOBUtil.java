@@ -869,6 +869,15 @@ public class DBSMOBUtil {
         }
       }
     }
+    readDataIntoDatabaseData(platform, db, databaseOrgData, files);
+    applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
+  }
+
+  public void readDataIntoDatabaseData(Platform platform, Database db,
+      DatabaseData databaseOrgData, List<File> files) {
+
+    final DatabaseDataIO dbdio = new DatabaseDataIO();
+    dbdio.setEnsureFKOrder(false);
     final DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
     getLog().info("Loading data from XML files");
     for (int i = 0; i < files.size(); i++) {
@@ -887,7 +896,6 @@ public class DBSMOBUtil {
         e.printStackTrace();
       }
     }
-    applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
   }
 
   public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,

@@ -145,6 +145,7 @@ public class Oracle8Platform extends PlatformImplBase {
       current = "SELECT 'ALTER TABLE'|| ' ' || TABLE_NAME || ' ' || 'DISABLE CONSTRAINT' || ' ' || CONSTRAINT_NAME  SQL_STR FROM USER_CONSTRAINTS WHERE  CONSTRAINT_TYPE='R' ";
       PreparedStatement pstmt = connection.prepareStatement(current);
       ResultSet rs = pstmt.executeQuery();
+
       while (rs.next()) {
         current = rs.getString("SQL_STR");
         PreparedStatement pstmtd = connection.prepareStatement(current);
@@ -163,7 +164,7 @@ public class Oracle8Platform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
-  public void enableAllFK(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
 
     String current = null;
@@ -171,6 +172,7 @@ public class Oracle8Platform extends PlatformImplBase {
       current = "SELECT 'ALTER TABLE'|| ' ' || TABLE_NAME || ' ' || 'ENABLE CONSTRAINT' || ' ' || CONSTRAINT_NAME  SQL_STR FROM USER_CONSTRAINTS WHERE  CONSTRAINT_TYPE='R' ";
       PreparedStatement pstmt = connection.prepareStatement(current);
       ResultSet rs = pstmt.executeQuery();
+
       while (rs.next()) {
         current = rs.getString("SQL_STR");
         PreparedStatement pstmtd = connection.prepareStatement(current);
@@ -179,6 +181,7 @@ public class Oracle8Platform extends PlatformImplBase {
       }
       rs.close();
       pstmt.close();
+      return true;
     } catch (SQLException e) {
       System.out.println("SQL command failed with " + e.getMessage());
       System.out.println(current);
@@ -197,6 +200,7 @@ public class Oracle8Platform extends PlatformImplBase {
       current = "SELECT 'ALTER TRIGGER'|| ' ' || TRIGGER_NAME || ' ' || 'DISABLE' SQL_STR FROM USER_TRIGGERS";
       PreparedStatement pstmt = connection.prepareStatement(current);
       ResultSet rs = pstmt.executeQuery();
+
       while (rs.next()) {
         current = rs.getString("SQL_STR");
         PreparedStatement pstmtd = connection.prepareStatement(current);
@@ -215,7 +219,7 @@ public class Oracle8Platform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
-  public void enableAllTriggers(Connection connection, Database model, boolean continueOnError)
+  public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
 
     String current = null;
@@ -231,6 +235,7 @@ public class Oracle8Platform extends PlatformImplBase {
       }
       rs.close();
       pstmt.close();
+      return true;
     } catch (SQLException e) {
       System.out.println("SQL command failed with " + e.getMessage());
       System.out.println(current);
