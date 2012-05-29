@@ -356,7 +356,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             throw new DatabaseOperationException(
                 "Error while executing a critical SQL to recreate a database table: "
                     + command
-                    + ".\nYou should recover a backup of the database if possible. If it's not, take into account that there is an auxiliary table which still contains the original data, which can be recovered from it. For more information, visit the page: http://wiki.openbravo.com/wiki/Update_Tips",
+                    + ".\nYou should recover a backup of the database if possible. If it's not, take into account that there is an auxiliary table which still contains the original data, which can be recovered from it. If a update.database or smartbuild is done, this auxiliary table will be deleted, and all its data will be lost forever. For more information, visit the page: http://wiki.openbravo.com/wiki/Update_Tips",
                 ex);
           }
 
