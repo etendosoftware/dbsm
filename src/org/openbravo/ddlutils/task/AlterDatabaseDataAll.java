@@ -198,6 +198,18 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       boolean fksEnabled = platform.enableAllFK(connection, originaldb, !isFailonerror());
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
 
+      // execute the post-script
+      if (getPostscript() == null) {
+        // try to execute the default prescript
+        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+        if (fpost.exists()) {
+          getLog().info("Executing default postscript");
+          platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
+        }
+      } else {
+        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
+      }
+      DBSMOBUtil.getInstance().updateCRC(platform);
       if (!triggersEnabled) {
         getLog()
             .error(
@@ -218,18 +230,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
             "There were serious problems while updating the database. Please review and fix them before continuing with the application rebuild");
 
       }
-      // execute the post-script
-      if (getPostscript() == null) {
-        // try to execute the default prescript
-        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
-        if (fpost.exists()) {
-          getLog().info("Executing default postscript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
-      }
-      DBSMOBUtil.getInstance().updateCRC(platform);
 
       final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
