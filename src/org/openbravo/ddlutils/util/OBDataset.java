@@ -150,7 +150,7 @@ public class OBDataset {
         ResultSet rs = ps.getResultSet();
         rs.next();
         if (rs.getInt(1) > 0) {
-          log.info("Change detected in table: " + table.getName());
+          log.warn("Change detected in table: " + table.getName());
           return true;
         }
       } catch (Exception e) {
@@ -161,5 +161,4 @@ public class OBDataset {
     }
     return false;
   }
-
 }
