@@ -38,7 +38,6 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.UtilsCompare;
-import org.apache.ddlutils.model.View;
 
 /**
  * Compares two database models and creates change objects that express how to adapt the first model
@@ -346,8 +345,9 @@ public class ModelComparator {
         }
 
         AddColumnChange change = new AddColumnChange(sourceTable, targetColumn,
-            columnIdx > 0 ? targetTable.getColumn(columnIdx - 1) : null, columnIdx < targetTable
-                .getColumnCount() - 1 ? targetTable.getColumn(columnIdx + 1) : null);
+            columnIdx > 0 ? targetTable.getColumn(columnIdx - 1) : null,
+            columnIdx < targetTable.getColumnCount() - 1 ? targetTable.getColumn(columnIdx + 1)
+                : null);
 
         changes.add(change);
         addColumnChanges.put(targetColumn, change);
@@ -652,30 +652,6 @@ public class ModelComparator {
       if ((_caseSensitive && sequence.equals(curSequence))
           || (!_caseSensitive && sequence.equalsIgnoreCase(curSequence))) {
         return curSequence;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Searches in the given database for a corresponding view. If the given view has no name, then a
-   * view (but not necessarily in the same order) is searched. If the given view has a name, then
-   * the corresponding view also needs to have the same name, or no name at all, but not a different
-   * one.
-   * 
-   * @param database
-   *          The database to search in
-   * @param view
-   *          The original view
-   * @return The corresponding view if found
-   */
-  private View findCorrespondingView(Database database, View view) {
-    for (int viIdx = 0; viIdx < database.getViewCount(); viIdx++) {
-      View curView = database.getView(viIdx);
-
-      if ((_caseSensitive && view.equals(curView))
-          || (!_caseSensitive && view.equalsIgnoreCase(curView))) {
-        return curView;
       }
     }
     return null;

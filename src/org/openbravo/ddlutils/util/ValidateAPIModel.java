@@ -20,6 +20,7 @@
 package org.openbravo.ddlutils.util;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,7 +94,53 @@ public class ValidateAPIModel extends ValidateAPI {
     ModelComparator modelComparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
     List<ModelChange> modelChanges = modelComparator.compare(validDB, testDB);
+    List<ModelChange> removeViewChanges = getRemoveViewChanges(validDB, testDB);
+    modelChanges.addAll(removeViewChanges);
     checkAllChanges(modelChanges);
+  }
+
+  private List<ModelChange> getRemoveViewChanges(Database sourceModel, Database targetModel) {
+    ArrayList<ModelChange> changes = new ArrayList<ModelChange>();
+    for (int viIdx = 0; viIdx < sourceModel.getViewCount(); viIdx++) {
+      View sourceView = sourceModel.getView(viIdx);
+      View targetView = findCorrespondingView(targetModel, sourceView);
+
+      if (targetView == null) {
+        boolean foundViewWithSameName = false;
+        int i = 0;
+        while (i < targetModel.getViewCount() && !foundViewWithSameName) {
+          if (targetModel.getView(i).getName().equalsIgnoreCase(sourceView.getName()))
+            foundViewWithSameName = true;
+          i++;
+        }
+        changes.add(new RemoveViewChange(sourceView));
+        // }
+      }
+    }
+    return changes;
+  }
+
+  /**
+   * Searches in the given database for a corresponding view. If the given view has no name, then a
+   * view (but not necessarily in the same order) is searched. If the given view has a name, then
+   * the corresponding view also needs to have the same name, or no name at all, but not a different
+   * one.
+   * 
+   * @param database
+   *          The database to search in
+   * @param view
+   *          The original view
+   * @return The corresponding view if found
+   */
+  private View findCorrespondingView(Database database, View view) {
+    for (int viIdx = 0; viIdx < database.getViewCount(); viIdx++) {
+      View curView = database.getView(viIdx);
+
+      if (view.equalsIgnoreCase(curView)) {
+        return curView;
+      }
+    }
+    return null;
   }
 
   private void checkAllChanges(List<ModelChange> changes) {
@@ -349,8 +396,9 @@ public class ValidateAPIModel extends ValidateAPI {
       // any modification in a view is a view remove and add, must check different changes
       RemoveViewChange c = (RemoveViewChange) change;
       View validView = testDB.findView(c.getView().getName());
-      if (validView == null)
+      if (validView == null) {
         errors.add("Removed view :" + c.getView().getName());
+      }
     } else if (change instanceof AddViewChange) {
       AddViewChange c = (AddViewChange) change;
       View validView = validDB.findView(c.getNewView().getName());
