@@ -125,6 +125,15 @@ public class ValidateAPIModel extends ValidateAPI {
               .add("Added mandatory column without onCreateDefault in a table contained in the AD dataset: "
                   + tablename + "." + c.getNewColumn().getName());
         }
+        if ("ad_module".equalsIgnoreCase(tablename) && c.getNewColumn().isRequired()) {
+          // Check if the column has been added to ad_module_install
+          Column adModuleInstallColumn = testDB.findTable("ad_module_install", false).findColumn(
+              c.getNewColumn().getName(), false);
+          if (adModuleInstallColumn == null) {
+            errors.add("A mandatory column (" + c.getNewColumn().getName()
+                + ") has been added to ad_module but not to ad_module_install");
+          }
+        }
       } else if (change instanceof AddForeignKeyChange) {
         AddForeignKeyChange c = (AddForeignKeyChange) change;
         if (validDB.findTable(tablename) != null) { // no new table
