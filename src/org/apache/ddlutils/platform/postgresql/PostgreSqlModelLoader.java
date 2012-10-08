@@ -56,6 +56,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected PreparedStatement _stmt_comments_funcs;
   protected PreparedStatement _stmt_oids_tables;
   protected PreparedStatement _stmt_comments_tables;
+  protected PreparedStatement _stmt_column_indexes;
 
   protected Translation _checkTranslation = new PostgreSqlCheckTranslation();
   protected Translation _SQLTranslation = new PostgreSQLStandarization();
@@ -475,6 +476,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     _stmt_comments_tables = _connection.prepareStatement("SELECT col_description(?,?)");
 
+    _stmt_column_indexes = _connection
+        .prepareStatement("SELECT ordinal_position FROM information_schema.columns WHERE table_name = ? order by ordinal_position;");
+
   }
 
   @Override
@@ -678,6 +682,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   String tableRealName;
   String commentCol;
 
+  ArrayList<Integer> columnIndexes;
+
   @Override
   protected Table readTable(String tablename, boolean usePrefix) throws SQLException {
     _stmt_oids_tables.setString(1, tablename);
@@ -690,11 +696,19 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     Table t = super.readTable(tableRealName, usePrefix);
 
+    columnIndexes = new ArrayList<Integer>();
+    _stmt_column_indexes.setString(1, tableRealName);
+    fillList(_stmt_column_indexes, new RowFiller() {
+      public void fillRow(ResultSet r) throws SQLException {
+        columnIndexes.add(r.getInt(1));
+      }
+    });
+
     // We'll change the types of NVarchar columns (which should have a
     // comment in the database)
     for (int i = 0; i < t.getColumnCount(); i++) {
       _stmt_comments_tables.setInt(1, oidTable);
-      _stmt_comments_tables.setInt(2, i + 1);
+      _stmt_comments_tables.setInt(2, columnIndexes.get(i));
       fillList(_stmt_comments_tables, new RowFiller() {
         public void fillRow(ResultSet r) throws SQLException {
           commentCol = r.getString(1);
