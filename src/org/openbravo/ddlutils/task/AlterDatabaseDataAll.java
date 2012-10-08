@@ -107,7 +107,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(excludeFilter);
-        log.info("Checking datatypes from the model loaded from the database");
+        getLog().info("Checking datatypes from the model loaded from the database");
         if (originaldb == null) {
           originaldb = new Database();
           getLog().info("Original model considered empty.");
@@ -121,7 +121,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       }
       Database db = null;
       db = readDatabaseModel();
-      log.info("Checking datatypes from the model loaded from XML files");
+      getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
       final DatabaseData databaseOrgData = new DatabaseData(db);
       databaseOrgData.setStrictMode(strict);
@@ -275,7 +275,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      log.info("Reading model files...");
+      getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray);
     }
     return db;
