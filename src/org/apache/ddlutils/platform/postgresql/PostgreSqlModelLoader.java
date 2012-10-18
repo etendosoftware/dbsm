@@ -133,6 +133,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       String standardizedBody = viewStandarization.exec(body);
       if (standardizedBody.endsWith("\n"))
         standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
+      standardizedBody=standardizedBody.trim();
       db.getView(i).setStatement(standardizedBody);
     }
 

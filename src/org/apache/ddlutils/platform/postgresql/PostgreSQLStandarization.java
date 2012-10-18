@@ -28,7 +28,8 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     // postgres castings '::text', '::numeric', '::character varying',
     // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
     // with time zone
-    append(new ReplacePatTranslation("::[A-Za-z\"]*( varying)?( with time zone)?(\\[\\])?", ""));
+    append(new ReplacePatTranslation(
+        "::[A-Za-z\"]*( varying)?( with time zone)?( without time zone)?(\\[\\])?", ""));
 
     // sql "in" sentence and "not in"
     append(new ReplacePatTranslation(
@@ -61,6 +62,7 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     append(new ByLineTranslation(new ReplacePatTranslation("^[ ]*(.*)", "$1")));
     append(new ReplacePatTranslation("\\([ ]*", "("));
 
+    append(new ReplaceStrTranslation("\n", " "));
     // removes the caracter ";" at the end of sql sentence
     append(new ReplaceStrTranslation(";", ""));
     // append(new ByLineTranslation(new
