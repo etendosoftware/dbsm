@@ -209,6 +209,9 @@ public class ExcludeFilter implements Cloneable {
   }
 
   private boolean hasPrefix(String name, String prefix) {
+    if(prefix.equalsIgnoreCase(name)){
+      return true;
+    }
     return name.toUpperCase().startsWith(prefix.toUpperCase() + "_");
   }
 
