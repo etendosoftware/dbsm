@@ -26,7 +26,6 @@ import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
-import org.openbravo.base.exception.OBException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.ValidateAPIData;
@@ -100,11 +99,11 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     validateData.printWarnings(getLog());
 
     if (validateModel.hasErrors() || validateData.hasErrors()) {
-      throw new OBException("Test did not validate API");
+      throw new RuntimeException("Test did not validate API");
     }
 
     if (validateModel.hasWarnings() || validateData.hasWarnings()) {
-      throw new OBException("Test validate API with warnings");
+      throw new RuntimeException("Test validate API with warnings");
     }
   }
 
