@@ -251,10 +251,7 @@ public class ValidateAPIModel extends ValidateAPI {
             }
           }
           if (ignoreStdBooleanConstraintNewColumn) {
-            infos
-                .add("Ignoring Check Constraint addition as it is the 'standard' boolean check constraint for a new column added in the same api-check run");
-            infos.add("  table: " + tablename + " - Constraint: " + c.getNewCheck().getName()
-                + " defined as: " + c.getNewCheck().getCondition());
+            // ignore as that is the standard boolean constraint added for a column also newly added
           } else {
             errors.add("Check Constraint addition: table: " + tablename + " - Constraint: "
                 + c.getNewCheck().getName() + " defined as: " + c.getNewCheck().getCondition());
