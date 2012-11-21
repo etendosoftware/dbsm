@@ -841,10 +841,6 @@ public class DBSMOBUtil {
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
-    final DatabaseDataIO dbdio = new DatabaseDataIO();
-    dbdio.setEnsureFKOrder(false);
-    dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
-        "com.openbravo.db.OpenbravoMetadataFilter", originaldb));
 
     final Vector<File> files = new Vector<File>();
     File[] sourceFiles = input.listFiles();
