@@ -62,6 +62,8 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     append(new ByLineTranslation(new ReplacePatTranslation("^[ ]*(.*)", "$1")));
     append(new ReplacePatTranslation("\\([ ]*", "("));
 
+    append(new ReplaceStrTranslation(" \n", " "));
+    append(new ReplaceStrTranslation("\n ", " "));
     append(new ReplaceStrTranslation("\n", " "));
     // removes the caracter ";" at the end of sql sentence
     append(new ReplaceStrTranslation(";", ""));
