@@ -194,8 +194,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
             final DatabaseDataIO dbdio = new DatabaseDataIO();
             dbdio.setEnsureFKOrder(false);
-            dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(
-                "com.openbravo.db.OpenbravoMetadataFilter", db));
 
             DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
 
