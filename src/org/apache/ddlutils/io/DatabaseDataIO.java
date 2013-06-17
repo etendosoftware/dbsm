@@ -722,38 +722,6 @@ public class DatabaseDataIO {
     }
   }
 
-  public Iterator readRowsFromTable(Connection connection, Platform platform, Database model,
-      Table table, DatabaseFilter filter) {
-    if (table.getPrimaryKeyColumns() == null || table.getPrimaryKeyColumns().length == 0) {
-      _log.error("Table " + table.getName() + " cannot be read because it has no primary key.");
-      return null;
-    }
-    Table[] atables = { table };
-    Statement statement = null;
-    ResultSet resultSet = null;
-    try {
-      statement = connection.createStatement();
-      String sqlstatement = "SELECT * FROM " + table.getName();
-      if (filter != null && filter.getTableFilter(table.getName()) != null) {
-        sqlstatement += " WHERE " + filter.getTableFilter(table.getName()) + " ";
-        sqlstatement += " ORDER BY ";
-        for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
-          if (j > 0)
-            sqlstatement += ",";
-          sqlstatement += table.getPrimaryKeyColumns()[j].getName();
-        }
-        resultSet = statement.executeQuery(sqlstatement);
-        return platform.createResultSetIterator(model, resultSet, atables);
-      } else
-        return null;
-    } catch (SQLException ex) {
-      _log.error(ex.getLocalizedMessage());
-      return null;
-      // throw new DatabaseOperationException("Error while performing a
-      // query", ex);
-    }
-  }
-
   private class BaseDynaBeanIDHexComparator implements Comparator<Object> {
     String pkName;
 

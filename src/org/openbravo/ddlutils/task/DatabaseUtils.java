@@ -197,6 +197,10 @@ public class DatabaseUtils {
     return s.toString();
   }
 
+  /**
+   * Needs to be kept as external code in module org.openbravo.ezattributes is calling it
+   */
+  @Deprecated
   public static DatabaseFilter getDynamicDatabaseFilter(String filter, Database database) {
     try {
       DynamicDatabaseFilter dbfilter = (DynamicDatabaseFilter) Class.forName(filter).newInstance();
