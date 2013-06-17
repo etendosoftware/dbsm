@@ -18,7 +18,7 @@ public class AlterDatabaseModJava {
     ada.setPassword(args[3]);
     ada.setExcludeobjects(args[4]);
     ada.setModel(new File(args[5]));
-    ada.setFilter(args[6]);
+    // args[6] was 'filter' now unused
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
     ada.setFailonerror(new Boolean(args[9]).booleanValue());

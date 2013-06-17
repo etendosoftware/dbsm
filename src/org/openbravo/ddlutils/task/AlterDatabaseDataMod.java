@@ -55,8 +55,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
   private File prescript = null;
   private File postscript = null;
 
-  private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
-
   private File input;
   private String encoding = "UTF-8";
   private File originalmodel;
@@ -188,7 +186,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       ada.setPassword(getPassword());
       ada.setExcludeobjects(excludeobjects);
       ada.setModel(model);
-      ada.setFilter(filter);
       ada.setInput(input);
       ada.setObject(object);
       ada.setFailonerror(failonerror);
@@ -277,7 +274,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
       final DatabaseDataIO dbdio = new DatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
-      dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), dbAD));
       for (ModuleRow row : moduleRows) {
         getLog().info("Loading data from XML files");
         final Vector<File> files = new Vector<File>();
@@ -438,12 +434,12 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     this.failonerror = failonerror;
   }
 
+  /**
+   * Functionality for deleting data during create.database was removed.
+   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   */
+  @Deprecated
   public void setFilter(String filter) {
-    this.filter = filter;
-  }
-
-  public String getFilter() {
-    return filter;
   }
 
   public File getInput() {

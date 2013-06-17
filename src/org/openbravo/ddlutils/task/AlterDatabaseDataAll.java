@@ -44,8 +44,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   protected File prescript = null;
   protected File postscript = null;
 
-  protected String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
-
   protected File input;
   protected String encoding = "UTF-8";
   protected File originalmodel;
@@ -329,12 +327,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     this.failonerror = failonerror;
   }
 
+  /**
+   * Functionality for deleting data during create.database was removed.
+   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   */
+  @Deprecated
   public void setFilter(String filter) {
-    this.filter = filter;
-  }
-
-  public String getFilter() {
-    return filter;
   }
 
   public File getInput() {
