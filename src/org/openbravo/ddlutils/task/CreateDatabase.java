@@ -49,7 +49,6 @@ public class CreateDatabase extends BaseDatabaseTask {
   private String modulesDir;
 
   private String dirFilter;
-  private String filter = "org.apache.ddlutils.io.NoneDatabaseFilter";
   private String input;
   private ExcludeFilter excludeFilter;
 
@@ -142,8 +141,6 @@ public class CreateDatabase extends BaseDatabaseTask {
 
       // Now we insert sourcedata into the database
       // first we load the data files
-      final String filters = getFilter();
-      final StringTokenizer strTokFil = new StringTokenizer(filters, ",");
       final String folders = getInput();
       final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
       final Vector<File> files = new Vector<File>();
@@ -175,17 +172,9 @@ public class CreateDatabase extends BaseDatabaseTask {
       // Now we insert the data into the database
       final DatabaseDataIO dbdio = new DatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
-      DataReader dataReader = null;
-      while (strTokFil.hasMoreElements()) {
-        final String filter = strTokFil.nextToken();
-        if (filter != null && !filter.equals("")) {
-          dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(filter, db));
-          dataReader = dbdio.getConfiguredDataReader(platform, db);
-          dataReader.getSink().start(); // we do this to delete data
-          // from tables in each of the
-          // filters
-        }
-      }
+      DataReader dataReader = dbdio.getConfiguredDataReader(platform, db);
+      dataReader.getSink().start();
+
       for (int i = 0; i < files.size(); i++) {
         getLog().debug("Importing data from file: " + files.get(i).getName());
         dbdio.writeDataToDatabase(dataReader, files.get(i));
@@ -301,12 +290,12 @@ public class CreateDatabase extends BaseDatabaseTask {
     return object;
   }
 
+  /**
+   * Functionality for deleting data during create.database was removed.
+   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   */
+  @Deprecated
   public void setFilter(String filter) {
-    this.filter = filter;
-  }
-
-  public String getFilter() {
-    return filter;
   }
 
   public String getInput() {
