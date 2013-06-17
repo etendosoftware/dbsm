@@ -87,8 +87,6 @@ public class DataToDatabaseSink implements DataSink {
   private ArrayList _waitingObjects = new ArrayList();
   // /**Stores the tables that are contained inserted data. */
   // private HashSet _mergedTables = new HashSet();
-  /** Stores the database filter into the database. */
-  private DatabaseFilter _databasefilter = null;
 
   /**
    * Creates a new sink instance.
@@ -167,25 +165,6 @@ public class DataToDatabaseSink implements DataSink {
    */
   public void setEnsureForeignKeyOrder(boolean ensureFkOrder) {
     _ensureFkOrder = ensureFkOrder;
-  }
-
-  /**
-   * Returns the dabase filter
-   * 
-   * @return The database filter
-   */
-  public DatabaseFilter getDatabaseFilter() {
-    return _databasefilter;
-  }
-
-  /**
-   * Sets the database filter
-   * 
-   * @param value
-   *          The database filter
-   */
-  public void setDatabaseFilter(DatabaseFilter value) {
-    _databasefilter = value;
   }
 
   /**
@@ -292,18 +271,6 @@ public class DataToDatabaseSink implements DataSink {
       throw new DataSinkException(ex);
     }
 
-    // delete filtered tables
-    if (_databasefilter != null) {
-      String[] tablenames = _databasefilter.getTableNames();
-      String[] tableFilters = new String[tablenames.length];
-      int ind = 0;
-      for (String table : tablenames) {
-        tableFilters[ind] = _databasefilter.getTableFilter(table);
-        ind++;
-      }
-      _platform.deleteDataFromTable(_connection, _model, tablenames, tableFilters, _haltOnErrors);
-
-    }
   }
 
   /**

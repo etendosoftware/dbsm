@@ -175,12 +175,12 @@ public class DatabaseDataIO {
     _ensureFKOrder = ensureFKOrder;
   }
 
-  public DatabaseFilter getDatabaseFilter() {
-    return _databasefilter;
-  }
-
+  /**
+   * Kept as org.openbravo.ezattributes module in at least version 2.0.5 (for 3.0) is still calling it.
+   * The method is changed to do nothing, as in case of that module the existing call was useless.
+   */
+  @Deprecated
   public void setDatabaseFilter(DatabaseFilter value) {
-    _databasefilter = value;
   }
 
   /**
@@ -421,7 +421,6 @@ public class DatabaseDataIO {
     sink.setHaltOnErrors(_failOnError);
     sink.setEnsureForeignKeyOrder(_ensureFKOrder);
     sink.setUseBatchMode(_useBatchMode);
-    sink.setDatabaseFilter(_databasefilter);
     if (_batchSize != null) {
       sink.setBatchSize(_batchSize.intValue());
     }
