@@ -51,7 +51,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
   private File model = null;
   private String coreData = null;
   private File moduledir;
-  private String filter = "org.apache.ddlutils.io.AllDatabaseFilter";
 
   private File output;
   private String encoding = "UTF-8";
@@ -107,7 +106,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       final DatabaseDataIO dbdio = new DatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
-      dbdio.setDatabaseFilter(DatabaseUtils.getDynamicDatabaseFilter(getFilter(), xmlModel));
 
       final DataReader dataReader = dbdio.getConfiguredCompareDataReader(xmlModel);
 
@@ -277,12 +275,12 @@ public class ExportConfigScript extends BaseDatabaseTask {
     this.model = model;
   }
 
+  /**
+   * Functionality for deleting data during create.database was removed.
+   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   */
+  @Deprecated
   public void setFilter(String filter) {
-    this.filter = filter;
-  }
-
-  public String getFilter() {
-    return filter;
   }
 
   public File getOutput() {
