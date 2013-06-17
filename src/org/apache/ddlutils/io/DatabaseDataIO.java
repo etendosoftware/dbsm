@@ -545,46 +545,6 @@ public class DatabaseDataIO {
   }
 
   /**
-   * Reads the data from the given input readers and writes it to the database to which the given
-   * platform is connected. Only data that matches the given model will be written.
-   * 
-   * @param platform
-   *          The platform, must be connected to a live database
-   * @param model
-   *          The model to which to constrain the written data
-   * @param inputs
-   *          The input readers for the XML data
-   */
-  public void writeDataToDatabase(Platform platform, Database model, File[] files)
-      throws DdlUtilsException {
-    DataReader dataReader = getConfiguredDataReader(platform, model);
-
-    ((DataToDatabaseSink) dataReader.getSink()).setDeleteInvalidRows(true);
-    dataReader.getSink().start();
-
-    for (int idx = 0; (files != null) && (idx < files.length); idx++) {
-      try {
-        writeDataToDatabase(dataReader, files[idx]);
-      } catch (Exception e) {
-        System.out.println("Error while inserting XML file " + files[idx].getAbsolutePath());
-        e.printStackTrace();
-      }
-    }
-    dataReader.getSink().end();
-  }
-
-  public void writeDataToDatabaseDeleteRows(Platform platform, Database model, File[] files)
-      throws DdlUtilsException {
-    DataReader dataReader = getConfiguredDataReader(platform, model);
-
-    dataReader.getSink().start();
-    for (int idx = 0; (files != null) && (idx < files.length); idx++) {
-      writeDataToDatabase(dataReader, files[idx]);
-    }
-    dataReader.getSink().end();
-  }
-
-  /**
    * Reads the data from the specified files and writes it to the database via the given data
    * reader. Note that the sink that the data reader is configured with, won't be started or ended
    * by this method. This has to be done by the code using this method.

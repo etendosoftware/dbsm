@@ -90,8 +90,6 @@ public class DataToDatabaseSink implements DataSink {
   /** Stores the database filter into the database. */
   private DatabaseFilter _databasefilter = null;
 
-  private boolean _deleteInvalidRows = false;
-
   /**
    * Creates a new sink instance.
    * 
@@ -134,10 +132,6 @@ public class DataToDatabaseSink implements DataSink {
    */
   public boolean isHaltOnErrors() {
     return _haltOnErrors;
-  }
-
-  public void setDeleteInvalidRows(boolean deleteInvalidRows) {
-    _deleteInvalidRows = deleteInvalidRows;
   }
 
   /**
@@ -239,8 +233,6 @@ public class DataToDatabaseSink implements DataSink {
   public void end() throws DataSinkException {
     purgeBatchQueue();
     try {
-      if (_deleteInvalidRows)
-        _platform.deleteInvalidConstraintRows(_model, _haltOnErrors);
       _platform.enableAllTriggers(_connection, _model, false);
       _platform.enableAllFK(_connection, _model, false);
       _connection.close();
