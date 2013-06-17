@@ -80,7 +80,6 @@ public class DatabaseDataIO {
    */
   private String _schemaPattern;
 
-  private DatabaseFilter _databasefilter = null;
   private final Log _log = LogFactory.getLog(DatabaseDataIO.class);
 
   /**
