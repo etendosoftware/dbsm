@@ -716,6 +716,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return sql;
   }
 
+  @Override
+  public void createAllFKs(Database model, boolean continueOnError) {
+    Connection connection = borrowConnection();
+
+      try {
+        String sql;
+        StringWriter buffer = new StringWriter();
+
+        getSqlBuilder().setWriter(buffer);
+        getSqlBuilder().createExternalForeignKeys(model);
+        sql = buffer.toString();
+        evaluateBatch(connection, sql, continueOnError);
+      } catch (IOException e) {
+        // won't happen because we're using a string writer
+      }
+
+      returnConnection(connection);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -1886,8 +1905,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
       }
       try {
+        Table table = model.findTable(dynaClass.getTableName());
+        Timestamp date = getDateStatement(connection);
+        int sqlIndex = 1;
         for (int idx = 0; idx < properties.length; idx++) {
-          setObject(statement, idx + 1, dynaBean, properties[idx]);
+          if (table.findColumn(properties[idx].getName()) != null) {
+            if (properties[idx].getName().equalsIgnoreCase("UPDATED")
+                || properties[idx].getName().equalsIgnoreCase("CREATED")) {
+              setStatementParameterValue(statement, sqlIndex++, properties[idx].getColumn()
+                  .getTypeCode(), date);
+            } else if (properties[idx].getName().equalsIgnoreCase("UPDATEDBY")
+                || properties[idx].getName().equalsIgnoreCase("CREATEDBY")) {
+              setStatementParameterValue(statement, sqlIndex++, properties[idx].getColumn()
+                  .getTypeCode(), "0");
+            } else {
+              setObject(statement, sqlIndex++, dynaBean, properties[idx]); // idx + 1
+            }
+          } else
+            _log.debug("Rejected column: " + properties[idx].getName());
+
         }
         statement.addBatch();
         addedStmts++;

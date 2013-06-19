@@ -212,8 +212,6 @@ public class DataToDatabaseSink implements DataSink {
   public void end() throws DataSinkException {
     purgeBatchQueue();
     try {
-      _platform.enableAllTriggers(_connection, _model, false);
-      _platform.enableAllFK(_connection, _model, false);
       _connection.close();
     } catch (SQLException ex) {
       throw new DataSinkException(ex);
@@ -263,13 +261,8 @@ public class DataToDatabaseSink implements DataSink {
         }
       }
     }
-    try {
-      _connection = _platform.borrowConnection();
-      _platform.disableAllTriggers(_connection, _model, _haltOnErrors);
-      _platform.disableAllFK(_connection, _model, _haltOnErrors);
-    } catch (DatabaseOperationException ex) {
-      throw new DataSinkException(ex);
-    }
+
+    _connection = _platform.borrowConnection();
 
   }
 

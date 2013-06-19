@@ -408,6 +408,16 @@ public interface Platform {
       boolean dropTablesFirst, boolean continueOnError);
 
   /**
+   * Creates all foreign keys in the database defined in the model
+   * 
+   * @param model
+   *          The database model
+   * @param continueOnError
+   *          Whether to continue executing the sql commands when an error occurred
+   */
+  public void createAllFKs(Database model, boolean continueOnError);
+
+  /**
    * Alters the database schema so that it match the given model.
    * 
    * @param desiredDb

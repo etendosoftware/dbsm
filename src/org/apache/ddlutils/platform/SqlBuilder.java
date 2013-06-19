@@ -479,18 +479,23 @@ public abstract class SqlBuilder {
       dropTables(database);
     }
 
+    /* skip adding not null constraints when creating tables
+     * as they would need to be dropped for data loading again
+     */
+    if (params == null) {
+      params = new CreationParameters();
+    }
+    params.addParameter(null, "OB_OptimizeNotNull", "true");
+
     for (int idx = 0; idx < database.getTableCount(); idx++) {
       Table table = database.getTable(idx);
 
       createTable(database, table, params == null ? null : params.getParametersFor(table));
       writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
       writeExternalIndicesCreateStmt(table);
-      disableAllNOTNULLColumns(table);
     }
 
-    // we're writing the external foreignkeys last to ensure that all
-    // referenced tables are already defined
-    createExternalForeignKeys(database);
+    // we don't write any foreign keys as those will be only activated after the data loading 
 
     // Write the sequences
     for (int idx = 0; idx < database.getSequenceCount(); idx++) {
@@ -2717,7 +2722,21 @@ public abstract class SqlBuilder {
     printlnIdentifier(getStructureObjectName(table));
     println("(");
 
-    writeColumns(table);
+    // optimize null handling (used in create database)
+    // if requested do not mark any columns as not null
+    if (parameters != null && parameters.containsKey("OB_OptimizeNotNull")) {
+      try {
+        Table clonedTable = (Table) table.clone();
+          for (Column col : clonedTable.getColumns()) {
+            col.setRequired(false);
+          }
+        writeColumns(clonedTable);
+      } catch (CloneNotSupportedException e) {
+        // will not happen as clone() is implemented on Table class
+      }
+    } else {
+      writeColumns(table);
+    }
 
     if (getPlatformInfo().isPrimaryKeyEmbedded()) {
       // writeEmbeddedPrimaryKeysStmt(table);

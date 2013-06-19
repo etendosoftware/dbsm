@@ -13,6 +13,7 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.sql.Connection;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -168,10 +169,17 @@ public class CreateDatabase extends BaseDatabaseTask {
           }
         }
       }
+      
+      getLog().info("Disabling triggers");
+      Connection _connection = platform.borrowConnection();
+      platform.disableAllTriggers(_connection, db, false);
+      platform.returnConnection(_connection);
+
       getLog().info("Inserting data into the database.");
       // Now we insert the data into the database
       final DatabaseDataIO dbdio = new DatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
+      dbdio.setUseBatchMode(true);
       DataReader dataReader = dbdio.getConfiguredDataReader(platform, db);
       dataReader.getSink().start();
 
@@ -179,6 +187,11 @@ public class CreateDatabase extends BaseDatabaseTask {
         getLog().debug("Importing data from file: " + files.get(i).getName());
         dbdio.writeDataToDatabase(dataReader, files.get(i));
       }
+
+      /* end method does final inserts when using batching, so call it after importing data files
+       * but before doing anything using those data (template, fk's, not null, ... )
+       */
+      dataReader.getSink().end();
 
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeFilter);
@@ -199,10 +212,19 @@ public class CreateDatabase extends BaseDatabaseTask {
                   + f.getAbsolutePath());
         }
       }
+      getLog().info("Executing onCreateDefault statements");
       platform.executeOnCreateDefaultForMandatoryColumns(db);
+      getLog().info("Enabling notnull constraints");
       platform.enableNOTNULLColumns(db);
-      // FKs and triggers are re-activated by the sink .end() method
-      dataReader.getSink().end();
+
+      boolean continueOnError = false;
+      getLog().info("Creating foreign keys");
+      platform.createAllFKs(db, continueOnError);
+
+      _connection = platform.borrowConnection();
+      getLog().info("Enabling triggers");
+      platform.enableAllTriggers(_connection, db, false);
+      platform.returnConnection(_connection);
 
       // execute the post-script
       if (getPostscript() == null) {
