@@ -19,7 +19,9 @@ package org.apache.ddlutils.platform;
  * under the License.
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -2706,6 +2708,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       else
         statement.setCharacterStream(sqlIndex, new StringReader(value.toString()), value.toString()
             .length());
+    } else if (typeCode == Types.BLOB) {
+      byte[] b = (byte[]) value;
+      InputStream isr = new ByteArrayInputStream(b);
+      statement.setBinaryStream(sqlIndex, isr, b.length);
     } else {
       statement.setObject(sqlIndex, value, typeCode);
     }
