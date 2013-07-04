@@ -75,6 +75,8 @@ public class DataWriter {
   /** Whether we're pretty-printing. */
   private boolean _prettyPrinting = true;
 
+  private boolean _writePrimaryKeyComment = true;
+
   /**
    * Creates a data writer instance using UTF-8 encoding.
    * 
@@ -148,6 +150,18 @@ public class DataWriter {
    */
   public void setPrettyPrinting(boolean prettyPrinting) {
     _prettyPrinting = prettyPrinting;
+  }
+
+  public boolean isWritePrimaryKeyComment() {
+    return _writePrimaryKeyComment;
+  }
+
+  /**
+   * Specifies if the output should contain <!-- primaryKeyValue --> in each line.
+   * Default value is true
+   */
+  public void setWritePrimaryKeyComment(boolean _writePrimaryKeyComment) {
+    this._writePrimaryKeyComment = _writePrimaryKeyComment;
   }
 
   /**
@@ -361,7 +375,9 @@ public class DataWriter {
     }
 
     try {
-      _writer.writeComment(comment);
+      if (_writePrimaryKeyComment) {
+        _writer.writeComment(comment);
+      }
       // indentIfPrettyPrinting(5);
       _writer.writeStartElement(table.getName());
       for (int i = 0; i < table.getColumnCount(); i++) {
@@ -412,7 +428,9 @@ public class DataWriter {
            * indentIfPrettyPrinting(3); _writer.writeComment(entry);
            */
           printlnIfPrettyPrinting();
-          _writer.writeComment(comment);
+          if (_writePrimaryKeyComment) {
+            _writer.writeComment(comment);
+          }
           indentIfPrettyPrinting(1);
           _writer.writeStartElement(entry);
 
@@ -453,7 +471,9 @@ public class DataWriter {
           i++;
         }
         printlnIfPrettyPrinting();
-        _writer.writeComment(comment);
+        if (_writePrimaryKeyComment) {
+          _writer.writeComment(comment);
+        }
         // indentIfPrettyPrinting(5);
       }
       _writer.writeEndElement();

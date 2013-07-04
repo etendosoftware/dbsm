@@ -211,6 +211,14 @@ public interface Platform {
    */
   public void setForeignKeysSorted(boolean foreignKeysSorted);
 
+  public boolean isOverrideDefaultValueOnMissingData();
+
+  /**
+   * Specifies if on data insertion, when no data for a column is present, and the column has a
+   * default value if that default value should be overridden with NULL or not (default: true)
+   */
+  public void setOverrideDefaultValueOnMissingData(boolean _overrideDefaultValueOnMissingData);
+
   // functionality
 
   /**

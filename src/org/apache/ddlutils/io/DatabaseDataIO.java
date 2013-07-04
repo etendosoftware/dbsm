@@ -80,6 +80,8 @@ public class DatabaseDataIO {
    */
   private String _schemaPattern;
 
+  private boolean _writePrimaryKeyComment = true;
+
   private final Log _log = LogFactory.getLog(DatabaseDataIO.class);
 
   /**
@@ -172,6 +174,18 @@ public class DatabaseDataIO {
    */
   public void setEnsureFKOrder(boolean ensureFKOrder) {
     _ensureFKOrder = ensureFKOrder;
+  }
+
+  public boolean isWritePrimaryKeyComment() {
+    return _writePrimaryKeyComment;
+  }
+
+  /**
+   * Specifies if the output should contain <!-- primaryKeyValue --> in each line.
+   * Default value is true
+   */
+  public void setWritePrimaryKeyComment(boolean _writePrimaryKeyComment) {
+    this._writePrimaryKeyComment = _writePrimaryKeyComment;
   }
 
   /**
@@ -367,6 +381,7 @@ public class DatabaseDataIO {
   public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
       OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
+    writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
     boolean b = false;
@@ -388,6 +403,7 @@ public class DatabaseDataIO {
       DatabaseData databaseData, OBDatasetTable dsTable, OutputStream output, String xmlEncoding,
       String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
+    writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
     boolean b = false;

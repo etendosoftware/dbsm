@@ -117,6 +117,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   private boolean _ignoreWarns = true;
 
+  private boolean _overrideDefaultValueOnMissingData = true;
+
   /**
    * {@inheritDoc}
    */
@@ -253,6 +255,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void setForeignKeysSorted(boolean foreignKeysSorted) {
     _foreignKeysSorted = foreignKeysSorted;
+  }
+
+  @Override
+  public boolean isOverrideDefaultValueOnMissingData() {
+    return _overrideDefaultValueOnMissingData;
+  }
+
+  @Override
+  public void setOverrideDefaultValueOnMissingData(boolean _overrideDefaultValueOnMissingData) {
+    this._overrideDefaultValueOnMissingData = _overrideDefaultValueOnMissingData;
   }
 
   /**
@@ -1597,17 +1609,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           // if they ain't auto-increment and don't have a
           // default value
           // in this case, a NULL is inserted
-          return !prop.getColumn().isAutoIncrement();// &&
-          // (prop.getColumn().getDefaultValue() == null);
-          // CORRECTION: If a property hasn't got value, and
-          // is not autoincrement,
-          // a NULL will be inserted. We don't care about
-          // default values.
-          // Before this change, if a nullable column had
-          // default value, if a row had NULL value
-          // in the database, after exporting and importing it
-          // the value would have been changed
-          // to the default value, and this is not correct.
+          if (_overrideDefaultValueOnMissingData) {
+            // CORRECTION: If a property hasn't got value, and
+            // is not autoincrement,
+            // a NULL will be inserted. We don't care about
+            // default values.
+            // Before this change, if a nullable column had
+            // default value, if a row had NULL value
+            // in the database, after exporting and importing it
+            // the value would have been changed
+            // to the default value, and this is not correct.
+            return !prop.getColumn().isAutoIncrement();
+          } else {
+            /* original logic: if a property has no value, but the column has a default value
+             * then do skip it, so the default value is used
+             */
+            return !prop.getColumn().isAutoIncrement() &&
+                (prop.getColumn().getDefaultValue() == null);
+          }
         }
       }
     });
@@ -1738,6 +1757,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       int sqlIndex = 1;
       for (int idx = 0; idx < properties.length; idx++) {
         if (table.findColumn(properties[idx].getName()) != null) {
+          String propName = properties[idx].getName();
+          Object propValue = dynaBean.get(propName);
+          boolean valuePresent = (propValue != null);
+          // if we have a value in the xml -> just use it
+          if (valuePresent) {
+            setObject(statement, sqlIndex++, dynaBean, properties[idx]); // idx + 1
+            continue;
+          }
+          // if value is missing handle the 4 audit columns specially
           if (properties[idx].getName().equalsIgnoreCase("UPDATED")
               || properties[idx].getName().equalsIgnoreCase("CREATED")) {
             setStatementParameterValue(statement, sqlIndex++, properties[idx].getColumn()
@@ -1912,6 +1940,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         int sqlIndex = 1;
         for (int idx = 0; idx < properties.length; idx++) {
           if (table.findColumn(properties[idx].getName()) != null) {
+            String propName = properties[idx].getName();
+            Object propValue = dynaBean.get(propName);
+            boolean valuePresent = (propValue != null);
+            // if we have a value in the xml -> just use it
+            if (valuePresent) {
+              setObject(statement, sqlIndex++, dynaBean, properties[idx]); // idx + 1
+              continue;
+            }
+            // if value is missing handle the 4 audit columns specially
             if (properties[idx].getName().equalsIgnoreCase("UPDATED")
                 || properties[idx].getName().equalsIgnoreCase("CREATED")) {
               setStatementParameterValue(statement, sqlIndex++, properties[idx].getColumn()
