@@ -657,6 +657,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public void createTables(Connection connection, Database model, boolean dropTablesFirst,
       boolean continueOnError) throws DatabaseOperationException {
     String sql = getCreateTablesSql(model, dropTablesFirst, continueOnError);
+    _log.info("Finished preparing SQL");
 
     evaluateBatch(connection, sql, continueOnError);
   }
