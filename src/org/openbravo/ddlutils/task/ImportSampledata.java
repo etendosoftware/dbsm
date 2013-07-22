@@ -13,19 +13,26 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Vector;
 
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DataReader;
+import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.Table;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -106,6 +113,25 @@ public class ImportSampledata extends BaseDatabaseTask {
           }
           log.info("Importing sampledata from folder: " + entry.getPath());
 
+          /**
+           * If there is an AD_CLIENT.xml in the folder to import, check if that client is not already in the db.
+           * If it is -> skip it.
+           * If no AD_CLIENT.xml is present in the folder, skip the check. That allows for easy support of incremental
+           * sampledata loading into existing clients.
+           *
+           */
+          File clientFile = new File(entry, "AD_CLIENT.xml");
+          if (clientFile.exists()) {
+            Vector<DynaBean> clients = readOneDataXml(db, clientFile);
+            DynaBean client = clients.get(0);
+            String clientId = (String) client.get("AD_CLIENT_ID");
+            DynaBean dbClient = findClient(platform, db, clientId);
+            if (dbClient != null) {
+              log.info("Client is already present in the database, skipping import");
+              continue;
+            }
+          }
+
           final Vector<File> files = new Vector<File>();
           final File[] fileArray = DatabaseUtils.readFileArray(entry);
           Arrays.sort(fileArray);
@@ -161,6 +187,40 @@ public class ImportSampledata extends BaseDatabaseTask {
       e.printStackTrace();
       throw new BuildException(e);
     }
+  }
+
+  /**
+   * Parses a single sourcedata style database and returns it as a list of DynaBeans
+   */
+  private static Vector<DynaBean> readOneDataXml(Database db, File file) throws IOException, SAXException {
+    final DatabaseDataIO dbdio = new DatabaseDataIO();
+    DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
+
+    dataReader.getSink().start();
+    dataReader.parse(file);
+    dataReader.getSink().end();
+
+    return ((DataToArraySink) dataReader.getSink()).getVector();
+  }
+
+  /**
+   * Loads the Dynabean for the specified AD_CLIENT from the database
+   * @param clientId ad_client_id
+   */
+  private DynaBean findClient(final Platform platform, Database db, String clientId) {
+    Connection connection = platform.borrowConnection();
+    Table table = db.findTable("AD_CLIENT");
+    DatabaseDataIO dbIO = new DatabaseDataIO();
+    OBDatasetTable dsTable = new OBDatasetTable();
+    dsTable.setWhereclause("1=1");
+    dsTable.setSecondarywhereclause("ad_client_id" + "=" + "'" + clientId + "'");
+    Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db,
+        table, dsTable, null);
+    platform.returnConnection(connection);
+    if (rowsNewData != null && rowsNewData.size() >0) {
+      return rowsNewData.get(0);
+    }
+    return null;
   }
 
   public String getBasedir() {
