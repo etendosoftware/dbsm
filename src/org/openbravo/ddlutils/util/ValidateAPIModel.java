@@ -367,6 +367,9 @@ public class ValidateAPIModel extends ValidateAPI {
           if (!oldRequired && newRequired) {
             errors.add("Column change from not required to required: column: " + tableColumn);
           }
+          if (oldRequired && !newRequired) {
+            errors.add("Column change from required to not required: column: " + tableColumn);
+          }
         } else if (change instanceof ColumnSizeChange) {
           int testSize = testDB.findTable(tablename).findColumn(columnname).getSizeAsInt();
           int originalSize = validDB.findTable(tablename).findColumn(columnname).getSizeAsInt();
