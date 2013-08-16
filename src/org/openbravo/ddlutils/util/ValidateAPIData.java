@@ -102,7 +102,7 @@ public class ValidateAPIData extends ValidateAPI {
         String processId = (String) c.getRow().get("AD_PROCESS_ID");
         String processParaId = (String) c.getRow().get("AD_PROCESS_PARA_ID");
         // if related to newly added process -> ok
-        if (!findAddRowChange("AD_PROCESS", "AD_PROCESS_ID", processId)) {
+        if (findAddRowChange("AD_PROCESS", "AD_PROCESS_ID", processId)) {
           log.debug("Allowing insertion for ad_process_para(" + processParaId
               + ") as they are related to newly added process(" + processId + ")");
           return;
