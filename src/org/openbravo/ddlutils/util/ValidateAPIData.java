@@ -26,8 +26,11 @@ import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
+import org.apache.log4j.Logger;
 
 public class ValidateAPIData extends ValidateAPI {
+  private static final Logger log = Logger.getLogger(ValidateAPIData.class);
+
   List<Change> changes;
 
   public ValidateAPIData(List<Change> changes) {
@@ -96,6 +99,14 @@ public class ValidateAPIData extends ValidateAPI {
     } else if (change instanceof AddRowChange) {
       AddRowChange c = (AddRowChange) change;
       if (c.getTable().getName().equalsIgnoreCase("AD_PROCESS_PARA")) {
+        String processId = (String) c.getRow().get("AD_PROCESS_ID");
+        String processParaId = (String) c.getRow().get("AD_PROCESS_PARA_ID");
+        // if related to newly added process -> ok
+        if (!findAddRowChange("AD_PROCESS", "AD_PROCESS_ID", processId)) {
+          log.debug("Allowing insertion for ad_process_para(" + processParaId
+              + ") as they are related to newly added process(" + processId + ")");
+          return;
+        }
         errors.add("Not Allowed insertions in "
             + c.getTable().getName()
             + " table. ID: "
@@ -105,4 +116,22 @@ public class ValidateAPIData extends ValidateAPI {
     }
 
   }
+
+  /**
+   * Returns true if an AddRowChange is found matching the search criteria
+   */
+  private boolean findAddRowChange(String tableName, String pkName, String id) {
+    for (Change change : changes) {
+      if (change instanceof AddRowChange) {
+        AddRowChange c = (AddRowChange) change;
+        if (c.getTable().getName().equalsIgnoreCase(tableName)) {
+          if (id.equals(c.getRow().get(pkName))) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
 }
