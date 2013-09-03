@@ -159,7 +159,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
-      platform.disableAllFK(connection, originaldb, !isFailonerror());
+      platform.disableDatasetFK(connection, originaldb, ad, !isFailonerror());
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db, ad);
@@ -181,7 +181,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(db, !isFailonerror());
+      platform.deleteInvalidConstraintRows(db, ad, !isFailonerror());
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing oncreatedefault statements for mandatory columns");
@@ -193,7 +193,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableAllFK(connection, originaldb, !isFailonerror());
+      boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad, !isFailonerror());
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
 
       // execute the post-script
@@ -328,8 +328,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   }
 
   /**
-   * Functionality for deleting data during create.database was removed.
-   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   * Functionality for deleting data during create.database was removed. Function is kept to not
+   * require lock-step update of dbsm.jar & build-create.xml
    */
   @Deprecated
   public void setFilter(String filter) {

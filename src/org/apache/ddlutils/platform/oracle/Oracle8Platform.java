@@ -404,4 +404,9 @@ public class Oracle8Platform extends PlatformImplBase {
 
     return inconsistentObjects;
   }
+
+  @Override
+  public String limitOneRow() {
+    return "where rownum<2";
+  }
 }

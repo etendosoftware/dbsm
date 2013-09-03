@@ -1289,6 +1289,9 @@ public interface Platform {
   public void disableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
 
+  public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) throws DatabaseOperationException;
+
   /**
    * Enable all Foreign key.
    * 
@@ -1301,6 +1304,9 @@ public interface Platform {
    */
   public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
+
+  public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) throws DatabaseOperationException;
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException;
@@ -1351,13 +1357,24 @@ public interface Platform {
 
   public void deleteInvalidConstraintRows(Database model, boolean continueOnError);
 
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError);
+
   public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError);
+
+  public void deleteAllInvalidConstraintRows(Database model, OBDataset dataset,
+      boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Connection connection, Database model,
       boolean continueOnError);
 
+  public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError);
+
   public void deleteAllInvalidConstraintRows(Connection connection, Database model,
       boolean continueOnError);
+
+  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
+      OBDataset dataset, boolean continueOnError);
 
   public void applyConfigScript(Database database, Vector<Change> changes);
 

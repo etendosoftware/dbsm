@@ -112,6 +112,7 @@ import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
+import org.openbravo.ddlutils.util.OBDataset;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop
@@ -479,8 +480,9 @@ public abstract class SqlBuilder {
       dropTables(database);
     }
 
-    /* skip adding not null constraints when creating tables
-     * as they would need to be dropped for data loading again
+    /*
+     * skip adding not null constraints when creating tables as they would need to be dropped for
+     * data loading again
      */
     if (params == null) {
       params = new CreationParameters();
@@ -495,7 +497,7 @@ public abstract class SqlBuilder {
       writeExternalIndicesCreateStmt(table);
     }
 
-    // we don't write any foreign keys as those will be only activated after the data loading 
+    // we don't write any foreign keys as those will be only activated after the data loading
 
     // Write the sequences
     for (int idx = 0; idx < database.getSequenceCount(); idx++) {
@@ -569,7 +571,8 @@ public abstract class SqlBuilder {
     }
   }
 
-  public void deleteInvalidConstraintRows(Database model, boolean onlyOnDeleteCascade) {
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      boolean onlyOnDeleteCascade) {
 
     try {
       // We will now delete the rows in tables which have a foreign key
@@ -577,7 +580,19 @@ public abstract class SqlBuilder {
       // with "on delete cascade" whose parent has been deleted
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        ForeignKey[] fksTable = table.getForeignKeys();
+        ForeignKey[] fksTable;
+        if (dataset == null || dataset.getTable(table.getName()) != null) {
+          fksTable = table.getForeignKeys();
+        } else {
+          List<ForeignKey> fks = new ArrayList<ForeignKey>();
+          for (int j = 0; j < table.getForeignKeyCount(); j++) {
+            ForeignKey fk = table.getForeignKey(j);
+            if (dataset.getTable(fk.getForeignTableName()) != null) {
+              fks.add(fk);
+            }
+          }
+          fksTable = fks.toArray(new ForeignKey[0]);
+        }
         for (int j = 0; j < fksTable.length; j++) {
           ForeignKey fk = fksTable[j];
           Table parentTable = fk.getForeignTable();
@@ -2727,9 +2742,9 @@ public abstract class SqlBuilder {
     if (parameters != null && parameters.containsKey("OB_OptimizeNotNull")) {
       try {
         Table clonedTable = (Table) table.clone();
-          for (Column col : clonedTable.getColumns()) {
-            col.setRequired(false);
-          }
+        for (Column col : clonedTable.getColumns()) {
+          col.setRequired(false);
+        }
         writeColumns(clonedTable);
       } catch (CloneNotSupportedException e) {
         // will not happen as clone() is implemented on Table class
@@ -3503,7 +3518,7 @@ public abstract class SqlBuilder {
    * @param key
    *          The foreign key
    */
-  protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
+  public void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
       throws IOException {
     if (key.getForeignTableName() == null) {
       _log.warn("Foreign key table is null for key " + key);
@@ -3596,7 +3611,7 @@ public abstract class SqlBuilder {
    * @param foreignKey
    *          The foreign key
    */
-  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     writeTableAlterStmt(table);
     print("DROP CONSTRAINT ");

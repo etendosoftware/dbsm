@@ -37,7 +37,9 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.translation.CommentFilter;
@@ -292,6 +294,38 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
   }
 
+  @Override
+  public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) throws DatabaseOperationException {
+
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTableCount(); i++) {
+        Table table = model.getTable(i);
+        if (dataset.getTable(table.getName()) != null) {
+          getSqlBuilder().dropExternalForeignKeys(table);
+        } else {
+          for (int j = 0; j < table.getForeignKeyCount(); j++) {
+            ForeignKey fk = table.getForeignKey(j);
+            if (dataset.getTable(fk.getForeignTableName()) != null) {
+              getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
+            }
+          }
+        }
+      }
+      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      /*
+       * PreparedStatementpstmt=connection.prepareStatement(
+       * "update pg_class set reltriggers=0 WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())"
+       * ); pstmt.executeUpdate(); pstmt.close();
+       */
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new DatabaseOperationException("Error while disabling foreign key ", e);
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -304,6 +338,42 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       getSqlBuilder().setWriter(buffer);
       for (int i = 0; i < model.getTableCount(); i++) {
         getSqlBuilder().createExternalForeignKeys(model, model.getTable(i));
+      }
+      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      if (numErrors > 0) {
+        return false;
+      }
+      return true;
+      /*
+       * PreparedStatementpstmt=connection.prepareStatement(
+       * "update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())"
+       * ); pstmt.executeUpdate(); pstmt.close();
+       */
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new DatabaseOperationException("Error while enabling foreign key ", e);
+    }
+  }
+
+  @Override
+  public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) throws DatabaseOperationException {
+
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTableCount(); i++) {
+        Table table = model.getTable(i);
+        if (dataset.getTable(table.getName()) != null) {
+          getSqlBuilder().createExternalForeignKeys(model, table);
+        } else {
+          for (int j = 0; j < table.getForeignKeyCount(); j++) {
+            ForeignKey fk = table.getForeignKey(j);
+            if (dataset.getTable(fk.getForeignTableName()) != null) {
+              getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
+            }
+          }
+        }
       }
       int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
       if (numErrors > 0) {
@@ -532,5 +602,10 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     } finally {
       returnConnection(connection);
     }
+  }
+
+  @Override
+  public String limitOneRow() {
+    return "LIMIT 1";
   }
 }

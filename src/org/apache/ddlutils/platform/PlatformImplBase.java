@@ -735,19 +735,19 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public void createAllFKs(Database model, boolean continueOnError) {
     Connection connection = borrowConnection();
 
-      try {
-        String sql;
-        StringWriter buffer = new StringWriter();
+    try {
+      String sql;
+      StringWriter buffer = new StringWriter();
 
-        getSqlBuilder().setWriter(buffer);
-        getSqlBuilder().createExternalForeignKeys(model);
-        sql = buffer.toString();
-        evaluateBatch(connection, sql, continueOnError);
-      } catch (IOException e) {
-        // won't happen because we're using a string writer
-      }
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().createExternalForeignKeys(model);
+      sql = buffer.toString();
+      evaluateBatch(connection, sql, continueOnError);
+    } catch (IOException e) {
+      // won't happen because we're using a string writer
+    }
 
-      returnConnection(connection);
+    returnConnection(connection);
   }
 
   /**
@@ -1622,11 +1622,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             // to the default value, and this is not correct.
             return !prop.getColumn().isAutoIncrement();
           } else {
-            /* original logic: if a property has no value, but the column has a default value
-             * then do skip it, so the default value is used
+            /*
+             * original logic: if a property has no value, but the column has a default value then
+             * do skip it, so the default value is used
              */
-            return !prop.getColumn().isAutoIncrement() &&
-                (prop.getColumn().getDefaultValue() == null);
+            return !prop.getColumn().isAutoIncrement()
+                && (prop.getColumn().getDefaultValue() == null);
           }
         }
       }
@@ -2557,6 +2558,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     throw new DatabaseOperationException("Error: Operation not supported");
   }
 
+  @Override
+  public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) throws DatabaseOperationException {
+    disableAllFK(connection, model, continueOnError);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -2571,6 +2578,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
     throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  @Override
+  public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) throws DatabaseOperationException {
+    return enableAllFK(connection, model, continueOnError);
   }
 
   /**
@@ -3009,38 +3022,57 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void deleteInvalidConstraintRows(Database model, boolean continueOnError) {
+    deleteInvalidConstraintRows(model, null, continueOnError);
+  }
+
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError) {
 
     Connection connection = borrowConnection();
-    deleteInvalidConstraintRows(connection, model, continueOnError);
+    deleteInvalidConstraintRows(connection, model, dataset, continueOnError);
     returnConnection(connection);
 
   }
 
   public void deleteInvalidConstraintRows(Connection connection, Database model,
       boolean continueOnError) {
+    deleteInvalidConstraintRows(connection, model, null, continueOnError);
+  }
+
+  public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
+      boolean continueOnError) {
 
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model, true);
+    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, true);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 
   public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError) {
+    deleteAllInvalidConstraintRows(model, null, continueOnError);
+  }
+
+  public void deleteAllInvalidConstraintRows(Database model, OBDataset dataset,
+      boolean continueOnError) {
 
     Connection connection = borrowConnection();
-    deleteAllInvalidConstraintRows(connection, model, continueOnError);
+    deleteAllInvalidConstraintRows(connection, model, dataset, continueOnError);
     returnConnection(connection);
 
   }
 
   public void deleteAllInvalidConstraintRows(Connection connection, Database model,
       boolean continueOnError) {
+    deleteAllInvalidConstraintRows(connection, model, null, continueOnError);
+  }
+
+  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
+      OBDataset dataset, boolean continueOnError) {
 
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model, false);
+    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, false);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 
@@ -3373,12 +3405,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
+  public String limitOneRow() {
+    return "";
+  }
+
   public boolean validateOnCreateDefault(Connection connection, String onCreateDefault, Table table) {
     if (onCreateDefault.startsWith("'"))
       return true;
     try {
       PreparedStatement st = connection.prepareStatement("SELECT (" + onCreateDefault + ") FROM "
-          + table.getName());
+          + table.getName() + limitOneRow());
       st.executeQuery();
     } catch (Exception e) {
       return false;
