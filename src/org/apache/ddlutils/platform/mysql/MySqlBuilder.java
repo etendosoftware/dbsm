@@ -136,7 +136,7 @@ public class MySqlBuilder extends SqlBuilder {
   /**
    * {@inheritDoc}
    */
-  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     writeTableAlterStmt(table);
     print("DROP FOREIGN KEY ");
@@ -299,8 +299,8 @@ public class MySqlBuilder extends SqlBuilder {
     printIndent();
     print("DROP PRIMARY KEY");
     printEndOfStatement();
-    writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getNewName(), change
-        .getNewPrimaryKeyColumns());
+    writeExternalPrimaryKeysCreateStmt(change.getChangedTable(), change.getNewName(),
+        change.getNewPrimaryKeyColumns());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 

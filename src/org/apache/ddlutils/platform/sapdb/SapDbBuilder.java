@@ -92,7 +92,7 @@ public class SapDbBuilder extends SqlBuilder {
   /**
    * {@inheritDoc}
    */
-  protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
+  public void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
       throws IOException {
     if (key.getForeignTableName() == null) {
       _log.warn("Foreign key table is null for key " + key);
@@ -115,7 +115,7 @@ public class SapDbBuilder extends SqlBuilder {
   /**
    * {@inheritDoc}
    */
-  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     writeTableAlterStmt(table);
     print("DROP FOREIGN KEY ");
@@ -162,8 +162,8 @@ public class SapDbBuilder extends SqlBuilder {
         changeIt.remove();
       } else if (change instanceof PrimaryKeyChange) {
         PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
-        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(pkChange
-            .getChangedTable(), pkChange.getOldPrimaryKeyColumns());
+        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
+            pkChange.getChangedTable(), pkChange.getOldPrimaryKeyColumns());
 
         processChange(currentModel, desiredModel, removePkChange);
       }

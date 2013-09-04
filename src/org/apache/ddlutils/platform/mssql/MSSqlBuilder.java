@@ -226,7 +226,7 @@ public class MSSqlBuilder extends SqlBuilder {
   /**
    * {@inheritDoc}
    */
-  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     String constraintName = getForeignKeyName(table, foreignKey);
 
@@ -457,8 +457,8 @@ public class MSSqlBuilder extends SqlBuilder {
         changeIt.remove();
       } else if (change instanceof PrimaryKeyChange) {
         PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
-        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(pkChange
-            .getChangedTable(), pkChange.getOldPrimaryKeyColumns());
+        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
+            pkChange.getChangedTable(), pkChange.getOldPrimaryKeyColumns());
 
         processChange(currentModel, desiredModel, removePkChange);
       }
