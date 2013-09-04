@@ -1355,26 +1355,10 @@ public interface Platform {
   public ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet,
       Table[] queryHints);
 
-  public void deleteInvalidConstraintRows(Database model, boolean continueOnError);
-
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError);
-
-  public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError);
-
-  public void deleteAllInvalidConstraintRows(Database model, OBDataset dataset,
-      boolean continueOnError);
-
-  public void deleteInvalidConstraintRows(Connection connection, Database model,
-      boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError);
-
-  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
-      boolean continueOnError);
-
-  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
-      OBDataset dataset, boolean continueOnError);
 
   public void applyConfigScript(Database database, Vector<Change> changes);
 

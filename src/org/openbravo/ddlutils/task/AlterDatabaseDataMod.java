@@ -337,7 +337,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
             !isFailonerror()));
       }
       getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(completedb, !isFailonerror());
+      platform.deleteInvalidConstraintRows(completedb, null, !isFailonerror());
       for (int i = 0; i < dataChanges.size(); i++) {
         getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
         platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i),

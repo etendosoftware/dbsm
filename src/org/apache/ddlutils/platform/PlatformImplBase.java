@@ -3021,21 +3021,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  public void deleteInvalidConstraintRows(Database model, boolean continueOnError) {
-    deleteInvalidConstraintRows(model, null, continueOnError);
-  }
-
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError) {
 
     Connection connection = borrowConnection();
     deleteInvalidConstraintRows(connection, model, dataset, continueOnError);
     returnConnection(connection);
 
-  }
-
-  public void deleteInvalidConstraintRows(Connection connection, Database model,
-      boolean continueOnError) {
-    deleteInvalidConstraintRows(connection, model, null, continueOnError);
   }
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
@@ -3045,34 +3036,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
     getSqlBuilder().setWriter(buffer);
     getSqlBuilder().deleteInvalidConstraintRows(model, dataset, true);
-    evaluateBatch(connection, buffer.toString(), continueOnError);
-  }
-
-  public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError) {
-    deleteAllInvalidConstraintRows(model, null, continueOnError);
-  }
-
-  public void deleteAllInvalidConstraintRows(Database model, OBDataset dataset,
-      boolean continueOnError) {
-
-    Connection connection = borrowConnection();
-    deleteAllInvalidConstraintRows(connection, model, dataset, continueOnError);
-    returnConnection(connection);
-
-  }
-
-  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
-      boolean continueOnError) {
-    deleteAllInvalidConstraintRows(connection, model, null, continueOnError);
-  }
-
-  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
-      OBDataset dataset, boolean continueOnError) {
-
-    StringWriter buffer = new StringWriter();
-
-    getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, false);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 
@@ -3406,7 +3369,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public String limitOneRow() {
-    return "";
+    throw new UnsupportedOperationException(
+        "limitOneRow method not yet implemented for this platform: " + getName());
   }
 
   public boolean validateOnCreateDefault(Connection connection, String onCreateDefault, Table table) {
