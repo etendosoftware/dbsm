@@ -1355,6 +1355,9 @@ public interface Platform {
   public ModelBasedResultSetIterator createResultSetIterator(Database model, ResultSet resultSet,
       Table[] queryHints);
 
+  // called by ERP SystemService.java (for delete client)
+  public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError);
+
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,

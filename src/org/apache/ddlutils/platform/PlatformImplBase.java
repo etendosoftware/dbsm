@@ -3039,6 +3039,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 
+  public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError) {
+
+    Connection connection = borrowConnection();
+    deleteAllInvalidConstraintRows(connection, model, continueOnError);
+    returnConnection(connection);
+
+  }
+
+  public void deleteAllInvalidConstraintRows(Connection connection, Database model,
+      boolean continueOnError) {
+
+    StringWriter buffer = new StringWriter();
+
+    getSqlBuilder().setWriter(buffer);
+    getSqlBuilder().deleteInvalidConstraintRows(model, null, false);
+    evaluateBatch(connection, buffer.toString(), continueOnError);
+  }
+
   public void applyConfigScript(Database database, Vector<Change> changes) {
     StringWriter buffer = new StringWriter();
 
