@@ -2561,7 +2561,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException {
-    disableAllFK(connection, model, continueOnError);
+    throw new DatabaseOperationException("Error: Operation not supported");
   }
 
   /**
@@ -2583,7 +2583,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException {
-    return enableAllFK(connection, model, continueOnError);
+    throw new DatabaseOperationException("Error: Operation not supported");
   }
 
   /**
