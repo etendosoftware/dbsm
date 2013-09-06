@@ -742,7 +742,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       getSqlBuilder().setWriter(buffer);
       getSqlBuilder().createExternalForeignKeys(model);
       sql = buffer.toString();
-      evaluateBatch(connection, sql, continueOnError);
+      evaluateBatchRealBatch(connection, sql, continueOnError);
     } catch (IOException e) {
       // won't happen because we're using a string writer
     }
@@ -3297,7 +3297,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           getSqlBuilder().disableAllChecks(database.getTable(i));
         }
       }
-      evaluateBatch(connection, buffer.toString(), true);
+      evaluateBatchRealBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -3395,7 +3395,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           getSqlBuilder().enableAllChecks(table);
         }
       }
-      evaluateBatch(connection, buffer.toString(), true);
+      evaluateBatchRealBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
       e.printStackTrace();
     }
