@@ -192,7 +192,7 @@ public class SybaseBuilder extends SqlBuilder {
   /**
    * {@inheritDoc}
    */
-  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     String constraintName = getForeignKeyName(table, foreignKey);
 

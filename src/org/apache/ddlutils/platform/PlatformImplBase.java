@@ -2561,7 +2561,29 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException {
-    throw new DatabaseOperationException("Error: Operation not supported");
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTableCount(); i++) {
+        Table table = model.getTable(i);
+        if (dataset.getTable(table.getName()) != null) {
+          for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
+            getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
+          }
+        } else {
+          for (int j = 0; j < table.getForeignKeyCount(); j++) {
+            ForeignKey fk = table.getForeignKey(j);
+            if (dataset.getTable(fk.getForeignTableName()) != null) {
+              getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
+            }
+          }
+        }
+      }
+      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new DatabaseOperationException("Error while disabling foreign key ", e);
+    }
   }
 
   /**
@@ -2583,7 +2605,31 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException {
-    throw new DatabaseOperationException("Error: Operation not supported");
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      for (int i = 0; i < model.getTableCount(); i++) {
+        Table table = model.getTable(i);
+        if (dataset.getTable(table.getName()) != null) {
+          getSqlBuilder().createExternalForeignKeys(model, table);
+        } else {
+          for (int j = 0; j < table.getForeignKeyCount(); j++) {
+            ForeignKey fk = table.getForeignKey(j);
+            if (dataset.getTable(fk.getForeignTableName()) != null) {
+              getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
+            }
+          }
+        }
+      }
+      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      if (numErrors > 0) {
+        return false;
+      }
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new DatabaseOperationException("Error while enabling foreign key ", e);
+    }
   }
 
   /**

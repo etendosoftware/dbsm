@@ -3518,7 +3518,7 @@ public abstract class SqlBuilder {
    * @param key
    *          The foreign key
    */
-  public void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
+  protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
       throws IOException {
     if (key.getForeignTableName() == null) {
       _log.warn("Foreign key table is null for key " + key);
@@ -3611,7 +3611,7 @@ public abstract class SqlBuilder {
    * @param foreignKey
    *          The foreign key
    */
-  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     writeTableAlterStmt(table);
     print("DROP CONSTRAINT ");

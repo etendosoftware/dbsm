@@ -32,9 +32,7 @@ import java.util.Map;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
-import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionStandarization;
@@ -45,7 +43,6 @@ import org.apache.ddlutils.platform.postgresql.PostgrePLSQLTriggerTranslation;
 import org.apache.ddlutils.translation.CommentFilter;
 import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.util.ExtTypes;
-import org.openbravo.ddlutils.util.OBDataset;
 
 /**
  * The platform for Oracle 8.
@@ -164,36 +161,6 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
-  @Override
-  public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException {
-
-    try {
-      StringWriter buffer = new StringWriter();
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < model.getTableCount(); i++) {
-        Table table = model.getTable(i);
-        if (dataset.getTable(table.getName()) != null) {
-          for (int j = 0; j < table.getForeignKeyCount(); j++) {
-            ForeignKey fk = table.getForeignKey(j);
-            getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
-          }
-        } else {
-          for (int j = 0; j < table.getForeignKeyCount(); j++) {
-            ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
-              getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
-            }
-          }
-        }
-      }
-      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new DatabaseOperationException("Error while disabling foreign key ", e);
-    }
-  }
-
   /**
    * {@inheritDoc}
    */
@@ -218,40 +185,6 @@ public class Oracle8Platform extends PlatformImplBase {
     } catch (SQLException e) {
       System.out.println("SQL command failed with " + e.getMessage());
       System.out.println(current);
-      throw new DatabaseOperationException("Error while enabling foreign key ", e);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException {
-
-    try {
-      StringWriter buffer = new StringWriter();
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < model.getTableCount(); i++) {
-        Table table = model.getTable(i);
-        if (dataset.getTable(table.getName()) != null) {
-          getSqlBuilder().createExternalForeignKeys(model, table);
-        } else {
-          for (int j = 0; j < table.getForeignKeyCount(); j++) {
-            ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
-              getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
-            }
-          }
-        }
-      }
-      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
-      if (numErrors > 0) {
-        return false;
-      }
-      return true;
-    } catch (Exception e) {
-      e.printStackTrace();
       throw new DatabaseOperationException("Error while enabling foreign key ", e);
     }
   }

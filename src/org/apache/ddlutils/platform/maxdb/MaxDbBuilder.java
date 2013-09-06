@@ -64,7 +64,7 @@ public class MaxDbBuilder extends SapDbBuilder {
   /**
    * {@inheritDoc}
    */
-  public void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
+  protected void writeExternalForeignKeyCreateStmt(Database database, Table table, ForeignKey key)
       throws IOException {
     if (key.getForeignTableName() == null) {
       _log.warn("Foreign key table is null for key " + key);
@@ -87,7 +87,7 @@ public class MaxDbBuilder extends SapDbBuilder {
   /**
    * {@inheritDoc}
    */
-  public void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
+  protected void writeExternalForeignKeyDropStmt(Table table, ForeignKey foreignKey)
       throws IOException {
     writeTableAlterStmt(table);
     print("DROP CONSTRAINT ");
