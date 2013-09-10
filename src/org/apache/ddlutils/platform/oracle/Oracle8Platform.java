@@ -407,6 +407,6 @@ public class Oracle8Platform extends PlatformImplBase {
 
   @Override
   public String limitOneRow() {
-    return "where rownum<2";
+    return " where rownum<2";
   }
 }

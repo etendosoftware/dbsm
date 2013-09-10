@@ -536,6 +536,6 @@ public class PostgreSqlPlatform extends PlatformImplBase {
 
   @Override
   public String limitOneRow() {
-    return "LIMIT 1";
+    return " LIMIT 1";
   }
 }
