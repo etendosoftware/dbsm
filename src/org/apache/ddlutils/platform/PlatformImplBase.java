@@ -3438,8 +3438,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public boolean validateOnCreateDefault(Connection connection, String onCreateDefault, Table table) {
-    if (onCreateDefault.startsWith("'"))
+    // short-circuit the most common/simple expression to skip execution of the validation-sql
+    if (onCreateDefault.startsWith("'") || onCreateDefault.equals("get_uuid()")
+        || onCreateDefault.equals("0")) {
       return true;
+    }
+
     try {
       PreparedStatement st = connection.prepareStatement("SELECT (" + onCreateDefault + ") FROM "
           + table.getName() + limitOneRow());
