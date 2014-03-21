@@ -13,6 +13,7 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -111,7 +112,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       final Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(getCoreData());
 
-      Vector<File> configScripts = new Vector<File>();
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
           final File dirF = new File(moduledir, util.getModule(j).dir
@@ -119,11 +119,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
           if (dirF.exists()) {
             dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
           }
-          File configScript = new File(moduledir, util.getModule(j).dir
-              + "/src-db/database/configScript.xml");
-          if (!util.getModule(j).dir.equals(industryTemplate) && configScript.exists()
-              && DBSMOBUtil.isApplied(platform, util.getModule(j).dir))
-            configScripts.add(configScript);
         }
       }
 
@@ -142,20 +137,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
           dataReader.getSink().end();
         } catch (final Exception e) {
           e.printStackTrace();
-        }
-      }
-
-      getLog().info("Loading and applying configuration scripts");
-      DatabaseIO dbIOs = new DatabaseIO();
-      for (File f : configScripts) {
-        getLog().info("Loading configuration script: " + f.getAbsolutePath());
-        Vector<Change> changes = dbIOs.readChanges(f);
-        for (Change change : changes) {
-          if (change instanceof ModelChange)
-            ((ModelChange) change).apply(xmlModel, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange)
-            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
-          getLog().debug(change);
         }
       }
 
@@ -183,6 +164,27 @@ public class ExportConfigScript extends BaseDatabaseTask {
             databaseModel.mergeWith(dbI);
         } catch (final Exception e) {
           e.printStackTrace();
+        }
+      }
+
+      List<String> configScripts = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
+      getLog().info("Loading and applying configuration scripts");
+      DatabaseIO dbIOs = new DatabaseIO();
+      for (String configScript : configScripts) {
+        File f = new File(moduledir, configScript + "/src-db/database/configScript.xml");
+        if (configScript.equals(industryTemplate) || !f.exists()
+            || !DBSMOBUtil.isApplied(platform, configScript)) {
+          continue;
+        }
+
+        getLog().info("Loading configuration script: " + f.getAbsolutePath());
+        Vector<Change> changes = dbIOs.readChanges(f);
+        for (Change change : changes) {
+          if (change instanceof ModelChange)
+            ((ModelChange) change).apply(xmlModel, platform.isDelimitedIdentifierModeOn());
+          else if (change instanceof DataChange)
+            ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+          getLog().debug(change);
         }
       }
 
@@ -276,8 +278,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
   }
 
   /**
-   * Functionality for deleting data during create.database was removed.
-   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   * Functionality for deleting data during create.database was removed. Function is kept to not
+   * require lock-step update of dbsm.jar & build-create.xml
    */
   @Deprecated
   public void setFilter(String filter) {
