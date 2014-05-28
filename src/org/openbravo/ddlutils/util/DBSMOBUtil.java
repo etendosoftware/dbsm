@@ -37,7 +37,6 @@ import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.jfree.util.Log;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 
 public class DBSMOBUtil {
@@ -997,7 +996,7 @@ public class DBSMOBUtil {
         boolean isOB3 = isOB3(platform);
         for (Change change : changes) {
           if (change instanceof ColumnDataChange) {
-            Log.info("Reversing change " + change);
+            getLog().info("Reversing change " + change);
             if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
               boolean applied = ((ColumnDataChange) change).applyInReverse(databaseOrgData,
                   platform.isDelimitedIdentifierModeOn());
