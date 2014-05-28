@@ -13,8 +13,12 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -26,6 +30,7 @@ import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -70,7 +75,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   protected void doExecute() {
     excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
-
     if (!onlyIfModified) {
       System.out
           .println("Executing database update process without checking changes in local files.");
@@ -245,6 +249,44 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       e.printStackTrace();
       throw new BuildException(e);
     }
+  }
+
+  public static void main(String[] args) throws FileNotFoundException, IOException {
+    String workingDir = System.getProperty("user.dir");
+    System.out.println("Working directory: " + workingDir);
+
+    Properties props = new Properties();
+    props.load(new FileInputStream(workingDir + "/config/Openbravo.properties"));
+    AlterDatabaseDataAll task = new AlterDatabaseDataAll();
+    String baseDir = workingDir + "/src-db/database";
+
+    task.setDriver(props.getProperty("bbdd.driver"));
+
+    String ownerUrl;
+    if ("POSTGRE".equals(props.getProperty("bbdd.rdbms"))) {
+      ownerUrl = props.getProperty("bbdd.url") + "/" + props.getProperty("bbdd.sid");
+    } else {
+      ownerUrl = props.getProperty("bbdd.url");
+    }
+
+    task.setUrl(ownerUrl);
+    task.setUser(props.getProperty("bbdd.user"));
+    task.setPassword(props.getProperty("bbdd.password"));
+    task.setExcludeobjects(props.getProperty("com.openbravo.db.OpenbravoExcludeFilter"));
+    task.setModel(new File(baseDir + "/model"));
+
+    task.setInput(new File(baseDir + "/sourcedata"));
+    task.setObject(props.getProperty("bbdd.object"));
+    task.setBasedir(workingDir + "/modules");
+    task.setDirFilter("*/src-db/database/model");
+    task.setDatadir(workingDir + "/modules");
+    task.setDatafilter("*/src-db/database/sourcedata");
+    task.setForce(false);
+    task.setFailonerror(false);
+
+    task.setVerbosity(new VerbosityLevel("DEBUG"));
+
+    task.execute();
   }
 
   protected Database readDatabaseModel() {
