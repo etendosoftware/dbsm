@@ -996,7 +996,7 @@ public class DBSMOBUtil {
         boolean isOB3 = isOB3(platform);
         for (Change change : changes) {
           if (change instanceof ColumnDataChange) {
-            getLog().info("Reversing change " + change);
+            getLog().debug("Reversing change " + change);
             if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
               boolean applied = ((ColumnDataChange) change).applyInReverse(databaseOrgData,
                   platform.isDelimitedIdentifierModeOn());
