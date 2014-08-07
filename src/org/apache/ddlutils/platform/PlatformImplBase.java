@@ -319,23 +319,26 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return evaluateBatch(connection, commands, continueOnError);
   }
 
-  public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError)
-      throws DatabaseOperationException {
+  public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError) {
+    return evaluateBatch(connection, sql, continueOnError, 0);
+  }
+
+  public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError,
+      long firstSqlCommandIndex) throws DatabaseOperationException {
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;
 
     ArrayList<String> aForcedCommands = new ArrayList<String>();
     ArrayList<String> iteratedCommands = new ArrayList<String>();
-
     // we tokenize the SQL along the delimiters, and we also make sure that
     // only delimiters
     // at the end of a line or the end of the string are used (row mode)
     try {
       statement = connection.createStatement();
 
-      for (String command : sql) {
-
+      List<String> sqlToRetry = sql.subList((int) firstSqlCommandIndex, sql.size());
+      for (String command : sqlToRetry) {
         // ignore whitespace
         command = command.trim();
         if (command.length() == 0) {
@@ -575,27 +578,38 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         statement.executeBatch();
       } catch (BatchUpdateException e) {
         errors++;
-        // The batch failed. We will execute all commands again using the old method
-        return evaluateBatch(connection, sql, continueOnError);
+        long indexFailedStatement = e.getUpdateCounts().length;
+        return handleFailedBatchExecution(connection, sql, continueOnError, indexFailedStatement);
       }
-
-      String errorNumber = "";
-      if (errors > 0)
-        errorNumber = " with " + errors + " error(s)";
-      else
-        errorNumber = " successfully";
-      if (commandCount > 0)
-        _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
 
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while executing SQL", ex);
     } finally {
+      try {
+        connection.setAutoCommit(true);
+      } catch (SQLException e) {
+        // won't happen
+      }
+
       if (statement != null) {
         closeStatement(statement);
       }
     }
 
+    String errorNumber = "";
+    if (errors > 0)
+      errorNumber = " with " + errors + " error(s)";
+    else
+      errorNumber = " successfully";
+    if (commandCount > 0)
+      _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
+
     return errors;
+  }
+
+  protected int handleFailedBatchExecution(Connection connection, List<String> sql,
+      boolean continueOnError, long indexFailedStatement) {
+    return evaluateBatch(connection, sql, continueOnError);
   }
 
   /**

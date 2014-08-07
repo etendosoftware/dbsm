@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.ddlutils.DatabaseOperationException;
@@ -408,5 +409,14 @@ public class Oracle8Platform extends PlatformImplBase {
   @Override
   public String limitOneRow() {
     return " where rownum<2";
+  }
+
+  protected int handleFailedBatchExecution(Connection connection, List<String> sql,
+      boolean continueOnError, long indexFailedStatement) {
+    getLog().info(
+        "Batch statement failed. Retrying froo statement #" + indexFailedStatement + "("
+            + sql.get((int) indexFailedStatement) + ")");
+    // The batch failed. We will execute all commands again using the old method
+    return evaluateBatch(connection, sql, continueOnError, indexFailedStatement);
   }
 }

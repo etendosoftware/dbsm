@@ -197,7 +197,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           changes, null);
 
       getLog().info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad, !isFailonerror());
+      boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad, true);
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
 
       // execute the post-script

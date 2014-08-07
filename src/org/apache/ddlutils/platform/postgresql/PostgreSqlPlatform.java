@@ -30,6 +30,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -538,4 +539,30 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   public String limitOneRow() {
     return " LIMIT 1";
   }
+
+  protected int handleFailedBatchExecution(Connection connection, List<String> sql,
+      boolean continueOnError, long indexFailedStatement) {
+    try {
+      connection.rollback();
+      connection.setAutoCommit(true);
+    } catch (SQLException e) {
+      getLog().error("Error while handling a failed batch execution ins postgreSql.");
+    }
+    getLog()
+        .info(
+            "Batch statement failed. Rolling back and retrying all the statements in a non-batched connection.");
+    // The batch failed. We will execute all commands again using the old method
+    return evaluateBatch(connection, sql, continueOnError);
+  }
+
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
+      throws DatabaseOperationException {
+    try {
+      connection.setAutoCommit(false);
+    } catch (SQLException e) {
+      // will not happen
+    }
+    return super.evaluateBatchRealBatch(connection, sql, continueOnError);
+  }
+
 }
