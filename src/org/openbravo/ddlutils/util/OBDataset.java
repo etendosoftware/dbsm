@@ -138,6 +138,11 @@ public class OBDataset {
   }
 
   public boolean hasChanged(Connection connection, Logger log) {
+    return hasChanged(connection, log, null);
+  }
+
+  public boolean hasChanged(Connection connection, Logger log, List<String> modifiedTables) {
+    boolean hasChanges = false;
     for (OBDatasetTable table : tables) {
       try {
         String sql = "SELECT count(*) FROM " + table.getName() + " WHERE 1=1 ";
@@ -151,7 +156,10 @@ public class OBDataset {
         rs.next();
         if (rs.getInt(1) > 0) {
           log.warn("Change detected in table: " + table.getName());
-          return true;
+          if (modifiedTables != null) {
+            modifiedTables.add(table.getName());
+          }
+          hasChanges = true;
         }
       } catch (Exception e) {
         // We do nothing if the select fails in one table. This can happen if a new table has been
@@ -159,6 +167,6 @@ public class OBDataset {
         // something fails here, there shouldn't be a warning
       }
     }
-    return false;
+    return hasChanges;
   }
 }
