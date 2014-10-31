@@ -1,6 +1,7 @@
 package org.openbravo.ddlutils.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,6 +10,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -533,6 +535,9 @@ public class DBSMOBUtil {
   public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
     final Connection connection = platform.borrowConnection();
     try {
+      // Execute the session config query before calling ad_db_modified, the same way it is done
+      // when using the Module Management Console
+      executeSessionConfigQuery(connection);
       PreparedStatement statementDate = connection
           .prepareStatement("SELECT last_dbupdate from AD_SYSTEM_INFO");
       statementDate.execute();
@@ -578,6 +583,9 @@ public class DBSMOBUtil {
     String sql = "SELECT ad_db_modified('Y') FROM DUAL";
     final Connection connection = platform.borrowConnection();
     try {
+      // Execute the session config query before calling ad_db_modified, the same way it is done
+      // when using the Module Management Console
+      executeSessionConfigQuery(connection);
       PreparedStatement statement = connection.prepareStatement(sql);
       statement.execute();
     } catch (Exception e) {
@@ -1146,5 +1154,24 @@ public class DBSMOBUtil {
     DatabaseIO dbIO = new DatabaseIO();
     Vector<Change> changes = dbIO.readChanges(file);
     return isOldConfigScript(changes);
+  }
+
+  /**
+   * Executes the sessionConfig query defined in Openbravo.properties
+   * 
+   * @param connection
+   */
+  private void executeSessionConfigQuery(Connection connection) {
+    String workingDir = System.getProperty("user.dir");
+    Properties props = new Properties();
+    try {
+      props.load(new FileInputStream(workingDir + "/../../config/Openbravo.properties"));
+      String sessionConfigQuery = props.getProperty("bbdd.sessionConfig");
+      PreparedStatement statement = connection.prepareStatement(sessionConfigQuery);
+      statement.execute();
+    } catch (Exception e) {
+      System.out.println("Error while executing the sessionConfig query");
+      e.printStackTrace();
+    }
   }
 }
