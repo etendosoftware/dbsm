@@ -1165,7 +1165,12 @@ public class DBSMOBUtil {
     String workingDir = System.getProperty("user.dir");
     Properties props = new Properties();
     try {
-      props.load(new FileInputStream(workingDir + "/../../config/Openbravo.properties"));
+      // the workingDir can be either the openbravoRoot or openbravoRoot/src-db/database
+      File propertiesFile = new File(workingDir + "/config/Openbravo.properties");
+      if (!propertiesFile.exists()) {
+        propertiesFile = new File(workingDir + "/../../config/Openbravo.properties");
+      }
+      props.load(new FileInputStream(propertiesFile));
       String sessionConfigQuery = props.getProperty("bbdd.sessionConfig");
       PreparedStatement statement = connection.prepareStatement(sessionConfigQuery);
       statement.execute();
