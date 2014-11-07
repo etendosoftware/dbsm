@@ -3,6 +3,7 @@ package org.openbravo.ddlutils.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -533,8 +534,9 @@ public class DBSMOBUtil {
   }
 
   public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
-    final Connection connection = platform.borrowConnection();
+    Connection connection = null;
     try {
+      connection = getUnpooledConnection();
       // Execute the session config query before calling ad_db_modified, the same way it is done
       // when using the Module Management Console
       executeSessionConfigQuery(connection);
@@ -562,7 +564,6 @@ public class DBSMOBUtil {
 
       System.out.println("Checking if data has changed in the application dictionary.");
       boolean datachange = dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
-
       if (datachange)
         return true;
       else
@@ -573,28 +574,56 @@ public class DBSMOBUtil {
       System.out
           .println("There was a problem verifying the changes in the database. Updating the database anyway...");
     } finally {
-      platform.returnConnection(connection);
+      try {
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        getLog().error("Error while closing connection", e);
+      }
     }
     return false;
 
   }
 
   public void updateCRC(Platform platform) {
-    String sql = "SELECT ad_db_modified('Y') FROM DUAL";
-    final Connection connection = platform.borrowConnection();
+    Connection connection = null;
     try {
+      connection = getUnpooledConnection();
       // Execute the session config query before calling ad_db_modified, the same way it is done
       // when using the Module Management Console
       executeSessionConfigQuery(connection);
+      String sql = "SELECT ad_db_modified('Y') FROM DUAL";
       PreparedStatement statement = connection.prepareStatement(sql);
       statement.execute();
     } catch (Exception e) {
       System.out.println("There was a problem updating the CRC in the database.");
       e.printStackTrace();
-
     } finally {
-      platform.returnConnection(connection);
+      try {
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        getLog().error("Error while closing connection", e);
+      }
     }
+  }
+
+  private Connection getUnpooledConnection() {
+    Connection connection = null;
+    try {
+      Properties obProps = getOpenbravoProperties();
+      String strURL = obProps.getProperty("bbdd.url");
+      if (obProps.getProperty("bbdd.rdbms").equalsIgnoreCase("POSTGRE")) {
+        strURL += "/" + obProps.getProperty("bbdd.sid");
+      }
+      connection = DriverManager.getConnection(strURL, obProps.getProperty("bbdd.user"),
+          obProps.getProperty("bbdd.password"));
+    } catch (SQLException e) {
+      getLog().error("Error while retrieving an unpooled connection: ", e);
+    }
+    return connection;
   }
 
   public void deleteInstallTables(Platform platform, Database database) {
@@ -1162,15 +1191,8 @@ public class DBSMOBUtil {
    * @param connection
    */
   private void executeSessionConfigQuery(Connection connection) {
-    String workingDir = System.getProperty("user.dir");
-    Properties props = new Properties();
     try {
-      // the workingDir can be either the openbravoRoot or openbravoRoot/src-db/database
-      File propertiesFile = new File(workingDir + "/config/Openbravo.properties");
-      if (!propertiesFile.exists()) {
-        propertiesFile = new File(workingDir + "/../../config/Openbravo.properties");
-      }
-      props.load(new FileInputStream(propertiesFile));
+      Properties props = getOpenbravoProperties();
       String sessionConfigQuery = props.getProperty("bbdd.sessionConfig");
       PreparedStatement statement = connection.prepareStatement(sessionConfigQuery);
       statement.execute();
@@ -1178,5 +1200,22 @@ public class DBSMOBUtil {
       System.out.println("Error while executing the sessionConfig query");
       e.printStackTrace();
     }
+  }
+
+  private static Properties getOpenbravoProperties() {
+    Properties props = new Properties();
+    String workingDir = System.getProperty("user.dir");
+    try {
+      // the workingDir can be either the openbravoRoot or openbravoRoot/src-db/database
+      File propertiesFile = new File(workingDir + "/config/Openbravo.properties");
+      if (!propertiesFile.exists()) {
+        propertiesFile = new File(workingDir + "/../../config/Openbravo.properties");
+      }
+      props.load(new FileInputStream(propertiesFile));
+    } catch (Exception e) {
+      System.out.println("Error while obtaining the Openbravo.properties file");
+      e.printStackTrace();
+    }
+    return props;
   }
 }
