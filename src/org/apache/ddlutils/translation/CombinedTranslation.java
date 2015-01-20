@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2015 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -33,23 +33,23 @@ public class CombinedTranslation implements Translation {
   }
 
   public final String exec(String s) {
-
+    String translatedCode = s;
     String initialComments = "";
     String initialBlanks = "";
-    while (s.charAt(0) == '\n' || s.charAt(0) == ' ') {
-      initialBlanks += s.substring(0, 1);
-      s = s.substring(1);
+    while (translatedCode.charAt(0) == '\n' || translatedCode.charAt(0) == ' ') {
+      initialBlanks += translatedCode.substring(0, 1);
+      translatedCode = translatedCode.substring(1);
     }
-    if (s.startsWith("/*")) {
-      int ind = s.indexOf("*/");
-      initialComments = s.substring(0, ind);
-      s = s.substring(ind);
+    if (translatedCode.startsWith("/*")) {
+      int ind = translatedCode.indexOf("*/");
+      initialComments = translatedCode.substring(0, ind);
+      translatedCode = translatedCode.substring(ind);
     }
 
     for (Translation t : _translations) {
-      s = t.exec(s);
+      translatedCode = t.exec(translatedCode);
     }
-    return initialBlanks + initialComments + s;
+    return initialBlanks + initialComments + translatedCode;
   }
 
 }
