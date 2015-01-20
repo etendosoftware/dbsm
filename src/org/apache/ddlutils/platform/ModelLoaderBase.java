@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2015 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -270,7 +270,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     // To get same behavior in rest of dbsm which expects the name in uppercase
     // we use the uppercase name in the Table object
 
-    // is in correct case (like in db) on postgres, and in upperCase on oracle 
+    // is in correct case (like in db) on postgres, and in upperCase on oracle
     String tableRealName = tablename;
 
     // is always in upperCase on both oracle & postgres
@@ -420,8 +420,14 @@ public abstract class ModelLoaderBase implements ModelLoader {
 
     Check c = new Check();
 
-    c.setName(rs.getString(1));
-    c.setCondition(translateCheckCondition(rs.getString(2)));
+    final String checkName = rs.getString(1);
+    final String originalCheck = rs.getString(2);
+    final String translatedCheck = translateCheckCondition(originalCheck);
+
+    _log.debug("  check " + checkName + " - original: " + originalCheck + " - translated: "
+        + translatedCheck);
+    c.setName(checkName);
+    c.setCondition(translatedCheck);
 
     return c;
   }
