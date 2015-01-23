@@ -1,0 +1,22 @@
+{
+  "testDBs": [
+    {
+      "rdbms": "POSTGRE",
+      "url": "jdbc:postgresql://localhost:5432",
+      "sid": "test1",
+      "password": "-",
+      "user": "tad",
+      "driver": "org.postgresql.Driver",
+      "name": "pg-9.3"
+    },
+    {
+      "rdbms": "ORACLE",
+      "url": "jdbc:oracle:thin:@localhost:1521:oborcl",
+      "sid": "oborcl",
+      "user": "test1",
+      "password": "test1",
+      "driver": "oracle.jdbc.driver.OracleDriver",
+      "name": "oracle"
+    }
+  ]
+}

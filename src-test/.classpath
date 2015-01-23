@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DBSourceManagerModularity"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/openbravo"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/OpenbravoTest"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-beanutils-1.7.0.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-betwixt-0.8.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-collections-3.1.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-dbcp-1.2.1.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-digester-1.7.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-lang-2.1.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-pool-1.2.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/dom4j-1.4.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/jakarta-oro-2.0.8.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/log4j-1.2.8.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/stax-api-1.0.1.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/wstx-asl-3.0.2.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/test/hamcrest-all-1.3.jar" sourcepath="/home/alostale/src/hamcrest-1.3/hamcrest-all-1.3-sources.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/test/junit.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/jettison-1.3.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-io-2.0.1.jar"/>
+	<classpathentry kind="output" path="build"/>
+</classpath>

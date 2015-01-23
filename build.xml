@@ -81,5 +81,9 @@
 
   <target name="build" depends="jar, doc">
   </target>
+  
+  <target name="run.tests" depends="compile">
+    <ant dir="src-test" target="run.tests" inheritAll="false" inheritRefs="false" useNativeBasedir="true"/>
+  </target>
 
 </project>

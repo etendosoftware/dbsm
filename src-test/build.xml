@@ -1,0 +1,42 @@
+<project default="run.tests"  name="dbsm-test">
+  <property name="test.src" value="src"/>
+  <property name="test.build" value="build"/>
+  <property file="../dbsm.properties" />
+
+  <path id="test.class.path">
+    <fileset dir="../lib">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="../lib/build-only">
+      <include name="**/*.jar"/>
+    </fileset>
+    <pathelement path="${pathOB}/build/classes/"/>
+    <fileset dir="${pathOB}/WebContent/WEB-INF/lib">
+      <include name="**/*.jar"/>
+      <exclude name="**/dbsourcemanager.jar"/>
+    </fileset>
+    <fileset dir="${pathOB}/lib/test">
+      <include name="**/*.jar"/>
+    </fileset>
+    <pathelement path="build"/>
+    <pathelement path="../build/classes"/>
+  </path>
+
+  <target name="run.tests" depends="compile.tests">
+      <junit printsummary="yes" haltonfailure="yes" fork="true" dir="${basedir}">
+        <sysproperty key="user.dir" value="${basedir}"/>
+      <classpath refid="test.class.path" />
+      <formatter type="plain" usefile="no"/>
+      <test name="org.openbravo.dbsm.test.DBSMTestSuite" haltonfailure="no" outfile="result">
+        <formatter type="xml" />
+      </test>
+    </junit>
+  </target>
+
+  <target name="compile.tests">
+    <mkdir dir="${test.build}"/>
+    <javac srcdir="${test.src}" destdir="${test.build}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+      <classpath refid="test.class.path" />
+    </javac>
+  </target>
+</project>
