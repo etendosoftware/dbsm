@@ -85,6 +85,7 @@ import org.apache.ddlutils.alteration.RemoveTableChange;
 import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.alteration.RemoveUniqueChange;
 import org.apache.ddlutils.alteration.RemoveViewChange;
+import org.apache.ddlutils.alteration.SequenceDefinitionChange;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
@@ -1014,6 +1015,9 @@ public abstract class SqlBuilder {
 
     applyForSelectedChanges(changes, new Class[] { AddSequenceChange.class }, callbackClosure);
 
+    applyForSelectedChanges(changes, new Class[] { SequenceDefinitionChange.class },
+        callbackClosure);
+
     applyForSelectedChanges(changes, new Class[] { AddFunctionChange.class }, callbackClosure);
 
     applyForSelectedChanges(changes, new Class[] { AddViewChange.class }, callbackClosure);
@@ -1194,6 +1198,12 @@ public abstract class SqlBuilder {
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, AddSequenceChange change) throws IOException {
     createSequence(change.getNewSequence());
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel,
+      CreationParameters params, SequenceDefinitionChange change) throws IOException {
+    alterSequence(change.getSequence());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -3722,7 +3732,27 @@ public abstract class SqlBuilder {
 
         print("CREATE SEQUENCE ");
         printIdentifier(getStructureObjectName(sequence));
-        print(" START WITH ");
+        print(" MINVALUE ");
+        print(Integer.toString(sequence.getStart()));
+        print(" INCREMENT BY ");
+        print(Integer.toString(sequence.getIncrement()));
+
+        printEndOfStatement(getStructureObjectName(sequence));
+      }
+    }
+  }
+
+  protected void alterSequence(Sequence sequence) throws IOException {
+
+    if (getPlatformInfo().isSequencesSupported()) {
+      if (sequence.getName() == null) {
+        _log.warn("Cannot write unnamed sequence " + sequence);
+      } else {
+        printStartOfStatement("SEQUENCE", getStructureObjectName(sequence));
+
+        print("ALTER SEQUENCE ");
+        printIdentifier(getStructureObjectName(sequence));
+        print(" MINVALUE ");
         print(Integer.toString(sequence.getStart()));
         print(" INCREMENT BY ");
         print(Integer.toString(sequence.getIncrement()));

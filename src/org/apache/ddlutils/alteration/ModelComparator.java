@@ -161,6 +161,9 @@ public class ModelComparator {
               + sourceModel.getName() + ")");
         }
         changes.add(new RemoveSequenceChange(sourceSequence));
+      } else if (targetSequence.getStart() != sourceSequence.getStart()
+          || targetSequence.getIncrement() != sourceSequence.getIncrement()) {
+        changes.add(new SequenceDefinitionChange(targetSequence));
       }
     }
 
@@ -649,8 +652,8 @@ public class ModelComparator {
     for (int sqIdx = 0; sqIdx < database.getSequenceCount(); sqIdx++) {
       Sequence curSequence = database.getSequence(sqIdx);
 
-      if ((_caseSensitive && sequence.equals(curSequence))
-          || (!_caseSensitive && sequence.equalsIgnoreCase(curSequence))) {
+      if ((_caseSensitive && sequence.getName().equals(curSequence.getName()))
+          || (!_caseSensitive && sequence.getName().equalsIgnoreCase(curSequence.getName()))) {
         return curSequence;
       }
     }
