@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-  <database name="SEQUENCE TESTSEQ1">
-    <sequence name="TESTSEQ1" start="10" increment="10"/>
-  </database>
