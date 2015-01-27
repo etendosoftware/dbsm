@@ -25,23 +25,40 @@ public class PostgreSqlCheckTranslation extends CombinedTranslation {
 
   public PostgreSqlCheckTranslation() {
     // pg 9.3+ adds extra casting to character varying columns, let's remove them
+    // example: translated check "PROCESSED IN ('Y', 'N')"
+    // can be exported as "ANY ((ARRAY['Y'::character varying, 'N'::character varying])::text[]))"
+    // or as "ANY (ARRAY[('Y'::character varying)::text, ('N'::character varying)::text]))"
+    // this replacement covers 2nd case resulting in:
+    // "ANY (ARRAY['M'::character varying, 'P'::character varying, 'T'::character varying]))"
     append(new ReplacePatTranslation("\\(([^\\(]*)(::character varying)\\)::text", "$1$2"));
 
+    // replaces " = ANY" by " in"
+    // in (ARRAY['M'::character varying, 'P'::character varying, 'T'::character varying]))
     append(new ReplaceStrTranslation(" = ANY", " in"));
+
+    // removes ARRAY and brackets:
+    // "in ('M'::character varying, 'P'::character varying, 'T'::character varying))"
     append(new ReplaceStrTranslation("ARRAY[", ""));
     append(new ReplaceStrTranslation("]", ""));
+
+    // removes extra castings: "((type) in ('M', 'P', 'T'))"
     append(new ReplaceStrTranslation("::bpchar", ""));
     append(new ReplaceStrTranslation("::text", ""));
     append(new ReplaceStrTranslation("::character varying", ""));
 
+    // removes pending bracket in case 1:
+    // "((type) in (('M', 'P', 'T')[))" -> ((type) in (('M', 'P', 'T')))
     append(new ReplacePatTranslation("\\[", ""));
 
+    // handles numeric casting
     append(new ReplacePatTranslation("\\(([0-9\\.\\-]+?)\\)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
 
     // remove 1st double brackets if present
+    // "((type) in (('M', 'P', 'T')))" -> "(type in (('M', 'P', 'T')))"
     append(new ReplacePatTranslation("\\((\\(.+)\\)( in .*)", "$1$2"));
 
-    // remove 2nd double brackets if present
+    // remove 2nd double brackets if present:
+    // "(type in (('M', 'P', 'T')))" -> "(type IN ('M', 'P', 'T'))"
     append(new ReplacePatTranslation("(.*) in \\((\\(.+\\))\\)", "$1 IN $2"));
 
     append(new Translation() {
