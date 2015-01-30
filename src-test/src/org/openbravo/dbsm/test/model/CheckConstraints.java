@@ -31,8 +31,6 @@ import org.junit.Test;
  */
 public class CheckConstraints {
 
-  private static final String EXPECTED_RESULT = "TYPE IN ('M', 'P', 'T')";
-
   private static List<CheckConstraintType> contrains;
 
   static {
@@ -79,7 +77,7 @@ public class CheckConstraints {
    * Checks constraint formatted as in pg9.3 after install sources is properly translated
    */
   @Test
-  public void installSourceIsProperlyTranlsated() throws NoSuchFieldException,
+  public void installSourceIsProperlyTranslated() throws NoSuchFieldException,
       IllegalAccessException {
     for (CheckConstraintType contraint : contrains) {
       assertThat(contraint.contraintName + " is not properly tranlsated",
