@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+  <vector>
+    <versionInfo version="3.0.25887"/>
+    <columnSizeChange tablename="TEST" columnname="LINE" newSize="10" newScale="2" oldSize="10" oldScale="0"/>
+  </vector>

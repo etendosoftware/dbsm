@@ -23,7 +23,11 @@ import org.junit.runners.Suite.SuiteClasses;
  *
  */
 @RunWith(Suite.class)
-@SuiteClasses({ CheckConstraints.class, Sequences.class })
+@SuiteClasses({ //
+CheckConstraints.class, //
+    Sequences.class, //
+    NumericScaleChanges.class //
+})
 public class ModelSuite {
 
 }
