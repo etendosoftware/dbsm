@@ -34,6 +34,8 @@ import org.apache.log4j.PropertyConfigurator;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -50,6 +52,7 @@ import org.openbravo.ddlutils.util.DBSMOBUtil;
  * @author alostale
  *
  */
+@RunWith(Parameterized.class)
 public class DbsmTest {
   private String password;
   private String user;
@@ -167,18 +170,32 @@ public class DbsmTest {
     return rdbms;
   }
 
-  /** Utility method to to update current DB to model defined in dbModelPath */
-  protected void updateDatabase(String dbModelPath) {
+  /**
+   * Utility method to to update current DB to model defined in dbModelPath
+   * 
+   * @return
+   */
+  protected Database updateDatabase(String dbModelPath) {
     File dbModel = new File("model", dbModelPath);
-    final Platform platform = PlatformFactory.createNewPlatformInstance(getDataSource());
+    final Platform platform = getPlatform();
     Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
     Database newDB = DatabaseUtils.readDatabase(dbModel);
     platform.alterTables(originalDB, newDB, false);
+    return newDB;
   }
 
-  /** Utility method to update current DB to model defined in modelPath field */
-  protected void updateDatabase() {
-    updateDatabase(modelPath);
+  /** Reads current DB model */
+  protected Database readModelFromDB() {
+    return getPlatform().loadModelFromDatabase(getExcludeFilter());
+  }
+
+  /**
+   * Utility method to update current DB to model defined in modelPath field
+   * 
+   * @return
+   */
+  protected Database updateDatabase() {
+    return updateDatabase(modelPath);
   }
 
   /** Utility method to reset current test DB removing all objects it might have */
@@ -189,8 +206,13 @@ public class DbsmTest {
   /** Exports current test DB to xml files within path directory */
   protected void exportDatabase(String path) {
     final DatabaseIO io = new DatabaseIO();
-    final Platform platform = PlatformFactory.createNewPlatformInstance(getDataSource());
+    final Platform platform = getPlatform();
     Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
     io.writeToDir(originalDB, new File(path));
+  }
+
+  /** returns platform for current execution */
+  protected Platform getPlatform() {
+    return PlatformFactory.createNewPlatformInstance(getDataSource());
   }
 }
