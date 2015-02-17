@@ -1,6 +1,7 @@
 package org.openbravo.dbsm.test.model;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
@@ -13,6 +14,7 @@ import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Table;
 import org.junit.Test;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
@@ -47,7 +49,7 @@ public class NumericScaleChanges extends DbsmTest {
     for (Change change : changes) {
       if (change instanceof ColumnSizeChange) {
         ColumnSizeChange sizeChange = (ColumnSizeChange) change;
-        assertThat("old scale", sizeChange.getOldScale(), is(0));
+        assertThat("old scale", sizeChange.getOldScale(), is(nullValue()));
         assertThat("new scale", sizeChange.getNewScale(), is(2));
         sizeChange.apply(db, getPlatform().isDelimitedIdentifierModeOn());
         changeFound = true;
@@ -73,8 +75,13 @@ public class NumericScaleChanges extends DbsmTest {
     updateDatabase("scaleChanges/TEST2.xml");
 
     Database appliedDB = readModelFromDB();
-    Column lineColumn = appliedDB.findTable("TEST").findColumn("LINE");
-    assertThat(lineColumn.getSize(), is("10,3"));
+    Table testTable = appliedDB.findTable("TEST");
+    Column lineColumn = testTable.findColumn("LINE");
+
+    assertThat(lineColumn.getSize(), is("20,3"));
     assertThat(lineColumn.getScale(), is(3));
+
+    Column textColumn = testTable.findColumn("TEXT");
+    assertThat(textColumn.getSize(), is("2000"));
   }
 }

@@ -9,6 +9,10 @@
         <default/>
         <onCreateDefault/>
       </column>
+      <column name="TEXT" primaryKey="false" required="false" type="NVARCHAR" size="1000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
     </table>
   </database>
   
