@@ -34,9 +34,9 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
   /** The new size. */
   private int _newSize;
   /** The new scale. */
-  private int _newScale;
+  private Integer _newScale;
   private int _oldSize = 0;
-  private int _oldScale;
+  private Integer _oldScale;
   private String _tablename;
   private String _columnname;
 
@@ -91,7 +91,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
    * 
    * @return The new scale
    */
-  public int getNewScale() {
+  public Integer getNewScale() {
     return _newScale;
   }
 
@@ -160,7 +160,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
     _newSize = newSize;
   }
 
-  public void setNewScale(int newScale) {
+  public void setNewScale(Integer newScale) {
     _newScale = newScale;
   }
 
@@ -182,7 +182,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
     _oldSize = size;
   }
 
-  public int getOldScale() {
+  public Integer getOldScale() {
     return _oldScale;
   }
 
