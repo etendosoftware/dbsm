@@ -1667,6 +1667,8 @@ public abstract class SqlBuilder {
       if (true) // canMigrateData) <-We will always try to insert data. If
       // it's not possible, the user will notice the error
       {
+        _log.info("Table " + sourceTable.getName() + " will be recreated");
+
         if (recreatedPKs.contains(sourceTable.getName())) {
           recreatedPKs.remove(sourceTable.getName());
         }
