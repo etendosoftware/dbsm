@@ -15,6 +15,7 @@ package org.openbravo.dbsm.test.model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 
 /**
  * Test suite grouping all cases for database model
@@ -26,8 +27,8 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({ //
 CheckConstraints.class, //
     Sequences.class, //
-    NumericScaleChanges.class //
-})
+    NumericScaleChanges.class, //
+    AddDropColumn.class })
 public class ModelSuite {
 
 }

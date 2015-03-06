@@ -172,8 +172,6 @@ public class DbsmTest {
 
   /**
    * Utility method to to update current DB to model defined in dbModelPath
-   * 
-   * @return
    */
   protected Database updateDatabase(String dbModelPath) {
     File dbModel = new File("model", dbModelPath);
@@ -191,8 +189,6 @@ public class DbsmTest {
 
   /**
    * Utility method to update current DB to model defined in modelPath field
-   * 
-   * @return
    */
   protected Database updateDatabase() {
     return updateDatabase(modelPath);
