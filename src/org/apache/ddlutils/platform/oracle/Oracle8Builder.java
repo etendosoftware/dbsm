@@ -442,15 +442,12 @@ public class Oracle8Builder extends SqlBuilder {
         AddColumnChange addColumnChange = (AddColumnChange) change;
 
         // Oracle can only add not insert columns
-        // Also, we cannot add NOT NULL columns unless they have a
-        // default value
-        if (!addColumnChange.isAtEnd() || // <-We will always rebuild
-            // the table
-            (addColumnChange.getNewColumn().isRequired()))// &&
-        // (addColumnChange.getNewColumn().getDefaultValue()
-        // ==
-        // null)))
-        {
+        // Recreating the whole table in these cases:
+        // * new column is added between existent ones
+        // * new column is mandatory
+        // * new column is not mandatory but it has onCreateDefault
+        if (!addColumnChange.isAtEnd() || (addColumnChange.getNewColumn().isRequired())
+            || addColumnChange.getNewColumn().getOnCreateDefault() != null) {
           // we need to rebuild the full table
           return;
         }
@@ -466,8 +463,8 @@ public class Oracle8Builder extends SqlBuilder {
         changeIt.remove();
       } else if (change instanceof PrimaryKeyChange) {
         PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
-        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(pkChange
-            .getChangedTable(), pkChange.getOldPrimaryKeyColumns());
+        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
+            pkChange.getChangedTable(), pkChange.getOldPrimaryKeyColumns());
 
         processChange(currentModel, desiredModel, removePkChange);
       }
