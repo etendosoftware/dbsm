@@ -15,6 +15,9 @@ package org.openbravo.dbsm.test.base;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,10 +25,13 @@ import java.util.Properties;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DatabaseIO;
+import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -97,7 +103,7 @@ public class DbsmTest {
    * Reads parameters in "config/db-config.json" to invoke the test cases
    */
   @Parameters(name = "DB: {6}")
-  public static Collection<String[]> editRecordValues() throws IOException, JSONException {
+  public static Collection<String[]> params() throws IOException, JSONException {
     JSONObject config = new JSONObject(FileUtils.readFileToString(
         new File("config/db-config.json"), "utf-8"));
 
@@ -210,5 +216,55 @@ public class DbsmTest {
   /** returns platform for current execution */
   protected Platform getPlatform() {
     return PlatformFactory.createNewPlatformInstance(getDataSource());
+  }
+
+  /**
+   * Generates dummy data for the model
+   * 
+   * @param model
+   *          model to generate data for
+   * @param rows
+   *          number of rows to generate
+   */
+  protected void generateData(Database model, int rows) throws SQLException {
+    for (Table table : model.getTables()) {
+      for (int i = 0; i < rows; i++) {
+        String sql = "insert into " + table.getName() + " (";
+        boolean first = true;
+        String values = "";
+        for (Column col : table.getColumns()) {
+          col.getName();
+          if (!first) {
+            sql += ", ";
+            values += ", ";
+          }
+          System.out.println(col.getType() + " - " + col.getTypeCode() + " - " + col.getSize());
+          first = false;
+          sql += col.getName();
+          if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())) {
+            values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
+          } else if ("DECIMAL".equals(col.getType())) {
+            values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
+          }
+        }
+        sql += ") values (" + values + ")";
+        System.out.println(sql);
+        Connection cn = null;
+        try {
+          cn = getDataSource().getConnection();
+
+          PreparedStatement st = cn.prepareStatement(sql);
+          st.execute();
+        } finally {
+          if (cn != null) {
+            try {
+              cn.close();
+            } catch (SQLException e) {
+              log.error("Error closing connection", e);
+            }
+          }
+        }
+      }
+    }
   }
 }

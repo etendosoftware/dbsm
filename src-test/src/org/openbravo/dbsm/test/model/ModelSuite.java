@@ -15,6 +15,7 @@ package org.openbravo.dbsm.test.model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.openbravo.dbsm.test.model.data.CreateDefault;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 
 /**
@@ -28,7 +29,8 @@ import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 CheckConstraints.class, //
     Sequences.class, //
     NumericScaleChanges.class, //
-    AddDropColumn.class })
+    AddDropColumn.class, //
+    CreateDefault.class })
 public class ModelSuite {
 
 }
