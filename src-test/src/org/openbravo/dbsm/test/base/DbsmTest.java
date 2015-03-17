@@ -12,6 +12,7 @@
 
 package org.openbravo.dbsm.test.base;
 
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -32,7 +33,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -282,6 +285,14 @@ public class DbsmTest {
     log.info("Enabling Foreign Keys and Triggers");
     boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true);
     boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
+
+    // Now check the new model updated in db is as it should
+    ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
+        platform.isDelimitedIdentifierModeOn());
+    @SuppressWarnings("unchecked")
+    List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+        platform.loadModelFromDatabase(getExcludeFilter()));
+    assertThat("changes between updated db and target db", newChanges, is(empty()));
 
     return newDB;
   }
