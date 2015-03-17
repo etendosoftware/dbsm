@@ -22,20 +22,12 @@ package org.apache.ddlutils.platform.oracle;
 import java.io.IOException;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
-import org.apache.ddlutils.alteration.AddColumnChange;
-import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
-import org.apache.ddlutils.alteration.PrimaryKeyChange;
-import org.apache.ddlutils.alteration.RemoveColumnChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
-import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
@@ -392,167 +384,6 @@ public class Oracle8Builder extends SqlBuilder {
     } else {
       return null;
     }
-  }
-
-  @Override
-  public boolean willBeRecreated(Table table, Vector<TableChange> changes) {
-    boolean recreated = false;
-    for (int i = 0; i < changes.size(); i++) {
-      TableChange currentChange = changes.get(i);
-
-      if (currentChange instanceof AddColumnChange) {
-        AddColumnChange addColumnChange = (AddColumnChange) currentChange;
-
-        // Oracle can only add not insert columns
-        // Also, we cannot add NOT NULL columns unless they have a
-        // default value
-        if (!addColumnChange.isAtEnd())// &&
-        // (addColumnChange.getNewColumn().getDefaultValue()
-        // ==
-        // null)))
-        {
-          // we need to rebuild the full table
-          recreated = true;
-        }
-      } else if (!(currentChange instanceof RemovePrimaryKeyChange)
-          && !(currentChange instanceof PrimaryKeyChange)
-          && !(currentChange instanceof AddColumnChange)
-          && !(currentChange instanceof RemoveColumnChange)
-          && !(currentChange instanceof AddPrimaryKeyChange))
-        recreated = true;
-    }
-    return recreated;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected void processTableStructureChanges(Database currentModel, Database desiredModel,
-      Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
-    // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
-    // limited
-    // esp. if there is data in the table, so we don't use it
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-      TableChange change = (TableChange) changeIt.next();
-      // TODO: Merge this code with willBeRecreated
-      if (change instanceof AddColumnChange) {
-        AddColumnChange addColumnChange = (AddColumnChange) change;
-
-        // Oracle can only add not insert columns
-        // Recreating the whole table in these cases:
-        // * new column is added between existent ones
-        // * new column is mandatory
-        if (!addColumnChange.isAtEnd()) {
-          // we need to rebuild the full table
-          return;
-        }
-      }
-    }
-
-    // First we drop primary keys as necessary
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-      TableChange change = (TableChange) changeIt.next();
-
-      if (change instanceof RemovePrimaryKeyChange) {
-        processChange(currentModel, desiredModel, (RemovePrimaryKeyChange) change);
-        changeIt.remove();
-      } else if (change instanceof PrimaryKeyChange) {
-        PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
-        RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
-            pkChange.getChangedTable(), pkChange.getOldPrimaryKeyColumns());
-
-        processChange(currentModel, desiredModel, removePkChange);
-      }
-    }
-
-    // Next we add/remove columns
-    // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
-    // limited
-    // esp. if there is data in the table, so we don't use it
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-      TableChange change = (TableChange) changeIt.next();
-
-      if (change instanceof AddColumnChange) {
-        processChange(currentModel, desiredModel, (AddColumnChange) change);
-        changeIt.remove();
-      } else if (change instanceof RemoveColumnChange) {
-        processChange(currentModel, desiredModel, (RemoveColumnChange) change);
-        changeIt.remove();
-      }
-    }
-    // Finally we add primary keys
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-      TableChange change = (TableChange) changeIt.next();
-
-      if (change instanceof AddPrimaryKeyChange) {
-        processChange(currentModel, desiredModel, (AddPrimaryKeyChange) change);
-        changeIt.remove();
-      } else if (change instanceof PrimaryKeyChange) {
-        PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
-        AddPrimaryKeyChange addPkChange = new AddPrimaryKeyChange(pkChange.getChangedTable(),
-            pkChange.getNewName(), pkChange.getNewPrimaryKeyColumns());
-
-        processChange(currentModel, desiredModel, addPkChange);
-        changeIt.remove();
-      }
-    }
-  }
-
-  /**
-   * Processes the addition of a column to a table.
-   * 
-   * @param currentModel
-   *          The current database schema
-   * @param desiredModel
-   *          The desired database schema
-   * @param change
-   *          The change object
-   */
-  protected void processChange(Database currentModel, Database desiredModel, AddColumnChange change)
-      throws IOException {
-    print("ALTER TABLE ");
-    printlnIdentifier(getStructureObjectName(change.getChangedTable()));
-    printIndent();
-    print("ADD ");
-    writeColumn(change.getChangedTable(), change.getNewColumn());
-    printEndOfStatement();
-    if (change.getNewColumn().isAutoIncrement()) {
-      createAutoIncrementSequence(change.getChangedTable(), change.getNewColumn());
-      createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
-    }
-    /*
-     * if(change.getNewColumn().getOnCreateDefault()!=null) {
-     * executeOnCreateDefault(change.getChangedTable(), change.getChangedTable(),
-     * change.getNewColumn()); writeColumnCommentStmt(currentModel, change.getChangedTable(),
-     * change.getNewColumn()); }
-     */
-    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-  }
-
-  /**
-   * Processes the removal of a column from a table.
-   * 
-   * @param currentModel
-   *          The current database schema
-   * @param desiredModel
-   *          The desired database schema
-   * @param change
-   *          The change object
-   */
-  protected void processChange(Database currentModel, Database desiredModel,
-      RemoveColumnChange change) throws IOException {
-    if (change.getColumn().isAutoIncrement()) {
-      dropAutoIncrementTrigger(change.getChangedTable(), change.getColumn());
-      dropAutoIncrementSequence(change.getChangedTable(), change.getColumn());
-    }
-    print("ALTER TABLE ");
-    printlnIdentifier(getStructureObjectName(change.getChangedTable()));
-    printIndent();
-    print("DROP COLUMN ");
-    printIdentifier(getColumnName(change.getColumn()));
-    printEndOfStatement();
-    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
   /**
