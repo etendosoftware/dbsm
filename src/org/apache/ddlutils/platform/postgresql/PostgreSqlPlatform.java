@@ -112,6 +112,8 @@ public class PostgreSqlPlatform extends PlatformImplBase {
 
     info.setNcharsupported(true);
 
+    info.setColumnOrderManaged(false);
+
     setSqlBuilder(new PostgreSqlBuilder(this));
     setModelReader(new PostgreSqlModelReader(this));
     setModelLoader(new PostgreSqlModelLoader());

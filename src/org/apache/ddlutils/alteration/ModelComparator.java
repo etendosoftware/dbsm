@@ -437,7 +437,7 @@ public class ModelComparator {
         }
       }
     }
-    if (!columnPosChanges.isEmpty()) {
+    if (!columnPosChanges.isEmpty() && _platformInfo.isColumnOrderManaged()) {
       changes.add(new ColumnOrderChange(sourceTable, columnPosChanges));
     }
 

@@ -225,6 +225,9 @@ public class PlatformInfo {
    */
   private HashSet _typesWithPrecisionAndScale = new HashSet();
 
+  /** Differences in column position are considered as change */
+  private boolean columnOrderManaged;
+
   /**
    * Creates a new platform info object.
    */
@@ -249,6 +252,8 @@ public class PlatformInfo {
 
     _typesWithPrecisionAndScale.add(new Integer(Types.DECIMAL));
     _typesWithPrecisionAndScale.add(new Integer(Types.NUMERIC));
+
+    columnOrderManaged = true;
   }
 
   // properties influencing the definition of columns
@@ -1228,5 +1233,19 @@ public class PlatformInfo {
     } else {
       _typesWithPrecisionAndScale.remove(new Integer(sqlTypeCode));
     }
+  }
+
+  /** Sets whether column order will be taken into account */
+  public void setColumnOrderManaged(boolean columnOrderManaged) {
+    this.columnOrderManaged = columnOrderManaged;
+  }
+
+  /**
+   * Flag that indicates whether changes in column position within a table are considered as a
+   * change or not. Not considering this as a change allows to prevent recreation of table when a
+   * column is inserted between others.
+   */
+  public boolean isColumnOrderManaged() {
+    return columnOrderManaged;
   }
 }

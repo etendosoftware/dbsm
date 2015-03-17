@@ -4408,17 +4408,17 @@ public abstract class SqlBuilder {
       if (currentChange instanceof AddColumnChange) {
         AddColumnChange addColumnChange = (AddColumnChange) currentChange;
 
-        // Oracle can only add not insert columns
-        // Also, we cannot add NOT NULL columns unless they have a
-        // default value
-        if (!addColumnChange.isAtEnd())// &&
-        // (addColumnChange.getNewColumn().getDefaultValue()
-        // ==
-        // null)))
-        {
-          // we need to rebuild the full table
-          recreated = true;
-        }
+        // // Oracle can only add not insert columns
+        // // Also, we cannot add NOT NULL columns unless they have a
+        // // default value
+        // if (!addColumnChange.isAtEnd())// &&
+        // // (addColumnChange.getNewColumn().getDefaultValue()
+        // // ==
+        // // null)))
+        // {
+        // // we need to rebuild the full table
+        // recreated = true;
+        // }
       } else if (!(currentChange instanceof RemovePrimaryKeyChange)
           && !(currentChange instanceof PrimaryKeyChange)
           && !(currentChange instanceof AddColumnChange)
@@ -4438,24 +4438,24 @@ public abstract class SqlBuilder {
     // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
     // limited
     // esp. if there is data in the table, so we don't use it
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-      TableChange change = (TableChange) changeIt.next();
-
-      if (change instanceof AddColumnChange) {
-        AddColumnChange addColumnChange = (AddColumnChange) change;
-
-        // TODO: merge with willBeRecreated method
-
-        // Oracle can only add not insert columns
-        // Recreating the whole table in these cases:
-        // * new column is added between existent ones
-        // * new column is mandatory
-        if (!addColumnChange.isAtEnd()) {
-          // we need to rebuild the full table
-          return;
-        }
-      }
-    }
+    // for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+    // TableChange change = (TableChange) changeIt.next();
+    //
+    // if (change instanceof AddColumnChange) {
+    // AddColumnChange addColumnChange = (AddColumnChange) change;
+    //
+    // // TODO: merge with willBeRecreated method
+    //
+    // // Oracle can only add not insert columns
+    // // Recreating the whole table in these cases:
+    // // * new column is added between existent ones
+    // // * new column is mandatory
+    // if (!addColumnChange.isAtEnd()) {
+    // // we need to rebuild the full table
+    // return;
+    // }
+    // }
+    // }
 
     // // First we drop primary keys as necessary
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
