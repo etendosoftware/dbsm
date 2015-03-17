@@ -35,6 +35,11 @@ public class OBDataset {
     createDataset(dataset, false);
   }
 
+  public OBDataset(DatabaseData databaseData) {
+    this.database = databaseData.getDatabase();
+    this.databaseData = databaseData;
+  }
+
   private void createDataset(DynaBean dataset, boolean readFromDb) {
     // Vector<DynaBean> alldsTables = getDynaBeans("AD_DATASET_TABLE", readFromDb);
     List<DynaBean> dsTables = searchDynaBeans("AD_DATASET_TABLE", readFromDb,
@@ -168,5 +173,10 @@ public class OBDataset {
       }
     }
     return hasChanges;
+  }
+
+  public void setTables(Vector<OBDatasetTable> tables2) {
+    this.tables = tables2;
+
   }
 }
