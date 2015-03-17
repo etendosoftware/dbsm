@@ -337,6 +337,10 @@ public class DbsmTest {
    */
   protected void generateData(Database model, int rows) throws SQLException {
     for (Table table : model.getTables()) {
+      if (table.getForeignKeyCount() > 0) {
+        // not generating FK data for now
+        continue;
+      }
       for (int i = 0; i < rows; i++) {
         String sql = "insert into " + table.getName() + " (";
         boolean first = true;

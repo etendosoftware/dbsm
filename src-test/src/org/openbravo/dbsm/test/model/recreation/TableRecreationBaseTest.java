@@ -55,12 +55,19 @@ public class TableRecreationBaseTest extends DbsmTest {
   }
 
   protected void assertTablesAreNotRecreated(String fromModel, String toModel) {
+    assertTablesAreNotRecreated(fromModel, toModel, true);
+  }
+
+  protected void assertTablesAreNotRecreated(String fromModel, String toModel,
+      boolean generateDummyData) {
     resetDB();
     try {
       Database originalModel = updateDatabase(MODEL_DIRECTORY
           + (type == Type.add ? fromModel : toModel));
 
-      generateData(originalModel, 10);
+      if (generateDummyData) {
+        generateData(originalModel, 10);
+      }
 
       List<String> oldTableInternalId = getOIds(originalModel);
 
