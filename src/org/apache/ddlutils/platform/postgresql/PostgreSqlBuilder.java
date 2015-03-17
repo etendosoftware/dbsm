@@ -165,6 +165,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     }
     println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
         + "';");
+    printEndOfStatement();
   }
 
   /**
