@@ -354,7 +354,8 @@ public class DbsmTest {
           System.out.println(col.getType() + " - " + col.getTypeCode() + " - " + col.getSize());
           first = false;
           sql += col.getName();
-          if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())) {
+          if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())
+              || "CHAR".equals(col.getType())) {
             values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
           } else if ("DECIMAL".equals(col.getType())) {
             values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
