@@ -1600,30 +1600,11 @@ public abstract class SqlBuilder {
         .isDelimitedIdentifierModeOn());
     // we're enforcing a full rebuild in case of the addition of a required
     // column without a default value that is not autoincrement
-    boolean requiresFullRebuild = false;
     boolean newColumn = false;
     Vector<AddColumnChange> newColumns = new Vector<AddColumnChange>();
 
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-      TableChange change = (TableChange) changeIt.next();
-
-      if (change instanceof AddColumnChange) {
-        newColumn = true;
-        AddColumnChange addColumnChange = (AddColumnChange) change;
-        newColumns.add(addColumnChange);
-
-        if (addColumnChange.getNewColumn().isRequired())// &&
-        // (addColumnChange.getNewColumn().getDefaultValue() == null) &&
-        // !addColumnChange.getNewColumn().isAutoIncrement())
-        {
-          requiresFullRebuild = true;
-        }
-      }
-    }
-    if (!requiresFullRebuild) {
-      processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable,
-          parameters, changes);
-    }
+    processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable, parameters,
+        changes);
 
     if (!changes.isEmpty()) {
 
