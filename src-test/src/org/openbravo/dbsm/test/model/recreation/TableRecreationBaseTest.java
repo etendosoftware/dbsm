@@ -15,8 +15,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.codehaus.jettison.json.JSONException;
@@ -46,9 +44,12 @@ public class TableRecreationBaseTest extends DbsmTest {
       List<Object> p = new ArrayList<Object>(Arrays.asList(param));
       p.add(Type.add);
       configs.add(p.toArray());
-      p = new ArrayList<Object>(Arrays.asList(param));
-      p.add(Type.drop);
-      configs.add(p.toArray());
+
+      if (false) {
+        p = new ArrayList<Object>(Arrays.asList(param));
+        p.add(Type.drop);
+        configs.add(p.toArray());
+      }
     }
     return configs;
   }
@@ -59,7 +60,7 @@ public class TableRecreationBaseTest extends DbsmTest {
       Database originalModel = updateDatabase(MODEL_DIRECTORY
           + (type == Type.add ? fromModel : toModel));
 
-      generateData(originalModel);
+      generateData(originalModel, 10);
 
       List<String> oldTableInternalId = getOIds(originalModel);
 
@@ -70,46 +71,6 @@ public class TableRecreationBaseTest extends DbsmTest {
       e.printStackTrace();
       fail("Exception " + e.getMessage());
     }
-  }
-
-  private void generateData(Database model) throws SQLException {
-
-    for (Table table : model.getTables()) {
-      for (int i = 0; i < 10; i++) {
-        String sql = "insert into " + table.getName() + " (";
-        boolean first = true;
-        String values = "";
-        for (Column col : table.getColumns()) {
-          col.getName();
-          if (!first) {
-            sql += ", ";
-            values += ", ";
-          }
-          System.out.println(col.getType() + " - " + col.getTypeCode() + " - " + col.getSize());
-          first = false;
-          sql += col.getName();
-          if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())) {
-            values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
-          } else if ("DECIMAL".equals(col.getType())) {
-            values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
-          }
-        }
-        sql += ") values (" + values + ")";
-        System.out.println(sql);
-        Connection cn = null;
-        try {
-          cn = getDataSource().getConnection();
-
-          PreparedStatement st = cn.prepareStatement(sql);
-          st.execute();
-        } finally {
-          if (cn != null) {
-            cn.close();
-          }
-        }
-      }
-    }
-
   }
 
   private List<String> getOIds(Database originalModel) throws SQLException {
