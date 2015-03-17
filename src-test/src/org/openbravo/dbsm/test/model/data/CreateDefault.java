@@ -12,8 +12,12 @@
 
 package org.openbravo.dbsm.test.model.data;
 
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -46,29 +50,41 @@ public class CreateDefault extends DbsmTest {
     append, addInTheMiddle
   }
 
+  protected enum DataMode {
+    instance, ADupdateExisting, ADAddInUpdate, ADAfterUpdate
+  }
+
   private AdditionMode mode;
+  private DataMode dataMode;
 
   public CreateDefault(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, AdditionMode mode) throws FileNotFoundException, IOException {
+      String password, String name, AdditionMode mode, DataMode datamode)
+      throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
     this.mode = mode;
+    this.dataMode = datamode;
   }
 
   /**
    * Adds new parameter to default ones to decide whether new column in following test cases is
    * appended or added between existent columns
    */
-  @Parameters(name = "DB: {6} - {7}")
+  @Parameters(name = "DB: {6} - {7} - {8}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     List<Object[]> configs = new ArrayList<Object[]>();
 
     for (String[] param : DbsmTest.params()) {
-      List<Object> p = new ArrayList<Object>(Arrays.asList(param));
-      p.add(AdditionMode.append);
-      configs.add(p.toArray());
-      p = new ArrayList<Object>(Arrays.asList(param));
-      p.add(AdditionMode.addInTheMiddle);
-      configs.add(p.toArray());
+      for (AdditionMode addMode : AdditionMode.values()) {
+        if (false && addMode == AdditionMode.addInTheMiddle) {
+          continue;
+        }
+        for (DataMode dataMode : DataMode.values()) {
+          List<Object> p = new ArrayList<Object>(Arrays.asList(param));
+          p.add(addMode);
+          p.add(dataMode);
+          configs.add(p.toArray());
+        }
+      }
     }
     return configs;
   }
@@ -76,53 +92,91 @@ public class CreateDefault extends DbsmTest {
   // ---- Non Mandatory columns ----
 
   @Test
-  public void nonMandatoryDefault() throws SQLException {
+  public void nonMandatoryDefault_NM1() throws SQLException {
+    assumeThat(dataMode, not(anyOf(is(DataMode.ADAfterUpdate), is(DataMode.ADAddInUpdate))));
     assertDefaults("NM1", "A");
   }
 
   @Test
-  public void nonMandatoryOnCreateDefault() throws SQLException {
+  public void nonMandatoryOnCreateDefault_NM2() throws SQLException {
+    assumeThat(dataMode, not(DataMode.ADAfterUpdate));
     assertDefaults("NM2", "A");
   }
 
   @Test
-  public void nonMandatorySameDefaultAndOnCreateDefault() throws SQLException {
+  public void nonMandatorySameDefaultAndOnCreateDefault_NM3() throws SQLException {
+    assumeThat(dataMode, not(DataMode.ADAfterUpdate));
     assertDefaults("NM3", "A");
   }
 
   @Test
-  public void nonMandatoryDifferentDefaultAndOnCreateDefault() throws SQLException {
+  public void nonMandatoryDifferentDefaultAndOnCreateDefault_NM4() throws SQLException {
+    assumeThat(dataMode, not(DataMode.ADAfterUpdate));
     assertDefaults("NM4", "B");
   }
 
   // ---- Mandatory columns ----
 
   @Test
-  public void mandatoryDefault() throws SQLException {
+  public void mandatoryDefault_M1() throws SQLException {
+    assumeThat(dataMode, not(anyOf(is(DataMode.ADAfterUpdate), is(DataMode.ADAddInUpdate))));
+
     assertDefaults("M1", "A");
   }
 
   @Test
-  public void mandatoryOnCreateDefault() throws SQLException {
+  public void mandatoryOnCreateDefault_M2() throws SQLException {
     assertDefaults("M2", "A");
   }
 
   @Test
-  public void mandatorySameDefaultAndOnCreateDefault() throws SQLException {
+  public void mandatorySameDefaultAndOnCreateDefault_M3() throws SQLException {
     assertDefaults("M3", "A");
   }
 
   @Test
-  public void mandatoryDifferentDefaultAndOnCreateDefault() throws SQLException {
+  public void mandatoryDifferentDefaultAndOnCreateDefault_M4() throws SQLException {
     assertDefaults("M4", "B");
   }
 
   private void assertDefaults(String columnName, String value) throws SQLException {
     resetDB();
-    Database originalModel = updateDatabase(mode == AdditionMode.append ? "createDefault/BASE_MODEL.xml"
-        : "createDefault/BASE_MODEL2.xml");
-    generateData(originalModel, 1);
-    updateDatabase("createDefault/" + columnName + ".xml");
+
+    String originalModelName = mode == AdditionMode.append ? "createDefault/BASE_MODEL.xml"
+        : "createDefault/BASE_MODEL2.xml";
+
+    Database originalModel = null;
+    switch (dataMode) {
+    case instance:
+      originalModel = updateDatabase(originalModelName);
+      break;
+    case ADAfterUpdate:
+    case ADAddInUpdate:
+      originalModel = updateDatabase(originalModelName);
+      break;
+    case ADupdateExisting:
+      originalModel = updateDatabase(originalModelName, "data/createDefault", Arrays.asList("TEST"));
+    }
+
+    switch (dataMode) {
+    case instance:
+      generateData(originalModel, 1);
+    case ADAfterUpdate:
+      updateDatabase("createDefault/" + columnName + ".xml");
+      break;
+    case ADAddInUpdate:
+    case ADupdateExisting:
+      updateDatabase("createDefault/" + columnName + ".xml", "data/createDefault",
+          Arrays.asList("TEST"));
+      break;
+    }
+
+    if (dataMode == DataMode.ADAfterUpdate) {
+      // same update than before including obsolete AD data
+      updateDatabase("createDefault/" + columnName + ".xml", "data/createDefault",
+          Arrays.asList("TEST"));
+    }
+
     assertThat("Value for column " + columnName, getActualValue(columnName), equalTo(value));
   }
 
@@ -146,5 +200,4 @@ public class CreateDefault extends DbsmTest {
       }
     }
   }
-
 }
