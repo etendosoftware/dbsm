@@ -13,32 +13,32 @@ public class AddDropColumn extends TableRecreationBaseTest {
   }
 
   @Test
-  public void lastNonMandatoryColumn() {
+  public void nonMandatoryColumn_COL1() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL1.xml");
   }
 
   @Test
-  public void lastMandatoryColumnWithDefault() {
+  public void mandatoryColumnWithDefault_COL2() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL2.xml");
   }
 
   @Test
-  public void lastMandatoryColumnWithOnCreateDefault() {
+  public void mandatoryColumnWithOnCreateDefault_COL3() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL3.xml");
   }
 
   @Test
-  public void lastNonMandatoryColumnWithDefault() {
+  public void nonMandatoryColumnWithDefault_COL4() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL4.xml");
   }
 
   @Test
-  public void lastNonMandatoryColumnWithOnCreateDefault() {
+  public void nonMandatoryColumnWithOnCreateDefault_COL5() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL5.xml");
   }
 
   @Test
-  public void lastTwoNonMandatoryColumn() {
+  public void twoNonMandatoryColumns_COL6() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL6.xml");
   }
 }
