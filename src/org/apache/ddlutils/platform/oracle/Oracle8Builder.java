@@ -445,9 +445,7 @@ public class Oracle8Builder extends SqlBuilder {
         // Recreating the whole table in these cases:
         // * new column is added between existent ones
         // * new column is mandatory
-        // * new column is not mandatory but it has onCreateDefault
-        if (!addColumnChange.isAtEnd() || (addColumnChange.getNewColumn().isRequired())
-            || addColumnChange.getNewColumn().getOnCreateDefault() != null) {
+        if (!addColumnChange.isAtEnd() || (addColumnChange.getNewColumn().isRequired())) {
           // we need to rebuild the full table
           return;
         }
