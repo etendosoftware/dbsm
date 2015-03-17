@@ -119,6 +119,9 @@ public class DbsmTest {
     JSONArray dbs = config.getJSONArray("testDBs");
     for (int i = 0; i < dbs.length(); i++) {
       JSONObject jsonDb = dbs.getJSONObject(i);
+      if (jsonDb.has("skip") && jsonDb.getBoolean("skip")) {
+        continue;
+      }
       String dbName = jsonDb.has("name") ? jsonDb.getString("name") : (jsonDb.getString("rdbms")
           + " " + jsonDb.getString("url") + " - " + jsonDb.getString("user"));
       configs.add(new String[] {//
