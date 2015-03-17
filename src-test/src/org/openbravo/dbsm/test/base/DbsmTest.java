@@ -145,7 +145,7 @@ public class DbsmTest {
     props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-4r %-5p %c - %m%n");
 
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
-    props.setProperty("log4j.logger.org.hibernate", "WARN");
+    props.setProperty("log4j.logger.org.apache.ddlutils.util.JdbcSupport", "WARN");
 
     LogManager.resetConfiguration();
     PropertyConfigurator.configure(props);
