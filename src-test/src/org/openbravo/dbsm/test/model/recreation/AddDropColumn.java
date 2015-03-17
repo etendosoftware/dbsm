@@ -3,7 +3,6 @@ package org.openbravo.dbsm.test.model.recreation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AddDropColumn extends TableRecreationBaseTest {
@@ -41,23 +40,5 @@ public class AddDropColumn extends TableRecreationBaseTest {
   @Test
   public void lastTwoNonMandatoryColumn() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "COL6.xml");
-  }
-
-  @Test
-  @Ignore
-  public void changeDecimalTypeSize() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE1.xml");
-  }
-
-  @Test
-  @Ignore
-  public void changeVarcharTypeSize() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE2.xml");
-  }
-
-  @Test
-  @Ignore
-  public void changeCharTypeSize() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
   }
 }
