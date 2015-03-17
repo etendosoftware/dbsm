@@ -58,6 +58,7 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
+import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
@@ -3333,6 +3334,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public String enableNOTNULLColumnsSql(Database database, OBDataset dataset) {
     StringWriter buffer = new StringWriter();
 
+    List<String> completelyEnabledTables = new ArrayList<String>();
+
     getSqlBuilder().setWriter(buffer);
     for (int i = 0; i < database.getTableCount(); i++) {
       Table table = database.getTable(i);
@@ -3355,12 +3358,28 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
       if (enable) {
         _log.debug("enabling not nulls for table " + table.getName());
+        completelyEnabledTables.add(table.getName());
         try {
           getSqlBuilder().enableAllNOTNULLColumns(table);
         } catch (IOException e) {
           e.printStackTrace();
         }
       }
+    }
+
+    Vector<AddColumnChange> columnsToSetNull = new Vector<AddColumnChange>();
+    for (AddColumnChange deferredNullColumn : database.getDeferedNotNulls()) {
+      if (completelyEnabledTables.contains(deferredNullColumn.getChangedTable().getName())) {
+        // already set
+        continue;
+      }
+      columnsToSetNull.add(deferredNullColumn);
+    }
+    try {
+      getSqlBuilder().enableNOTNULLColumns(columnsToSetNull);
+    } catch (IOException e) {
+      // TODO: handle this properly and other cases avobe
+      e.printStackTrace();
     }
     return buffer.toString();
   }

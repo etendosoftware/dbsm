@@ -2765,6 +2765,21 @@ public abstract class SqlBuilder {
    *          The column
    */
   protected void writeColumn(Table table, Column column) throws IOException {
+    writeColumn(table, column, false);
+  }
+
+  /**
+   * Outputs the DDL for the specified column.
+   * 
+   * @param table
+   *          The table containing the column
+   * @param column
+   *          The column
+   * @param delayNotNull
+   *          if true, not null will not be created at this point, it will require of later
+   *          management
+   */
+  protected void writeColumn(Table table, Column column, boolean deferNotNull) throws IOException {
     // see comments in columnsDiffer about null/"" defaults
     printIdentifier(getColumnName(column));
     print(" ");
@@ -2777,8 +2792,10 @@ public abstract class SqlBuilder {
     }
 
     if (column.isRequired()) {
-      print(" ");
-      writeColumnNotNullableStmt();
+      if (!deferNotNull) {
+        print(" ");
+        writeColumnNotNullableStmt();
+      }
     } else if (getPlatformInfo().isNullAsDefaultValueRequired()
         && getPlatformInfo().hasNullDefault(column.getTypeCode())) {
       print(" ");
@@ -4501,17 +4518,27 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel, AddColumnChange change)
       throws IOException {
+
+    Column newColumn = change.getNewColumn();
+    boolean deferNotNull = newColumn.isRequired()
+        && StringUtils.isEmpty(newColumn.getDefaultValue())
+        && StringUtils.isNotEmpty(newColumn.getOnCreateDefault());
+
     print("ALTER TABLE ");
     printlnIdentifier(getStructureObjectName(change.getChangedTable()));
     printIndent();
     print("ADD ");
-    writeColumn(change.getChangedTable(), change.getNewColumn());
+    writeColumn(change.getChangedTable(), change.getNewColumn(), deferNotNull);
     printEndOfStatement();
     if (change.getNewColumn().isAutoIncrement()) {
       createAutoIncrementSequence(change.getChangedTable(), change.getNewColumn());
       createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
     }
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+
+    if (deferNotNull) {
+      desiredModel.addDeferredNotNull(change);
+    }
   }
 
   /**

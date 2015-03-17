@@ -222,12 +222,25 @@ public class PostgreSqlBuilder extends SqlBuilder {
     }
   }
 
+  @Override
   protected void enableAllNOTNULLColumns(Table table) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
       if (column.isRequired()) {
         println("ALTER TABLE " + table.getName() + " ALTER " + getColumnName(column)
             + " SET NOT NULL");
+        printEndOfStatement();
+      }
+    }
+  }
+
+  @Override
+  protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {
+    for (int i = 0; i < newColumns.size(); i++) {
+      Column column = newColumns.get(i).getNewColumn();
+      if (column.isRequired() && !column.isPrimaryKey()) {
+        println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + " ALTER "
+            + getColumnName(column) + " SET NOT NULL");
         printEndOfStatement();
       }
 

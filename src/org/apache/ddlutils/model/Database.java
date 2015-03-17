@@ -26,11 +26,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.dynabean.DynaClassCache;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaException;
@@ -69,6 +71,8 @@ public class Database implements Serializable, Cloneable {
   private transient DynaClassCache _dynaClassCache = null;
 
   private ArrayList _modifiedTables = new ArrayList();
+
+  private List<AddColumnChange> deferredNotNulls = new ArrayList<AddColumnChange>();
 
   /**
    * Adds all tables from the other database to this database. Note that the other database is not
@@ -1598,5 +1602,13 @@ public class Database implements Serializable, Cloneable {
         }
       }
     }
+  }
+
+  public void addDeferredNotNull(AddColumnChange change) {
+    deferredNotNulls.add(change);
+  }
+
+  public List<AddColumnChange> getDeferedNotNulls() {
+    return deferredNotNulls;
   }
 }
