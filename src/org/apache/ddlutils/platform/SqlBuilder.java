@@ -746,8 +746,8 @@ public abstract class SqlBuilder {
           Table tempTable = getTemporaryTableFor(desiredModel, change.getChangedTable());
           if (change.getNewColumn().getOnCreateDefault() != null) {
             executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, false);
-            writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
           }
+          writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
         }
       }
       if (recreated) {
