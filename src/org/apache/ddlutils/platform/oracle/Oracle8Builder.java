@@ -437,7 +437,7 @@ public class Oracle8Builder extends SqlBuilder {
     // esp. if there is data in the table, so we don't use it
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
-
+      // TODO: Merge this code with willBeRecreated
       if (change instanceof AddColumnChange) {
         AddColumnChange addColumnChange = (AddColumnChange) change;
 

@@ -21,14 +21,19 @@ package org.apache.ddlutils.platform.postgresql;
 
 import java.io.IOException;
 import java.sql.Types;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.AddPrimaryKeyChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.PrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
+import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
+import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -285,32 +290,119 @@ public class PostgreSqlBuilder extends SqlBuilder {
     }
   }
 
+  @Override
+  public boolean willBeRecreated(Table table, Vector<TableChange> changes) {
+    boolean recreated = false;
+    for (int i = 0; i < changes.size(); i++) {
+      TableChange currentChange = changes.get(i);
+
+      if (currentChange instanceof AddColumnChange) {
+        AddColumnChange addColumnChange = (AddColumnChange) currentChange;
+
+        // Oracle can only add not insert columns
+        // Also, we cannot add NOT NULL columns unless they have a
+        // default value
+        if (!addColumnChange.isAtEnd() || // <-We will always rebuild
+            // the table
+            (addColumnChange.getNewColumn().isRequired()))// &&
+        // (addColumnChange.getNewColumn().getDefaultValue()
+        // ==
+        // null)))
+        {
+          // we need to rebuild the full table
+          recreated = true;
+        }
+      } else if (!(currentChange instanceof RemovePrimaryKeyChange)
+          && !(currentChange instanceof PrimaryKeyChange)
+          && !(currentChange instanceof AddColumnChange)
+          && !(currentChange instanceof RemoveColumnChange)
+          && !(currentChange instanceof AddPrimaryKeyChange))
+        recreated = true;
+    }
+    return recreated;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
       Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
-    /*
-     * for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) { TableChange change =
-     * (TableChange)changeIt.next();
-     * 
-     * if (change instanceof AddColumnChange) { AddColumnChange addColumnChange =
-     * (AddColumnChange)change;
-     * 
-     * // We can only use PostgreSQL-specific SQL if // the column is not set to NOT NULL (the
-     * constraint would be applied immediately // which will not work if there is already data in
-     * the table) // the column has no default value (it would be applied after the change which //
-     * means that PostgreSQL would behave differently from other databases where the // default is
-     * applied to every column) // the column is added at the end of the table (PostgreSQL does not
-     * support // insertion of a column) if (!addColumnChange.getNewColumn().isRequired() &&
-     * (addColumnChange.getNewColumn().getDefaultValue() == null) &&
-     * (addColumnChange.getNextColumn() == null)) { processChange(currentModel, desiredModel,
-     * addColumnChange); changeIt.remove(); } } else if (change instanceof RemoveColumnChange) {
-     * processChange(currentModel, desiredModel, (RemoveColumnChange)change); changeIt.remove(); } }
-     */// We will try to insert data even in this case
-    super.processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable,
-        parameters, changes);
+    if (false) {
+      super.processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable,
+          parameters, changes);
+      return;
+
+    }
+    // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
+    // limited
+    // esp. if there is data in the table, so we don't use it
+    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+      TableChange change = (TableChange) changeIt.next();
+
+      if (change instanceof AddColumnChange) {
+        AddColumnChange addColumnChange = (AddColumnChange) change;
+
+        // TODO: merge with willBeRecreated method
+
+        // Oracle can only add not insert columns
+        // Recreating the whole table in these cases:
+        // * new column is added between existent ones
+        // * new column is mandatory
+        if (!addColumnChange.isAtEnd() || (addColumnChange.getNewColumn().isRequired())) {
+          // we need to rebuild the full table
+          return;
+        }
+      }
+    }
+
+    // // First we drop primary keys as necessary
+    // for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+    // TableChange change = (TableChange) changeIt.next();
+    //
+    // if (change instanceof RemovePrimaryKeyChange) {
+    // processChange(currentModel, desiredModel, (RemovePrimaryKeyChange) change);
+    // changeIt.remove();
+    // } else if (change instanceof PrimaryKeyChange) {
+    // PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
+    // RemovePrimaryKeyChange removePkChange = new RemovePrimaryKeyChange(
+    // pkChange.getChangedTable(), pkChange.getOldPrimaryKeyColumns());
+    //
+    // processChange(currentModel, desiredModel, removePkChange);
+    // }
+    // }
+
+    // Next we add/remove columns
+    // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
+    // limited
+    // esp. if there is data in the table, so we don't use it
+    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+      TableChange change = (TableChange) changeIt.next();
+
+      if (change instanceof AddColumnChange) {
+        processChange(currentModel, desiredModel, (AddColumnChange) change);
+        changeIt.remove();
+      } else if (change instanceof RemoveColumnChange) {
+        processChange(currentModel, desiredModel, (RemoveColumnChange) change);
+        changeIt.remove();
+      }
+    }
+    // Finally we add primary keys
+    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+      TableChange change = (TableChange) changeIt.next();
+
+      if (change instanceof AddPrimaryKeyChange) {
+        processChange(currentModel, desiredModel, (AddPrimaryKeyChange) change);
+        changeIt.remove();
+      } else if (change instanceof PrimaryKeyChange) {
+        PrimaryKeyChange pkChange = (PrimaryKeyChange) change;
+        AddPrimaryKeyChange addPkChange = new AddPrimaryKeyChange(pkChange.getChangedTable(),
+            pkChange.getNewName(), pkChange.getNewPrimaryKeyColumns());
+
+        processChange(currentModel, desiredModel, addPkChange);
+        changeIt.remove();
+      }
+    }
   }
 
   /**
