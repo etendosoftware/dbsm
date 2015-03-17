@@ -9,10 +9,9 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="COL2" primaryKey="false" required="false" type="NVARCHAR" size="1000" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
     </table>
+    <unique name="TEST_UN">
+      <unique-column name="COL1"/>
+    </unique>
   </database>
   

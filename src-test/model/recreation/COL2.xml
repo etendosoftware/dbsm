@@ -9,8 +9,8 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="COL2" primaryKey="false" required="false" type="NVARCHAR" size="1000" autoIncrement="false">
-        <default/>
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" autoIncrement="false">
+        <default><![CDATA[A]]></default>
         <onCreateDefault/>
       </column>
     </table>

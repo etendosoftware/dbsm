@@ -1,68 +1,74 @@
 package org.openbravo.dbsm.test.model.recreation;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import org.junit.Test;
-import org.openbravo.dbsm.test.base.PGOnlyDbsmTest;
 
-public class AddDropColumn extends PGOnlyDbsmTest {
-  private final static String TEST_TABLE_NAME = "TEST";
+public class AddDropColumn extends TableRecreationBaseTest {
 
   public AddDropColumn(String rdbms, String driver, String url, String sid, String user,
-      String password, String name) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name);
+      String password, String name, Type type) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name, type);
   }
 
   @Test
-  public void appendColumnRecreatesTable() throws SQLException {
-    resetDB();
-    updateDatabase("recreation/COL1.xml");
-    String oldTableInternalId = getTableDBOId(TEST_TABLE_NAME);
-    updateDatabase("recreation/COL2.xml");
-    String newTableInternalId = getTableDBOId(TEST_TABLE_NAME);
-    assertThat(oldTableInternalId, not(equalTo(newTableInternalId)));
+  public void lastNonMandatoryColumn() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "COL1.xml");
   }
 
   @Test
-  public void dropColumnRecreatesTable() throws SQLException {
-    resetDB();
-    updateDatabase("recreation/COL2.xml");
-    String oldTableInternalId = getTableDBOId(TEST_TABLE_NAME);
-    updateDatabase("recreation/COL1.xml");
-    String newTableInternalId = getTableDBOId(TEST_TABLE_NAME);
-    assertThat(oldTableInternalId, not(equalTo(newTableInternalId)));
+  public void lastMandatoryColumnWithDefault() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "COL2.xml");
   }
 
-  private String getTableDBOId(String testTableName) throws SQLException {
-    Connection cn = null;
-    try {
-      cn = getDataSource().getConnection();
+  @Test
+  public void lastMandatoryColumnWithOnCreateDefault() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "COL3.xml");
+  }
 
-      PreparedStatement st;
-      if (getRdbms() == Rdbms.PG) {
-        st = cn.prepareStatement("select oid from pg_class where relname = lower(?)");
-      } else {
-        st = cn.prepareStatement("select object_id from user_objects where object_name = upper(?)");
-      }
-      st.setString(1, testTableName);
+  @Test
+  public void lastNonMandatoryColumnWithDefault() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "COL4.xml");
+  }
 
-      ResultSet rs = st.executeQuery();
+  @Test
+  public void lastNonMandatoryColumnWithOnCreateDefault() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "COL5.xml");
+  }
 
-      rs.next();
-      return rs.getString(1);
-    } finally {
-      if (cn != null) {
-        cn.close();
-      }
-    }
+  @Test
+  public void lastTwoNonMandatoryColumn() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "COL6.xml");
+  }
+
+  @Test
+  public void index() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "IDX.xml");
+  }
+
+  @Test
+  public void unique() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "UNIQUE.xml");
+  }
+
+  @Test
+  public void fk() {
+    assertTablesAreNotRecreated("FK_BASE.xml", "FK.xml");
+  }
+
+  @Test
+  public void changeDecimalTypeSize() {
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE1.xml");
+  }
+
+  @Test
+  public void changeVarcharTypeSize() {
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE2.xml");
+  }
+
+  @Test
+  public void changeCharTypeSize() {
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
   }
 }
