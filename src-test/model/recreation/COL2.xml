@@ -13,6 +13,12 @@
         <default><![CDATA[A]]></default>
         <onCreateDefault/>
       </column>
+      
+      <!-- dummy column to force new columns to be added in the middle -->
+      <column name="DUMMY" primaryKey="false" required="false" type="VARCHAR" size="10" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
     </table>
   </database>
   

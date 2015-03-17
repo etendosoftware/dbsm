@@ -75,7 +75,7 @@ public class CreateDefault extends DbsmTest {
 
     for (String[] param : DbsmTest.params()) {
       for (AdditionMode addMode : AdditionMode.values()) {
-        if (false && addMode == AdditionMode.addInTheMiddle) {
+        if (true && addMode == AdditionMode.addInTheMiddle) {
           continue;
         }
         for (DataMode dataMode : DataMode.values()) {

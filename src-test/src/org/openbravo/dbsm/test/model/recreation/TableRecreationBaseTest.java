@@ -24,14 +24,15 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 public class TableRecreationBaseTest extends DbsmTest {
   private static final String MODEL_DIRECTORY = "recreation/";
 
-  protected enum Type {
-    add, drop
+  protected enum ActionType {
+    append, prepend, drop
   }
 
-  private Type type;;
+  protected static List<ActionType> availableTypes = new ArrayList<ActionType>();
+  private ActionType type;
 
   public TableRecreationBaseTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, Type type) throws FileNotFoundException, IOException {
+      String password, String name, ActionType type) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
     this.type = type;
   }
@@ -41,17 +42,18 @@ public class TableRecreationBaseTest extends DbsmTest {
     List<Object[]> configs = new ArrayList<Object[]>();
 
     for (String[] param : DbsmTest.params()) {
-      List<Object> p = new ArrayList<Object>(Arrays.asList(param));
-      p.add(Type.add);
-      configs.add(p.toArray());
-
-      if (false) {
-        p = new ArrayList<Object>(Arrays.asList(param));
-        p.add(Type.drop);
+      for (ActionType type : availableTypes) {
+        List<Object> p = new ArrayList<Object>(Arrays.asList(param));
+        p.add(type);
         configs.add(p.toArray());
       }
     }
     return configs;
+  }
+
+  protected void assertTablesAreNotRecreated(String toModel) {
+    String fromModel = type == ActionType.prepend ? "BASE_MODEL_PREPEND.xml" : "BASE_MODEL.xml";
+    assertTablesAreNotRecreated(fromModel, toModel, true);
   }
 
   protected void assertTablesAreNotRecreated(String fromModel, String toModel) {
@@ -63,7 +65,7 @@ public class TableRecreationBaseTest extends DbsmTest {
     resetDB();
     try {
       Database originalModel = updateDatabase(MODEL_DIRECTORY
-          + (type == Type.add ? fromModel : toModel));
+          + (type == ActionType.append || type == ActionType.prepend ? fromModel : toModel));
 
       if (generateDummyData) {
         generateData(originalModel, 10);
@@ -71,7 +73,8 @@ public class TableRecreationBaseTest extends DbsmTest {
 
       List<String> oldTableInternalId = getOIds(originalModel);
 
-      Database newModel = updateDatabase(MODEL_DIRECTORY + (type == Type.add ? toModel : fromModel));
+      Database newModel = updateDatabase(MODEL_DIRECTORY
+          + (type == ActionType.append || type == ActionType.prepend ? toModel : fromModel));
       List<String> newTableInternalId = getOIds(newModel);
       assertThat("Table OID changed", newTableInternalId, contains(oldTableInternalId.toArray()));
     } catch (Exception e) {
