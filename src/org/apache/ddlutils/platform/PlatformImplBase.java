@@ -27,7 +27,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
-import java.sql.BatchUpdateException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -92,8 +91,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /** The default name for models read from the database, if no name as given. */
   protected static final String MODEL_DEFAULT_NAME = "default";
 
-  protected static final int MAX_LOOPS_OF_FORCED = 5;
-
   /** The log for this platform. */
   private final Log _log = LogFactory.getLog(getClass());
 
@@ -119,6 +116,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   private boolean _ignoreWarns = true;
 
   private boolean _overrideDefaultValueOnMissingData = true;
+
+  private SQLBatchEvaluator batchEvaluator = new StandardBatchEvaluator(this);
 
   /**
    * {@inheritDoc}
@@ -326,182 +325,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError,
       long firstSqlCommandIndex) throws DatabaseOperationException {
-    Statement statement = null;
-    int errors = 0;
-    int commandCount = 0;
-
-    ArrayList<String> aForcedCommands = new ArrayList<String>();
-    ArrayList<String> iteratedCommands = new ArrayList<String>();
-    // we tokenize the SQL along the delimiters, and we also make sure that
-    // only delimiters
-    // at the end of a line or the end of the string are used (row mode)
-    try {
-      statement = connection.createStatement();
-
-      List<String> sqlToRetry = sql.subList((int) firstSqlCommandIndex, sql.size());
-      for (String command : sqlToRetry) {
-        // ignore whitespace
-        command = command.trim();
-        if (command.length() == 0) {
-          continue;
-        }
-
-        commandCount++;
-
-        if (_log.isDebugEnabled()) {
-          _log.debug("About to execute SQL " + command);
-        }
-        if (command.contains("ITERATE = TRUE")) {
-          iteratedCommands.add(command);
-          continue;
-        }
-        try {
-          // int results = statement.executeUpdate(command);
-          boolean result = statement.execute(command);
-          // int results;
-          // if (statement.execute(command)) {
-          // results = 0; // is a result set
-          // } else {
-          // results = statement.getUpdateCount();
-          // }
-
-          /*
-           * if (_log.isDebugEnabled()) { _log.debug("After execution, " + results +
-           * " row(s) have been changed"); }
-           */
-        } catch (SQLException ex) {
-          if (command.contains("SCRIPT OPTIONS (CRITICAL = TRUE)")) {
-            throw new DatabaseOperationException(
-                "Error while executing a critical SQL to recreate a database table: "
-                    + command
-                    + ".\nYou should recover a backup of the database if possible. If it's not, take into account that there is an auxiliary table which still contains the original data, which can be recovered from it. If a update.database or smartbuild is done, this auxiliary table will be deleted, and all its data will be lost forever. For more information, visit the page: http://wiki.openbravo.com/wiki/Update_Tips",
-                ex);
-          }
-
-          if (continueOnError) {
-            // Since the user deciced to ignore this error, we log
-            // the error
-            // on level warn, and the exception itself on level
-            // debug
-            if (!command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
-              _log.warn("SQL Command failed with: " + ex.getMessage());
-              _log.warn(command);
-              if (_log.isDebugEnabled()) {
-                _log.debug(ex);
-              }
-              errors++;
-            }
-
-            // It is a "forced" command ?
-            if (command.contains("SCRIPT OPTIONS (FORCE = TRUE)")) {
-              aForcedCommands.add(command);
-            }
-          } else {
-            throw new DatabaseOperationException("Error while executing SQL " + command, ex);
-          }
-        }
-
-        // lets display any warnings
-        SQLWarning warning = connection.getWarnings();
-
-        while (warning != null) {
-          _log.warn(warning.toString());
-          warning = warning.getNextWarning();
-        }
-        connection.clearWarnings();
-      }
-      boolean changedSomething = false;
-      do {
-        changedSomething = false;
-        for (String command : iteratedCommands) {
-          int changedRecords = statement.executeUpdate(command);
-          if (changedRecords != 0) {
-            _log.debug("changed: " + changedRecords + " executed: " + command);
-            changedSomething = true;
-          }
-        }
-      } while (changedSomething);
-      String errorNumber = "";
-      if (errors > 0)
-        errorNumber = " with " + errors + " error(s)";
-      else
-        errorNumber = " successfully";
-      if (commandCount > 0)
-        _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
-
-      // execute the forced commands
-      int loops = 0;
-      HashMap<String, String> errorMap = new HashMap<String, String>();
-      int previousErrors = errors;
-      while (loops < MAX_LOOPS_OF_FORCED && !aForcedCommands.isEmpty()) {
-
-        loops++;
-        commandCount = 0;
-        errors = previousErrors;
-
-        for (Iterator<String> it = aForcedCommands.iterator(); it.hasNext();) {
-
-          String command = it.next();
-          commandCount++;
-
-          if (_log.isDebugEnabled()) {
-            _log.debug("About to execute SQL " + command);
-          }
-          try {
-            int results = statement.executeUpdate(command);
-            if (_log.isDebugEnabled()) {
-              _log.debug("After execution, " + results + " row(s) have been changed");
-            }
-            it.remove();
-            if (errorMap.containsKey(command)) {
-              errorMap.remove(command);
-            }
-          } catch (SQLException ex) {
-            String error = "SQL Command failed with: " + ex.getMessage();
-            errorMap.put(command, error);
-            if (_log.isDebugEnabled()) {
-              _log.debug(ex);
-            }
-            errors++;
-          }
-        }
-        String errorNumber2 = "";
-        if (errors > 0)
-          errorNumber2 = " with " + errors + " error(s)";
-        else
-          errorNumber2 = " successfully";
-        if (commandCount > 0) {
-          _log.info("Executed " + commandCount + " forced SQL command(s)" + errorNumber2);
-
-        }
-      }
-      Iterator it = errorMap.keySet().iterator();
-      while (it.hasNext()) {
-        String error = errorMap.get(it.next());
-        if (!_ignoreWarns) {
-          _log.warn(error);
-        } else {
-          _log.info(error);
-        }
-      }
-      if (!aForcedCommands.isEmpty()) {
-        String error = "There are still "
-            + aForcedCommands.size()
-            + " forced commands not executed sucessfully (likely related to failed view statements).";
-        if (_ignoreWarns) {
-          _log.info(error);
-        } else {
-          _log.warn(error);
-        }
-      }
-
-    } catch (SQLException ex) {
-      throw new DatabaseOperationException("Error while executing SQL", ex);
-    } finally {
-      closeStatement(statement);
-    }
-
-    return errors;
+    return batchEvaluator.evaluateBatch(connection, sql, continueOnError, firstSqlCommandIndex);
   }
 
   public int evaluateBatchRealBatch(Connection connection, String sql, boolean continueOnError)
@@ -517,100 +341,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
       throws DatabaseOperationException {
-    Statement statement = null;
-    int errors = 0;
-    int commandCount = 0;
-
-    // we tokenize the SQL along the delimiters, and we also make sure that
-    // only delimiters
-    // at the end of a line or the end of the string are used (row mode)
-    try {
-
-      statement = connection.createStatement();
-
-      for (String command : sql) {
-
-        // ignore whitespace
-        command = command.trim();
-        if (command.length() == 0) {
-          continue;
-        }
-
-        commandCount++;
-
-        if (_log.isDebugEnabled()) {
-          _log.debug("About to execute SQL " + command);
-        }
-
-        try {
-          statement.addBatch(command);
-
-        } catch (SQLException ex) {
-
-          if (continueOnError) {
-            // Since the user deciced to ignore this error, we log
-            // the error
-            // on level warn, and the exception itself on level
-            // debug
-            _log.warn("SQL Command failed with: " + ex.getMessage());
-            _log.warn(command);
-            if (_log.isDebugEnabled()) {
-              _log.debug(ex);
-            }
-            errors++;
-
-          } else {
-            throw new DatabaseOperationException("Error while executing SQL " + command, ex);
-          }
-        }
-
-        // lets display any warnings
-        SQLWarning warning = connection.getWarnings();
-
-        while (warning != null) {
-          _log.warn(warning.toString());
-          warning = warning.getNextWarning();
-        }
-        connection.clearWarnings();
-      }
-
-      // everything added to batch
-      try {
-        statement.executeBatch();
-      } catch (BatchUpdateException e) {
-        errors++;
-        long indexFailedStatement = e.getUpdateCounts().length;
-        return handleFailedBatchExecution(connection, sql, continueOnError, indexFailedStatement);
-      }
-
-    } catch (SQLException ex) {
-      throw new DatabaseOperationException("Error while executing SQL", ex);
-    } finally {
-      try {
-        connection.setAutoCommit(true);
-      } catch (SQLException e) {
-        // won't happen
-      }
-
-      if (statement != null) {
-        closeStatement(statement);
-      }
-    }
-
-    String errorNumber = "";
-    if (errors > 0)
-      errorNumber = " with " + errors + " error(s)";
-    else
-      errorNumber = " successfully";
-    if (commandCount > 0)
-      _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
-
-    return errors;
-  }
-
-  protected int handleFailedBatchExecution(Connection connection, List<String> sql,
-      boolean continueOnError, long indexFailedStatement) {
-    return evaluateBatch(connection, sql, continueOnError);
+    return batchEvaluator.evaluateBatchRealBatch(connection, sql, continueOnError);
   }
 
   /**
@@ -3529,5 +3260,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
     getLog().warn(fullDiff);
     getLog().warn("********************************************************");
+  }
+
+  @Override
+  public boolean areWarnsIgnored() {
+    return _ignoreWarns;
+  }
+
+  @Override
+  public void setBatchEvaluator(SQLBatchEvaluator batchEvaluator) {
+    this.batchEvaluator = batchEvaluator;
+  }
+
+  @Override
+  public SQLBatchEvaluator getBatchEvaluator() {
+    return batchEvaluator;
   }
 }

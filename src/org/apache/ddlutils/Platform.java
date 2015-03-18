@@ -40,6 +40,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.JdbcModelReader;
 import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.ddlutils.platform.ModelLoader;
+import org.apache.ddlutils.platform.SQLBatchEvaluator;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -1407,4 +1408,10 @@ public interface Platform {
   public String disableNOTNULLColumnsSql(Database database, OBDataset dataset);
 
   public String enableNOTNULLColumnsSql(Database database, OBDataset dataset);
+
+  boolean areWarnsIgnored();
+
+  public void setBatchEvaluator(SQLBatchEvaluator batchEvaluator);
+
+  public SQLBatchEvaluator getBatchEvaluator();
 }
