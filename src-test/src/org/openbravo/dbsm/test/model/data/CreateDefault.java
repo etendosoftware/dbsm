@@ -21,9 +21,6 @@ import static org.junit.Assume.assumeThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +32,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
+import org.openbravo.dbsm.test.base.matchers.DBSMMatchers;
 
 /**
  * Test cases covering onCreateDefault behavior
@@ -75,7 +73,7 @@ public class CreateDefault extends DbsmTest {
 
     for (String[] param : DbsmTest.params()) {
       for (AdditionMode addMode : AdditionMode.values()) {
-        if (true && addMode == AdditionMode.addInTheMiddle) {
+        if (false && addMode == AdditionMode.addInTheMiddle) {
           continue;
         }
         for (DataMode dataMode : DataMode.values()) {
@@ -146,6 +144,10 @@ public class CreateDefault extends DbsmTest {
         : "createDefault/BASE_MODEL2.xml";
 
     Database originalModel = null;
+    Database newModel = null;
+
+    Row oldRow = null;
+    String pk = "";
     switch (dataMode) {
     case instance:
       originalModel = updateDatabase(originalModelName);
@@ -160,13 +162,13 @@ public class CreateDefault extends DbsmTest {
 
     switch (dataMode) {
     case instance:
-      generateData(originalModel, 1);
+      generateRow(originalModel, TEST_TABLE_NAME);
     case ADAfterUpdate:
-      updateDatabase("createDefault/" + columnName + ".xml");
+      newModel = updateDatabase("createDefault/" + columnName + ".xml");
       break;
     case ADAddInUpdate:
     case ADupdateExisting:
-      updateDatabase("createDefault/" + columnName + ".xml", "data/createDefault",
+      newModel = updateDatabase("createDefault/" + columnName + ".xml", "data/createDefault",
           Arrays.asList("TEST"));
       break;
     }
@@ -177,27 +179,19 @@ public class CreateDefault extends DbsmTest {
           Arrays.asList("TEST"));
     }
 
-    assertThat("Value for column " + columnName, getActualValue(columnName), equalTo(value));
-  }
+    assertThat("Value for column " + columnName, getActualValue(TEST_TABLE_NAME, columnName),
+        equalTo(value));
 
-  /** gets first value in DB for given column */
-  private String getActualValue(String columnName) throws SQLException {
-    Connection cn = null;
-    try {
-      cn = getDataSource().getConnection();
+    if (dataMode == DataMode.instance) {
+      pk = generateRow(newModel, TEST_TABLE_NAME);
+      oldRow = getRowValues(TEST_TABLE_NAME, pk);
 
-      PreparedStatement st;
+      updateDatabase("createDefault/" + columnName + ".xml");
+      Row newRow = getRowValues(TEST_TABLE_NAME, pk);
 
-      st = cn.prepareStatement("select " + columnName + " from " + TEST_TABLE_NAME);
-
-      ResultSet rs = st.executeQuery();
-
-      rs.next();
-      return rs.getString(1);
-    } finally {
-      if (cn != null) {
-        cn.close();
-      }
+      assertThat(newRow, DBSMMatchers.rowEquals(oldRow));
     }
+
   }
+
 }
