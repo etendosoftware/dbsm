@@ -3187,6 +3187,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         boolean isADTable = ad == null || ad.getTable(table.getName()) != null;
         for (int j = 0; j < table.getColumnCount(); j++) {
           Column column = table.getColumn(j);
+          if (!isADTable && column.isRequired() && column.isSameDefaultAndOCD()) {
+            continue;
+          }
+
           if ((isADTable || database.isNewColumn(table, column)) && column.isRequired()
               && column.getOnCreateDefault() != null) {
             if (validateOnCreateDefault(connection, column.getOnCreateDefault(), table)) {

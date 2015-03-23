@@ -744,7 +744,9 @@ public abstract class SqlBuilder {
         Table table = change.getChangedTable();
         if (table.getName().equalsIgnoreCase(desiredModel.getTable(i).getName())) {
           Table tempTable = getTemporaryTableFor(desiredModel, change.getChangedTable());
-          if (change.getNewColumn().getOnCreateDefault() != null) {
+          Column changedNewColumn = change.getNewColumn();
+          if (changedNewColumn.getOnCreateDefault() != null
+              && (!changedNewColumn.isRequired() || !changedNewColumn.isSameDefaultAndOCD())) {
             executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, false);
           }
           writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());

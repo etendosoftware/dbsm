@@ -459,4 +459,27 @@ public class Column extends ValueObject implements Cloneable, Serializable {
 
     return result.toString();
   }
+
+  /** Returns whether default and onCreateDefault are identical */
+  public boolean isSameDefaultAndOCD() {
+    String defaultValue = getDefaultValue();
+    String onCreateDefault = getOnCreateDefault();
+    if (defaultValue == null || onCreateDefault == null) {
+      return false;
+    }
+
+    if (defaultValue.equals(onCreateDefault)) {
+      return true;
+    }
+
+    if (onCreateDefault.startsWith("'") && onCreateDefault.endsWith("'")) {
+      onCreateDefault = onCreateDefault.substring(1);
+      onCreateDefault = onCreateDefault.substring(0, onCreateDefault.length() - 1);
+      if (defaultValue.equals(onCreateDefault)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
