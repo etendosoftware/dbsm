@@ -289,7 +289,7 @@ public class DbsmTest {
     log.info("Recreating Primary Keys");
     List changes = platform.alterTablesRecreatePKs(oldModel, newDB, false);
     log.info("Executing oncreatedefault statements for mandatory columns");
-    platform.executeOnCreateDefaultForMandatoryColumns(newDB);
+    platform.executeOnCreateDefaultForMandatoryColumns(newDB, ad);
     log.info("Recreating not null constraints");
     platform.enableNOTNULLColumns(newDB, ad);
     log.info("Executing update final script (dropping temporary tables)");
