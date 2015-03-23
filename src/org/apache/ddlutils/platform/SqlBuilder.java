@@ -4535,7 +4535,7 @@ public abstract class SqlBuilder {
       createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
     }
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-
+    desiredModel.addNewColumnChange(change);
     if (deferNotNull) {
       desiredModel.addDeferredNotNull(change);
     }

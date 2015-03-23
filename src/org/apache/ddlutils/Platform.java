@@ -1401,7 +1401,7 @@ public interface Platform {
 
   public void enableCheckConstraints(Connection connection, Database database, OBDataset dataset);
 
-  public void executeOnCreateDefaultForMandatoryColumns(Database database);
+  public void executeOnCreateDefaultForMandatoryColumns(Database database, OBDataset ad);
 
   public ArrayList checkTranslationConsistency(Database database, Database fullDatabase);
 

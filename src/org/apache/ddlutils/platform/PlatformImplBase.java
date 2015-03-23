@@ -3109,7 +3109,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       getSqlBuilder().enableNOTNULLColumns(columnsToSetNull);
     } catch (IOException e) {
-      // TODO: handle this properly and other cases avobe
+      // TODO: handle this properly and other cases above
       e.printStackTrace();
     }
     return buffer.toString();
@@ -3170,7 +3170,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   }
 
-  public void executeOnCreateDefaultForMandatoryColumns(Database database) {
+  @Override
+  public void executeOnCreateDefaultForMandatoryColumns(Database database, OBDataset ad) {
     Connection connection = borrowConnection();
 
     try {
@@ -3179,9 +3180,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       getSqlBuilder().setWriter(buffer);
       for (int i = 0; i < database.getTableCount(); i++) {
         Table table = database.getTable(i);
+
+        boolean recreated = getSqlBuilder().recreatedTables.contains(table.getName());
+        boolean isADTable = ad.getTable(table.getName()) != null;
         for (int j = 0; j < table.getColumnCount(); j++) {
           Column column = table.getColumn(j);
-          if (column.isRequired() && column.getOnCreateDefault() != null) {
+          if ((isADTable || recreated || database.isNewColumn(table, column))
+              && column.isRequired() && column.getOnCreateDefault() != null) {
             if (validateOnCreateDefault(connection, column.getOnCreateDefault(), table)) {
               getSqlBuilder().executeOnCreateDefault(table, null, column, false, true);
             }

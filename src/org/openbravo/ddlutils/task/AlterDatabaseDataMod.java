@@ -241,8 +241,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
         if (row.prefixes.size() > 0) {
           getLog().info("Updating database model...");
-          ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(), platform
-              .isDelimitedIdentifierModeOn());
+          ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
+              platform.isDelimitedIdentifierModeOn());
           List changes = comparator.compare(originaldb, db);
           for (int i = 0; i < changes.size(); i++) {
             if (changes.get(i) instanceof AddForeignKeyChange) {
@@ -288,8 +288,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         for (int i = 0; i < files.size(); i++) {
           try {
             dataReader.getSink().start();
-            final String tablename = files.get(i).getName().substring(0,
-                files.get(i).getName().length() - 4);
+            final String tablename = files.get(i).getName()
+                .substring(0, files.get(i).getName().length() - 4);
             final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
                 .getVector();
             dataReader.parse(files.get(i));
@@ -343,7 +343,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i),
             !isFailonerror(), changes.get(i), dbXML);
       }
-      platform.executeOnCreateDefaultForMandatoryColumns(dbXML);
+      platform.executeOnCreateDefaultForMandatoryColumns(dbXML, ad);
       getLog().info("Enabling Foreign Keys and Triggers");
       platform.enableNOTNULLColumns(dbXML, ad);
       platform.enableAllFK(connection, dbAD, !isFailonerror());
@@ -435,8 +435,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
   }
 
   /**
-   * Functionality for deleting data during create.database was removed.
-   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   * Functionality for deleting data during create.database was removed. Function is kept to not
+   * require lock-step update of dbsm.jar & build-create.xml
    */
   @Deprecated
   public void setFilter(String filter) {

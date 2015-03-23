@@ -189,7 +189,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing oncreatedefault statements for mandatory columns");
-      platform.executeOnCreateDefaultForMandatoryColumns(db);
+      platform.executeOnCreateDefaultForMandatoryColumns(db, ad);
       getLog().info("Recreating not null constraints");
       platform.enableNOTNULLColumns(db, ad);
       getLog().info("Executing update final script (dropping temporary tables)");

@@ -73,6 +73,7 @@ public class Database implements Serializable, Cloneable {
   private ArrayList _modifiedTables = new ArrayList();
 
   private List<AddColumnChange> deferredNotNulls = new ArrayList<AddColumnChange>();
+  private List<AddColumnChange> addedColumns = new ArrayList<AddColumnChange>();
 
   /**
    * Adds all tables from the other database to this database. Note that the other database is not
@@ -1610,5 +1611,19 @@ public class Database implements Serializable, Cloneable {
 
   public List<AddColumnChange> getDeferedNotNulls() {
     return deferredNotNulls;
+  }
+
+  public void addNewColumnChange(AddColumnChange change) {
+    addedColumns.add(change);
+  }
+
+  public boolean isNewColumn(Table table, Column column) {
+    for (AddColumnChange newCol : addedColumns) {
+      if (newCol.getChangedTable().getName().equalsIgnoreCase(table.getName())
+          && newCol.getNewColumn().getName().equalsIgnoreCase(column.getName())) {
+        return true;
+      }
+    }
+    return false;
   }
 }
