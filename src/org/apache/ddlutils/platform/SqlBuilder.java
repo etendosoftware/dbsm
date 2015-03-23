@@ -879,6 +879,9 @@ public abstract class SqlBuilder {
     String oncreatedefault = col.getOnCreateDefault();
     if (oncreatedefault != null && !oncreatedefault.equals("")) {
       print("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault + ")");
+      if (onlyForNullRows) {
+        print(" WHERE " + col.getName() + " IS NULL");
+      }
       println();
       printEndOfStatement();
     }
