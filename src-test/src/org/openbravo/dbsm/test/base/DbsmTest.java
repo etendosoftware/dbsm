@@ -21,11 +21,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -358,43 +363,138 @@ public class DbsmTest {
         continue;
       }
       for (int i = 0; i < rows; i++) {
-        String sql = "insert into " + table.getName() + " (";
-        boolean first = true;
-        String values = "";
-        for (Column col : table.getColumns()) {
-          col.getName();
-          if (!first) {
-            sql += ", ";
-            values += ", ";
-          }
-          System.out.println(col.getType() + " - " + col.getTypeCode() + " - " + col.getSize());
-          first = false;
-          sql += col.getName();
-          if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())
-              || "CHAR".equals(col.getType())) {
-            values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
-          } else if ("DECIMAL".equals(col.getType())) {
-            values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
-          }
-        }
-        sql += ") values (" + values + ")";
-        System.out.println(sql);
-        Connection cn = null;
-        try {
-          cn = getDataSource().getConnection();
+        generateRow(table);
+      }
+    }
+  }
 
-          PreparedStatement st = cn.prepareStatement(sql);
-          st.execute();
-        } finally {
-          if (cn != null) {
-            try {
-              cn.close();
-            } catch (SQLException e) {
-              log.error("Error closing connection", e);
-            }
-          }
+  protected String generateRow(Database model, String tableName) throws SQLException {
+    for (Table t : model.getTables()) {
+      if (t.getName().equalsIgnoreCase(tableName)) {
+        return generateRow(t);
+      }
+    }
+    return null;
+  }
+
+  protected String generateRow(Table table) throws SQLException {
+    String tableName = table.getName();
+    String sql = "insert into " + tableName + " (";
+    boolean first = true;
+    String values = "";
+    String pkValue = "";
+    for (Column col : table.getColumns()) {
+      String colName = col.getName();
+      if (!first) {
+        sql += ", ";
+        values += ", ";
+      }
+      System.out.println(col.getType() + " - " + col.getTypeCode() + " - " + col.getSize());
+      first = false;
+      sql += colName;
+      boolean isPK = colName.equalsIgnoreCase(tableName + "_id");
+      if (isPK) {
+        pkValue = RandomStringUtils.random(col.getSizeAsInt(), "0123456789ABCDEF");
+        values += "'" + pkValue + "'";
+      } else if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())
+          || "CHAR".equals(col.getType())) {
+        values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
+      } else if ("DECIMAL".equals(col.getType())) {
+        values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
+      }
+    }
+    sql += ") values (" + values + ")";
+    System.out.println(sql);
+    Connection cn = null;
+    try {
+      cn = getDataSource().getConnection();
+
+      PreparedStatement st = cn.prepareStatement(sql);
+      st.execute();
+    } finally {
+      if (cn != null) {
+        try {
+          cn.close();
+        } catch (SQLException e) {
+          log.error("Error closing connection", e);
         }
       }
+    }
+
+    return pkValue;
+  }
+
+  /** gets first value in DB for given column */
+  protected String getActualValue(String tableName, String columnName) throws SQLException {
+    Connection cn = null;
+    try {
+      cn = getDataSource().getConnection();
+
+      PreparedStatement st;
+
+      st = cn.prepareStatement("select " + columnName + " from " + tableName);
+
+      ResultSet rs = st.executeQuery();
+
+      rs.next();
+      return rs.getString(1);
+    } finally {
+      if (cn != null) {
+        cn.close();
+      }
+    }
+  }
+
+  protected Row getRowValues(String tableName, String pk) throws SQLException {
+    Connection cn = null;
+    try {
+      cn = getDataSource().getConnection();
+
+      PreparedStatement st;
+
+      st = cn.prepareStatement("select *  from " + tableName + " where " + tableName + "_id=?");
+      st.setString(1, pk);
+
+      ResultSet rs = st.executeQuery();
+      ResultSetMetaData md = rs.getMetaData();
+      rs.next();
+      Row row = new Row();
+      for (int i = 1; i <= md.getColumnCount(); i++) {
+        row.addColumn(md.getColumnName(i), rs.getString(i));
+      }
+
+      return row;
+    } finally {
+      if (cn != null) {
+        cn.close();
+      }
+    }
+
+  }
+
+  /** Represents a DB row with its values */
+  public class Row {
+    private Map<String, String> cols = new HashMap<String, String>();
+
+    public void addColumn(String name, String value) {
+      cols.put(name, value);
+    }
+
+    @Override
+    public String toString() {
+      String v = "";
+      for (String colName : cols.keySet()) {
+        v += " " + colName + " [" + cols.get(colName) + "]";
+      }
+      return v;
+    }
+
+    public Set<String> getColumnNames() {
+      return cols.keySet();
+    }
+
+    public String getValue(String colName) {
+      return cols.get(colName);
     }
   }
 }
