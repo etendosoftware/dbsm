@@ -3182,7 +3182,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         Table table = database.getTable(i);
 
         boolean recreated = getSqlBuilder().recreatedTables.contains(table.getName());
-        boolean isADTable = ad.getTable(table.getName()) != null;
+        // onCreateDefault are executed always for AD tables to cover the case where AD is older
+        // than new column definition, then onCreateDefault should be executed.
+        // On install.source ad is null, we execute onCreateDefault always in this case
+        boolean isADTable = ad == null || ad.getTable(table.getName()) != null;
         for (int j = 0; j < table.getColumnCount(); j++) {
           Column column = table.getColumn(j);
           if ((isADTable || recreated || database.isNewColumn(table, column))

@@ -169,7 +169,7 @@ public class CreateDatabase extends BaseDatabaseTask {
           }
         }
       }
-      
+
       getLog().info("Disabling triggers");
       Connection _connection = platform.borrowConnection();
       platform.disableAllTriggers(_connection, db, false);
@@ -188,7 +188,8 @@ public class CreateDatabase extends BaseDatabaseTask {
         dbdio.writeDataToDatabase(dataReader, files.get(i));
       }
 
-      /* end method does final inserts when using batching, so call it after importing data files
+      /*
+       * end method does final inserts when using batching, so call it after importing data files
        * but before doing anything using those data (template, fk's, not null, ... )
        */
       dataReader.getSink().end();
@@ -213,7 +214,7 @@ public class CreateDatabase extends BaseDatabaseTask {
         }
       }
       getLog().info("Executing onCreateDefault statements");
-      platform.executeOnCreateDefaultForMandatoryColumns(db);
+      platform.executeOnCreateDefaultForMandatoryColumns(db, null);
       getLog().info("Enabling notnull constraints");
       platform.enableNOTNULLColumns(db);
 
@@ -313,8 +314,8 @@ public class CreateDatabase extends BaseDatabaseTask {
   }
 
   /**
-   * Functionality for deleting data during create.database was removed.
-   * Function is kept to not require lock-step update of dbsm.jar & build-create.xml
+   * Functionality for deleting data during create.database was removed. Function is kept to not
+   * require lock-step update of dbsm.jar & build-create.xml
    */
   @Deprecated
   public void setFilter(String filter) {
