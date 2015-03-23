@@ -4479,18 +4479,15 @@ public abstract class SqlBuilder {
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
-      if (change instanceof AddColumnChange) {
+      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange) {
         if (i > 0) {
-          print(", ");
+          println(",");
         }
-        processChange(currentModel, desiredModel, (AddColumnChange) change);
-        changeIt.remove();
-        i++;
-      } else if (change instanceof RemoveColumnChange) {
-        if (i > 0) {
-          print(", ");
+        if (change instanceof AddColumnChange) {
+          processChange(currentModel, desiredModel, (AddColumnChange) change);
+        } else if (change instanceof RemoveColumnChange) {
+          processChange(currentModel, desiredModel, (RemoveColumnChange) change);
         }
-        processChange(currentModel, desiredModel, (RemoveColumnChange) change);
         changeIt.remove();
         i++;
       }
