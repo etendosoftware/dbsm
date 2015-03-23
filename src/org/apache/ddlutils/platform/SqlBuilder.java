@@ -4435,27 +4435,15 @@ public abstract class SqlBuilder {
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
       Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
 
-    // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
-    // limited
-    // esp. if there is data in the table, so we don't use it
-    // for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-    // TableChange change = (TableChange) changeIt.next();
-    //
-    // if (change instanceof AddColumnChange) {
-    // AddColumnChange addColumnChange = (AddColumnChange) change;
-    //
-    // // TODO: merge with willBeRecreated method
-    //
-    // // Oracle can only add not insert columns
-    // // Recreating the whole table in these cases:
-    // // * new column is added between existent ones
-    // // * new column is mandatory
-    // if (!addColumnChange.isAtEnd()) {
-    // // we need to rebuild the full table
-    // return;
-    // }
-    // }
-    // }
+    boolean alterTable = false;
+    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+      TableChange change = (TableChange) changeIt.next();
+
+      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange) {
+        alterTable = true;
+        break;
+      }
+    }
 
     // // First we drop primary keys as necessary
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
@@ -4477,16 +4465,34 @@ public abstract class SqlBuilder {
     // While Oracle has an ALTER TABLE MODIFY statement, it is somewhat
     // limited
     // esp. if there is data in the table, so we don't use it
+    if (alterTable) {
+      print("ALTER TABLE ");
+      printlnIdentifier(getStructureObjectName(targetTable.getName()));
+    }
+
+    int i = 0;
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
       if (change instanceof AddColumnChange) {
+        if (i > 0) {
+          print(", ");
+        }
         processChange(currentModel, desiredModel, (AddColumnChange) change);
         changeIt.remove();
+        i++;
       } else if (change instanceof RemoveColumnChange) {
+        if (i > 0) {
+          print(", ");
+        }
         processChange(currentModel, desiredModel, (RemoveColumnChange) change);
         changeIt.remove();
+        i++;
       }
+    }
+
+    if (i > 0) {
+      printEndOfStatement();
     }
     // Finally we add primary keys
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
@@ -4524,12 +4530,10 @@ public abstract class SqlBuilder {
         && StringUtils.isEmpty(newColumn.getDefaultValue())
         && StringUtils.isNotEmpty(newColumn.getOnCreateDefault());
 
-    print("ALTER TABLE ");
-    printlnIdentifier(getStructureObjectName(change.getChangedTable()));
     printIndent();
     print("ADD ");
     writeColumn(change.getChangedTable(), change.getNewColumn(), deferNotNull);
-    printEndOfStatement();
+
     if (change.getNewColumn().isAutoIncrement()) {
       createAutoIncrementSequence(change.getChangedTable(), change.getNewColumn());
       createAutoIncrementTrigger(change.getChangedTable(), change.getNewColumn());
@@ -4557,12 +4561,9 @@ public abstract class SqlBuilder {
       dropAutoIncrementTrigger(change.getChangedTable(), change.getColumn());
       dropAutoIncrementSequence(change.getChangedTable(), change.getColumn());
     }
-    print("ALTER TABLE ");
-    printlnIdentifier(getStructureObjectName(change.getChangedTable()));
     printIndent();
     print("DROP COLUMN ");
     printIdentifier(getColumnName(change.getColumn()));
-    printEndOfStatement();
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
