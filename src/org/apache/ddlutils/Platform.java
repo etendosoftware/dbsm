@@ -584,14 +584,10 @@ public interface Platform {
   /**
    * Executes a small postscript to correct null constraints in new not-null columns added to the
    * database.
-   * 
-   * @param currentModel
-   * @param desiredModel
-   * @param continueOnError
-   * @throws DatabaseOperationException
    */
   public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
-      boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException;
+      boolean continueOnError, List changes, Database fullModel, OBDataset ad)
+      throws DatabaseOperationException;
 
   public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException;

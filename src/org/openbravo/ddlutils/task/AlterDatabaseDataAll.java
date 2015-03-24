@@ -194,7 +194,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.enableNOTNULLColumns(db, ad);
       getLog().info("Executing update final script (dropping temporary tables)");
       boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, db, !isFailonerror(),
-          changes, null);
+          changes, null, ad);
 
       getLog().info("Enabling Foreign Keys and Triggers");
       boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad, true);

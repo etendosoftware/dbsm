@@ -74,6 +74,7 @@ public class Database implements Serializable, Cloneable {
 
   private List<AddColumnChange> deferredNotNulls = new ArrayList<AddColumnChange>();
   private List<AddColumnChange> addedColumns = new ArrayList<AddColumnChange>();
+  private List<AddColumnChange> deferredOnCreateDefaults = new ArrayList<AddColumnChange>();
 
   /**
    * Adds all tables from the other database to this database. Note that the other database is not
@@ -1609,8 +1610,16 @@ public class Database implements Serializable, Cloneable {
     deferredNotNulls.add(change);
   }
 
+  public void addDeferredOnCreateDefault(AddColumnChange change) {
+    deferredOnCreateDefaults.add(change);
+  }
+
   public List<AddColumnChange> getDeferedNotNulls() {
     return deferredNotNulls;
+  }
+
+  public List<AddColumnChange> getDeferredOnCreateDefault() {
+    return deferredOnCreateDefaults;
   }
 
   public void addNewColumnChange(AddColumnChange change) {
@@ -1619,6 +1628,16 @@ public class Database implements Serializable, Cloneable {
 
   public boolean isNewColumn(Table table, Column column) {
     for (AddColumnChange newCol : addedColumns) {
+      if (newCol.getChangedTable().getName().equalsIgnoreCase(table.getName())
+          && newCol.getNewColumn().getName().equalsIgnoreCase(column.getName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isDeferredDefault(Table table, Column column) {
+    for (AddColumnChange newCol : deferredOnCreateDefaults) {
       if (newCol.getChangedTable().getName().equalsIgnoreCase(table.getName())
           && newCol.getNewColumn().getName().equalsIgnoreCase(column.getName())) {
         return true;

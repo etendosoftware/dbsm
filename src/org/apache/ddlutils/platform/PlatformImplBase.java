@@ -619,14 +619,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     evaluateBatch(sql, continueOnError);
   }
 
+  /**
+   * @deprecated should receive ad
+   */
   public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
-      boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException {
+      boolean continueOnError, List changes, Database fullModel) {
+    return alterTablesPostScript(currentModel, desiredModel, continueOnError, changes, fullModel,
+        null);
+  }
+
+  public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
+      boolean continueOnError, List changes, Database fullModel, OBDataset ad)
+      throws DatabaseOperationException {
 
     Connection connection = borrowConnection();
 
     try {
       return alterTablesPostScript(connection, currentModel, desiredModel, continueOnError,
-          changes, fullModel);
+          changes, fullModel, ad);
     } finally {
       returnConnection(connection);
     }
@@ -647,7 +657,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public boolean alterTablesPostScript(Connection connection, Database currentModel,
-      Database desiredModel, boolean continueOnError, List changes, Database fullModel)
+      Database desiredModel, boolean continueOnError, List changes, Database fullModel, OBDataset ad)
       throws DatabaseOperationException {
     String sql = null;
 
@@ -655,7 +665,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
 
       getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null, changes, fullModel);
+      getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null, changes, fullModel,
+          ad);
       sql = buffer.toString();
     } catch (IOException ex) {
       // won't happen because we're using a string writer
@@ -1617,7 +1628,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       dateStatement.close();
       return date;
     } catch (Exception e) {
-      e.printStackTrace();
+      // don't print stack trace, this can happen in test cases
+      // e.printStackTrace();
     }
     return null;
 
@@ -3106,6 +3118,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
       columnsToSetNull.add(deferredNullColumn);
     }
+
+    for (AddColumnChange deferredDefault : database.getDeferredOnCreateDefault()) {
+      try {
+        getSqlBuilder().addDefault(deferredDefault);
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+
     try {
       getSqlBuilder().enableNOTNULLColumns(columnsToSetNull);
     } catch (IOException e) {
@@ -3191,8 +3213,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             continue;
           }
 
-          if ((isADTable || database.isNewColumn(table, column)) && column.isRequired()
-              && column.getOnCreateDefault() != null) {
+          if ((isADTable || database.isNewColumn(table, column)
+              && !database.isDeferredDefault(table, column))
+              && column.isRequired() && column.getOnCreateDefault() != null) {
             if (validateOnCreateDefault(connection, column.getOnCreateDefault(), table)) {
               getSqlBuilder().executeOnCreateDefault(table, null, column, false, isADTable);
             }

@@ -695,7 +695,7 @@ public abstract class SqlBuilder {
   }
 
   public void alterDatabasePostScript(Database currentModel, Database desiredModel,
-      CreationParameters params, List changes, Database fullModel) throws IOException {
+      CreationParameters params, List changes, Database fullModel, OBDataset ad) throws IOException {
     Iterator it = changes.iterator();
 
     Vector<AddColumnChange> newColumns = new Vector<AddColumnChange>();
@@ -745,7 +745,11 @@ public abstract class SqlBuilder {
         if (table.getName().equalsIgnoreCase(desiredModel.getTable(i).getName())) {
           Table tempTable = getTemporaryTableFor(desiredModel, change.getChangedTable());
           Column changedNewColumn = change.getNewColumn();
+
+          boolean isADTable = ad == null || ad.getTable(table.getName()) != null;
+
           if (changedNewColumn.getOnCreateDefault() != null
+              && (isADTable || !desiredModel.isDeferredDefault(table, changedNewColumn))
               && (!changedNewColumn.isRequired() || !changedNewColumn.isSameDefaultAndOCD())) {
             executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, false);
           }
@@ -1144,13 +1148,13 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, AddTableChange change) throws IOException {
+    createdTables.add(change.getNewTable().getName());
     createTable(desiredModel, change.getNewTable(),
         params == null ? null : params.getParametersFor(change.getNewTable()));
     writeExternalPrimaryKeysCreateStmt(change.getNewTable(), change.getNewTable().getPrimaryKey(),
         change.getNewTable().getPrimaryKeyColumns());
     writeExternalIndicesCreateStmt(change.getNewTable());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-    createdTables.add(change.getNewTable().getName());
   }
 
   /**
@@ -2790,7 +2794,14 @@ public abstract class SqlBuilder {
     print(" ");
     print(getSqlType(column));
 
-    String value = getDefaultValue(column);
+    String value;
+    String onCreateDefault = column.getLiteralOnCreateDefault();
+    if (!createdTables.contains(table.getName()) && onCreateDefault != null) {
+      value = onCreateDefault;
+    } else {
+      value = getDefaultValue(column);
+    }
+
     if (value != null) {
       print(" DEFAULT ");
       print(value);
@@ -4528,7 +4539,7 @@ public abstract class SqlBuilder {
       throws IOException {
 
     Column newColumn = change.getNewColumn();
-    boolean deferNotNull = newColumn.isRequired()
+    boolean deferNotNull = false && newColumn.isRequired()
         && StringUtils.isEmpty(newColumn.getDefaultValue())
         && StringUtils.isNotEmpty(newColumn.getOnCreateDefault());
 
@@ -4544,6 +4555,10 @@ public abstract class SqlBuilder {
     desiredModel.addNewColumnChange(change);
     if (deferNotNull) {
       desiredModel.addDeferredNotNull(change);
+    }
+
+    if (!newColumn.isSameDefaultAndOCD()) {
+      desiredModel.addDeferredOnCreateDefault(change);
     }
   }
 
@@ -4603,5 +4618,21 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       RemovePrimaryKeyChange change) throws IOException {
+  }
+
+  public void addDefault(AddColumnChange deferredDefault) throws IOException {
+
+    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " ALTER COLUMN "
+        + deferredDefault.getNewColumn().getName());
+    String dafaultValue = getDefaultValue(deferredDefault.getNewColumn());
+
+    if (dafaultValue != null) {
+      print(" SET DEFAULT " + dafaultValue);
+    } else {
+      print(" DROP DEFAULT");
+    }
+
+    printEndOfStatement();
+
   }
 }

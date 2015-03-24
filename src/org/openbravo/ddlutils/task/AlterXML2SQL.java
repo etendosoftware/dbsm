@@ -130,7 +130,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       w.write(platform.enableNOTNULLColumnsSql(db, ad));
       platform.enableNOTNULLColumns(db, ad);
       getLog().info("Executing update final script (NOT NULLs and dropping temporal tables");
-      platform.getSqlBuilder().alterDatabasePostScript(oldModel, db, null, changes, null);
+      platform.getSqlBuilder().alterDatabasePostScript(oldModel, db, null, changes, null, ad);
 
       getLog().info("Enabling Foreign Keys and Triggers");
       platform.enableAllFK(originaldb, !isFailonerror(), w);

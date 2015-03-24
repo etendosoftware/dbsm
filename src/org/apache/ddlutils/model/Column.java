@@ -464,7 +464,12 @@ public class Column extends ValueObject implements Cloneable, Serializable {
   public boolean isSameDefaultAndOCD() {
     String defaultValue = getDefaultValue();
     String onCreateDefault = getOnCreateDefault();
-    if (defaultValue == null || onCreateDefault == null) {
+    if (defaultValue == null && onCreateDefault == null) {
+      return true;
+    }
+
+    if ((defaultValue == null && onCreateDefault != null)
+        || (defaultValue != null && onCreateDefault == null)) {
       return false;
     }
 
@@ -481,5 +486,27 @@ public class Column extends ValueObject implements Cloneable, Serializable {
     }
 
     return false;
+  }
+
+  public String getLiteralOnCreateDefault() {
+    String onCreateDefault = getOnCreateDefault();
+    if (onCreateDefault == null) {
+      return null;
+    }
+
+    if (onCreateDefault.startsWith("'") && onCreateDefault.endsWith("'")) {
+      // onCreateDefault = onCreateDefault.substring(1);
+      // onCreateDefault = onCreateDefault.substring(0, onCreateDefault.length() - 1);
+      return onCreateDefault;
+    }
+
+    try {
+      Double.parseDouble(onCreateDefault);
+      return onCreateDefault;
+    } catch (NumberFormatException nonDouble) {
+      // ignore
+    }
+
+    return null;
   }
 }

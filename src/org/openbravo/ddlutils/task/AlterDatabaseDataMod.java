@@ -341,7 +341,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dataChanges.size(); i++) {
         getLog().info("Executing update final script (NOT NULLs and dropping temporary tables)");
         platform.alterTablesPostScript(moduleOldModels.get(i), moduleModels.get(i),
-            !isFailonerror(), changes.get(i), dbXML);
+            !isFailonerror(), changes.get(i), dbXML, ad);
       }
       platform.executeOnCreateDefaultForMandatoryColumns(dbXML, ad);
       getLog().info("Enabling Foreign Keys and Triggers");
