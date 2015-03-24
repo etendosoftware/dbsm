@@ -11,6 +11,11 @@
         <onCreateDefault><![CDATA['B']]></onCreateDefault>
       </column>
       
+      <column name="MM4" primaryKey="false" required="true" type="VARCHAR" size="10" autoIncrement="false">
+        <default><![CDATA[A]]></default>
+        <onCreateDefault><![CDATA['A']]></onCreateDefault>
+      </column>
+      
       <!-- dummy column to force new columns to be added in the middle -->
       <column name="DUMMY" primaryKey="false" required="false" type="VARCHAR" size="10" autoIncrement="false">
         <default/>
