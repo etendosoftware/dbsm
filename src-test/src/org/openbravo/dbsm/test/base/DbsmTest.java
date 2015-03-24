@@ -47,6 +47,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.ddlutils.platform.SQLBatchEvaluator;
 import org.apache.ddlutils.platform.StandardBatchEvaluator;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -86,6 +87,7 @@ public class DbsmTest {
   private BasicDataSource ds;
   private Rdbms rdbms;
   private Platform platform;
+  private SQLBatchEvaluator evaluator;
 
   public enum Rdbms {
     PG, ORA
@@ -198,12 +200,9 @@ public class DbsmTest {
   }
 
   protected List<String> sqlStatmentsForUpdate(String dbModelPath) {
-    TestBatchEvaluator evaluator = new TestBatchEvaluator();
-    getPlatform().setBatchEvaluator(evaluator);
+    evaluator = new TestBatchEvaluator();
     updateDatabase(dbModelPath);
-    // reset evaluator after completion
-    getPlatform().setBatchEvaluator(new StandardBatchEvaluator(getPlatform()));
-    return evaluator.getSQLStatements();
+    return ((TestBatchEvaluator) evaluator).getSQLStatements();
   }
 
   protected Database updateDatabase(String dbModelPath) {
@@ -294,7 +293,7 @@ public class DbsmTest {
     platform.enableNOTNULLColumns(newDB, ad);
     log.info("Executing update final script (dropping temporary tables)");
     boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, false, changes,
-        null);
+        null, ad);
 
     // assertThat("Postscript should be correct", postscriptCorrect, is(true));
 
@@ -335,16 +334,18 @@ public class DbsmTest {
   /** Exports current test DB to xml files within path directory */
   protected void exportDatabase(String path) {
     final DatabaseIO io = new DatabaseIO();
-    final Platform platform = getPlatform();
     Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
     io.writeToDir(originalDB, new File(path));
   }
 
   /** returns platform for current execution */
   protected Platform getPlatform() {
-    if (platform == null) {
-      platform = PlatformFactory.createNewPlatformInstance(getDataSource());
+    platform = PlatformFactory.createNewPlatformInstance(getDataSource());
+    if (evaluator == null) {
+      evaluator = new StandardBatchEvaluator(platform);
     }
+    platform.setBatchEvaluator(evaluator);
+
     return platform;
   }
 
