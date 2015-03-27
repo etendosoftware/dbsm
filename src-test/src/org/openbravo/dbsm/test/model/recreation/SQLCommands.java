@@ -7,10 +7,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
 public class SQLCommands extends DbsmTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   public SQLCommands(String rdbms, String driver, String url, String sid, String user,
       String password, String name) throws FileNotFoundException, IOException {
@@ -57,16 +61,13 @@ public class SQLCommands extends DbsmTest {
     resetDB();
     updateDatabase("recreation/BASE_MODEL.xml");
     List<String> l = sqlStatmentsForUpdate("createDefault/M4.xml");
-    String statements = "";
     int numberOfAlterTable = 0;
     for (String st : l) {
       System.out.println("    " + st);
-      statements += st;
       if (st.startsWith("UPDATE TEST SET M4")) {
         numberOfAlterTable += 1;
       }
     }
     assertThat("OnCreateDefault shouldn't be executed", numberOfAlterTable, is(0));
   }
-
 }

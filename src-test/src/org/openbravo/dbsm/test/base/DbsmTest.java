@@ -367,7 +367,7 @@ public class DbsmTest {
         continue;
       }
       for (int i = 0; i < rows; i++) {
-        generateRow(table);
+        generateRow(table, false);
       }
     }
   }
@@ -375,19 +375,22 @@ public class DbsmTest {
   protected String generateRow(Database model, String tableName) throws SQLException {
     for (Table t : model.getTables()) {
       if (t.getName().equalsIgnoreCase(tableName)) {
-        return generateRow(t);
+        return generateRow(t, false);
       }
     }
     return null;
   }
 
-  protected String generateRow(Table table) throws SQLException {
+  protected String generateRow(Table table, boolean skipNullables) throws SQLException {
     String tableName = table.getName();
     String sql = "insert into " + tableName + " (";
     boolean first = true;
     String values = "";
     String pkValue = "";
     for (Column col : table.getColumns()) {
+      if (skipNullables && !col.isRequired()) {
+        continue;
+      }
       String colName = col.getName();
       if (!first) {
         sql += ", ";
