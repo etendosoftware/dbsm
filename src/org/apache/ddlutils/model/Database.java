@@ -33,6 +33,7 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.dynabean.DynaClassCache;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaException;
@@ -72,7 +73,7 @@ public class Database implements Serializable, Cloneable {
 
   private ArrayList _modifiedTables = new ArrayList();
 
-  private List<AddColumnChange> deferredNotNulls = new ArrayList<AddColumnChange>();
+  private List<ColumnChange> deferredNotNulls = new ArrayList<ColumnChange>();
   private List<AddColumnChange> addedColumns = new ArrayList<AddColumnChange>();
   private List<AddColumnChange> deferredOnCreateDefaults = new ArrayList<AddColumnChange>();
 
@@ -1606,7 +1607,7 @@ public class Database implements Serializable, Cloneable {
     }
   }
 
-  public void addDeferredNotNull(AddColumnChange change) {
+  public void addDeferredNotNull(ColumnChange change) {
     deferredNotNulls.add(change);
   }
 
@@ -1614,7 +1615,7 @@ public class Database implements Serializable, Cloneable {
     deferredOnCreateDefaults.add(change);
   }
 
-  public List<AddColumnChange> getDeferedNotNulls() {
+  public List<ColumnChange> getDeferedNotNulls() {
     return deferredNotNulls;
   }
 

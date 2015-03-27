@@ -64,6 +64,7 @@ import org.apache.ddlutils.alteration.AddUniqueChange;
 import org.apache.ddlutils.alteration.AddViewChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnAutoIncrementChange;
+import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
@@ -1811,9 +1812,9 @@ public abstract class SqlBuilder {
 
   }
 
-  protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {
+  protected void enableNOTNULLColumns(Vector<ColumnChange> newColumns) throws IOException {
     for (int i = 0; i < newColumns.size(); i++) {
-      Column column = newColumns.get(i).getNewColumn();
+      Column column = newColumns.get(i).getChangedColumn();
       if (column.isRequired() && !column.isPrimaryKey()) {
         println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + " MODIFY "
             + getColumnName(column) + " " + getSqlType(column) + " NOT NULL");
@@ -4488,8 +4489,7 @@ public abstract class SqlBuilder {
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
-      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
-          || change instanceof ColumnRequiredChange) {
+      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange) {
         alterTable = true;
         break;
       }
@@ -4510,6 +4510,12 @@ public abstract class SqlBuilder {
         processChange(currentModel, desiredModel, removePkChange);
       } else if (change instanceof ColumnOnCreateDefaultValueChange) {
         processChange(currentModel, desiredModel, (ColumnOnCreateDefaultValueChange) change);
+        changeIt.remove();
+      } else if (change instanceof ColumnRequiredChange) {
+        // this should be part of the alter table to have a single one, but because some times it is
+        // deferred, we are doing it here
+
+        processChange(currentModel, desiredModel, (ColumnRequiredChange) change);
         changeIt.remove();
       }
     }
@@ -4536,8 +4542,6 @@ public abstract class SqlBuilder {
           processChange(currentModel, desiredModel, (AddColumnChange) change);
         } else if (change instanceof RemoveColumnChange) {
           processChange(currentModel, desiredModel, (RemoveColumnChange) change);
-        } else if (change instanceof ColumnRequiredChange) {
-          processChange(currentModel, desiredModel, (ColumnRequiredChange) change);
         }
 
         changeIt.remove();
@@ -4627,16 +4631,25 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnRequiredChange change) throws IOException {
-    printIndent();
-    print("ALTER COLUMN ");
-    printIdentifier(getColumnName(change.getChangedColumn()));
     boolean required = change.getRequired();
+
+    Column col = change.getChangedColumn();
+    change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
+
+    if (required && col.getOnCreateDefault() == null && col.getDefaultValue() == null) {
+      desiredModel.addDeferredNotNull(change);
+      return;
+    }
+
+    print("ALTER TABLE " + change.getTableName() + " ALTER COLUMN ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+
     if (required) {
       print(" SET NOT NULL");
     } else {
       print(" DROP NOT NULL");
     }
-    change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
+    printEndOfStatement();
   }
 
   /**

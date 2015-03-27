@@ -29,7 +29,7 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: $
  */
-public class AddColumnChange extends TableChangeImplBase {
+public class AddColumnChange extends TableChangeImplBase implements ColumnChange {
   /** The new column. */
   private Column _newColumn;
   /** The column after which the new column should be added. */
@@ -132,5 +132,10 @@ public class AddColumnChange extends TableChangeImplBase {
   @Override
   public String toString() {
     return "AddColumnChange. Name: " + _newColumn.getName();
+  }
+
+  @Override
+  public Column getChangedColumn() {
+    return getNewColumn();
   }
 }

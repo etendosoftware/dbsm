@@ -60,6 +60,7 @@ import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
@@ -3110,8 +3111,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
     }
 
-    Vector<AddColumnChange> columnsToSetNull = new Vector<AddColumnChange>();
-    for (AddColumnChange deferredNullColumn : database.getDeferedNotNulls()) {
+    Vector<ColumnChange> columnsToSetNull = new Vector<ColumnChange>();
+    for (ColumnChange deferredNullColumn : database.getDeferedNotNulls()) {
       if (completelyEnabledTables.contains(deferredNullColumn.getChangedTable().getName())) {
         // already set
         continue;

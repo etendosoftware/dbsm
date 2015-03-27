@@ -26,6 +26,7 @@ import java.util.Vector;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
@@ -235,9 +236,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
   }
 
   @Override
-  protected void enableNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {
+  protected void enableNOTNULLColumns(Vector<ColumnChange> newColumns) throws IOException {
     for (int i = 0; i < newColumns.size(); i++) {
-      Column column = newColumns.get(i).getNewColumn();
+      Column column = newColumns.get(i).getChangedColumn();
       if (column.isRequired() && !column.isPrimaryKey()) {
         println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + " ALTER "
             + getColumnName(column) + " SET NOT NULL");
