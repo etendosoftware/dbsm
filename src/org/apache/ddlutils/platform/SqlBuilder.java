@@ -4465,7 +4465,9 @@ public abstract class SqlBuilder {
         PrimaryKeyChange.class, //
         AddColumnChange.class, //
         RemoveColumnChange.class, //
-        AddPrimaryKeyChange.class };
+        AddPrimaryKeyChange.class,//
+        ColumnOnCreateDefaultValueChange.class,//
+    };
 
     Predicate p = new MultiInstanceofPredicate(supportedTypes);
     return !p.evaluate(change);
@@ -4529,6 +4531,10 @@ public abstract class SqlBuilder {
         } else if (change instanceof RemoveColumnChange) {
           processChange(currentModel, desiredModel, (RemoveColumnChange) change);
         }
+        changeIt.remove();
+        i++;
+      } else if (change instanceof ColumnOnCreateDefaultValueChange) {
+        processChange(currentModel, desiredModel, (ColumnOnCreateDefaultValueChange) change);
         changeIt.remove();
         i++;
       }
