@@ -3213,8 +3213,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             continue;
           }
 
-          if ((isADTable || database.isNewColumn(table, column)) && column.isRequired()
-              && column.getOnCreateDefault() != null) {
+          boolean nonLiteralDeferredOnCreateDefault = database.isDeferredDefault(table, column)
+              && column.getOnCreateDefault() != null && column.getLiteralOnCreateDefault() == null;
+
+          if ((isADTable || database.isNewColumn(table, column)
+              && (!database.isDeferredDefault(table, column) || nonLiteralDeferredOnCreateDefault))
+              && column.isRequired() && column.getOnCreateDefault() != null) {
             if (validateOnCreateDefault(connection, column.getOnCreateDefault(), table)) {
               getSqlBuilder().executeOnCreateDefault(table, null, column, false, isADTable);
             }
