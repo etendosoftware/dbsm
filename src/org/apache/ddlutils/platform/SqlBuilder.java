@@ -4569,9 +4569,9 @@ public abstract class SqlBuilder {
       throws IOException {
 
     Column newColumn = change.getNewColumn();
-    boolean deferNotNull = false && newColumn.isRequired()
-        && StringUtils.isEmpty(newColumn.getDefaultValue())
-        && StringUtils.isNotEmpty(newColumn.getOnCreateDefault());
+    boolean deferNotNull = newColumn.isRequired()
+        && StringUtils.isNotEmpty(newColumn.getOnCreateDefault())
+        && newColumn.getLiteralOnCreateDefault() == null;
 
     printIndent();
     print("ADD ");
@@ -4652,9 +4652,16 @@ public abstract class SqlBuilder {
 
   public void addDefault(AddColumnChange deferredDefault) throws IOException {
 
+    Column col = deferredDefault.getNewColumn();
+
+    if (col.getOnCreateDefault() != null && col.getLiteralOnCreateDefault() == null
+        && col.getDefaultValue() == null) {
+      return;
+    }
+
     print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " ALTER COLUMN "
-        + deferredDefault.getNewColumn().getName());
-    String dafaultValue = getDefaultValue(deferredDefault.getNewColumn());
+        + col.getName());
+    String dafaultValue = getDefaultValue(col);
 
     if (dafaultValue != null) {
       print(" SET DEFAULT " + dafaultValue);
