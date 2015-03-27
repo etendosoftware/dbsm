@@ -11,7 +11,8 @@ import org.openbravo.dbsm.test.model.data.OtherDefaults;
 AddDropColumn.class, //
     CreateDefault.class, //
     OtherDefaults.class, //
-    SQLCommands.class })
+    SQLCommands.class, //
+    OtherRecreations.class })
 public class RecreationTestSuite {
 
 }
