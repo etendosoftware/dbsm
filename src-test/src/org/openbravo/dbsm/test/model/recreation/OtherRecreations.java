@@ -33,4 +33,9 @@ public class OtherRecreations extends TableRecreationBaseTest {
   public void createDefaultRemoval() {
     assertTablesAreNotRecreated("OCD1.xml", "OCD2.xml", false);
   }
+
+  @Test
+  public void mandatorynessRemoval() {
+    assertTablesAreNotRecreated("M1.xml", "M2.xml", false);
+  }
 }
