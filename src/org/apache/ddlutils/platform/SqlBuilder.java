@@ -4465,8 +4465,8 @@ public abstract class SqlBuilder {
         PrimaryKeyChange.class, //
         AddColumnChange.class, //
         RemoveColumnChange.class, //
-        AddPrimaryKeyChange.class,//
-        ColumnOnCreateDefaultValueChange.class,//
+        AddPrimaryKeyChange.class, //
+        ColumnOnCreateDefaultValueChange.class //
     };
 
     Predicate p = new MultiInstanceofPredicate(supportedTypes);
@@ -4506,6 +4506,9 @@ public abstract class SqlBuilder {
             pkChange.getChangedTable(), pkChange.getOldPrimaryKeyColumns());
 
         processChange(currentModel, desiredModel, removePkChange);
+      } else if (change instanceof ColumnOnCreateDefaultValueChange) {
+        processChange(currentModel, desiredModel, (ColumnOnCreateDefaultValueChange) change);
+        changeIt.remove();
       }
     }
 
@@ -4531,10 +4534,6 @@ public abstract class SqlBuilder {
         } else if (change instanceof RemoveColumnChange) {
           processChange(currentModel, desiredModel, (RemoveColumnChange) change);
         }
-        changeIt.remove();
-        i++;
-      } else if (change instanceof ColumnOnCreateDefaultValueChange) {
-        processChange(currentModel, desiredModel, (ColumnOnCreateDefaultValueChange) change);
         changeIt.remove();
         i++;
       }
