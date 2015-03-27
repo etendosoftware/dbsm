@@ -137,6 +137,11 @@ public class CreateDefault extends DbsmTest {
     assertDefaults("M4", "B");
   }
 
+  @Test
+  public void mandatoryNonLiteralOnCreateDefault_M5() throws SQLException {
+    assertDefaults("M5", "1970-01-01 00:00:00");
+  }
+
   private void assertDefaults(String columnName, String value) throws SQLException {
     resetDB();
 
