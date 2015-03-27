@@ -24,12 +24,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
 
@@ -402,6 +405,12 @@ public class DbsmTest {
         values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
       } else if ("DECIMAL".equals(col.getType())) {
         values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
+      } else if ("TIMESTAMP".equals(col.getType())) {
+
+        Date date = new Date((long) (new Random().nextDouble() * (System.currentTimeMillis())));
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+        values += "to_date('" + sdf.format(date) + "', 'DD/MM/YYYY')";
       }
     }
     sql += ") values (" + values + ")";
