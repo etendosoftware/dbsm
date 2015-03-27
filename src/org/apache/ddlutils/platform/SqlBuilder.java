@@ -4466,7 +4466,8 @@ public abstract class SqlBuilder {
         AddColumnChange.class, //
         RemoveColumnChange.class, //
         AddPrimaryKeyChange.class, //
-        ColumnOnCreateDefaultValueChange.class //
+        ColumnOnCreateDefaultValueChange.class, //
+        ColumnRequiredChange.class //
     };
 
     Predicate p = new MultiInstanceofPredicate(supportedTypes);
@@ -4487,7 +4488,8 @@ public abstract class SqlBuilder {
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
-      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange) {
+      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
+          || change instanceof ColumnRequiredChange) {
         alterTable = true;
         break;
       }
@@ -4525,7 +4527,8 @@ public abstract class SqlBuilder {
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
-      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange) {
+      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
+          || change instanceof ColumnRequiredChange) {
         if (i > 0) {
           println(",");
         }
@@ -4533,7 +4536,10 @@ public abstract class SqlBuilder {
           processChange(currentModel, desiredModel, (AddColumnChange) change);
         } else if (change instanceof RemoveColumnChange) {
           processChange(currentModel, desiredModel, (RemoveColumnChange) change);
+        } else if (change instanceof ColumnRequiredChange) {
+          processChange(currentModel, desiredModel, (ColumnRequiredChange) change);
         }
+
         changeIt.remove();
         i++;
       }
@@ -4617,6 +4623,20 @@ public abstract class SqlBuilder {
     print("DROP COLUMN ");
     printIdentifier(getColumnName(change.getColumn()));
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnRequiredChange change) throws IOException {
+    printIndent();
+    print("ALTER COLUMN ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+    boolean required = change.getRequired();
+    if (required) {
+      print(" SET NOT NULL");
+    } else {
+      print(" DROP NOT NULL");
+    }
+    change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
   /**
