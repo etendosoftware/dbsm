@@ -21,6 +21,7 @@ package org.apache.ddlutils.platform;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Method;
 import java.rmi.server.UID;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
@@ -1642,11 +1643,6 @@ public abstract class SqlBuilder {
       if (true) // canMigrateData) <-We will always try to insert data. If
       // it's not possible, the user will notice the error
       {
-        _log.info("Table " + sourceTable.getName() + " will be recreated beacuse of these changes");
-        for (Object recChange : changes) {
-          _log.info("       " + recChange);
-        }
-
         if (recreatedPKs.contains(sourceTable.getName())) {
           recreatedPKs.remove(sourceTable.getName());
         }
@@ -4420,32 +4416,59 @@ public abstract class SqlBuilder {
   }
 
   public boolean willBeRecreated(Table table, Vector<TableChange> changes) {
-    boolean recreated = false;
-    for (int i = 0; i < changes.size(); i++) {
-      TableChange currentChange = changes.get(i);
+    return requiresRecreation(table, changes, false);
+  }
 
-      if (currentChange instanceof AddColumnChange) {
-        AddColumnChange addColumnChange = (AddColumnChange) currentChange;
-
-        // // Oracle can only add not insert columns
-        // // Also, we cannot add NOT NULL columns unless they have a
-        // // default value
-        // if (!addColumnChange.isAtEnd())// &&
-        // // (addColumnChange.getNewColumn().getDefaultValue()
-        // // ==
-        // // null)))
-        // {
-        // // we need to rebuild the full table
-        // recreated = true;
-        // }
-      } else if (!(currentChange instanceof RemovePrimaryKeyChange)
-          && !(currentChange instanceof PrimaryKeyChange)
-          && !(currentChange instanceof AddColumnChange)
-          && !(currentChange instanceof RemoveColumnChange)
-          && !(currentChange instanceof AddPrimaryKeyChange))
-        recreated = true;
+  /** Checks whether table requires recreation base on the changes that require */
+  private boolean requiresRecreation(Table table, List<TableChange> changes, boolean logRecreation) {
+    boolean recreationRequired = false;
+    List<TableChange> unsupportedChanges = new ArrayList<TableChange>();
+    for (TableChange change : changes) {
+      boolean changeRequiresRecreation = true;
+      Method m = null;
+      try {
+        m = this.getClass().getMethod("requiresRecreation", change.getClass());
+      } catch (Exception ignore) {
+      }
+      if (m != null) {
+        try {
+          changeRequiresRecreation = (Boolean) m.invoke(this, change);
+        } catch (Exception ignore) {
+        }
+      } else {
+        changeRequiresRecreation = requiresRecreation(change);
+      }
+      if (changeRequiresRecreation) {
+        recreationRequired = true;
+        unsupportedChanges.add(change);
+      }
     }
-    return recreated;
+
+    if (logRecreation && recreationRequired) {
+      _log.info("Table " + table.getName() + " will be recreated beacuse of these changes");
+      for (Object recChange : unsupportedChanges) {
+        _log.info("       " + recChange);
+      }
+    }
+
+    return recreationRequired;
+  }
+
+  /**
+   * Checks if a TableChange requires full table recreation. This method can be overridden for
+   * specific changes
+   */
+  public boolean requiresRecreation(TableChange change) {
+    // list of changes not requiring table recreation
+    Class[] supportedTypes = new Class[] { AddColumnChange.class, //
+        RemovePrimaryKeyChange.class, //
+        PrimaryKeyChange.class, //
+        AddColumnChange.class, //
+        RemoveColumnChange.class, //
+        AddPrimaryKeyChange.class };
+
+    Predicate p = new MultiInstanceofPredicate(supportedTypes);
+    return !p.evaluate(change);
   }
 
   /**
@@ -4453,6 +4476,10 @@ public abstract class SqlBuilder {
    */
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
       Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
+
+    if (requiresRecreation(targetTable, changes, true)) {
+      return;
+    }
 
     boolean alterTable = false;
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
