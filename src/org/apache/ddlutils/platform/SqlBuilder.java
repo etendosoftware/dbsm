@@ -1595,83 +1595,57 @@ public abstract class SqlBuilder {
         .isDelimitedIdentifierModeOn());
     Table targetTable = desiredModel.findTable(tableName, getPlatform()
         .isDelimitedIdentifierModeOn());
-    // we're enforcing a full rebuild in case of the addition of a required
-    // column without a default value that is not autoincrement
-    boolean newColumn = false;
-    Vector<AddColumnChange> newColumns = new Vector<AddColumnChange>();
 
     processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable, parameters,
         changes);
 
-    if (!changes.isEmpty()) {
+    if (changes.isEmpty()) {
+      // we're done, all changes for the table have been processed without need of recreating it
+      return;
+    }
 
-      // read unchanged triggers
-      List<Trigger> triggers = new ArrayList<Trigger>();
-      for (int i = 0; i < desiredModel.getTriggerCount(); i++) {
-        Trigger t = desiredModel.getTrigger(i);
-        if (unchangedtriggers.contains(t.getName()) && t.getTable().equals(tableName)) {
-          triggers.add(t);
-        }
+    // there are changes that cannot be processed without table recreation, let's recreate the
+    // whole table
+
+    // read unchanged triggers
+    List<Trigger> triggers = new ArrayList<Trigger>();
+    for (int i = 0; i < desiredModel.getTriggerCount(); i++) {
+      Trigger t = desiredModel.getTrigger(i);
+      if (unchangedtriggers.contains(t.getName()) && t.getTable().equals(tableName)) {
+        triggers.add(t);
       }
+    }
 
-      // drop unchanged triggers
-      for (Iterator<Trigger> it = triggers.iterator(); it.hasNext();) {
-        dropTrigger(desiredModel, it.next());
-      }
+    // drop unchanged triggers
+    for (Iterator<Trigger> it = triggers.iterator(); it.hasNext();) {
+      dropTrigger(desiredModel, it.next());
+    }
 
-      // we can only copy the data if no required columns without default
-      // value and
-      // non-autoincrement have been added
-      boolean canMigrateData = true;
+    Table realTargetTable = getRealTargetTableFor(desiredModel, sourceTable, targetTable);
 
-      /*
-       * for (Iterator it = changes.iterator(); canMigrateData && it.hasNext();) { TableChange
-       * change = (TableChange)it.next();
-       * 
-       * if (change instanceof AddColumnChange) { AddColumnChange addColumnChange =
-       * (AddColumnChange)change;
-       * 
-       * if (addColumnChange.getNewColumn().isRequired() &&
-       * !addColumnChange.getNewColumn().isAutoIncrement() &&
-       * (addColumnChange.getNewColumn().getDefaultValue() == null)) {
-       * _log.warn("Data cannot be retained in table " + change.getChangedTable().getName() +
-       * " because of the addition of the required column " +
-       * addColumnChange.getNewColumn().getName()); canMigrateData = false; } } }
-       */
+    if (recreatedPKs.contains(sourceTable.getName())) {
+      recreatedPKs.remove(sourceTable.getName());
+    }
+    Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
+    createTemporaryTable(desiredModel, tempTable, parameters);
+    disableAllNOTNULLColumns(tempTable);
+    writeCopyDataStatement(sourceTable, tempTable);
+    // Note that we don't drop the indices here because the DROP
+    // TABLE will take care of that
+    // Likewise, foreign keys have already been dropped as necessary
+    dropTable(sourceTable);
+    createTable(desiredModel, realTargetTable, parameters);
+    disableAllNOTNULLColumns(realTargetTable);
+    writeCopyDataStatement(tempTable, targetTable);
+    dropTemporaryTable(desiredModel, tempTable);
+    if (recreatedTables.contains(sourceTable.getName())) {
+      recreatedTablesTwice.add(sourceTable.getName());
+    }
+    recreatedTables.add(sourceTable.getName());
 
-      Table realTargetTable = getRealTargetTableFor(desiredModel, sourceTable, targetTable);
-
-      if (true) // canMigrateData) <-We will always try to insert data. If
-      // it's not possible, the user will notice the error
-      {
-        if (recreatedPKs.contains(sourceTable.getName())) {
-          recreatedPKs.remove(sourceTable.getName());
-        }
-        Table tempTable = getTemporaryTableFor(currentModel, sourceTable);
-        createTemporaryTable(desiredModel, tempTable, parameters);
-        disableAllNOTNULLColumns(tempTable);
-        writeCopyDataStatement(sourceTable, tempTable);
-        // Note that we don't drop the indices here because the DROP
-        // TABLE will take care of that
-        // Likewise, foreign keys have already been dropped as necessary
-        dropTable(sourceTable);
-        createTable(desiredModel, realTargetTable, parameters);
-        disableAllNOTNULLColumns(realTargetTable);
-        writeCopyDataStatement(tempTable, targetTable);
-        dropTemporaryTable(desiredModel, tempTable);
-        if (recreatedTables.contains(sourceTable.getName())) {
-          recreatedTablesTwice.add(sourceTable.getName());
-        }
-        recreatedTables.add(sourceTable.getName());
-      } else {
-        dropTable(sourceTable);
-        createTable(desiredModel, realTargetTable, parameters);
-      }
-
-      // create unchanged triggers
-      for (Iterator<Trigger> it = triggers.iterator(); it.hasNext();) {
-        createTrigger(desiredModel, it.next());
-      }
+    // create unchanged triggers
+    for (Iterator<Trigger> it = triggers.iterator(); it.hasNext();) {
+      createTrigger(desiredModel, it.next());
     }
   }
 
