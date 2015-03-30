@@ -753,7 +753,7 @@ public abstract class SqlBuilder {
           if (changedNewColumn.getOnCreateDefault() != null
               && (isADTable || !desiredModel.isDeferredDefault(table, changedNewColumn))
               && (!changedNewColumn.isRequired() || !changedNewColumn.isSameDefaultAndOCD())) {
-            executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, false);
+            executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, true);
           }
           writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
         }
