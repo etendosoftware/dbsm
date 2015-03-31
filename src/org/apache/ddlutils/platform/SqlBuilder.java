@@ -4420,7 +4420,7 @@ public abstract class SqlBuilder {
     }
 
     if (logRecreation && recreationRequired) {
-      _log.info("Table " + table.getName() + " will be recreated beacuse of these changes");
+      _log.info("Table " + table.getName() + " will be recreated because of these changes");
       for (Object recChange : unsupportedChanges) {
         _log.info("       " + recChange);
       }
@@ -4442,7 +4442,8 @@ public abstract class SqlBuilder {
         RemoveColumnChange.class, //
         AddPrimaryKeyChange.class, //
         ColumnOnCreateDefaultValueChange.class, //
-        ColumnRequiredChange.class //
+        ColumnRequiredChange.class, //
+        ColumnDefaultValueChange.class //
     };
 
     Predicate p = new MultiInstanceofPredicate(supportedTypes);
@@ -4463,7 +4464,8 @@ public abstract class SqlBuilder {
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
-      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange) {
+      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
+          || change instanceof ColumnDefaultValueChange) {
         alterTable = true;
         break;
       }
@@ -4508,7 +4510,7 @@ public abstract class SqlBuilder {
       TableChange change = (TableChange) changeIt.next();
 
       if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
-          || change instanceof ColumnRequiredChange) {
+          || change instanceof ColumnDefaultValueChange) {
         if (i > 0) {
           println(",");
         }
@@ -4516,6 +4518,8 @@ public abstract class SqlBuilder {
           processChange(currentModel, desiredModel, (AddColumnChange) change);
         } else if (change instanceof RemoveColumnChange) {
           processChange(currentModel, desiredModel, (RemoveColumnChange) change);
+        } else if (change instanceof ColumnDefaultValueChange) {
+          processChange(currentModel, desiredModel, (ColumnDefaultValueChange) change);
         }
 
         changeIt.remove();
@@ -4601,6 +4605,18 @@ public abstract class SqlBuilder {
     print("DROP COLUMN ");
     printIdentifier(getColumnName(change.getColumn()));
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDefaultValueChange change) throws IOException {
+
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+
+    printIndent();
+    print("ALTER COLUMN ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+    print(" SET DEFAULT ");
+    print(getDefaultValue(change.getChangedColumn()));
   }
 
   protected void processChange(Database currentModel, Database desiredModel,
