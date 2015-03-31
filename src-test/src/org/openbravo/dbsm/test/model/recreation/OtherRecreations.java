@@ -66,4 +66,10 @@ public class OtherRecreations extends TableRecreationBaseTest {
 
     updateDatabase("recreation/RM2.xml");
   }
+
+  @Test
+  public void mandatoryChanged() throws SQLException {
+    resetDB();
+    assertTablesAreNotRecreated("COL4.xml", "COL41.xml", false);
+  }
 }
