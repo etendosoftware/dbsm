@@ -227,10 +227,16 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
           final DatabaseDataIO dbdio = new DatabaseDataIO();
           dbdio.setEnsureFKOrder(false);
+
+          // once model is exported, reload it from files to guarantee data is exported in a fixed
+          // manner, other case column position could be different
+          Database dbXML = DatabaseUtils.readDatabaseModel(model, moduledir.getAbsolutePath(),
+              "*/src-db/database/model");
+
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);
             DatabaseData dataToExport = new DatabaseData(db);
-            dbdio.readRowsIntoDatabaseData(platform, db, dataToExport, dataset,
+            dbdio.readRowsIntoDatabaseData(platform, dbXML, dataToExport, dataset,
                 util.getActiveModule(i).idMod);
             DBSMOBUtil.getInstance().removeSortedTemplates(platform, dataToExport,
                 moduledir.getAbsolutePath());
@@ -246,8 +252,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
               try {
                 final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
                 final OutputStream out = new FileOutputStream(tableFile);
-                final boolean b = dbdio.writeDataForTableToXML(platform, db, dataToExport, table,
-                    out, getEncoding(), util.getActiveModule(i).idMod);
+                final boolean b = dbdio.writeDataForTableToXML(platform, dbXML, dataToExport,
+                    table, out, getEncoding(), util.getActiveModule(i).idMod);
                 if (!b) {
                   tableFile.delete();
                 } else {
