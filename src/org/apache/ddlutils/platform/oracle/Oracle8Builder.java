@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
 import org.apache.ddlutils.model.Column;
@@ -510,6 +511,28 @@ public class Oracle8Builder extends SqlBuilder {
   @Override
   protected void endAlterTable() throws IOException {
     println(")");
+    printEndOfStatement();
+  }
+
+  @Override
+  protected void addDefault(AddColumnChange deferredDefault) throws IOException {
+    Column col = deferredDefault.getNewColumn();
+
+    if (col.getOnCreateDefault() != null && col.getLiteralOnCreateDefault() == null
+        && col.getDefaultValue() == null) {
+      return;
+    }
+
+    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " MODIFY ("
+        + col.getName());
+    String dafaultValue = getDefaultValue(col);
+
+    if (dafaultValue != null) {
+      print(" DEFAULT " + dafaultValue);
+    } else {
+      print(" DEFAULT NULL");
+    }
+    print(")");
     printEndOfStatement();
   }
 

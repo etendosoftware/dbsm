@@ -4715,26 +4715,7 @@ public abstract class SqlBuilder {
       RemovePrimaryKeyChange change) throws IOException {
   }
 
-  public void addDefault(AddColumnChange deferredDefault) throws IOException {
-
-    Column col = deferredDefault.getNewColumn();
-
-    if (col.getOnCreateDefault() != null && col.getLiteralOnCreateDefault() == null
-        && col.getDefaultValue() == null) {
-      return;
-    }
-
-    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " ALTER COLUMN "
-        + col.getName());
-    String dafaultValue = getDefaultValue(col);
-
-    if (dafaultValue != null) {
-      print(" SET DEFAULT " + dafaultValue);
-    } else {
-      print(" DROP DEFAULT");
-    }
-
-    printEndOfStatement();
+  protected void addDefault(AddColumnChange deferredDefault) throws IOException {
 
   }
 }
