@@ -501,16 +501,17 @@ public class Oracle8Builder extends SqlBuilder {
   @Override
   protected void addColumnStatement(int position) throws IOException {
     if (position == 0) {
-      printIndent();
-      println("ADD (");
+      println("  ADD (");
     } else {
       println(",");
     }
+    printIndent();
   }
 
   @Override
   protected void endAlterTable() throws IOException {
-    println(")");
+    println();
+    println("  )");
     printEndOfStatement();
   }
 

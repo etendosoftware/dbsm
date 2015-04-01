@@ -4604,7 +4604,6 @@ public abstract class SqlBuilder {
         && StringUtils.isNotEmpty(newColumn.getOnCreateDefault())
         && newColumn.getLiteralOnCreateDefault() == null;
 
-    printIndent();
     writeColumn(change.getChangedTable(), change.getNewColumn(), deferNotNull);
 
     if (change.getNewColumn().isAutoIncrement()) {
