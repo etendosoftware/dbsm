@@ -497,4 +497,20 @@ public class Oracle8Builder extends SqlBuilder {
     printEndOfStatement();
   }
 
+  @Override
+  protected void addColumnStatement(int position) throws IOException {
+    if (position == 0) {
+      printIndent();
+      println("ADD (");
+    } else {
+      println(",");
+    }
+  }
+
+  @Override
+  protected void endAlterTable() throws IOException {
+    println(")");
+    printEndOfStatement();
+  }
+
 }

@@ -871,4 +871,17 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   }
 
+  @Override
+  protected void addColumnStatement(int position) throws IOException {
+    printIndent();
+    if (position > 0) {
+      println(",");
+    }
+  }
+
+  @Override
+  protected void endAlterTable() throws IOException {
+    printEndOfStatement();
+  }
+
 }
