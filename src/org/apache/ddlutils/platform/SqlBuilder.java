@@ -4674,35 +4674,12 @@ public abstract class SqlBuilder {
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnDefaultValueChange change) throws IOException {
 
-    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-    print("ALTER TABLE " + change.getChangedTable().getName() + " ALTER COLUMN ");
-    printIdentifier(getColumnName(change.getChangedColumn()));
-    print(" SET DEFAULT ");
-    print(getDefaultValue(change.getChangedColumn()));
-    printEndOfStatement();
+    // no default implementation
   }
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnRequiredChange change) throws IOException {
-    boolean required = change.getRequired();
-
-    Column col = change.getChangedColumn();
-    change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
-
-    if (required && col.getOnCreateDefault() == null && col.getDefaultValue() == null) {
-      desiredModel.addDeferredNotNull(change);
-      return;
-    }
-
-    print("ALTER TABLE " + change.getTableName() + " ALTER COLUMN ");
-    printIdentifier(getColumnName(change.getChangedColumn()));
-
-    if (required) {
-      print(" SET NOT NULL");
-    } else {
-      print(" DROP NOT NULL");
-    }
-    printEndOfStatement();
+    // no default implementation
   }
 
   /**

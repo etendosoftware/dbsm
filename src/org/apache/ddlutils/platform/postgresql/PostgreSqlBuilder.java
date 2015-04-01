@@ -27,6 +27,8 @@ import java.util.Vector;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ColumnChange;
+import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
+import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
@@ -916,4 +918,39 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement();
   }
 
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDefaultValueChange change) throws IOException {
+
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    print("ALTER TABLE " + change.getChangedTable().getName() + " ALTER COLUMN ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+    print(" SET DEFAULT ");
+    print(getDefaultValue(change.getChangedColumn()));
+    printEndOfStatement();
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnRequiredChange change) throws IOException {
+    boolean required = change.getRequired();
+
+    Column col = change.getChangedColumn();
+    change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
+
+    if (required && col.getOnCreateDefault() == null && col.getDefaultValue() == null) {
+      desiredModel.addDeferredNotNull(change);
+      return;
+    }
+
+    print("ALTER TABLE " + change.getTableName() + " ALTER COLUMN ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+
+    if (required) {
+      print(" SET NOT NULL");
+    } else {
+      print(" DROP NOT NULL");
+    }
+    printEndOfStatement();
+  }
 }

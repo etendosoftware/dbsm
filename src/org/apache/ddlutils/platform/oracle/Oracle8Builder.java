@@ -27,6 +27,8 @@ import java.util.Map;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
+import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
 import org.apache.ddlutils.model.Column;
@@ -534,8 +536,7 @@ public class Oracle8Builder extends SqlBuilder {
       return;
     }
 
-    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " MODIFY ("
-        + col.getName());
+    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " MODIFY " + col.getName());
     String dafaultValue = getDefaultValue(col);
 
     if (dafaultValue != null) {
@@ -543,7 +544,43 @@ public class Oracle8Builder extends SqlBuilder {
     } else {
       print(" DEFAULT NULL");
     }
-    print(")");
+    printEndOfStatement();
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDefaultValueChange change) throws IOException {
+
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+
+    print("ALTER TABLE " + change.getChangedTable().getName() + " MODIFY ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+    print(" DEFAULT ");
+    print(getDefaultValue(change.getChangedColumn()));
+    printEndOfStatement();
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnRequiredChange change) throws IOException {
+    boolean required = change.getRequired();
+
+    Column col = change.getChangedColumn();
+    change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
+
+    if (required && col.getOnCreateDefault() == null && col.getDefaultValue() == null) {
+      desiredModel.addDeferredNotNull(change);
+      return;
+    }
+
+    print("ALTER TABLE " + change.getTableName() + " MODIFY ");
+    printIdentifier(getColumnName(change.getChangedColumn()));
+
+    if (required) {
+      print(" NOT ");
+    }
+    print(" NULL");
+
     printEndOfStatement();
   }
 }
