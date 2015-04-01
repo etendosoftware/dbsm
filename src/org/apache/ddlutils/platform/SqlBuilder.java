@@ -4477,10 +4477,10 @@ public abstract class SqlBuilder {
         processChange(currentModel, desiredModel, (ColumnOnCreateDefaultValueChange) change);
         changeIt.remove();
       } else if (change instanceof ColumnRequiredChange) {
-        // this should be part of the alter table to have a single one, but because some times it is
-        // deferred, we are doing it here
-
         processChange(currentModel, desiredModel, (ColumnRequiredChange) change);
+        changeIt.remove();
+      } else if (change instanceof ColumnDefaultValueChange) {
+        processChange(currentModel, desiredModel, (ColumnDefaultValueChange) change);
         changeIt.remove();
       }
     }
@@ -4675,12 +4675,11 @@ public abstract class SqlBuilder {
       ColumnDefaultValueChange change) throws IOException {
 
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-
-    printIndent();
-    print("ALTER COLUMN ");
+    print("ALTER TABLE " + change.getChangedTable().getName() + " ALTER COLUMN ");
     printIdentifier(getColumnName(change.getChangedColumn()));
     print(" SET DEFAULT ");
     print(getDefaultValue(change.getChangedColumn()));
+    printEndOfStatement();
   }
 
   protected void processChange(Database currentModel, Database desiredModel,
