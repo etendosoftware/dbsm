@@ -873,10 +873,11 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   @Override
   protected void addColumnStatement(int position) throws IOException {
-    printIndent();
     if (position > 0) {
       println(",");
     }
+    printIndent();
+    print(" ADD ");
   }
 
   @Override
