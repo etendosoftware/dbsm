@@ -67,6 +67,8 @@ import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
+import com.openbravo.db.OpenbravoExcludeFilter;
+
 /**
  * Base class to for test cases for DBSM. Classes extending this one, should be run as
  * Parameterized.
@@ -191,7 +193,7 @@ public class DbsmTest {
   }
 
   protected ExcludeFilter getExcludeFilter() {
-    return new ExcludeFilter();
+    return new OpenbravoExcludeFilter();
   }
 
   protected BasicDataSource getDataSource() {
@@ -332,6 +334,26 @@ public class DbsmTest {
   /** Utility method to reset current test DB removing all objects it might have */
   protected void resetDB() {
     updateDatabase("empty");
+    if (rdbms == Rdbms.PG) {
+      Connection cn = null;
+      try {
+        cn = getDataSource().getConnection();
+
+        PreparedStatement st = cn
+            .prepareStatement("CREATE OR REPLACE VIEW DUAL AS SELECT 'X'::text AS dummy");
+        st.execute();
+      } catch (Exception e) {
+        log.error("Error creating DUAL in PG");
+      } finally {
+        if (cn != null) {
+          try {
+            cn.close();
+          } catch (SQLException e) {
+            log.error("Error closing connection", e);
+          }
+        }
+      }
+    }
   }
 
   /** Exports current test DB to xml files within path directory */

@@ -8,7 +8,7 @@
 
       <column name="M5" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
         <default/>
-        <onCreateDefault><![CDATA[select to_date('01/01/1970', 'DD/MM/YYYY')]]></onCreateDefault>
+        <onCreateDefault><![CDATA[select to_date('01/01/1970', 'DD/MM/YYYY') from dual]]></onCreateDefault>
       </column>
       
       <!-- dummy column to force new columns to be added in the middle -->
