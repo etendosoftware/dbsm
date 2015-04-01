@@ -2040,7 +2040,6 @@ public abstract class SqlBuilder {
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnOnCreateDefaultValueChange change) throws IOException {
     writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn());
-    printEndOfStatement();
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
