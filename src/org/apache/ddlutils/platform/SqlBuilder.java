@@ -4487,11 +4487,14 @@ public abstract class SqlBuilder {
 
     boolean alterTable = false;
     boolean newColumnsShouldBeAdded = false;
+    boolean oldColumnsShouldBeDropped = false;
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
       if (change instanceof AddColumnChange) {
         newColumnsShouldBeAdded = true;
+      } else if (change instanceof RemoveColumnChange) {
+        oldColumnsShouldBeDropped = true;
       }
 
       if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
@@ -4503,6 +4506,10 @@ public abstract class SqlBuilder {
 
     if (newColumnsShouldBeAdded) {
       addNewColumns(targetTable, changes, currentModel, desiredModel);
+    }
+
+    if (oldColumnsShouldBeDropped) {
+      dropOldColumns(targetTable, changes, currentModel, desiredModel);
     }
 
     if (false) {
@@ -4576,6 +4583,26 @@ public abstract class SqlBuilder {
     endAlterTable();
   }
 
+  private void dropOldColumns(Table targetTable, List changes, Database currentModel,
+      Database desiredModel) throws IOException {
+
+    print("ALTER TABLE ");
+    printlnIdentifier(getStructureObjectName(targetTable.getName()));
+
+    int i = 0;
+    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+      TableChange change = (TableChange) changeIt.next();
+      if (change instanceof RemoveColumnChange) {
+        dropColumnStatement(i);
+        processChange(currentModel, desiredModel, (RemoveColumnChange) change);
+        changeIt.remove();
+        i++;
+      }
+    }
+
+    endAlterTable();
+  }
+
   protected void endAlterTable() throws IOException {
     // TODO Auto-generated method stub
 
@@ -4583,7 +4610,10 @@ public abstract class SqlBuilder {
 
   protected void addColumnStatement(int position) throws IOException {
     // TODO Auto-generated method stub
+  }
 
+  protected void dropColumnStatement(int position) throws IOException {
+    // TODO Auto-generated method stub
   }
 
   /**
@@ -4637,8 +4667,6 @@ public abstract class SqlBuilder {
       dropAutoIncrementTrigger(change.getChangedTable(), change.getColumn());
       dropAutoIncrementSequence(change.getChangedTable(), change.getColumn());
     }
-    printIndent();
-    print("DROP COLUMN ");
     printIdentifier(getColumnName(change.getColumn()));
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }

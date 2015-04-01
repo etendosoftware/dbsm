@@ -877,7 +877,16 @@ public class PostgreSqlBuilder extends SqlBuilder {
       println(",");
     }
     printIndent();
-    print(" ADD ");
+    print("ADD ");
+  }
+
+  @Override
+  protected void dropColumnStatement(int position) throws IOException {
+    if (position > 0) {
+      println(",");
+    }
+    printIndent();
+    print("DROP ");
   }
 
   @Override
