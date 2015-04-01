@@ -66,6 +66,7 @@ public class TableRecreationBaseTest extends DbsmTest {
     try {
       String initialModel = MODEL_DIRECTORY
           + (type == ActionType.append || type == ActionType.prepend ? fromModel : toModel);
+      log.info("Updating to " + initialModel);
       Database originalModel = updateDatabase(initialModel);
 
       if (generateDummyData) {
@@ -77,6 +78,8 @@ public class TableRecreationBaseTest extends DbsmTest {
       String targetModel = MODEL_DIRECTORY
           + (type == ActionType.append || type == ActionType.prepend ? toModel : fromModel);
       Database newModel = updateDatabase(targetModel);
+
+      log.info("Updating to " + newModel);
       List<String> newTableInternalId = getOIds(newModel);
       assertThat("Table OID changed", newTableInternalId, contains(oldTableInternalId.toArray()));
     } catch (Exception e) {
