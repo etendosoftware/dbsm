@@ -319,6 +319,21 @@ public class DbsmTest {
     return newDB;
   }
 
+  protected Database createDatabase(String dbModelPath) {
+    File dbModel = new File("model", dbModelPath);
+    final Platform platform = getPlatform();
+    Database newDB = DatabaseUtils.readDatabase(dbModel);
+    platform.createTables(newDB, false, true);
+
+    ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
+        platform.isDelimitedIdentifierModeOn());
+    @SuppressWarnings("unchecked")
+    List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+        platform.loadModelFromDatabase(getExcludeFilter()));
+    assertThat("changes between updated db and target db", newChanges, is(empty()));
+    return newDB;
+  }
+
   /** Reads current DB model */
   protected Database readModelFromDB() {
     return getPlatform().loadModelFromDatabase(getExcludeFilter());
