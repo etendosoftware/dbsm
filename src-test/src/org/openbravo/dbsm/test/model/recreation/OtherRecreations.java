@@ -83,4 +83,10 @@ public class OtherRecreations extends TableRecreationBaseTest {
     resetDB();
     assertTablesAreNotRecreated("COL4.xml", "COL41.xml", false);
   }
+
+  @Test
+  public void differentDefaultAndOCDinCreateDatabase() throws SQLException {
+    resetDB();
+    createDatabase("createDefault/M4.xml");
+  }
 }
