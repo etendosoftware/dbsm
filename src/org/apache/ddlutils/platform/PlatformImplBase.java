@@ -3120,7 +3120,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       columnsToSetNull.add(deferredNullColumn);
     }
 
-    for (AddColumnChange deferredDefault : database.getDeferredOnCreateDefault()) {
+    for (AddColumnChange deferredDefault : database.getDeferredDefaults()) {
       try {
         getSqlBuilder().addDefault(deferredDefault);
       } catch (IOException e) {

@@ -488,18 +488,22 @@ public class Column extends ValueObject implements Cloneable, Serializable {
     return false;
   }
 
+  /**
+   * If onCreateDefault is a literal (String or numeric) it is returned, other cases null is
+   * returned.
+   */
   public String getLiteralOnCreateDefault() {
     String onCreateDefault = getOnCreateDefault();
     if (onCreateDefault == null) {
       return null;
     }
 
+    // check for string
     if (onCreateDefault.startsWith("'") && onCreateDefault.endsWith("'")) {
-      // onCreateDefault = onCreateDefault.substring(1);
-      // onCreateDefault = onCreateDefault.substring(0, onCreateDefault.length() - 1);
       return onCreateDefault;
     }
 
+    // check for numeric
     try {
       Double.parseDouble(onCreateDefault);
       return onCreateDefault;

@@ -4450,7 +4450,9 @@ public abstract class SqlBuilder {
   }
 
   /**
-   * {@inheritDoc}
+   * Processes changes on a table to try to apply them to the existing table without recreating it,
+   * if this is possible changes list will be empty after invocation of this method, if not,
+   * remaining changes will be in that list.
    */
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
       Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
@@ -4484,7 +4486,6 @@ public abstract class SqlBuilder {
       }
     }
 
-    boolean alterTable = false;
     boolean newColumnsShouldBeAdded = false;
     boolean oldColumnsShouldBeDropped = false;
     for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
@@ -4495,12 +4496,6 @@ public abstract class SqlBuilder {
       } else if (change instanceof RemoveColumnChange) {
         oldColumnsShouldBeDropped = true;
       }
-
-      if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
-          || change instanceof ColumnDefaultValueChange) {
-        alterTable = true;
-        break;
-      }
     }
 
     if (newColumnsShouldBeAdded) {
@@ -4509,39 +4504,6 @@ public abstract class SqlBuilder {
 
     if (oldColumnsShouldBeDropped) {
       dropOldColumns(targetTable, changes, currentModel, desiredModel);
-    }
-
-    if (false) {
-      if (alterTable) {
-        print("ALTER TABLE ");
-        printlnIdentifier(getStructureObjectName(targetTable.getName()));
-      }
-
-      int i = 0;
-      for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
-        TableChange change = (TableChange) changeIt.next();
-
-        if (change instanceof AddColumnChange || change instanceof RemoveColumnChange
-            || change instanceof ColumnDefaultValueChange) {
-          if (i > 0) {
-            println(",");
-          }
-          if (change instanceof AddColumnChange) {
-            processChange(currentModel, desiredModel, (AddColumnChange) change);
-          } else if (change instanceof RemoveColumnChange) {
-            processChange(currentModel, desiredModel, (RemoveColumnChange) change);
-          } else if (change instanceof ColumnDefaultValueChange) {
-            processChange(currentModel, desiredModel, (ColumnDefaultValueChange) change);
-          }
-
-          changeIt.remove();
-          i++;
-        }
-      }
-
-      if (i > 0) {
-        printEndOfStatement();
-      }
     }
 
     // Finally we add primary keys
@@ -4562,6 +4524,10 @@ public abstract class SqlBuilder {
     }
   }
 
+  /**
+   * Adds new columns to an existing table, all of these new columns are added in a single ALTER
+   * TABLE statement
+   */
   private void addNewColumns(Table targetTable, List changes, Database currentModel,
       Database desiredModel) throws IOException {
 
@@ -4582,6 +4548,10 @@ public abstract class SqlBuilder {
     endAlterTable();
   }
 
+  /**
+   * Drops columns from an existing table, all these drops are included in a single ALTER TABLE
+   * statement
+   */
   private void dropOldColumns(Table targetTable, List changes, Database currentModel,
       Database desiredModel) throws IOException {
 
@@ -4602,17 +4572,31 @@ public abstract class SqlBuilder {
     endAlterTable();
   }
 
-  protected void endAlterTable() throws IOException {
-    // TODO Auto-generated method stub
-
-  }
-
+  /**
+   * Writes SQL required to add a single column within an ALTER TABLE statement.
+   * 
+   * This is DB specific so it must be implemented per DB
+   */
   protected void addColumnStatement(int position) throws IOException {
-    // TODO Auto-generated method stub
+    // no default implementation
   }
 
+  /**
+   * Writes SQL required to drop a single column within an ALTER TABLE statement.
+   * 
+   * This is DB specific so it must be implemented per DB
+   */
   protected void dropColumnStatement(int position) throws IOException {
-    // TODO Auto-generated method stub
+    // no default implementation
+  }
+
+  /**
+   * Writes SQL required terminate ALTER TABLE statement
+   * 
+   * This is DB specific so it must be implemented per DB
+   */
+  protected void endAlterTable() throws IOException {
+    // no default implementation
   }
 
   /**
@@ -4646,7 +4630,7 @@ public abstract class SqlBuilder {
     }
 
     if (!newColumn.isSameDefaultAndOCD()) {
-      desiredModel.addDeferredOnCreateDefault(change);
+      desiredModel.addDeferredDefault(change);
     }
   }
 
@@ -4672,7 +4656,6 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnDefaultValueChange change) throws IOException {
-
     // no default implementation
   }
 
