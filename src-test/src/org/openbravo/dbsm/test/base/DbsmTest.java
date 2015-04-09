@@ -325,6 +325,8 @@ public class DbsmTest {
     Database newDB = DatabaseUtils.readDatabase(dbModel);
     platform.createTables(newDB, false, true);
 
+    platform.enableNOTNULLColumns(newDB);
+
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
     @SuppressWarnings("unchecked")
