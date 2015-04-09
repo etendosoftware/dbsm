@@ -495,6 +495,9 @@ public abstract class SqlBuilder {
     for (int idx = 0; idx < database.getTableCount(); idx++) {
       Table table = database.getTable(idx);
 
+      // mark this table as created to properly manage defaults and onCreateDefaults
+      createdTables.add(table.getName());
+
       createTable(database, table, params == null ? null : params.getParametersFor(table));
       writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
       writeExternalIndicesCreateStmt(table);
