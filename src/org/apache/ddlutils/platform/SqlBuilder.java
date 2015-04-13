@@ -168,6 +168,7 @@ public abstract class SqlBuilder {
   protected ArrayList<String> recreatedTablesTwice = new ArrayList<String>();
   protected ArrayList<String> recreatedFKs = new ArrayList<String>();
   protected ArrayList<String> recreatedPKs = new ArrayList<String>();
+  private List<String> droppedFKs = new ArrayList<String>();
 
   //
   // Configuration
@@ -824,8 +825,8 @@ public abstract class SqlBuilder {
       }
       changesForTable.add(change);
     }
-    // we also need to drop the foreign keys of the unchanged tables
-    // referencing the changed tables
+
+    // recreate unchanged FKs from non recreated tables to recreated tables
     addRelevantFKsFromUnchangedTables(currentModel, desiredModel, changesPerTable.keySet(),
         unchangedFKs);
 
@@ -835,7 +836,7 @@ public abstract class SqlBuilder {
 
       for (Iterator fkIt = ((List) entry.getValue()).iterator(); fkIt.hasNext();) {
         ForeignKey fk = (ForeignKey) fkIt.next();
-        if (!recreatedFKs.contains(fk.getName())) {
+        if (droppedFKs.contains(fk.getName()) && !recreatedFKs.contains(fk.getName())) {
           recreatedFKs.add(fk.getName());
           writeExternalForeignKeyCreateStmt(desiredModel, targetTable, fk);
         }
@@ -1429,7 +1430,6 @@ public abstract class SqlBuilder {
     ListOrderedMap changesPerTable = new ListOrderedMap();
     ListOrderedMap unchangedFKs = new ListOrderedMap();
     boolean caseSensitive = getPlatform().isDelimitedIdentifierModeOn();
-
     // we first sort the changes for the tables
     // however since the changes might contain source or target tables
     // we use the names rather than the table objects
@@ -1450,21 +1450,9 @@ public abstract class SqlBuilder {
       }
       changesForTable.add(change);
     }
-    // we also need to drop the foreign keys of the unchanged tables
-    // referencing the changed tables
+
     addRelevantFKsFromUnchangedTables(currentModel, desiredModel, changesPerTable.keySet(),
         unchangedFKs);
-
-    // we're dropping the unchanged foreign keys
-    for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();) {
-      Map.Entry entry = (Map.Entry) tableFKIt.next();
-      Table targetTable = desiredModel.findTable((String) entry.getKey(), caseSensitive);
-
-      for (Iterator fkIt = ((List) entry.getValue()).iterator(); fkIt.hasNext();) {
-        ForeignKey fk = (ForeignKey) fkIt.next();
-        writeExternalForeignKeyDropStmt(targetTable, fk);
-      }
-    }
 
     // We're using a copy of the current model so that the table structure
     // changes can
@@ -1484,18 +1472,6 @@ public abstract class SqlBuilder {
       processTableStructureChanges(copyOfCurrentModel, desiredModel, (String) entry.getKey(),
           params == null ? null : params.getParametersFor(targetTable), (List) entry.getValue(),
           unchangedTriggers);
-    }
-    // and finally we're re-creating the unchanged foreign keys
-    for (Iterator tableFKIt = unchangedFKs.entrySet().iterator(); tableFKIt.hasNext();) {
-      Map.Entry entry = (Map.Entry) tableFKIt.next();
-      Table targetTable = desiredModel.findTable((String) entry.getKey(), caseSensitive);
-
-      for (Iterator fkIt = ((List) entry.getValue()).iterator(); fkIt.hasNext();) {
-        currentModel.findTable((String) entry.getKey(), caseSensitive).removeForeignKey(
-            (ForeignKey) fkIt.next());
-        // writeExternalForeignKeyCreateStmt(desiredModel, targetTable,
-        // (ForeignKey)fkIt.next());
-      }
     }
   }
 
@@ -1609,6 +1585,25 @@ public abstract class SqlBuilder {
 
     // there are changes that cannot be processed without table recreation, let's recreate the
     // whole table
+
+    // drop FKs to recreated table
+    int numTablesInOldModel = currentModel.getTableCount();
+    for (int i = 0; i < numTablesInOldModel; i++) {
+      Table oldTable = currentModel.getTable(i);
+      if (recreatedTables.contains(oldTable.getName())) {
+        // no need to drop FKs in already recreated tables
+        continue;
+      }
+      for (int fkIdx = 0; fkIdx < oldTable.getForeignKeyCount(); fkIdx++) {
+        ForeignKey oldFk = oldTable.getForeignKey(fkIdx);
+        if (!tableName.equals(oldFk.getForeignTableName())) {
+          // we only care at this point about FKs to current table
+          continue;
+        }
+        writeExternalForeignKeyDropStmt(oldTable, oldFk);
+        droppedFKs.add(oldFk.getName());
+      }
+    }
 
     // read unchanged triggers
     List<Trigger> triggers = new ArrayList<Trigger>();
