@@ -3124,7 +3124,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       try {
         getSqlBuilder().addDefault(deferredDefault);
       } catch (IOException e) {
-        // TODO Auto-generated catch block
+        // TODO: handle this properly and other cases above
         e.printStackTrace();
       }
     }

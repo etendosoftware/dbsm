@@ -27,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.ddlutils.DatabaseOperationException;
@@ -35,6 +34,7 @@ import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Trigger;
+import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionStandarization;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
@@ -119,6 +119,7 @@ public class Oracle8Platform extends PlatformImplBase {
     setSqlBuilder(new Oracle8Builder(this));
     setModelReader(new Oracle8ModelReader(this));
     setModelLoader(new OracleModelLoader());
+    setBatchEvaluator(new Oracle8StandardBatchEvaluator(this));
   }
 
   /**
@@ -411,14 +412,5 @@ public class Oracle8Platform extends PlatformImplBase {
   @Override
   public String limitOneRow() {
     return " where rownum<2";
-  }
-
-  protected int handleFailedBatchExecution(Connection connection, List<String> sql,
-      boolean continueOnError, long indexFailedStatement) {
-    getLog().info(
-        "Batch statement failed. Retrying froo statement #" + indexFailedStatement + "("
-            + sql.get((int) indexFailedStatement) + ")");
-    // The batch failed. We will execute all commands again using the old method
-    return evaluateBatch(connection, sql, continueOnError, indexFailedStatement);
   }
 }

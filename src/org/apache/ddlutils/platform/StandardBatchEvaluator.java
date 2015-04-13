@@ -36,7 +36,7 @@ import org.apache.ddlutils.util.JdbcSupport;
  */
 public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvaluator {
   private static final int MAX_LOOPS_OF_FORCED = 5;
-  private final Log _log = LogFactory.getLog(getClass());
+  protected final Log _log = LogFactory.getLog(getClass());
   private Platform platform;
 
   public StandardBatchEvaluator(Platform platform) {

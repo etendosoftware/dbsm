@@ -40,6 +40,7 @@ import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Trigger;
+import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.translation.CommentFilter;
 import org.apache.ddlutils.translation.LiteralFilter;
@@ -117,6 +118,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     setSqlBuilder(new PostgreSqlBuilder(this));
     setModelReader(new PostgreSqlModelReader(this));
     setModelLoader(new PostgreSqlModelLoader());
+    setBatchEvaluator(new PGStandardBatchEvaluator(this));
   }
 
   /**
