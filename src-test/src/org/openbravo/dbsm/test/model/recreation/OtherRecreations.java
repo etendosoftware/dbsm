@@ -11,10 +11,17 @@
  */
 package org.openbravo.dbsm.test.model.recreation;
 
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
+import static org.junit.Assert.assertThat;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
@@ -88,5 +95,34 @@ public class OtherRecreations extends TableRecreationBaseTest {
   public void differentDefaultAndOCDinCreateDatabase() throws SQLException {
     resetDB();
     createDatabase("createDefault/M4.xml");
+  }
+
+  @Test
+  public void fksShouldnBeRecreated() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK.xml");
+    List<String> l = sqlStatmentsForUpdate("recreation/FK2.xml");
+    for (String st : l) {
+      assertThat(st,
+          not(anyOf(containsString("DROP CONSTRAINT"), containsString("ADD CONSTRAINT"))));
+    }
+  }
+
+  @Test
+  public void fksShoulBeRecreatedWhenRefTableIsRecreated() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK.xml");
+    List<String> l = sqlStatmentsForUpdate("recreation/FK3.xml");
+    StringBuilder allSts = new StringBuilder();
+    for (String st : l) {
+      allSts.append(st);
+    }
+
+    // checking SQL commands
+    assertThat(allSts.toString(),
+        allOf(containsString("DROP CONSTRAINT"), containsString("ADD CONSTRAINT")));
+
+    // checking real update
+    updateDatabase("recreation/FK3.xml");
   }
 }
