@@ -589,6 +589,9 @@ public interface Platform {
       boolean continueOnError, List changes, Database fullModel, OBDataset ad)
       throws DatabaseOperationException;
 
+  public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
+      boolean continueOnError, List changes, Database fullModel) throws DatabaseOperationException;
+
   public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException;
 
