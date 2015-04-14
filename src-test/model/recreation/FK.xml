@@ -5,7 +5,7 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="COL1" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+      <column name="COL1" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>

@@ -15,11 +15,13 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -118,11 +120,49 @@ public class OtherRecreations extends TableRecreationBaseTest {
       allSts.append(st);
     }
 
+    System.out.println("\n\n*****************************************************************");
+    System.out.println(allSts);
+    System.out.println("*****************************************************************\n\n");
+
     // checking SQL commands
     assertThat(allSts.toString(),
         allOf(containsString("DROP CONSTRAINT"), containsString("ADD CONSTRAINT")));
 
     // checking real update
     updateDatabase("recreation/FK3.xml");
+  }
+
+  @Test
+  public void fksShoulBeRecreatedWhenRefTableIsRecreatedAD() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK.xml", "data/createDefault", Arrays.asList("TEST", "TEST2"));
+    List<String> l = sqlStatmentsForUpdate("recreation/FK3.xml", "data/createDefault",
+        Arrays.asList("TEST", "TEST2"));
+    StringBuilder allSts = new StringBuilder();
+    int numOfDrops = 0;
+    int numOfAdds = 0;
+    for (String st : l) {
+      allSts.append(st);
+      if (st.contains("DROP CONSTRAINT") && st.contains("TEST2_TEST_FK")) {
+        numOfDrops++;
+      }
+      if (st.contains("ADD CONSTRAINT") && st.contains("TEST2_TEST_FK")) {
+        numOfAdds++;
+      }
+    }
+
+    System.out.println("\n\n*****************************************************************");
+    System.out.println(allSts);
+    System.out.println("*****************************************************************\n\n");
+
+    // checking SQL commands
+    if (true) {
+      assertThat(allSts.toString(),
+          allOf(containsString("DROP CONSTRAINT"), containsString("ADD CONSTRAINT")));
+      assertThat("Number of DROP statements", numOfDrops, is(1));
+      assertThat("Number of ADD statements", numOfAdds, is(1));
+    }
+    // checking real update
+    updateDatabase("recreation/FK3.xml", "data/createDefault", Arrays.asList("TEST", "TEST2"));
   }
 }
