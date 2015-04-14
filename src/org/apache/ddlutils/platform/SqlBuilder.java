@@ -170,6 +170,8 @@ public abstract class SqlBuilder {
   protected ArrayList<String> recreatedPKs = new ArrayList<String>();
   private List<String> droppedFKs = new ArrayList<String>();
 
+  private String forcedRecreation = "";
+
   //
   // Configuration
   //
@@ -4410,6 +4412,18 @@ public abstract class SqlBuilder {
 
   /** Checks whether table requires recreation base on the changes that require */
   private boolean requiresRecreation(Table table, List<TableChange> changes, boolean logRecreation) {
+    if (changes == null || changes.isEmpty()) {
+      return false;
+    }
+
+    if (isRecreationForced(table)) {
+      if (logRecreation) {
+        _log.info("Table " + table.getName()
+            + " will be recreated because it is forced by paramter");
+      }
+      return true;
+    }
+
     boolean recreationRequired = false;
     List<TableChange> unsupportedChanges = new ArrayList<TableChange>();
     for (TableChange change : changes) {
@@ -4441,6 +4455,22 @@ public abstract class SqlBuilder {
     }
 
     return recreationRequired;
+  }
+
+  private boolean isRecreationForced(Table table) {
+    if (StringUtils.isEmpty(forcedRecreation)) {
+      return false;
+    }
+    if (forcedRecreation.equalsIgnoreCase("all")) {
+      return true;
+    }
+    for (String tableName : forcedRecreation.split(",")) {
+      if (table.getName().equalsIgnoreCase(tableName)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -4717,5 +4747,9 @@ public abstract class SqlBuilder {
 
   protected void addDefault(AddColumnChange deferredDefault) throws IOException {
 
+  }
+
+  public void setForcedRecreation(String forcedRecreation) {
+    this.forcedRecreation = forcedRecreation;
   }
 }

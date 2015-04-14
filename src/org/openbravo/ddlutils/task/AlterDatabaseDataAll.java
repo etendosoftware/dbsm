@@ -67,6 +67,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected ExcludeFilter excludeFilter;
 
+  private String forcedRecreation = "";
+
   public AlterDatabaseDataAll() {
     super();
   }
@@ -98,6 +100,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
     // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
         .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
@@ -459,5 +462,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   public void setStrict(boolean strict) {
     this.strict = strict;
+  }
+
+  public void setForcedRecreation(String forcedRecreation) {
+    this.forcedRecreation = forcedRecreation;
   }
 }
