@@ -565,10 +565,11 @@ public class Oracle8Builder extends SqlBuilder {
       ColumnRequiredChange change) throws IOException {
     boolean required = change.getRequired();
 
-    Column col = change.getChangedColumn();
     change.apply(desiredModel, getPlatform().isDelimitedIdentifierModeOn());
 
-    if (required && col.getOnCreateDefault() == null && col.getDefaultValue() == null) {
+    // whenever a column is set as not null, it needs to be referred in order to populate it with
+    // onCreateDefault or moduleScripts
+    if (required) {
       desiredModel.addDeferredNotNull(change);
       return;
     }
