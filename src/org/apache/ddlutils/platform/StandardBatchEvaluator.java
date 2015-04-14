@@ -325,7 +325,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
     return errors;
   }
 
-  private int handleFailedBatchExecution(Connection connection, List<String> sql,
+  protected int handleFailedBatchExecution(Connection connection, List<String> sql,
       boolean continueOnError, long indexFailedStatement) {
     return evaluateBatch(connection, sql, continueOnError, 0);
   }

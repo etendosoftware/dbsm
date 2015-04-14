@@ -25,6 +25,7 @@ public class PGStandardBatchEvaluator extends StandardBatchEvaluator {
     super(platform);
   }
 
+  @Override
   protected int handleFailedBatchExecution(Connection connection, List<String> sql,
       boolean continueOnError, long indexFailedStatement) {
     try {
@@ -38,6 +39,7 @@ public class PGStandardBatchEvaluator extends StandardBatchEvaluator {
     return evaluateBatch(connection, sql, continueOnError, 0);
   }
 
+  @Override
   public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
       throws DatabaseOperationException {
     try {

@@ -23,6 +23,7 @@ public class Oracle8StandardBatchEvaluator extends StandardBatchEvaluator {
     super(platform);
   }
 
+  @Override
   protected int handleFailedBatchExecution(Connection connection, List<String> sql,
       boolean continueOnError, long indexFailedStatement) {
     _log.info("Batch statement failed. Retrying froo statement #" + indexFailedStatement + "("
