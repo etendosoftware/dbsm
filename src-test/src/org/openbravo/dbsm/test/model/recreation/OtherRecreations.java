@@ -165,4 +165,18 @@ public class OtherRecreations extends TableRecreationBaseTest {
     // checking real update
     updateDatabase("recreation/FK3.xml", "data/createDefault", Arrays.asList("TEST", "TEST2"));
   }
+
+  @Test
+  public void newTableWithDiffDefaultAndOCD() {
+    resetDB();
+    updateDatabase("recreation/COL5.xml");
+  }
+
+  @Test
+  public void recreatedTableWithDiffDefaultAndOCD() {
+    resetDB();
+    updateDatabase("recreation/COL5.xml");
+    System.out.println("\n\n*****************************************************************");
+    updateDatabase("recreation/COL51.xml");
+  }
 }
