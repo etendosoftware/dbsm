@@ -2323,16 +2323,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
+      ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         if (dataset.getTable(table.getName()) != null) {
-          for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
-            getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
+          if (!recreatedTables.contains(table.getName())) {
+            for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
+              ForeignKey fk = table.getForeignKey(idx);
+              if (!recreatedTables.contains(fk.getForeignTableName())) {
+                // FKs to recreated tables are already dropped
+                getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
+              }
+            }
           }
         } else {
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
+            if (dataset.getTable(fk.getForeignTableName()) != null
+                && !recreatedTables.contains(fk.getForeignTableName())) {
+              // FKs to recreated tables are already dropped
               getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
             }
           }
@@ -2367,14 +2376,18 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
+      ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         if (dataset.getTable(table.getName()) != null) {
-          getSqlBuilder().createExternalForeignKeys(model, table);
+          if (!recreatedTables.contains(table.getName())) {
+            getSqlBuilder().createExternalForeignKeys(model, table, true);
+          }
         } else {
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
+            if (dataset.getTable(fk.getForeignTableName()) != null
+                && !recreatedTables.contains(table.getName())) {
               getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
             }
           }

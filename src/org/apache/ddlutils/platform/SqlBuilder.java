@@ -2181,9 +2181,17 @@ public abstract class SqlBuilder {
    *          The table
    */
   public void createExternalForeignKeys(Database database, Table table) throws IOException {
+    createExternalForeignKeys(database, table, false);
+  }
+
+  public void createExternalForeignKeys(Database database, Table table, boolean skipRecreated)
+      throws IOException {
     if (!getPlatformInfo().isForeignKeysEmbedded()) {
       for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
-        writeExternalForeignKeyCreateStmt(database, table, table.getForeignKey(idx));
+        ForeignKey fk = table.getForeignKey(idx);
+        if (!skipRecreated || !recreatedTables.contains(fk.getForeignTableName())) {
+          writeExternalForeignKeyCreateStmt(database, table, fk);
+        }
       }
     }
   }
