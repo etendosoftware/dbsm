@@ -2387,7 +2387,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
             if (dataset.getTable(fk.getForeignTableName()) != null
-                && !recreatedTables.contains(table.getName())) {
+                && !recreatedTables.contains(fk.getForeignTableName())) {
               getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
             }
           }
