@@ -60,4 +60,12 @@ public class OtherDefaults extends DbsmTest {
     assertThat("New AD column value should be kept", getActualValue("test", "m2"),
         is(equalTo("NEW")));
   }
+
+  @Test
+  public void setMandatoryInAD() throws SQLException {
+    resetDB();
+    updateDatabase("createDefault/NM3.xml", "data/newCreateDefault", Arrays.asList("TEST"));
+    updateDatabase("createDefault/NM31.xml", "data/newCreateDefault", Arrays.asList("TEST"));
+
+  }
 }
