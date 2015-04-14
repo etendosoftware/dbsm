@@ -21,6 +21,7 @@ package org.apache.ddlutils.platform.postgresql;
 
 import java.io.IOException;
 import java.sql.Types;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -953,5 +954,19 @@ public class PostgreSqlBuilder extends SqlBuilder {
       print(" DROP NOT NULL");
     }
     printEndOfStatement();
+  }
+
+  @Override
+  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls)
+      throws IOException {
+    for (int i = 0; i < table.getColumnCount(); i++) {
+      Column column = table.getColumn(i);
+      if (column.isRequired() && !column.isPrimaryKey() && !recreatedTbls.contains(table.getName())) {
+        println("ALTER TABLE " + table.getName() + " ALTER COLUMN " + getColumnName(column)
+            + " DROP  NOT NULL");
+        printEndOfStatement();
+      }
+
+    }
   }
 }

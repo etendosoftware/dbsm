@@ -1633,13 +1633,15 @@ public abstract class SqlBuilder {
     // Likewise, foreign keys have already been dropped as necessary
     dropTable(sourceTable);
 
+    @SuppressWarnings("unchecked")
+    List<String> originallyRecreatedTables = (List<String>) recreatedTables.clone();
     if (recreatedTables.contains(sourceTable.getName())) {
       recreatedTablesTwice.add(sourceTable.getName());
     }
     recreatedTables.add(sourceTable.getName());
 
     createTable(desiredModel, realTargetTable, parameters);
-    disableAllNOTNULLColumns(realTargetTable);
+    disableAllNOTNULLColumns(realTargetTable, originallyRecreatedTables);
     writeCopyDataStatement(tempTable, targetTable);
     dropTemporaryTable(desiredModel, tempTable);
 
@@ -1709,10 +1711,14 @@ public abstract class SqlBuilder {
   }
 
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
+    disableAllNOTNULLColumns(table, recreatedTables);
+  }
+
+  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls)
+      throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && !column.isPrimaryKey()
-          && !recreatedTables.contains(table.getName())) {
+      if (column.isRequired() && !column.isPrimaryKey() && !recreatedTbls.contains(table.getName())) {
         if (getSqlType(column).equalsIgnoreCase("CLOB")) {
           // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
           // the null/not null constraint
