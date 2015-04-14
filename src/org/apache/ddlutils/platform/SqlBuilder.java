@@ -1632,14 +1632,16 @@ public abstract class SqlBuilder {
     // TABLE will take care of that
     // Likewise, foreign keys have already been dropped as necessary
     dropTable(sourceTable);
-    createTable(desiredModel, realTargetTable, parameters);
-    disableAllNOTNULLColumns(realTargetTable);
-    writeCopyDataStatement(tempTable, targetTable);
-    dropTemporaryTable(desiredModel, tempTable);
+
     if (recreatedTables.contains(sourceTable.getName())) {
       recreatedTablesTwice.add(sourceTable.getName());
     }
     recreatedTables.add(sourceTable.getName());
+
+    createTable(desiredModel, realTargetTable, parameters);
+    disableAllNOTNULLColumns(realTargetTable);
+    writeCopyDataStatement(tempTable, targetTable);
+    dropTemporaryTable(desiredModel, tempTable);
 
     // create unchanged triggers
     for (Iterator<Trigger> it = triggers.iterator(); it.hasNext();) {
@@ -2775,7 +2777,8 @@ public abstract class SqlBuilder {
 
     String value;
     String onCreateDefault = column.getLiteralOnCreateDefault();
-    if (!createdTables.contains(table.getName()) && onCreateDefault != null) {
+    if ((!createdTables.contains(table.getName()) && !recreatedTables.contains(table.getName()))
+        && onCreateDefault != null) {
       value = onCreateDefault;
     } else {
       value = getDefaultValue(column);
