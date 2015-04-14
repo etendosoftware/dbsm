@@ -56,31 +56,32 @@ public class CreateDefault extends DbsmTest {
   private DataMode dataMode;
 
   public CreateDefault(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, AdditionMode mode, DataMode datamode)
-      throws FileNotFoundException, IOException {
+      String password, String name, AdditionMode mode, DataMode datamode,
+      DbsmTest.RecreationMode recMode) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
     this.mode = mode;
     this.dataMode = datamode;
+    this.recreationMode = recMode;
   }
 
   /**
    * Adds new parameter to default ones to decide whether new column in following test cases is
    * appended or added between existent columns
    */
-  @Parameters(name = "DB: {6} - {7} - {8}")
+  @Parameters(name = "DB: {6} - {7} - {8} - recreation {9}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     List<Object[]> configs = new ArrayList<Object[]>();
 
     for (String[] param : DbsmTest.params()) {
       for (AdditionMode addMode : AdditionMode.values()) {
-        if (false && addMode == AdditionMode.addInTheMiddle) {
-          continue;
-        }
-        for (DataMode dataMode : DataMode.values()) {
-          List<Object> p = new ArrayList<Object>(Arrays.asList(param));
-          p.add(addMode);
-          p.add(dataMode);
-          configs.add(p.toArray());
+        for (DbsmTest.RecreationMode recMode : DbsmTest.RecreationMode.values()) {
+          for (DataMode dataMode : DataMode.values()) {
+            List<Object> p = new ArrayList<Object>(Arrays.asList(param));
+            p.add(addMode);
+            p.add(dataMode);
+            p.add(recMode);
+            configs.add(p.toArray());
+          }
         }
       }
     }

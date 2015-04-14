@@ -20,6 +20,8 @@ import org.openbravo.dbsm.test.model.data.OtherDefaults;
 @RunWith(Suite.class)
 @SuiteClasses({ //
 AddDropColumn.class, //
+    AddDropConstraints.class,//
+    DataTypeChanges.class, //
     CreateDefault.class, //
     OtherDefaults.class, //
     SQLCommands.class, //

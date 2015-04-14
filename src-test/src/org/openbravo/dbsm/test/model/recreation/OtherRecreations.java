@@ -30,19 +30,22 @@ import org.apache.ddlutils.model.Table;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
+import org.openbravo.dbsm.test.base.DbsmTest;
 
 public class OtherRecreations extends TableRecreationBaseTest {
 
   static {
+    availableTypes.clear();
     availableTypes.add(ActionType.append);
   }
 
   public OtherRecreations(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, ActionType type) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name, type);
+      String password, String name, ActionType type, DbsmTest.RecreationMode recMode)
+      throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name, type, recMode);
   }
 
-  @Parameters(name = "DB: {6} - {7}")
+  @Parameters(name = "DB: {6} - {7} - recreation {8}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     return TableRecreationBaseTest.parameters();
   }
@@ -104,6 +107,9 @@ public class OtherRecreations extends TableRecreationBaseTest {
     resetDB();
     updateDatabase("recreation/FK.xml");
     List<String> l = sqlStatmentsForUpdate("recreation/FK2.xml");
+    if (recreationMode == RecreationMode.forced) {
+      return;
+    }
     for (String st : l) {
       assertThat(st,
           not(anyOf(containsString("DROP CONSTRAINT"), containsString("ADD CONSTRAINT"))));

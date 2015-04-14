@@ -95,9 +95,14 @@ public class DbsmTest {
   private Rdbms rdbms;
   private Platform platform;
   private SQLBatchEvaluator evaluator;
+  protected RecreationMode recreationMode = RecreationMode.standard;
 
   public enum Rdbms {
     PG, ORA
+  }
+
+  public enum RecreationMode {
+    standard, forced
   }
 
   public DbsmTest(String rdbms, String driver, String url, String sid, String user,
@@ -236,6 +241,10 @@ public class DbsmTest {
     boolean failOnError = true;
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
+    if (recreationMode == RecreationMode.forced) {
+      platform.getSqlBuilder().setForcedRecreation("all");
+    }
+
     Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
     Database newDB = DatabaseUtils.readDatabase(dbModel);
 

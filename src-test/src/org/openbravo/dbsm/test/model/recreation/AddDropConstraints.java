@@ -19,20 +19,23 @@ import java.util.Collection;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
+import org.openbravo.dbsm.test.base.DbsmTest;
 
 public class AddDropConstraints extends TableRecreationBaseTest {
 
   static {
+    availableTypes.clear();
     availableTypes.add(ActionType.append);
     availableTypes.add(ActionType.drop);
   }
 
   public AddDropConstraints(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, ActionType type) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name, type);
+      String password, String name, ActionType type, DbsmTest.RecreationMode recMode)
+      throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name, type, recMode);
   }
 
-  @Parameters(name = "DB: {6} - {7}")
+  @Parameters(name = "DB: {6} - {7} - recreation {8}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     return TableRecreationBaseTest.parameters();
   }

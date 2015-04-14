@@ -43,20 +43,25 @@ public class TableRecreationBaseTest extends DbsmTest {
   private ActionType type;
 
   public TableRecreationBaseTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, ActionType type) throws FileNotFoundException, IOException {
+      String password, String name, ActionType type, DbsmTest.RecreationMode recMode)
+      throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
     this.type = type;
+    this.recreationMode = recMode;
   }
 
-  @Parameters(name = "DB: {6} - {7}")
+  @Parameters(name = "DB: {6} - {7} - recreation {8}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     List<Object[]> configs = new ArrayList<Object[]>();
 
     for (String[] param : DbsmTest.params()) {
       for (ActionType type : availableTypes) {
-        List<Object> p = new ArrayList<Object>(Arrays.asList(param));
-        p.add(type);
-        configs.add(p.toArray());
+        for (DbsmTest.RecreationMode recMode : DbsmTest.RecreationMode.values()) {
+          List<Object> p = new ArrayList<Object>(Arrays.asList(param));
+          p.add(type);
+          p.add(recMode);
+          configs.add(p.toArray());
+        }
       }
     }
     return configs;
@@ -91,8 +96,10 @@ public class TableRecreationBaseTest extends DbsmTest {
       Database newModel = updateDatabase(targetModel);
 
       log.info("Updating to " + newModel);
-      List<String> newTableInternalId = getOIds(newModel);
-      assertThat("Table OID changed", newTableInternalId, contains(oldTableInternalId.toArray()));
+      if (recreationMode == RecreationMode.standard) {
+        List<String> newTableInternalId = getOIds(newModel);
+        assertThat("Table OID changed", newTableInternalId, contains(oldTableInternalId.toArray()));
+      }
     } catch (Exception e) {
       e.printStackTrace();
       fail("Exception " + e.getMessage());

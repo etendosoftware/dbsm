@@ -11,26 +11,38 @@
  */
 package org.openbravo.dbsm.test.model.recreation;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assume.assumeThat;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 
 import org.codehaus.jettison.json.JSONException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
+import org.openbravo.dbsm.test.base.DbsmTest;
 
 public class DataTypeChanges extends TableRecreationBaseTest {
 
   static {
+    availableTypes.clear();
     availableTypes.add(ActionType.append);
   }
 
   public DataTypeChanges(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, ActionType type) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name, type);
+      String password, String name, ActionType type, DbsmTest.RecreationMode recMode)
+      throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name, type, recMode);
   }
 
-  @Parameters(name = "DB: {6}")
+  @Before
+  public void willCauseRecreation() {
+    assumeThat(recreationMode, is(DbsmTest.RecreationMode.forced));
+  }
+
+  @Parameters(name = "DB: {6} - recreation {8}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     return TableRecreationBaseTest.parameters();
   }
