@@ -50,6 +50,8 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
+import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.SQLBatchEvaluator;
 import org.apache.ddlutils.platform.StandardBatchEvaluator;
 import org.apache.log4j.Level;
@@ -207,7 +209,18 @@ public class DbsmTest {
   protected List<String> sqlStatmentsForUpdate(String dbModelPath) {
     evaluator = new TestBatchEvaluator();
     updateDatabase(dbModelPath);
-    return ((TestBatchEvaluator) evaluator).getSQLStatements();
+    List<String> res = ((TestBatchEvaluator) evaluator).getSQLStatements();
+    evaluator = null;
+    return res;
+  }
+
+  protected List<String> sqlStatmentsForUpdate(String dbModelPath, String adDirectoryName,
+      List<String> adTableNames) {
+    evaluator = new TestBatchEvaluator();
+    updateDatabase(dbModelPath, adDirectoryName, adTableNames);
+    List<String> res = ((TestBatchEvaluator) evaluator).getSQLStatements();
+    evaluator = null;
+    return res;
   }
 
   protected Database updateDatabase(String dbModelPath) {
@@ -384,7 +397,14 @@ public class DbsmTest {
   protected Platform getPlatform() {
     platform = PlatformFactory.createNewPlatformInstance(getDataSource());
     if (evaluator == null) {
-      evaluator = new StandardBatchEvaluator(platform);
+      switch (rdbms) {
+      case PG:
+        evaluator = new PGStandardBatchEvaluator(platform);
+        break;
+      case ORA:
+        evaluator = new Oracle8StandardBatchEvaluator(platform);
+        break;
+      }
     }
     platform.setBatchEvaluator(evaluator);
 
