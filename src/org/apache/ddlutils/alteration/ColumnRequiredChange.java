@@ -111,7 +111,9 @@ public class ColumnRequiredChange extends TableChangeImplBase implements ColumnC
         caseSensitive);
 
     boolean required = getRequired();
-    _column.setRequired(required);
+    if (_column != null) {
+      _column.setRequired(required);
+    }
     column.setRequired(required);
   }
 
