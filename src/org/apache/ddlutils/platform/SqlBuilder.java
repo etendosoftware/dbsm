@@ -4419,7 +4419,7 @@ public abstract class SqlBuilder {
     if (isRecreationForced(table)) {
       if (logRecreation) {
         _log.info("Table " + table.getName()
-            + " will be recreated because it is forced by paramter");
+            + " will be recreated because it is forced by parameter");
       }
       return true;
     }
