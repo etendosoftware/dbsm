@@ -34,7 +34,13 @@ public class AlterDatabaseJava {
     String strict = args[16];
     if (strict.equalsIgnoreCase("yes"))
       strict = "true";
+
     ada.setStrict(new Boolean(strict).booleanValue());
+
+    if (args.length > 17) {
+      ada.setForcedRecreation(args[17]);
+    }
+
     ada.execute();
 
   }

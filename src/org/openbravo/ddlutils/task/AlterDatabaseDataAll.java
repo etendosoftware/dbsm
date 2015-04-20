@@ -22,6 +22,7 @@ import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
@@ -100,6 +101,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+
+    if (!StringUtils.isEmpty(forcedRecreation)) {
+      getLog().info("Forced recreation: " + forcedRecreation);
+    }
+
     platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
     // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
