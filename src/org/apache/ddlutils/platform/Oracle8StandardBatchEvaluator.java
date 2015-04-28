@@ -26,7 +26,7 @@ public class Oracle8StandardBatchEvaluator extends StandardBatchEvaluator {
   @Override
   protected int handleFailedBatchExecution(Connection connection, List<String> sql,
       boolean continueOnError, long indexFailedStatement) {
-    _log.info("Batch statement failed. Retrying froo statement #" + indexFailedStatement + "("
+    _log.info("Batch statement failed. Retrying from statement #" + indexFailedStatement + "("
         + sql.get((int) indexFailedStatement) + ")");
     // The batch failed. We will execute all commands again using the old method
     return evaluateBatch(connection, sql, continueOnError, indexFailedStatement);
