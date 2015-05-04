@@ -213,7 +213,7 @@ public class DbsmTest {
 
   protected List<String> sqlStatmentsForUpdate(String dbModelPath) {
     evaluator = new TestBatchEvaluator();
-    updateDatabase(dbModelPath);
+    updateDatabase(dbModelPath, false);
     List<String> res = ((TestBatchEvaluator) evaluator).getSQLStatements();
     evaluator = null;
     return res;
@@ -222,7 +222,7 @@ public class DbsmTest {
   protected List<String> sqlStatmentsForUpdate(String dbModelPath, String adDirectoryName,
       List<String> adTableNames) {
     evaluator = new TestBatchEvaluator();
-    updateDatabase(dbModelPath, adDirectoryName, adTableNames);
+    updateDatabase(dbModelPath, adDirectoryName, adTableNames, false);
     List<String> res = ((TestBatchEvaluator) evaluator).getSQLStatements();
     evaluator = null;
     return res;
@@ -231,12 +231,20 @@ public class DbsmTest {
   protected Database updateDatabase(String dbModelPath) {
     return updateDatabase(dbModelPath, null, null);
   }
+  
+  protected Database updateDatabase(String dbModelPath, boolean assertDBisCorrect) {
+	    return updateDatabase(dbModelPath, null, null, assertDBisCorrect);
+	  }
 
+  protected Database updateDatabase(String dbModelPath, String adDirectoryName,
+	      List<String> adTableNames) {
+	  return updateDatabase(dbModelPath, adDirectoryName, adTableNames, true);
+  }
   /**
    * Utility method to to update current DB to model defined in dbModelPath
    */
   protected Database updateDatabase(String dbModelPath, String adDirectoryName,
-      List<String> adTableNames) {
+      List<String> adTableNames, boolean assertDBisCorrect) {
 
     boolean failOnError = true;
     File dbModel = new File("model", dbModelPath);
@@ -329,7 +337,7 @@ public class DbsmTest {
     boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
 
     // Now check the new model updated in db is as it should
-    if (getPlatform().getBatchEvaluator() instanceof StandardBatchEvaluator) {
+    if (assertDBisCorrect ) {
       ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
           platform.isDelimitedIdentifierModeOn());
       @SuppressWarnings("unchecked")
