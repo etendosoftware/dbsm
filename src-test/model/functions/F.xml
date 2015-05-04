@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+  <database name="test">
+    <function name="TEST1" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST1
+]]></body>
+    </function>
+    
+        <function name="TEST1" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST1
+]]></body>
+    </function>
+    
+        <function name="TEST2" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST2
+]]></body>
+    </function>
+    
+        <function name="TEST3" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST3
+]]></body>
+    </function>
+    
+        <function name="TEST4" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST4
+]]></body>
+    </function>
+    
+        <function name="TEST5" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST5
+]]></body>
+    </function>
+    
+        <function name="TEST6" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p2" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[
+BEGIN
+  RETURN NULL ;
+EXCEPTION
+WHEN OTHERS THEN
+  RETURN(NULL) ;
+END TEST6
+]]></body>
+    </function>
+  </database>
