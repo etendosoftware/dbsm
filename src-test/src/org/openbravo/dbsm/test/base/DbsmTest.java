@@ -53,7 +53,6 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.SQLBatchEvaluator;
-import org.apache.ddlutils.platform.StandardBatchEvaluator;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -231,15 +230,16 @@ public class DbsmTest {
   protected Database updateDatabase(String dbModelPath) {
     return updateDatabase(dbModelPath, null, null);
   }
-  
+
   protected Database updateDatabase(String dbModelPath, boolean assertDBisCorrect) {
-	    return updateDatabase(dbModelPath, null, null, assertDBisCorrect);
-	  }
+    return updateDatabase(dbModelPath, null, null, assertDBisCorrect);
+  }
 
   protected Database updateDatabase(String dbModelPath, String adDirectoryName,
-	      List<String> adTableNames) {
-	  return updateDatabase(dbModelPath, adDirectoryName, adTableNames, true);
+      List<String> adTableNames) {
+    return updateDatabase(dbModelPath, adDirectoryName, adTableNames, true);
   }
+
   /**
    * Utility method to to update current DB to model defined in dbModelPath
    */
@@ -337,7 +337,7 @@ public class DbsmTest {
     boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
 
     // Now check the new model updated in db is as it should
-    if (assertDBisCorrect ) {
+    if (assertDBisCorrect) {
       ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
           platform.isDelimitedIdentifierModeOn());
       @SuppressWarnings("unchecked")
