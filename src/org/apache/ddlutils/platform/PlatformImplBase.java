@@ -2326,14 +2326,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
+        if (recreatedTables.contains(table.getName())) {
+          // this table has been already recreated and its FKs are not present at this point because
+          // they will be recreated later, so no need to drop FKs again
+          continue;
+        }
         if (dataset.getTable(table.getName()) != null) {
-          if (!recreatedTables.contains(table.getName())) {
-            for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
-              ForeignKey fk = table.getForeignKey(idx);
-              if (!recreatedTables.contains(fk.getForeignTableName())) {
-                // FKs to recreated tables are already dropped
-                getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
-              }
+          for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
+            ForeignKey fk = table.getForeignKey(idx);
+            if (!recreatedTables.contains(fk.getForeignTableName())) {
+              // FKs to recreated tables are already dropped
+              getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
             }
           }
         } else {
