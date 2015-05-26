@@ -172,6 +172,19 @@ public class OtherRecreations extends TableRecreationBaseTest {
     updateDatabase("recreation/FK3.xml", "data/createDefault", Arrays.asList("TEST", "TEST2"));
   }
 
+  /**
+   * When there is a FK from a non AD table to a recreated AD table it failed because it tried to
+   * drop FK twice. See issue #29923
+   */
+  @Test
+  public void fkToADRecreatedTable() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK4.xml", "data/createDefault", Arrays.asList("TEST"));
+    System.out.println("\n\n*****************************************************************");
+    // checking real update
+    updateDatabase("recreation/FK41.xml", "data/createDefault", Arrays.asList("TEST"));
+  }
+
   @Test
   public void newTableWithDiffDefaultAndOCD() {
     resetDB();
