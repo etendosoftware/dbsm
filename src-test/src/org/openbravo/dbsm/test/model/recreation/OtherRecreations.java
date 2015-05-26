@@ -185,6 +185,17 @@ public class OtherRecreations extends TableRecreationBaseTest {
     updateDatabase("recreation/FK41.xml", "data/createDefault", Arrays.asList("TEST"));
   }
 
+  /**
+   * FKs from recreated to non recreated tables in case none of them are in AD are lost when
+   * updating. See issue #30016
+   */
+  @Test
+  public void fkFromRecreatedTable() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK4.xml");
+    updateDatabase("recreation/FK41.xml");
+  }
+
   @Test
   public void newTableWithDiffDefaultAndOCD() {
     resetDB();
