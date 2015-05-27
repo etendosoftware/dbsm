@@ -185,6 +185,15 @@ public class OtherRecreations extends TableRecreationBaseTest {
     updateDatabase("recreation/FK41.xml", "data/createDefault", Arrays.asList("TEST"));
   }
 
+  @Test
+  public void fkFromADToADRecreatedTable() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK4.xml", "data/createDefault", Arrays.asList("TEST", "TEST2"));
+    System.out.println("\n\n*****************************************************************");
+    // checking real update
+    updateDatabase("recreation/FK41.xml", "data/createDefault", Arrays.asList("TEST", "TEST2"));
+  }
+
   /**
    * FKs from recreated to non recreated tables in case none of them are in AD are lost when
    * updating. See issue #30016
@@ -194,6 +203,33 @@ public class OtherRecreations extends TableRecreationBaseTest {
     resetDB();
     updateDatabase("recreation/FK4.xml");
     updateDatabase("recreation/FK41.xml");
+  }
+
+  @Test
+  public void fkToRecreatedTable() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK.xml");
+    updateDatabase("recreation/FK3.xml");
+  }
+
+  @Test
+  public void fkFromRecreatedToRecreatedTable() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK4.xml");
+    System.out.println("\n\n*****************************************************************\n\n");
+    updateDatabase("recreation/FK42.xml");
+  }
+
+  /**
+   * Asserts FKs between 2 recreated tables. Similar to fkFromRecreatedToRecreatedTable but the
+   * order this tables are loaded is inverse.
+   */
+  @Test
+  public void fkFromRecreatedToRecreatedTableDifferentOrder() throws SQLException {
+    resetDB();
+    updateDatabase("recreation/FK5.xml");
+    System.out.println("\n\n*****************************************************************\n\n");
+    updateDatabase("recreation/FK52.xml");
   }
 
   @Test
