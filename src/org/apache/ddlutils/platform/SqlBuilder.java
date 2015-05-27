@@ -1592,17 +1592,20 @@ public abstract class SqlBuilder {
     int numTablesInOldModel = currentModel.getTableCount();
     for (int i = 0; i < numTablesInOldModel; i++) {
       Table oldTable = currentModel.getTable(i);
-      if (recreatedTables.contains(oldTable.getName())) {
-        // no need to drop FKs in already recreated tables
-        continue;
-      }
+
       for (int fkIdx = 0; fkIdx < oldTable.getForeignKeyCount(); fkIdx++) {
         ForeignKey oldFk = oldTable.getForeignKey(fkIdx);
         if (!tableName.equals(oldFk.getForeignTableName())) {
           // we only care at this point about FKs to current table
           continue;
         }
-        writeExternalForeignKeyDropStmt(oldTable, oldFk);
+
+        if (!recreatedTables.contains(oldTable.getName())) {
+          // no need to drop FKs in already recreated tables, but we need to remember it as dropped
+          // to be recreated later
+          writeExternalForeignKeyDropStmt(oldTable, oldFk);
+        }
+
         droppedFKs.add(oldFk.getName());
       }
     }
