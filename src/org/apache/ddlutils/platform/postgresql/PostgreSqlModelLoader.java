@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -64,6 +65,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected Translation _SQLTranslation = new PostgreSQLStandarization();
 
   protected Map<Integer, Integer> _paramtypes = new HashMap<Integer, Integer>();
+
+  private static final String FUNCTION_BASED_COLUMN_INDEX_POSITION = "0";
 
   /** Creates a new instance of PostgreSqlModelLoader */
   public PostgreSqlModelLoader() {
@@ -272,7 +275,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and pc.conname = ? and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
             + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
 
-    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END"
+    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, PG_GET_EXPR(PG_INDEX.indexprs,PG_INDEX.indrelid, true)"
         + " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE"
         + " WHERE PG_INDEX.indexrelid = PG_CLASS.OID"
         + " AND PG_INDEX.indrelid = PG_CLASS1.OID"
@@ -1028,16 +1031,109 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       }
     });
 
-    /*
-     * Re-order the IndexColumn into the correct order (based on index-definition) as they are read
-     * without ordering them from the metadata
-     */
-    if (apositions.size() > 0) {
-      for (String pos : (apositions.get(0).split(","))) {
-        inx.addColumn(colMap.get(pos));
+    String indexExpression = rs.getString(3);
+    if (indexExpression != null && !indexExpression.isEmpty()) {
+      // if it is a function based index, check that the functions used are valid
+      if (isValidExpression(indexExpression)) {
+        List<IndexColumn> functionBasedIndexColumnList = getIndexColumnsFromExpression(indexExpression);
+        // colMap contains the index column where functions are not applied
+        // functionBasedIndexColumnList contains the index column where functions are applied
+        if (colMap.isEmpty()) {
+          // there are only function based index columns, no need to merge them with non-function
+          // based columns
+          for (IndexColumn indexColumn : functionBasedIndexColumnList) {
+            inx.addColumn(indexColumn);
+          }
+        } else {
+          int addedFunctionBasedIndexes = 0;
+          // if colMap is not empty we can be sure that apositions is not empty either
+          // all the values of apositions contains the same values, so we just take the first one
+          for (String pos : (apositions.get(0).split(","))) {
+            // if the position is FUNCTION_BASED_COLUMN_INDEX_POSITION, that means that the next
+            // column should be a function based one, use the next one
+            if (FUNCTION_BASED_COLUMN_INDEX_POSITION.equals(pos)) {
+              inx.addColumn(functionBasedIndexColumnList.get(addedFunctionBasedIndexes++));
+            } else {
+              inx.addColumn(colMap.get(pos));
+            }
+          }
+        }
+      } else {
+        _log.error("The index " + inx.getName() + " uses a non supported function: "
+            + indexExpression);
+        return null;
+      }
+    } else {
+      /*
+       * Re-order the IndexColumn into the correct order (based on index-definition) as they are
+       * read without ordering them from the metadata
+       */
+      if (apositions.size() > 0) {
+        for (String pos : (apositions.get(0).split(","))) {
+          inx.addColumn(colMap.get(pos));
+        }
       }
     }
     return inx;
+  }
+
+  // Check if an index expression is valid
+  // An index expression will be valid if it uses a function that accepts just one input parameter
+  // There is no need to check if the function exists, as the provided indexExpression belong to an
+  // existing index
+  private boolean isValidExpression(String indexExpressions) {
+    boolean isValid = true;
+    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
+    while (st.hasMoreElements()) {
+      String indexExpression = st.nextToken();
+      if (!indexExpression.endsWith(")")) {
+        indexExpression = indexExpression + ")";
+      }
+      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
+      if (!isMonadicFunction(functionName)) {
+        isValid = false;
+        break;
+      }
+    }
+    return isValid;
+  }
+
+  // Check if a function is monadic (accepts just one input argument) by querying PG_PROC
+  protected boolean isMonadicFunction(String functionName) {
+    boolean isFunctionMonadic = true;
+    try {
+      PreparedStatement st = _connection
+          .prepareStatement("select count(*) from pg_proc where upper(proname) = ? and pronargs = 1");
+      st.setString(1, functionName.toUpperCase());
+
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        int nMonadicFunctions = rs.getInt(1);
+        isFunctionMonadic = (nMonadicFunctions > 0);
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return isFunctionMonadic;
+  }
+
+  private List<IndexColumn> getIndexColumnsFromExpression(String indexExpressions) {
+    List<IndexColumn> indexColumnList = new ArrayList<IndexColumn>();
+    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
+    while (st.hasMoreElements()) {
+      String indexExpression = st.nextToken();
+      if (!indexExpression.endsWith(")")) {
+        indexExpression = indexExpression + ")";
+      }
+      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
+      String columnName = indexExpression.substring(indexExpression.indexOf("(") + 1,
+          indexExpression.indexOf(":"));
+      IndexColumn inxcol = new IndexColumn();
+      inxcol.setName(columnName.toUpperCase());
+      inxcol.setFunctionName(functionName.toUpperCase());
+      indexColumnList.add(inxcol);
+    }
+    return indexColumnList;
   }
 
   @Override

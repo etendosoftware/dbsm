@@ -3374,7 +3374,14 @@ public abstract class SqlBuilder {
           if (idx > 0) {
             print(", ");
           }
-          printIdentifier(getColumnName(col));
+          if (idxColumn.getFunctionName() != null && !idxColumn.getFunctionName().isEmpty()) {
+            // wrap the function name around the column name
+            print(idxColumn.getFunctionName().toUpperCase() + "(");
+            printIdentifier(getColumnName(col));
+            print(")");
+          } else {
+            printIdentifier(getColumnName(col));
+          }
         }
 
         print(")");

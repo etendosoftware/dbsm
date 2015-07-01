@@ -41,6 +41,8 @@ public class IndexColumn implements Cloneable, Serializable {
   protected String _name;
   /** The size of the column in the index. */
   protected String _size;
+  /** The name of the function that is applied to this column. */
+  protected String _functionName;
 
   // TODO: It might be useful if the referenced column is directly acessible
   // here ?
@@ -151,6 +153,25 @@ public class IndexColumn implements Cloneable, Serializable {
   }
 
   /**
+   * Gets the name of the function that applies to this column
+   * 
+   * @return The name of the function
+   */
+  public String getFunctionName() {
+    return _functionName;
+  }
+
+  /**
+   * Sets the name of the function that applies to this column
+   * 
+   * @param size
+   *          The size
+   */
+  public void setFunctionName(String _functionName) {
+    this._functionName = _functionName;
+  }
+
+  /**
    * {@inheritDoc}
    */
   public Object clone() throws CloneNotSupportedException {
@@ -182,8 +203,8 @@ public class IndexColumn implements Cloneable, Serializable {
    * @return <code>true</code> if this index column is equal (ignoring case) to the given one
    */
   public boolean equalsIgnoreCase(IndexColumn other) {
-    return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase()).append(_size,
-        other._size).isEquals();
+    return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase())
+        .append(_size, other._size).isEquals();
   }
 
   /**

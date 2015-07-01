@@ -17,10 +17,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
@@ -34,6 +37,8 @@ import org.apache.ddlutils.util.ExtTypes;
 public class OracleModelLoader extends ModelLoaderBase {
 
   protected PreparedStatement _stmt_comments_tables;
+
+  private static final String VIRTUAL_COLUMN_PREFIX = "SYS_NC";
 
   /** Creates a new instance of BasicModelLoader */
   public OracleModelLoader() {
@@ -101,14 +106,14 @@ public class OracleModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONS_COLUMNS C2 WHERE C.CONSTRAINT_NAME = ? and C2.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
 
     _stmt_listindexes = _connection
-        .prepareStatement("SELECT INDEX_NAME, UNIQUENESS FROM USER_INDEXES U WHERE TABLE_NAME = ? AND INDEX_TYPE = 'NORMAL' AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
     _stmt_listindexes_prefix = _connection
-        .prepareStatement("SELECT INDEX_NAME, UNIQUENESS FROM USER_INDEXES U WHERE TABLE_NAME = ? AND INDEX_TYPE = 'NORMAL' AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(INDEX_NAME) LIKE 'EM_"
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
             + _prefix
-            + "\\_%' ESCAPE '\\' OR (upper(INDEX_NAME)||UPPER(TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
-            + _moduleId + "'))) ORDER BY INDEX_NAME");
+            + "\\_%' ESCAPE '\\' OR (upper(U.INDEX_NAME)||UPPER(U.TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+            + _moduleId + "'))) ORDER BY U.INDEX_NAME");
     _stmt_listindexes_noprefix = _connection
-        .prepareStatement("SELECT INDEX_NAME, UNIQUENESS FROM USER_INDEXES U WHERE TABLE_NAME = ? AND INDEX_TYPE = 'NORMAL' AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(INDEX_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY INDEX_NAME");
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
     _stmt_indexcolumns = _connection
         .prepareStatement("SELECT COLUMN_NAME FROM USER_IND_COLUMNS WHERE INDEX_NAME = ? ORDER BY COLUMN_POSITION");
 
@@ -320,6 +325,57 @@ public class OracleModelLoader extends ModelLoaderBase {
     return t;
   }
 
+  @Override
+  // Overrides readIndex to be able to discard indexes that use non supported functions
+  protected Index readIndex(ResultSet rs) throws SQLException {
+    String indexRealName = rs.getString(1);
+    String indexName = indexRealName.toUpperCase();
+
+    final Index inx = new Index();
+
+    inx.setName(indexName);
+    inx.setUnique(translateUniqueness(rs.getString(2)));
+    // The index expression will be defined only for function based indexes
+    final String indexExpression = rs.getString(3);
+    if (indexExpression != null && !indexExpression.isEmpty()
+        && !isValidExpression(indexExpression)) {
+      _log.error("The index " + inx.getName() + " uses a non supported function: "
+          + indexExpression);
+      return null;
+    }
+    _stmt_indexcolumns.setString(1, indexRealName);
+    fillList(_stmt_indexcolumns, new RowFiller() {
+      public void fillRow(ResultSet r) throws SQLException {
+        String columnName = r.getString(1);
+        IndexColumn inxcol = null;
+        if (indexExpression != null && !indexExpression.isEmpty()
+            && columnName.startsWith(VIRTUAL_COLUMN_PREFIX)) {
+          // The name of function based index columns needs to be translated from the name of the
+          // virtual column created by Oracle to the name of the column in its table
+          inxcol = getFunctionBasedIndexColumn(indexExpression);
+        } else {
+          inxcol = new IndexColumn();
+          inxcol.setName(columnName);
+        }
+        inx.addColumn(inxcol);
+      }
+    });
+    return inx;
+  }
+
+  // Given an index expression, returns the name of the referenced column
+  // The index expression will be like this: UPPER("COL1")
+  private IndexColumn getFunctionBasedIndexColumn(String indexExpression) {
+    // The column name will be wrapped by (" and ")
+    String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
+    String columnName = indexExpression.substring(indexExpression.indexOf("(\"") + 2,
+        indexExpression.indexOf("\")"));
+    IndexColumn indexColumn = new IndexColumn();
+    indexColumn.setName(columnName);
+    indexColumn.setFunctionName(functionName);
+    return indexColumn;
+  }
+
   /*
    * Overloaded version for oracle as first sql does return one more value which needs to be passed
    * to the 2nd sql reading the columns (done this way to improve performance (issue 17796)
@@ -350,6 +406,47 @@ public class OracleModelLoader extends ModelLoaderBase {
     });
 
     return fk;
+  }
+
+  // Check if an index expression is valid
+  // An index expression will be valid if it uses a function that accepts just one input parameter
+  // There is no need to check if the function exists, as the provided indexExpression belong to an
+  // existing index
+  private boolean isValidExpression(String indexExpressions) {
+    boolean isValid = true;
+    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
+    while (st.hasMoreElements()) {
+      String indexExpression = st.nextToken();
+      if (!indexExpression.endsWith(")")) {
+        indexExpression = indexExpression + ")";
+      }
+      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
+      if (!isMonadicFunction(functionName)) {
+        isValid = false;
+        break;
+      }
+    }
+    return isValid;
+  }
+
+  // Check if a function is monadic (accepts just one input argument) by querying ALL_ARGUMENTS
+  protected boolean isMonadicFunction(String functionName) {
+    boolean isFunctionMonadic = true;
+    try {
+      PreparedStatement st = null;
+      st = _connection
+          .prepareStatement("select count(count(*)) from ALL_ARGUMENTS where OBJECT_NAME = ? and in_out = 'IN' group by subprogram_id having count(*) = 1");
+      st.setString(1, functionName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        int nMonadicFunctions = rs.getInt(1);
+        isFunctionMonadic = (nMonadicFunctions > 0);
+      }
+
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return isFunctionMonadic;
   }
 
 }
