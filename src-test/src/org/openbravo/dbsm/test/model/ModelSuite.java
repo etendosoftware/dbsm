@@ -30,7 +30,8 @@ CheckConstraints.class, //
     Sequences.class, //
     NumericScaleChanges.class, //
     AddDropColumn.class, //
-    CreateDefault.class })
+    CreateDefault.class, //
+    FunctionBasedIndexes.class })
 public class ModelSuite {
 
 }

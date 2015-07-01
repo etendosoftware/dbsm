@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <index name="TEST_COL1_UPPER" unique="false">
+        <index-column name="COL1" functionName="UPPER"/>
+      </index>
+      <index name="TEST_MIXED_INDEXES1" unique="false">
+        <index-column name="COL1"/>
+        <index-column name="COL2" functionName="LOWER"/>
+      </index>
+      <index name="TEST_MIXED_INDEXES2" unique="false">
+        <index-column name="COL1" functionName="LOWER"/>
+        <index-column name="COL2"/>
+      </index>
+    </table>
+  </database>
