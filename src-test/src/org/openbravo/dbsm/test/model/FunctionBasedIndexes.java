@@ -184,6 +184,20 @@ public class FunctionBasedIndexes extends DbsmTest {
     assertExport("indexes/FUNCTION_INDEX.xml");
   }
 
+  @Test
+  public void recreationFromFunctionToBasic() throws IOException {
+    assumeThat(testType, is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/FUNCTION_INDEX.xml");
+    assertExport("indexes/FUNCTION_INDEX.xml");
+
+    // 2nd update should perform model check, but it doesn't check correctly index type...
+    updateDatabase("indexes/BASIC_INDEX.xml");
+
+    // ...that's why we compare models now
+    assertExport("indexes/BASIC_INDEX.xml");
+  }
+
   private void assertExport(String modelFileToCompare) throws IOException {
     File exportTo = new File(EXPORT_DIR);
     if (exportTo.exists()) {
