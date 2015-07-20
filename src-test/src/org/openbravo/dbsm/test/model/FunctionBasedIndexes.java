@@ -130,20 +130,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_INDEX.xml");
 
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat(exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils.readFileToString(new File("model",
-        "indexes/BASIC_INDEX.xml"));
-    assertThat(exportedContents, equalTo(originalContents));
+    assertExport("indexes/BASIC_INDEX.xml");
   }
 
   @Test
@@ -170,20 +157,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_BASED_INDEXES.xml");
 
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat(exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils.readFileToString(new File("model",
-        "indexes/FUNCTION_BASED_INDEXES.xml"));
-    assertThat(exportedContents, equalTo(originalContents));
+    assertExport("indexes/FUNCTION_BASED_INDEXES.xml");
   }
 
   @Test
@@ -194,21 +168,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     createDatabaseIfNeeded(forceCreation);
     addNonMonadicFunctionBasedIndexInDatabase();
 
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-
-    exportDatabase(EXPORT_DIR);
-    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat(exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils
-        .readFileToString(new File("model", "indexes/BASE_MODEL.xml"));
-
-    assertThat(exportedContents, equalTo(originalContents));
+    assertExport("indexes/BASE_MODEL.xml");
   }
 
   @Test
@@ -221,6 +181,10 @@ public class FunctionBasedIndexes extends DbsmTest {
     updateDatabase("indexes/FUNCTION_INDEX.xml");
 
     // ...that's why we compare models now
+    assertExport("indexes/FUNCTION_INDEX.xml");
+  }
+
+  private void assertExport(String modelFileToCompare) throws IOException {
     File exportTo = new File(EXPORT_DIR);
     if (exportTo.exists()) {
       exportTo.delete();
@@ -229,12 +193,11 @@ public class FunctionBasedIndexes extends DbsmTest {
     exportDatabase(EXPORT_DIR);
 
     File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat(exportedTable.exists(), is(true));
+    assertThat("exported table exists", exportedTable.exists(), is(true));
 
     String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils.readFileToString(new File("model",
-        "indexes/FUNCTION_INDEX.xml"));
-    assertThat(exportedContents, equalTo(originalContents));
+    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
+    assertThat("exported contents", exportedContents, equalTo(originalContents));
   }
 
   // Creates an index based on a non monadic function (SUBSTRING/SUBSTR)
