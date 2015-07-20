@@ -15,6 +15,7 @@ package org.openbravo.dbsm.test.model;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -207,6 +208,32 @@ public class FunctionBasedIndexes extends DbsmTest {
     String originalContents = FileUtils
         .readFileToString(new File("model", "indexes/BASE_MODEL.xml"));
 
+    assertThat(exportedContents, equalTo(originalContents));
+  }
+
+  @Test
+  public void recreationFromBasicToFunction() throws IOException {
+    assumeThat(testType, is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_INDEX.xml");
+
+    // 2nd update should perform model check, but it doesn't check correctly index type...
+    updateDatabase("indexes/FUNCTION_INDEX.xml");
+
+    // ...that's why we compare models now
+    File exportTo = new File(EXPORT_DIR);
+    if (exportTo.exists()) {
+      exportTo.delete();
+    }
+    exportTo.mkdirs();
+    exportDatabase(EXPORT_DIR);
+
+    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
+    assertThat(exportedTable.exists(), is(true));
+
+    String exportedContents = FileUtils.readFileToString(exportedTable);
+    String originalContents = FileUtils.readFileToString(new File("model",
+        "indexes/FUNCTION_INDEX.xml"));
     assertThat(exportedContents, equalTo(originalContents));
   }
 
