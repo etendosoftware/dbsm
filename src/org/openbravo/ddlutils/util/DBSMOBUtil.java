@@ -11,6 +11,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -288,6 +289,28 @@ public class DBSMOBUtil {
       }
     }
     return databaseRevision;
+  }
+
+  public static Map<String, String> getModulesVersion(Platform platform) {
+    final String sql = "SELECT ad_module_id AS moduleid, version AS version FROM ad_module";
+    final Connection connection = platform.borrowConnection();
+    ResultSet resultSet = null;
+    Map<String, String> moduleVersionMap = new HashMap<String, String>();
+    try {
+      final PreparedStatement statement = connection.prepareStatement(sql);
+      statement.execute();
+      resultSet = statement.getResultSet();
+      while (resultSet.next()) {
+        String moduleId = resultSet.getString("moduleid");
+        String moduleVersion = resultSet.getString("version");
+        moduleVersionMap.put(moduleId, moduleVersion);
+      }
+      resultSet.close();
+    } catch (final Exception e) {
+    } finally {
+      platform.returnConnection(connection);
+    }
+    return moduleVersionMap;
   }
 
   public static void verifyRevision(Platform platform, String codeRevision, Logger _log) {

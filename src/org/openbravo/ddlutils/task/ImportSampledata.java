@@ -26,7 +26,6 @@ import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -35,11 +34,10 @@ import org.openbravo.modulescript.ModuleScriptHandler;
 import org.xml.sax.SAXException;
 
 /**
- *
+ * 
  * @author huehner
  */
 public class ImportSampledata extends BaseDatabaseTask {
-
 
   private String basedir;
 
@@ -114,11 +112,11 @@ public class ImportSampledata extends BaseDatabaseTask {
           log.info("Importing sampledata from folder: " + entry.getPath());
 
           /**
-           * If there is an AD_CLIENT.xml in the folder to import, check if that client is not already in the db.
-           * If it is -> skip it.
-           * If no AD_CLIENT.xml is present in the folder, skip the check. That allows for easy support of incremental
-           * sampledata loading into existing clients.
-           *
+           * If there is an AD_CLIENT.xml in the folder to import, check if that client is not
+           * already in the db. If it is -> skip it. If no AD_CLIENT.xml is present in the folder,
+           * skip the check. That allows for easy support of incremental sampledata loading into
+           * existing clients.
+           * 
            */
           File clientFile = new File(entry, "AD_CLIENT.xml");
           if (clientFile.exists()) {
@@ -162,6 +160,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       log.info("Running modulescripts...");
       try {
         ModuleScriptHandler hd = new ModuleScriptHandler();
+        hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
         hd.setBasedir(new File(basedir));
         hd.execute();
       } catch (Exception e) {
@@ -192,7 +191,8 @@ public class ImportSampledata extends BaseDatabaseTask {
   /**
    * Parses a single sourcedata style database and returns it as a list of DynaBeans
    */
-  private static Vector<DynaBean> readOneDataXml(Database db, File file) throws IOException, SAXException {
+  private static Vector<DynaBean> readOneDataXml(Database db, File file) throws IOException,
+      SAXException {
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
 
@@ -205,7 +205,9 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   /**
    * Loads the Dynabean for the specified AD_CLIENT from the database
-   * @param clientId ad_client_id
+   * 
+   * @param clientId
+   *          ad_client_id
    */
   private DynaBean findClient(final Platform platform, Database db, String clientId) {
     Connection connection = platform.borrowConnection();
@@ -214,10 +216,10 @@ public class ImportSampledata extends BaseDatabaseTask {
     OBDatasetTable dsTable = new OBDatasetTable();
     dsTable.setWhereclause("1=1");
     dsTable.setSecondarywhereclause("ad_client_id" + "=" + "'" + clientId + "'");
-    Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db,
-        table, dsTable, null);
+    Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db, table,
+        dsTable, null);
     platform.returnConnection(connection);
-    if (rowsNewData != null && rowsNewData.size() >0) {
+    if (rowsNewData != null && rowsNewData.size() > 0) {
       return rowsNewData.get(0);
     }
     return null;

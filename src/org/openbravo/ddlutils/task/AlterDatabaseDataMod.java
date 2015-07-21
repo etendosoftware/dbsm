@@ -144,6 +144,11 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
     }
     DBSMOBUtil.resetInstance();
+    // Initialize the ModuleScriptHandler that we will use later, to keep the current module
+    // versions, prior to the update
+    ModuleScriptHandler hd = new ModuleScriptHandler();
+    hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
+
     DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
     ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
@@ -322,7 +327,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
       Collections.sort(sortedModRows);
       for (String row : sortedModRows) {
-        ModuleScriptHandler hd = new ModuleScriptHandler();
         hd.setBasedir(new File(basedir + "/../"));
         hd.setModuleJavaPackage(row);
         hd.execute();
