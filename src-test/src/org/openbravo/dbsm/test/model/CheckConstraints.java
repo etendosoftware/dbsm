@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ddlutils.platform.postgresql.PostgreSqlCheckTranslation;
+import org.apache.ddlutils.translation.CombinedTranslation;
 import org.apache.ddlutils.translation.Translation;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -29,6 +31,9 @@ import org.junit.Test;
  * @author alostale
  *
  */
+@Ignore("These tests are not applicable anymore after fix for issue #30397 "
+    + "because constraints are read from db already beautified so extra required modifications "
+    + "are much more limited.")
 public class CheckConstraints {
 
   private static List<CheckConstraintType> contrains;
@@ -99,9 +104,13 @@ public class CheckConstraints {
     }
   }
 
-  private String translate(String checkConstraint) throws NoSuchFieldException,
+  public static String translate(String checkConstraint) throws NoSuchFieldException,
       IllegalAccessException {
-    PostgreSqlCheckTranslation trl = new PostgreSqlCheckTranslation();
+    return translate(checkConstraint, new PostgreSqlCheckTranslation());
+  }
+
+  public static String translate(String checkConstraint, CombinedTranslation trl)
+      throws NoSuchFieldException, IllegalAccessException {
     Field f = trl.getClass().getSuperclass().getDeclaredField("_translations");
     f.setAccessible(true);
     @SuppressWarnings("unchecked")
