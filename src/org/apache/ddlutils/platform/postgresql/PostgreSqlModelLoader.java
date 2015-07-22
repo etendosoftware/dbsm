@@ -238,7 +238,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pg_constraint.conrelid = pg_class.oid AND pg_attribute.attrelid = pg_constraint.conrelid AND (pg_attribute.attnum = ANY (pg_constraint.conkey))"
             + " AND pg_constraint.conname = ?" + " ORDER BY pg_attribute.attnum::integer");
 
-    sql = "SELECT upper(pg_constraint.conname::text), pg_constraint.consrc"
+    sql = "SELECT upper(pg_constraint.conname::text), regexp_replace(pg_get_constraintdef(pg_constraint.oid, true), E'CHECK \\\\((.*)\\\\).*', E'\\\\1')"
         + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
         + " WHERE pg_constraint.contype = 'c' and pg_class.relname = ?";
     _stmt_listchecks = _connection.prepareStatement(sql
