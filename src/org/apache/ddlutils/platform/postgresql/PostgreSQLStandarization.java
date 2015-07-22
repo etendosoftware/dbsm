@@ -25,6 +25,13 @@ public class PostgreSQLStandarization extends CombinedTranslation {
 
   /** Creates a new instance of PostgreSQLTranslation */
   public PostgreSQLStandarization() {
+    // Starting from 9.5, what before was:
+    // i.grandtotal * (-1)::numeric
+    // now is:
+    // i.grandtotal * '-1'::integer::numeric
+    // keeping old format
+    append(new ReplacePatTranslation("'([0-9-]*)'::integer", "\\($1\\)"));
+
     // postgres castings '::text', '::numeric', '::character varying',
     // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
     // with time zone
@@ -71,5 +78,4 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     // ReplacePatTranslation("^[\\s]*(.*?)[\\s]*","$1")));
     append(new ReplaceStrTranslation("~~", "LIKE"));
   }
-
 }
