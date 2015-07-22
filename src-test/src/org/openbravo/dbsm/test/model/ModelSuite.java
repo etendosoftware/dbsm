@@ -29,6 +29,7 @@ import com.google.common.base.Functions;
 @RunWith(Suite.class)
 @SuiteClasses({ //
 CheckConstraints.class, //
+    Pg95SqlStandardization.class, //
     Sequences.class, //
     NumericScaleChanges.class, //
     AddDropColumn.class, //
