@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -160,7 +161,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       log.info("Running modulescripts...");
       try {
         ModuleScriptHandler hd = new ModuleScriptHandler();
-        hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
+        hd.setModulesVersionMap(new HashMap<String, String>());
         hd.setBasedir(new File(basedir));
         hd.execute();
       } catch (Exception e) {
