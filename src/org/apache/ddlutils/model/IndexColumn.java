@@ -189,7 +189,8 @@ public class IndexColumn implements Cloneable, Serializable {
     if (obj instanceof IndexColumn) {
       IndexColumn other = (IndexColumn) obj;
 
-      return new EqualsBuilder().append(_name, other._name).append(_size, other._size).isEquals();
+      return new EqualsBuilder().append(_name, other._name).append(_size, other._size)
+          .append(_functionName, other._functionName).isEquals();
     } else {
       return false;
     }
@@ -204,7 +205,7 @@ public class IndexColumn implements Cloneable, Serializable {
    */
   public boolean equalsIgnoreCase(IndexColumn other) {
     return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase())
-        .append(_size, other._size).isEquals();
+        .append(_size, other._size).append(_functionName, other._functionName).isEquals();
   }
 
   /**
