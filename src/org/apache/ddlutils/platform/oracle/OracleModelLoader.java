@@ -17,7 +17,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -408,28 +407,14 @@ public class OracleModelLoader extends ModelLoaderBase {
     return fk;
   }
 
-  // Check if an index expression is valid
-  // An index expression will be valid if it uses a function that accepts just one input parameter
-  // There is no need to check if the function exists, as the provided indexExpression belong to an
-  // existing index
-  private boolean isValidExpression(String indexExpressions) {
-    boolean isValid = true;
-    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
-    while (st.hasMoreElements()) {
-      String indexExpression = st.nextToken();
-      if (!indexExpression.endsWith(")")) {
-        indexExpression = indexExpression + ")";
-      }
-      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
-      if (!isMonadicFunction(functionName)) {
-        isValid = false;
-        break;
-      }
-    }
-    return isValid;
-  }
-
-  // Check if a function is monadic (accepts just one input argument) by querying ALL_ARGUMENTS
+  /**
+   * Check if a function is monadic (accepts just one input argument) by querying ALL_ARGUMENTS
+   * 
+   * @param functionName
+   *          the name of a function
+   * @return true if the provided function accepts only one argument
+   */
+  @Override
   protected boolean isMonadicFunction(String functionName) {
     boolean isFunctionMonadic = true;
     try {
@@ -442,9 +427,8 @@ public class OracleModelLoader extends ModelLoaderBase {
         int nMonadicFunctions = rs.getInt(1);
         isFunctionMonadic = (nMonadicFunctions > 0);
       }
-
     } catch (SQLException e) {
-      e.printStackTrace();
+      _log.error("Error while checking if the " + functionName + " function is monadic", e);
     }
     return isFunctionMonadic;
   }

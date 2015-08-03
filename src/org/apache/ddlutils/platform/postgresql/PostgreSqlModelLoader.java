@@ -1034,6 +1034,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     String indexExpression = rs.getString(3);
     if (indexExpression != null && !indexExpression.isEmpty()) {
       // if it is a function based index, check that the functions used are valid
+      System.out.println("Expression for index " + inx.getName());
       if (isValidExpression(indexExpression)) {
         List<IndexColumn> functionBasedIndexColumnList = getIndexColumnsFromExpression(indexExpression);
         // colMap contains the index column where functions are not applied
@@ -1077,28 +1078,14 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     return inx;
   }
 
-  // Check if an index expression is valid
-  // An index expression will be valid if it uses a function that accepts just one input parameter
-  // There is no need to check if the function exists, as the provided indexExpression belong to an
-  // existing index
-  private boolean isValidExpression(String indexExpressions) {
-    boolean isValid = true;
-    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
-    while (st.hasMoreElements()) {
-      String indexExpression = st.nextToken();
-      if (!indexExpression.endsWith(")")) {
-        indexExpression = indexExpression + ")";
-      }
-      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
-      if (!isMonadicFunction(functionName)) {
-        isValid = false;
-        break;
-      }
-    }
-    return isValid;
-  }
-
-  // Check if a function is monadic (accepts just one input argument) by querying PG_PROC
+  /**
+   * Check if a function is monadic (accepts just one input argument) by querying PG_PROC
+   * 
+   * @param functionName
+   *          the name of a function
+   * @return true if the provided function accepts only one argument
+   */
+  @Override
   protected boolean isMonadicFunction(String functionName) {
     boolean isFunctionMonadic = true;
     try {
@@ -1112,7 +1099,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         isFunctionMonadic = (nMonadicFunctions > 0);
       }
     } catch (SQLException e) {
-      e.printStackTrace();
+      _log.error("Error while checking if the " + functionName + " function is monadic", e);
     }
     return isFunctionMonadic;
   }

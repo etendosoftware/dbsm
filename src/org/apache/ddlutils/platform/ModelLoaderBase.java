@@ -916,4 +916,37 @@ public abstract class ModelLoaderBase implements ModelLoader {
       getLog().error(e);
     }
   }
+
+  /**
+   * Check if an index expression is valid An index expression will be valid if it uses a function
+   * that accepts just one input parameter
+   * 
+   * @param indexExpressions
+   *          A String that represents the index expressions
+   * @return true if the provided index expression is valid, false otherwise
+   */
+  protected boolean isValidExpression(String indexExpressions) {
+    // Examples of valid expressions:
+    // UPPER("COL1")
+    // LOWER(col1::text), UPPER(col2::text)
+    // Example of invalid expression:
+    // SUBSTR("COL1",3)
+    boolean isValid = true;
+    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
+    while (st.hasMoreElements()) {
+      String indexExpression = st.nextToken();
+      System.out.println("Token = " + indexExpression);
+      if (!indexExpression.endsWith(")")) {
+        indexExpression = indexExpression + ")";
+      }
+      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
+      if (!isMonadicFunction(functionName)) {
+        isValid = false;
+        break;
+      }
+    }
+    return isValid;
+  }
+
+  protected abstract boolean isMonadicFunction(String functionName);
 }
