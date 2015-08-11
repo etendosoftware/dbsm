@@ -161,14 +161,23 @@ public class FunctionBasedIndexes extends DbsmTest {
   }
 
   @Test
-  // Tests that it is not possible to export indexes that use non monadic functions
-  public void exportNonMonadicFunctionBasedIndex() throws IOException {
+  // Tests that it is possible to define indexes that use non monadic functions
+  public void testNonMonadicFunctionBasedIndex() throws IOException {
     resetDB();
     boolean forceCreation = true;
     createDatabaseIfNeeded(forceCreation);
-    addNonMonadicFunctionBasedIndexInDatabase();
+    updateDatabase("indexes/NON_MONADIC_FUNCTION_INDEX.xml");
+    assertExport("indexes/NON_MONADIC_FUNCTION_INDEX.xml");
+  }
 
-    assertExport("indexes/BASE_MODEL.xml");
+  @Test
+  // Tests that it is possible to define indexes ethat use nested functions
+  public void testNestedFunctionBasedIndex() throws IOException {
+    resetDB();
+    boolean forceCreation = true;
+    createDatabaseIfNeeded(forceCreation);
+    updateDatabase("indexes/NESTED_FUNCTION_INDEX.xml");
+    assertExport("indexes/NESTED_FUNCTION_INDEX.xml");
   }
 
   @Test
@@ -212,30 +221,6 @@ public class FunctionBasedIndexes extends DbsmTest {
     String exportedContents = FileUtils.readFileToString(exportedTable);
     String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
     assertThat("exported contents", exportedContents, equalTo(originalContents));
-  }
-
-  // Creates an index based on a non monadic function (SUBSTRING/SUBSTR)
-  private void addNonMonadicFunctionBasedIndexInDatabase() {
-    Connection cn = null;
-    try {
-      cn = getDataSource().getConnection();
-      PreparedStatement st = null;
-      if (getRdbms() == Rdbms.PG) {
-        st = cn.prepareStatement("CREATE INDEX NON_MONADIC_INDEX ON TEST (SUBSTRING(COL1,3))");
-      } else {
-        st = cn.prepareStatement("CREATE INDEX NON_MONADIC_INDEX ON TEST (SUBSTR(COL1,3))");
-      }
-      st.executeUpdate();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      if (cn != null) {
-        try {
-          cn.close();
-        } catch (SQLException e) {
-        }
-      }
-    }
   }
 
   // Given the name of an index, return a string representation of its column, along with the
