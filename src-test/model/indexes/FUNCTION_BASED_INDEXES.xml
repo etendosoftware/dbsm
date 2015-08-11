@@ -14,14 +14,14 @@
         <onCreateDefault/>
       </column>
       <index name="TEST_COL1_UPPER" unique="false">
-        <index-column name="indexBasedColumn" functionExpression="UPPER(COL1)"/>
+        <index-column name="functionBasedColumn" functionExpression="UPPER(COL1)"/>
       </index>
       <index name="TEST_MIXED_INDEXES1" unique="false">
         <index-column name="COL1"/>
-        <index-column name="indexBasedColumn" functionExpression="LOWER(COL2)"/>
+        <index-column name="functionBasedColumn" functionExpression="LOWER(COL2)"/>
       </index>
       <index name="TEST_MIXED_INDEXES2" unique="false">
-        <index-column name="indexBasedColumn" functionExpression="LOWER(COL1)"/>
+        <index-column name="functionBasedColumn" functionExpression="LOWER(COL1)"/>
         <index-column name="COL2"/>
       </index>
     </table>

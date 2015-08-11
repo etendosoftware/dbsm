@@ -14,7 +14,7 @@
         <onCreateDefault/>
       </column>
       <index name="NON_MONADIC_INDEX" unique="false">
-        <index-column name="indexBasedColumn" functionExpression="REPLACE(COL1,&apos;a&apos;,&apos;b&apos;)"/>
+        <index-column name="functionBasedColumn" functionExpression="REPLACE(COL1,&apos;a&apos;,&apos;b&apos;)"/>
         <index-column name="COL2"/>
       </index>
     </table>

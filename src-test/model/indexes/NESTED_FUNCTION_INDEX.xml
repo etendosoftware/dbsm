@@ -14,7 +14,7 @@
         <onCreateDefault/>
       </column>
       <index name="NESTED_FUNCTION_INDEX" unique="false">
-        <index-column name="indexBasedColumn" functionExpression="UPPER(REPLACE(COL1,&apos;a&apos;,&apos;b&apos;))"/>
+        <index-column name="functionBasedColumn" functionExpression="UPPER(REPLACE(COL1,&apos;a&apos;,&apos;b&apos;))"/>
       </index>
     </table>
   </database>

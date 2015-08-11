@@ -14,7 +14,7 @@
         <onCreateDefault/>
       </column>
       <index name="BASIC_INDEX" unique="false">
-        <index-column name="indexBasedColumn" functionExpression="LOWER(COL1)"/>
+        <index-column name="functionBasedColumn" functionExpression="LOWER(COL1)"/>
       </index>
     </table>
   </database>
