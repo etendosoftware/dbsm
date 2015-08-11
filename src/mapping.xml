@@ -103,7 +103,7 @@ under the License.
     <element name="index-column">
       <attribute name="name" property="name"/>
       <attribute name="size" property="size"/>
-      <attribute name="functionName" property="functionName"/>
+       <attribute name="functionExpression" property="functionExpression"/>
     </element>
   </class>
 

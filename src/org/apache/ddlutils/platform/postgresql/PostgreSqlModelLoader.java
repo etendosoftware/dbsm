@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -1033,36 +1032,25 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     String indexExpression = rs.getString(3);
     if (indexExpression != null && !indexExpression.isEmpty()) {
-      // if it is a function based index, check that the functions used are valid
-      System.out.println("Expression for index " + inx.getName());
-      if (isValidExpression(indexExpression)) {
-        List<IndexColumn> functionBasedIndexColumnList = getIndexColumnsFromExpression(indexExpression);
-        // colMap contains the index column where functions are not applied
-        // functionBasedIndexColumnList contains the index column where functions are applied
-        if (colMap.isEmpty()) {
-          // there are only function based index columns, no need to merge them with non-function
-          // based columns
-          for (IndexColumn indexColumn : functionBasedIndexColumnList) {
+      IndexColumn indexColumn = getIndexColumnFromExpression(indexExpression);
+      // colMap contains the index column where functions are not applied
+      // functionBasedIndexColumnList contains the index column where functions are applied
+      if (colMap.isEmpty()) {
+        // there are only function based index columns, no need to merge them with non-function
+        // based columns
+        inx.addColumn(indexColumn);
+      } else {
+        // if colMap is not empty we can be sure that apositions is not empty either
+        // all the values of apositions contains the same values, so we just take the first one
+        for (String pos : (apositions.get(0).split(","))) {
+          // if the position is FUNCTION_BASED_COLUMN_INDEX_POSITION, that means that the next
+          // column should be a function based one, use the next one
+          if (FUNCTION_BASED_COLUMN_INDEX_POSITION.equals(pos)) {
             inx.addColumn(indexColumn);
-          }
-        } else {
-          int addedFunctionBasedIndexes = 0;
-          // if colMap is not empty we can be sure that apositions is not empty either
-          // all the values of apositions contains the same values, so we just take the first one
-          for (String pos : (apositions.get(0).split(","))) {
-            // if the position is FUNCTION_BASED_COLUMN_INDEX_POSITION, that means that the next
-            // column should be a function based one, use the next one
-            if (FUNCTION_BASED_COLUMN_INDEX_POSITION.equals(pos)) {
-              inx.addColumn(functionBasedIndexColumnList.get(addedFunctionBasedIndexes++));
-            } else {
-              inx.addColumn(colMap.get(pos));
-            }
+          } else {
+            inx.addColumn(colMap.get(pos));
           }
         }
-      } else {
-        _log.error("The index " + inx.getName() + " uses a non supported function: "
-            + indexExpression);
-        return null;
       }
     } else {
       /*
@@ -1078,49 +1066,79 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     return inx;
   }
 
-  /**
-   * Check if a function is monadic (accepts just one input argument) by querying PG_PROC
-   * 
-   * @param functionName
-   *          the name of a function
-   * @return true if the provided function accepts only one argument
-   */
-  @Override
-  protected boolean isMonadicFunction(String functionName) {
-    boolean isFunctionMonadic = true;
-    try {
-      PreparedStatement st = _connection
-          .prepareStatement("select count(*) from pg_proc where upper(proname) = ? and pronargs = 1");
-      st.setString(1, functionName.toUpperCase());
-
-      ResultSet rs = st.executeQuery();
-      if (rs.next()) {
-        int nMonadicFunctions = rs.getInt(1);
-        isFunctionMonadic = (nMonadicFunctions > 0);
-      }
-    } catch (SQLException e) {
-      _log.error("Error while checking if the " + functionName + " function is monadic", e);
-    }
-    return isFunctionMonadic;
+  private IndexColumn getIndexColumnFromExpression(String indexExpression) {
+    String transformedExpression = transformIndexExpression(indexExpression);
+    IndexColumn inxcol = new IndexColumn();
+    inxcol.setName("indexBasedColumn");
+    inxcol.setFunctionExpression(transformedExpression);
+    return inxcol;
   }
 
-  private List<IndexColumn> getIndexColumnsFromExpression(String indexExpressions) {
-    List<IndexColumn> indexColumnList = new ArrayList<IndexColumn>();
-    StringTokenizer st = new StringTokenizer(indexExpressions, "),");
-    while (st.hasMoreElements()) {
-      String indexExpression = st.nextToken();
-      if (!indexExpression.endsWith(")")) {
-        indexExpression = indexExpression + ")";
+  /**
+   * Remove the ::type, uppercase everything that is not between quotes and remove the whitespaces
+   * 
+   * @param indexExpression
+   *          the index expression to be transformed
+   * @return the transformed index expression
+   */
+  private String transformIndexExpression(String indexExpression) {
+    String transformedIndexExpression = removeCastExpressions(indexExpression);
+    transformedIndexExpression = capitalizeAllUnquotedCharacters(transformedIndexExpression);
+    transformedIndexExpression = removeWhitespaces(transformedIndexExpression);
+    return transformedIndexExpression;
+  }
+
+  private String removeCastExpressions(String indexExpression) {
+    // look for '::'
+    String transformedIndexExpression = indexExpression;
+    int castIndex = indexExpression.indexOf("::");
+    while (castIndex != -1) {
+      // casts will end either with ')' or with ','
+      int closingParenthesisIndex = transformedIndexExpression.indexOf(")", castIndex);
+      int commaIndex = transformedIndexExpression.indexOf(",", castIndex);
+      int castEndIndex = -1;
+      if (closingParenthesisIndex != -1 && commaIndex != -1) {
+        castEndIndex = Math.min(commaIndex, closingParenthesisIndex);
+      } else if (closingParenthesisIndex == -1) {
+        castEndIndex = commaIndex;
+      } else {
+        castEndIndex = closingParenthesisIndex;
       }
-      String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
-      String columnName = indexExpression.substring(indexExpression.indexOf("(") + 1,
-          indexExpression.indexOf(":"));
-      IndexColumn inxcol = new IndexColumn();
-      inxcol.setName(columnName.toUpperCase());
-      inxcol.setFunctionName(functionName.toUpperCase());
-      indexColumnList.add(inxcol);
+      String cast = transformedIndexExpression.substring(castIndex, castEndIndex);
+      // remove the whole cast expression
+      transformedIndexExpression = transformedIndexExpression.replace(cast, "");
+      // look for the next cast expression, if any
+      castIndex = transformedIndexExpression.indexOf("::", castIndex);
     }
-    return indexColumnList;
+    return transformedIndexExpression;
+  }
+
+  private String capitalizeAllUnquotedCharacters(String indexExpression) {
+    String transformedIndexExpression = indexExpression;
+    int openingQuoteIndex = indexExpression.indexOf("'");
+    if (openingQuoteIndex == -1) {
+      // there is no text between quotes, capitalize all the string
+      transformedIndexExpression = transformedIndexExpression.toUpperCase();
+    } else {
+      // capitalize only the text that is not between quotes
+      StringBuilder expressionBuilder = new StringBuilder();
+      int closingQuoteIndex = -1;
+      while (openingQuoteIndex != -1) {
+        expressionBuilder.append(transformedIndexExpression.substring(closingQuoteIndex + 1,
+            openingQuoteIndex).toUpperCase());
+        closingQuoteIndex = indexExpression.indexOf("'", openingQuoteIndex + 1);
+        expressionBuilder.append(transformedIndexExpression.substring(openingQuoteIndex,
+            closingQuoteIndex + 1));
+        openingQuoteIndex = indexExpression.indexOf("'", closingQuoteIndex + 1);
+      }
+      expressionBuilder.append(transformedIndexExpression.substring(closingQuoteIndex + 1));
+      transformedIndexExpression = expressionBuilder.toString();
+    }
+    return transformedIndexExpression;
+  }
+
+  private String removeWhitespaces(String transformedIndexExpression) {
+    return transformedIndexExpression.replaceAll("\\s", "");
   }
 
   @Override

@@ -41,8 +41,8 @@ public class IndexColumn implements Cloneable, Serializable {
   protected String _name;
   /** The size of the column in the index. */
   protected String _size;
-  /** The name of the function that is applied to this column. */
-  protected String _functionName;
+  /** The function expression applied to this column. */
+  protected String _functionExpression;
 
   // TODO: It might be useful if the referenced column is directly acessible
   // here ?
@@ -153,22 +153,22 @@ public class IndexColumn implements Cloneable, Serializable {
   }
 
   /**
-   * Gets the name of the function that applies to this column
+   * Gets the function expression that is applied to this column
    * 
    * @return The name of the function
    */
-  public String getFunctionName() {
-    return _functionName;
+  public String getFunctionExpression() {
+    return _functionExpression;
   }
 
   /**
-   * Sets the name of the function that applies to this column
+   * Sets the function expression that is applied to this column
    * 
    * @param size
    *          The size
    */
-  public void setFunctionName(String _functionName) {
-    this._functionName = _functionName;
+  public void setFunctionExpression(String _functionExpression) {
+    this._functionExpression = _functionExpression;
   }
 
   /**
@@ -190,7 +190,7 @@ public class IndexColumn implements Cloneable, Serializable {
       IndexColumn other = (IndexColumn) obj;
 
       return new EqualsBuilder().append(_name, other._name).append(_size, other._size)
-          .append(_functionName, other._functionName).isEquals();
+          .append(_functionExpression, other._functionExpression).isEquals();
     } else {
       return false;
     }
@@ -205,7 +205,8 @@ public class IndexColumn implements Cloneable, Serializable {
    */
   public boolean equalsIgnoreCase(IndexColumn other) {
     return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase())
-        .append(_size, other._size).append(_functionName, other._functionName).isEquals();
+        .append(_size, other._size).append(_functionExpression, other._functionExpression)
+        .isEquals();
   }
 
   /**

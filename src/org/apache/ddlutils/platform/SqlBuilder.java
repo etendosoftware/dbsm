@@ -3362,24 +3362,22 @@ public abstract class SqlBuilder {
         print(" (");
 
         for (int idx = 0; idx < index.getColumnCount(); idx++) {
-          IndexColumn idxColumn = index.getColumn(idx);
-          Column col = table.findColumn(idxColumn.getName());
-
-          if (col == null) {
-            // would get null pointer on next line anyway, so throw
-            // exception
-            throw new ModelException("Invalid column '" + idxColumn.getName() + "' on index "
-                + index.getName() + " for table " + table.getName());
-          }
           if (idx > 0) {
             print(", ");
           }
-          if (idxColumn.getFunctionName() != null && !idxColumn.getFunctionName().isEmpty()) {
-            // wrap the function name around the column name
-            print(idxColumn.getFunctionName().toUpperCase() + "(");
-            printIdentifier(getColumnName(col));
-            print(")");
+          IndexColumn idxColumn = index.getColumn(idx);
+          if ("indexBasedColumn".equals(idxColumn.getName())) {
+            // print the expression instead of just the column name
+            print(idxColumn.getFunctionExpression());
           } else {
+            Column col = table.findColumn(idxColumn.getName());
+
+            if (col == null) {
+              // would get null pointer on next line anyway, so throw
+              // exception
+              throw new ModelException("Invalid column '" + idxColumn.getName() + "' on index "
+                  + index.getName() + " for table " + table.getName());
+            }
             printIdentifier(getColumnName(col));
           }
         }

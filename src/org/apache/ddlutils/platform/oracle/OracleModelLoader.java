@@ -336,12 +336,6 @@ public class OracleModelLoader extends ModelLoaderBase {
     inx.setUnique(translateUniqueness(rs.getString(2)));
     // The index expression will be defined only for function based indexes
     final String indexExpression = rs.getString(3);
-    if (indexExpression != null && !indexExpression.isEmpty()
-        && !isValidExpression(indexExpression)) {
-      _log.error("The index " + inx.getName() + " uses a non supported function: "
-          + indexExpression);
-      return null;
-    }
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
@@ -365,14 +359,20 @@ public class OracleModelLoader extends ModelLoaderBase {
   // Given an index expression, returns the name of the referenced column
   // The index expression will be like this: UPPER("COL1")
   private IndexColumn getFunctionBasedIndexColumn(String indexExpression) {
-    // The column name will be wrapped by (" and ")
-    String functionName = indexExpression.substring(0, indexExpression.indexOf("("));
-    String columnName = indexExpression.substring(indexExpression.indexOf("(\"") + 2,
-        indexExpression.indexOf("\")"));
     IndexColumn indexColumn = new IndexColumn();
-    indexColumn.setName(columnName);
-    indexColumn.setFunctionName(functionName);
+    indexColumn.setName("indexBasedColumn");
+    indexColumn.setFunctionExpression(removeDoubleQuotes(indexExpression));
     return indexColumn;
+  }
+
+  /**
+   * Remove the double quotes
+   * 
+   * @param indexExpression
+   * @return
+   */
+  private String removeDoubleQuotes(String indexExpression) {
+    return indexExpression.replace("\"", "");
   }
 
   /*
@@ -406,31 +406,4 @@ public class OracleModelLoader extends ModelLoaderBase {
 
     return fk;
   }
-
-  /**
-   * Check if a function is monadic (accepts just one input argument) by querying ALL_ARGUMENTS
-   * 
-   * @param functionName
-   *          the name of a function
-   * @return true if the provided function accepts only one argument
-   */
-  @Override
-  protected boolean isMonadicFunction(String functionName) {
-    boolean isFunctionMonadic = true;
-    try {
-      PreparedStatement st = null;
-      st = _connection
-          .prepareStatement("select count(count(*)) from ALL_ARGUMENTS where OBJECT_NAME = ? and in_out = 'IN' group by subprogram_id having count(*) = 1");
-      st.setString(1, functionName.toUpperCase());
-      ResultSet rs = st.executeQuery();
-      if (rs.next()) {
-        int nMonadicFunctions = rs.getInt(1);
-        isFunctionMonadic = (nMonadicFunctions > 0);
-      }
-    } catch (SQLException e) {
-      _log.error("Error while checking if the " + functionName + " function is monadic", e);
-    }
-    return isFunctionMonadic;
-  }
-
 }
