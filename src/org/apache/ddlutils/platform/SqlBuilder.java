@@ -3366,7 +3366,7 @@ public abstract class SqlBuilder {
             print(", ");
           }
           IndexColumn idxColumn = index.getColumn(idx);
-          if ("indexBasedColumn".equals(idxColumn.getName())) {
+          if ("functionBasedColumn".equals(idxColumn.getName())) {
             // print the expression instead of just the column name
             print(idxColumn.getFunctionExpression());
           } else {

@@ -360,7 +360,7 @@ public class OracleModelLoader extends ModelLoaderBase {
   // The index expression will be like this: UPPER("COL1")
   private IndexColumn getFunctionBasedIndexColumn(String indexExpression) {
     IndexColumn indexColumn = new IndexColumn();
-    indexColumn.setName("indexBasedColumn");
+    indexColumn.setName("functionBasedColumn");
     indexColumn.setFunctionExpression(removeDoubleQuotes(indexExpression));
     return indexColumn;
   }

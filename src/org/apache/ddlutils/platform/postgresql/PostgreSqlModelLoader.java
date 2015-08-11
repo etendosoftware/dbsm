@@ -1069,7 +1069,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   private IndexColumn getIndexColumnFromExpression(String indexExpression) {
     String transformedExpression = transformIndexExpression(indexExpression);
     IndexColumn inxcol = new IndexColumn();
-    inxcol.setName("indexBasedColumn");
+    inxcol.setName("functionBasedColumn");
     inxcol.setFunctionExpression(transformedExpression);
     return inxcol;
   }
