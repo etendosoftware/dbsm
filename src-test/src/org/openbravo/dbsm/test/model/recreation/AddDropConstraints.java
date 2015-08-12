@@ -41,11 +41,6 @@ public class AddDropConstraints extends TableRecreationBaseTest {
   }
 
   @Test
-  public void index() {
-    assertTablesAreNotRecreated("BASE_MODEL.xml", "IDX.xml");
-  }
-
-  @Test
   public void unique() {
     assertTablesAreNotRecreated("BASE_MODEL.xml", "UNIQUE.xml");
   }
@@ -53,5 +48,20 @@ public class AddDropConstraints extends TableRecreationBaseTest {
   @Test
   public void fk() {
     assertTablesAreNotRecreated("FK_BASE.xml", "FK.xml", false);
+  }
+
+  @Test
+  public void index() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "IDX.xml");
+  }
+
+  @Test
+  public void functionBasedIndexFromScratch() {
+    assertTablesAreNotRecreated("BASE_MODEL.xml", "FUNCTION_IDX.xml");
+  }
+
+  @Test
+  public void addFunctionToExistingIndex() {
+    assertTablesAreNotRecreated("IDX.xml", "FUNCTION_IDX.xml");
   }
 }
