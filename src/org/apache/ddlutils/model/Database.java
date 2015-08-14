@@ -857,8 +857,14 @@ public class Database implements Serializable, Cloneable {
           Column column = curTable.findColumn(indexColumn.getName(), true);
 
           if (column == null) {
-            throw new ModelException("The index " + indexDesc + " in table " + curTable.getName()
-                + " references the undefined column " + indexColumn.getName());
+            // if the index column is based on a function there is no need to check that there is a
+            // column in the database with same name
+            // the index will be exported properly even if a column is not assigned to the
+            // indexColumn
+            if (!"functionBasedColumn".equals(indexColumn.getName())) {
+              throw new ModelException("The index " + indexDesc + " in table " + curTable.getName()
+                  + " references the undefined column " + indexColumn.getName());
+            }
           } else {
             indexColumn.setColumn(column);
           }
