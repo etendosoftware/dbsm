@@ -16,6 +16,7 @@ import org.apache.ddlutils.translation.ByLineTranslation;
 import org.apache.ddlutils.translation.CombinedTranslation;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
 import org.apache.ddlutils.translation.ReplaceStrTranslation;
+import org.apache.ddlutils.translation.Translation;
 
 /**
  * 
@@ -25,6 +26,47 @@ public class PostgreSQLStandarization extends CombinedTranslation {
 
   /** Creates a new instance of PostgreSQLTranslation */
   public PostgreSQLStandarization() {
+    // Starting from 9.5, what before was:
+    // i.grandtotal * (-1)::numeric
+    // now is:
+    // i.grandtotal * '-1'::integer::numeric
+    // keeping old format
+    append(new ReplacePatTranslation("'([0-9-]*)'::integer", "\\($1\\)"));
+
+    // Starting from 9.5, some elements in group by are enclosed by brackets, they were not before,
+    // so let's keep old format
+    append(new Translation() {
+      @Override
+      public String exec(String s) {
+        if (s.indexOf("GROUP BY") == -1) {
+          return s;
+        }
+        String result = "";
+        for (String line : s.split("\n")) {
+          String modifiedLine;
+          if (line.trim().startsWith("GROUP BY")) {
+            modifiedLine = "";
+            for (String groupByElement : line.split(",")) {
+              String modifiedGroupByElement = groupByElement.trim();
+              if (modifiedGroupByElement.startsWith("(") && modifiedGroupByElement.endsWith(")")) {
+                modifiedGroupByElement = modifiedGroupByElement.substring(1,
+                    modifiedGroupByElement.length() - 1);
+              }
+              modifiedLine += modifiedGroupByElement + ", ";
+            }
+            if (modifiedLine.endsWith(", ") && !line.trim().endsWith(",")) {
+              modifiedLine = modifiedLine.substring(0, modifiedLine.length() - 2);
+            }
+
+          } else {
+            modifiedLine = line;
+          }
+          result += modifiedLine + "\n";
+        }
+        return result;
+      }
+    });
+
     // postgres castings '::text', '::numeric', '::character varying',
     // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , ::timestamp
     // with time zone
@@ -71,5 +113,4 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     // ReplacePatTranslation("^[\\s]*(.*?)[\\s]*","$1")));
     append(new ReplaceStrTranslation("~~", "LIKE"));
   }
-
 }

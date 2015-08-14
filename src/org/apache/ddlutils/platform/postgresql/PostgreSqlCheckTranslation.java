@@ -51,19 +51,11 @@ public class PostgreSqlCheckTranslation extends CombinedTranslation {
     append(new ReplacePatTranslation("\\[", ""));
 
     // handles numeric casting
-    append(new ReplacePatTranslation("\\(([0-9\\.\\-]+?)\\)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
-
-    // remove 1st double brackets if present
-    // "((type) in (('M', 'P', 'T')))" -> "(type in (('M', 'P', 'T')))"
-    append(new ReplacePatTranslation("\\((\\(.+)\\)( in .*)", "$1$2"));
-
-    // remove 2nd double brackets if present:
-    // "(type in (('M', 'P', 'T')))" -> "(type IN ('M', 'P', 'T'))"
-    append(new ReplacePatTranslation("(.*) in \\((\\(.+\\))\\)", "$1 IN $2"));
+    append(new ReplacePatTranslation("([0-9\\.\\-]+?)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
 
     append(new Translation() {
       public String exec(String s) {
-        return s.substring(1, s.length() - 1).toUpperCase();
+        return s.toUpperCase();
       }
     });
   }

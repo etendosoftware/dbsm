@@ -12,6 +12,7 @@
 
 package org.apache.ddlutils.platform.postgresql;
 
+import java.sql.Array;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -238,7 +240,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pg_constraint.conrelid = pg_class.oid AND pg_attribute.attrelid = pg_constraint.conrelid AND (pg_attribute.attnum = ANY (pg_constraint.conkey))"
             + " AND pg_constraint.conname = ?" + " ORDER BY pg_attribute.attnum::integer");
 
-    sql = "SELECT upper(pg_constraint.conname::text), pg_constraint.consrc"
+    sql = "SELECT upper(pg_constraint.conname::text), regexp_replace(pg_get_constraintdef(pg_constraint.oid, true), E'CHECK \\\\((.*)\\\\).*', E'\\\\1')"
         + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
         + " WHERE pg_constraint.contype = 'c' and pg_class.relname = ?";
     _stmt_listchecks = _connection.prepareStatement(sql
@@ -775,7 +777,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   protected Integer[] getIntArray(ResultSet r, int iposition) throws SQLException {
-
     String s = r.getString(iposition);
     if (s == null) {
       return null;
@@ -793,45 +794,29 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   protected Integer[] getIntArray2(ResultSet r, int iposition) throws SQLException {
-
-    String s = r.getString(iposition);
-    if (s == null) {
+    Array sqlArray = r.getArray(iposition);
+    if (sqlArray == null) {
       return null;
+    }
+
+    Object array = sqlArray.getArray();
+    if (array instanceof Long[]) {
+      List<Integer> intArray = new ArrayList<Integer>();
+      for (Long l : (Long[]) array) {
+        intArray.add(l.intValue());
+      }
+      return intArray.toArray(new Integer[intArray.size()]);
     } else {
-      ArrayList<Integer> list = new ArrayList<Integer>();
-      if (s.length() > 1 && s.charAt(0) == '{' && s.charAt(s.length() - 1) == '}') {
-        s = s.substring(1, s.length() - 1);
-      }
-
-      StringTokenizer st = new StringTokenizer(s, ",");
-
-      while (st.hasMoreTokens()) {
-        list.add(Integer.parseInt(st.nextToken()));
-      }
-
-      return list.toArray(new Integer[list.size()]);
+      return (Integer[]) array;
     }
   }
 
   protected String[] getStringArray(ResultSet r, int iposition) throws SQLException {
-
-    String s = r.getString(iposition);
-    if (s == null) {
+    Array sqlArray = r.getArray(iposition);
+    if (sqlArray == null) {
       return null;
-    } else {
-      ArrayList<String> list = new ArrayList<String>();
-      if (s.length() > 1 && s.charAt(0) == '{' && s.charAt(s.length() - 1) == '}') {
-        s = s.substring(1, s.length() - 1);
-      }
-
-      StringTokenizer st = new StringTokenizer(s, ",");
-
-      while (st.hasMoreTokens()) {
-        list.add(st.nextToken());
-      }
-
-      return list.toArray(new String[list.size()]);
     }
+    return (String[]) sqlArray.getArray();
   }
 
   protected int getParamType(int pgtype) throws SQLException {

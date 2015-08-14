@@ -18,6 +18,8 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.openbravo.dbsm.test.model.data.CreateDefault;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 
+import com.google.common.base.Functions;
+
 /**
  * Test suite grouping all cases for database model
  * 
@@ -27,11 +29,13 @@ import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 @RunWith(Suite.class)
 @SuiteClasses({ //
 CheckConstraints.class, //
+    Pg95SqlStandardization.class, //
     Sequences.class, //
     NumericScaleChanges.class, //
     AddDropColumn.class, //
     CreateDefault.class, //
-    FunctionBasedIndexes.class })
+    FunctionBasedIndexes.class, //
+    Functions.class })
 public class ModelSuite {
 
 }

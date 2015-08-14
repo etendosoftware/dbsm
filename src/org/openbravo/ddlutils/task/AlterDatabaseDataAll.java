@@ -169,6 +169,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.alterTables(originaldb, db, !isFailonerror());
       getLog().info("Model update complete.");
 
+      // Initialize the ModuleScriptHandler that we will use later, to keep the current module
+      // versions, prior to the update
+      ModuleScriptHandler hd = new ModuleScriptHandler();
+      hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
+
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
@@ -178,8 +183,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.disableNOTNULLColumns(db, ad);
 
       // Executing modulescripts
-
-      ModuleScriptHandler hd = new ModuleScriptHandler();
       hd.setBasedir(new File(basedir + "/../"));
       hd.execute();
 
