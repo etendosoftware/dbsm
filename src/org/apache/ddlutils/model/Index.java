@@ -133,14 +133,74 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     if (obj instanceof Index) {
       Index other = (Index) obj;
 
-      return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique).append(
-          _columns, other._columns).isEquals();
+      return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
+          .append(_columns, other._columns).isEquals();
     } else {
       return false;
     }
   }
 
+  /**
+   * Checks if two indexes are equals, taking into account if in the current dbms empty strings are
+   * treated as NULL
+   * 
+   * @param other
+   *          the index that will be compared with the current class
+   * @param emptyStringIsNull
+   *          a boolean that defines whether the empty strings are treated as null
+   * @return true if the two indexes are equal, false otherwise
+   */
+  @SuppressWarnings("unchecked")
+  public boolean equals(Index other, boolean emptyStringIsNull) {
+    if (!emptyStringIsNull) {
+      return equals(other);
+    } else {
+      return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
+          .isEquals()
+          && columnsAreEqual(_columns, other._columns, emptyStringIsNull);
+    }
+  }
+
+  /**
+   * Checks if two index column arrays are equal, taking into account if in the current database
+   * empty strings are treated as NULL
+   *
+   * @param columns
+   *          the first index column arrays
+   * @param otherColumns
+   *          the second index column array
+   * @param emptyStringIsNull
+   *          a boolean that defines whether in the current dbms empty strings are handled like NULL
+   * @return true if the two index column arrays are equal, false otherwise
+   */
+  private boolean columnsAreEqual(ArrayList<IndexColumn> columns,
+      ArrayList<IndexColumn> otherColumns, boolean emptyStringIsNull) {
+    for (int idx = 0; idx < getColumnCount(); idx++) {
+      if (!columns.get(idx).equals(otherColumns.get(idx), emptyStringIsNull)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public boolean equalsIgnoreCase(Index other) {
+    boolean emptyStringIsNull = false;
+    return equals(other, emptyStringIsNull);
+  }
+
+  /**
+   * Compares two indexes without taking into account the casing of their names or of their columns
+   * names. It also takes into account in in the current database empty strings are treated as null
+   * (relevant when comparing the functions of the index columns)
+   * 
+   * @param other
+   *          the index being compared with the current one
+   * @param emptyStringIsNull
+   *          a flag that determines whether in the current database empty strings are treated as
+   *          null
+   * @return true if the two indexes are equal
+   */
+  public boolean equalsIgnoreCase(Index other, boolean emptyStringIsNull) {
     if (other instanceof Index) {
       Index otherIndex = (Index) other;
 
@@ -154,7 +214,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         }
 
         for (int idx = 0; idx < getColumnCount(); idx++) {
-          if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx))) {
+          if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx), emptyStringIsNull)) {
             return false;
           }
         }

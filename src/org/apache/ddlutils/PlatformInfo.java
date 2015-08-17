@@ -228,6 +228,9 @@ public class PlatformInfo {
   /** Differences in column position are considered as change */
   private boolean columnOrderManaged;
 
+  /** Whether empty strings are treated as NULL */
+  private boolean emptyStringIsNull = false;
+
   /**
    * Creates a new platform info object.
    */
@@ -286,6 +289,25 @@ public class PlatformInfo {
    */
   public boolean isDefaultValuesForLongTypesSupported() {
     return _defaultValuesForLongTypesSupported;
+  }
+
+  /**
+   * Determines whether empty strings are treated as NULL
+   * 
+   * @return true if an empty string is considered NULL
+   */
+  public boolean emptyStringIsNull() {
+    return emptyStringIsNull;
+  }
+
+  /**
+   * Determines whether empty strings are treated as NULL
+   * 
+   * @param emptyStringIsNull
+   *          specifies if empty strings are treated as NULL
+   */
+  public void setEmptyStringIsNull(boolean emptyStringIsNull) {
+    this.emptyStringIsNull = emptyStringIsNull;
   }
 
   /**

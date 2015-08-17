@@ -186,11 +186,23 @@ public class IndexColumn implements Cloneable, Serializable {
    * {@inheritDoc}
    */
   public boolean equals(Object obj) {
+    boolean emptyStringIsNull = false;
+    return equals(obj, emptyStringIsNull);
+
+  }
+
+  public boolean equals(Object obj, boolean emptyStringIsNull) {
     if (obj instanceof IndexColumn) {
       IndexColumn other = (IndexColumn) obj;
 
+      String transformedFunctionExpression = _functionExpression;
+      String otherTransformedFunctionExpression = other._functionExpression;
+      if (emptyStringIsNull) {
+        transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
+        otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+      }
       return new EqualsBuilder().append(_name, other._name).append(_size, other._size)
-          .append(_functionExpression, other._functionExpression).isEquals();
+          .append(transformedFunctionExpression, otherTransformedFunctionExpression).isEquals();
     } else {
       return false;
     }
@@ -204,9 +216,28 @@ public class IndexColumn implements Cloneable, Serializable {
    * @return <code>true</code> if this index column is equal (ignoring case) to the given one
    */
   public boolean equalsIgnoreCase(IndexColumn other) {
+    boolean emptyStringIsNull = false;
+    return equalsIgnoreCase(other, emptyStringIsNull);
+  }
+
+  public boolean equalsIgnoreCase(IndexColumn other, boolean emptyStringIsNull) {
+    String transformedFunctionExpression = _functionExpression;
+    String otherTransformedFunctionExpression = other._functionExpression;
+    if (emptyStringIsNull) {
+      transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
+      otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+    }
     return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase())
-        .append(_size, other._size).append(_functionExpression, other._functionExpression)
-        .isEquals();
+        .append(_size, other._size)
+        .append(transformedFunctionExpression, otherTransformedFunctionExpression).isEquals();
+  }
+
+  private String replaceEmptyStringWithNull(String functionExpression) {
+    String transformedFunctionExpression = null;
+    if (functionExpression != null) {
+      transformedFunctionExpression = functionExpression.replace("\'\'", "NULL");
+    }
+    return transformedFunctionExpression;
   }
 
   /**

@@ -308,9 +308,10 @@ public class ModelComparator {
       }
     }
 
+    boolean emptyStringIsNull = _platformInfo.emptyStringIsNull();
     for (int indexIdx = 0; indexIdx < sourceTable.getIndexCount(); indexIdx++) {
       Index sourceIndex = sourceTable.getIndex(indexIdx);
-      Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex);
+      Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex, emptyStringIsNull);
 
       if (targetIndex == null) {
         if (_log.isDebugEnabled()) {
@@ -322,7 +323,7 @@ public class ModelComparator {
     }
     for (int indexIdx = 0; indexIdx < targetTable.getIndexCount(); indexIdx++) {
       Index targetIndex = targetTable.getIndex(indexIdx);
-      Index sourceIndex = findCorrespondingIndex(sourceTable, targetIndex);
+      Index sourceIndex = findCorrespondingIndex(sourceTable, targetIndex, emptyStringIsNull);
 
       if (sourceIndex == null) {
         if (_log.isDebugEnabled()) {
@@ -600,12 +601,12 @@ public class ModelComparator {
    *          The original index
    * @return The corresponding index if found
    */
-  private Index findCorrespondingIndex(Table table, Index index) {
+  private Index findCorrespondingIndex(Table table, Index index, boolean emptyStringIsNull) {
     for (int indexIdx = 0; indexIdx < table.getIndexCount(); indexIdx++) {
       Index curIndex = table.getIndex(indexIdx);
 
-      if ((_caseSensitive && index.equals(curIndex))
-          || (!_caseSensitive && index.equalsIgnoreCase(curIndex))) {
+      if ((_caseSensitive && index.equals(curIndex, emptyStringIsNull))
+          || (!_caseSensitive && index.equalsIgnoreCase(curIndex, emptyStringIsNull))) {
         return curIndex;
       }
     }

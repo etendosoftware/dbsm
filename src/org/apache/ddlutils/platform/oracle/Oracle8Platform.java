@@ -115,6 +115,7 @@ public class Oracle8Platform extends PlatformImplBase {
     info.setDefaultSize(Types.VARBINARY, 254);
 
     info.setColumnOrderManaged(false);
+    info.setEmptyStringIsNull(true);
 
     setSqlBuilder(new Oracle8Builder(this));
     setModelReader(new Oracle8ModelReader(this));
