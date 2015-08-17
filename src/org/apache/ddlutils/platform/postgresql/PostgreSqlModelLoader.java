@@ -1068,8 +1068,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
    */
   private String transformIndexExpression(String indexExpression) {
     String transformedIndexExpression = removeCastExpressions(indexExpression);
-    transformedIndexExpression = capitalizeAllUnquotedCharacters(transformedIndexExpression);
-    transformedIndexExpression = removeWhitespaces(transformedIndexExpression);
+    transformedIndexExpression = transformUnquotedPartOfExpression(transformedIndexExpression);
     return transformedIndexExpression;
   }
 
@@ -1098,19 +1097,24 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     return transformedIndexExpression;
   }
 
-  private String capitalizeAllUnquotedCharacters(String indexExpression) {
+  /**
+   * Uppercases and remove whitespaces from the unquoted parts of the expression
+   * 
+   */
+  private String transformUnquotedPartOfExpression(String indexExpression) {
     String transformedIndexExpression = indexExpression;
     int openingQuoteIndex = indexExpression.indexOf("'");
     if (openingQuoteIndex == -1) {
       // there is no text between quotes, capitalize all the string
       transformedIndexExpression = transformedIndexExpression.toUpperCase();
     } else {
-      // capitalize only the text that is not between quotes
+      // capitalize and remove whitespaces only from the text that is not between quotes
       StringBuilder expressionBuilder = new StringBuilder();
       int closingQuoteIndex = -1;
       while (openingQuoteIndex != -1) {
-        expressionBuilder.append(transformedIndexExpression.substring(closingQuoteIndex + 1,
-            openingQuoteIndex).toUpperCase());
+        expressionBuilder.append(transformedIndexExpression
+            .substring(closingQuoteIndex + 1, openingQuoteIndex).toUpperCase()
+            .replaceAll("\\s", ""));
         closingQuoteIndex = indexExpression.indexOf("'", openingQuoteIndex + 1);
         expressionBuilder.append(transformedIndexExpression.substring(openingQuoteIndex,
             closingQuoteIndex + 1));
@@ -1120,10 +1124,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       transformedIndexExpression = expressionBuilder.toString();
     }
     return transformedIndexExpression;
-  }
-
-  private String removeWhitespaces(String transformedIndexExpression) {
-    return transformedIndexExpression.replaceAll("\\s", "");
   }
 
   @Override

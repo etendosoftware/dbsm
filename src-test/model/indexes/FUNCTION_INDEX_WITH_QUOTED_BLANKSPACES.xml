@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <index name="NESTED_FUNCTION_INDEX" unique="false">
+        <index-column name="functionBasedColumn" functionExpression="UPPER(REPLACE(COL1,&apos; a &apos;,&apos; b &apos;))"/>
+      </index>
+    </table>
+  </database>

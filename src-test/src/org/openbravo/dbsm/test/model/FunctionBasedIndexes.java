@@ -134,6 +134,16 @@ public class FunctionBasedIndexes extends DbsmTest {
   }
 
   @Test
+  // Tests that if an index column has a function with whitespaces inside quotes, those whitespaces
+  // are not removed
+  public void quotedBlankSpacesInFunctionsShouldNotBeRemoved() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml");
+    assertExport("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml");
+  }
+
+  @Test
   // Tests that function based indexes are properly imported
   public void importFunctionBasedIndexes() {
     resetDB();
