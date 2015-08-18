@@ -35,6 +35,7 @@ CheckConstraints.class, //
     AddDropColumn.class, //
     CreateDefault.class, //
     FunctionBasedIndexes.class, //
+    OperatorClassIndexes.class, //
     Functions.class })
 public class ModelSuite {
 
