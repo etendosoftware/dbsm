@@ -308,6 +308,9 @@ public class ModelComparator {
       }
     }
 
+    // Only in some platforms do the operator classes of the index column matter
+    // Take this into account when comparing the indexes
+    boolean operatorClassMatters = _platformInfo.isOperatorClassesSupported();
     for (int indexIdx = 0; indexIdx < sourceTable.getIndexCount(); indexIdx++) {
       Index sourceIndex = sourceTable.getIndex(indexIdx);
       Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex);

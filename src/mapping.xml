@@ -104,6 +104,7 @@ under the License.
       <attribute name="name" property="name"/>
       <attribute name="size" property="size"/>
        <attribute name="functionExpression" property="functionExpression"/>
+       <attribute name="operatorClass" property="operatorClass"/>
     </element>
   </class>
 

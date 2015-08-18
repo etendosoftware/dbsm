@@ -80,6 +80,9 @@ public class PlatformInfo {
   /** Whether functions and procedures are supported. */
   private boolean _functionsSupported = true;
 
+  /** Whether operator classes in index columns are supported. */
+  private boolean _operatorClassesSupported = false;
+
   /** Whether triggers are supported. */
   private boolean _triggersSupported = true;
 
@@ -518,6 +521,25 @@ public class PlatformInfo {
    */
   public void setFunctionsSupported(boolean supportingFunctions) {
     _functionsSupported = supportingFunctions;
+  }
+
+  /**
+   * Determines whether operator classes in index columns are supported.
+   * 
+   * @return <code>true</code> if operator classes in index columns are supported
+   */
+  public boolean isOperatorClassesSupported() {
+    return _operatorClassesSupported;
+  }
+
+  /**
+   * Specifies whether operator classes in index columns are supported.
+   * 
+   * @param supportingFunctions
+   *          <code>true</code> if operator classes in index columns are supported
+   */
+  public void setOperatorClassesSupported(boolean operatorClassesSupported) {
+    _operatorClassesSupported = operatorClassesSupported;
   }
 
   /**

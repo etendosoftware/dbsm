@@ -44,6 +44,8 @@ public class IndexColumn implements Cloneable, Serializable {
   protected String _size;
   /** The function expression applied to this column. */
   protected String _functionExpression;
+  /** The name of the operator class that is applied to this column. */
+  protected String _operatorClass;
 
   // TODO: It might be useful if the referenced column is directly acessible
   // here ?
@@ -173,6 +175,25 @@ public class IndexColumn implements Cloneable, Serializable {
   }
 
   /**
+   * Gets the name of the operator class that applies to this column
+   * 
+   * @return The name of the function
+   */
+  public String getOperatorClass() {
+    return _operatorClass;
+  }
+
+  /**
+   * Sets the name of the operator class that applies to this column
+   * 
+   * @param size
+   *          The size
+   */
+  public void setOperatorClass(String _operatorClass) {
+    this._operatorClass = _operatorClass;
+  }
+
+  /**
    * {@inheritDoc}
    */
   public Object clone() throws CloneNotSupportedException {
@@ -198,15 +219,23 @@ public class IndexColumn implements Cloneable, Serializable {
 
       String transformedFunctionExpression = _functionExpression;
       String otherTransformedFunctionExpression = other._functionExpression;
+      boolean operatorClassMatters = false;
       if (platformInfo != null) {
+        operatorClassMatters = platformInfo.isOperatorClassesSupported();
         boolean emptyStringIsNull = platformInfo.emptyStringIsNull();
         if (emptyStringIsNull) {
           transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
           otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
         }
       }
-      return new EqualsBuilder().append(_name, other._name).append(_size, other._size)
-          .append(transformedFunctionExpression, otherTransformedFunctionExpression).isEquals();
+      EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name)
+          .append(_size, other._size)
+          .append(transformedFunctionExpression, otherTransformedFunctionExpression);
+      if (operatorClassMatters) {
+        // only compare the operator class if it is relevant in the curren dbms
+        equalsBuilder.append(_operatorClass, other._operatorClass);
+      }
+      return equalsBuilder.isEquals();
     } else {
       return false;
     }
@@ -227,16 +256,23 @@ public class IndexColumn implements Cloneable, Serializable {
   public boolean equalsIgnoreCase(IndexColumn other, PlatformInfo platformInfo) {
     String transformedFunctionExpression = _functionExpression;
     String otherTransformedFunctionExpression = other._functionExpression;
+    boolean operatorClassMatters = false;
     if (platformInfo != null) {
+      operatorClassMatters = platformInfo.isOperatorClassesSupported();
       boolean emptyStringIsNull = platformInfo.emptyStringIsNull();
       if (emptyStringIsNull) {
         transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
         otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
       }
     }
-    return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase())
-        .append(_size, other._size)
-        .append(transformedFunctionExpression, otherTransformedFunctionExpression).isEquals();
+    EqualsBuilder equalsBuilder = new EqualsBuilder()
+        .append(_name.toUpperCase(), other._name.toUpperCase()).append(_size, other._size)
+        .append(transformedFunctionExpression, otherTransformedFunctionExpression);
+    if (operatorClassMatters) {
+      // only compare the operator class if it is relevant in the curren dbms
+      equalsBuilder.append(_operatorClass, other._operatorClass);
+    }
+    return equalsBuilder.isEquals();
   }
 
   private String replaceEmptyStringWithNull(String functionExpression) {

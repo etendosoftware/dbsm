@@ -20,10 +20,18 @@ package org.apache.ddlutils.platform.oracle;
  */
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
@@ -35,6 +43,7 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.Unique;
@@ -583,5 +592,136 @@ public class Oracle8Builder extends SqlBuilder {
     print(" NULL");
 
     printEndOfStatement();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+    // Updates the comments of the tables that have new indexes, to prevent losing the info about
+    // the operator class of the indexes columns
+    for (Table table : newIndexesMap.keySet()) {
+      List<Index> indexesWithOperatorClass = new ArrayList<Index>();
+      for (Index index : newIndexesMap.get(table)) {
+        if (indexHasColumnWithOperatorClass(index)) {
+          indexesWithOperatorClass.add(index);
+        }
+      }
+      if (!indexesWithOperatorClass.isEmpty()) {
+        includeOperatorClassInTableComment(table, indexesWithOperatorClass);
+      }
+    }
+  }
+
+  /**
+   * Creates a SQL command to include in the comments of a table the info about the operator classes
+   * used in its indexes. The format of the comment will be:
+   * "indexName1.indexColumnName1.operatorClass=operatorClass1$indexName2.indexColumnName2.operatorClass=operatorClass2$..."
+   * 
+   * @param table
+   *          the table whose comment will include the info about the operator classes
+   * @param indexesWithOperatorClass
+   *          the list of indexes that contain columns that define operator classes
+   * @throws IOException
+   */
+  private void includeOperatorClassInTableComment(Table table, List<Index> indexesWithOperatorClass)
+      throws IOException {
+    if (!indexesWithOperatorClass.isEmpty()) {
+      // If the table already has comments, append new to comments to thems
+      String currentComments = getCommentOfTable(table.getName());
+      StringBuilder tableComment = new StringBuilder();
+      if (currentComments != null) {
+        tableComment.append(currentComments);
+      }
+      for (Index index : indexesWithOperatorClass) {
+        for (IndexColumn indexColumn : index.getColumns()) {
+          if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
+            tableComment.append(index.getName() + "." + indexColumn.getName() + ".operatorClass="
+                + indexColumn.getOperatorClass() + "$");
+          }
+        }
+      }
+      print("COMMENT ON TABLE " + table.getName() + " IS '" + tableComment.toString() + "'");
+      printEndOfStatement();
+    }
+  }
+
+  @Override
+  protected void removedOperatorClassIndexesPostAction(Map<String, List<Index>> removedIndexesMap)
+      throws IOException {
+    // Updates the comments of the tables whose indexes have been deleted, to delete the info about
+    // the operator classes
+    for (String tableName : removedIndexesMap.keySet()) {
+      List<Index> indexesWithOperatorClass = new ArrayList<Index>();
+      for (Index index : removedIndexesMap.get(tableName)) {
+        if (indexHasColumnWithOperatorClass(index)) {
+          indexesWithOperatorClass.add(index);
+        }
+      }
+      if (!indexesWithOperatorClass.isEmpty()) {
+        removeOperatorClassInTableComment(tableName, indexesWithOperatorClass);
+      }
+    }
+  }
+
+  /**
+   * Given a table and a list of removed indexes that define operator classes, updates the comments
+   * of the table to delete the info associated with the deleted indexes
+   * 
+   * @param tableName
+   *          the table whose comments will be updated
+   * @param indexesWithOperatorClass
+   *          the deleted indexes
+   * @throws IOException
+   */
+  private void removeOperatorClassInTableComment(String tableName,
+      List<Index> indexesWithOperatorClass) throws IOException {
+    if (!indexesWithOperatorClass.isEmpty()) {
+      String currentComments = getCommentOfTable(tableName);
+      List<String> commentLines = new ArrayList<String>(Arrays.asList(currentComments.split("\\$")));
+      for (Index index : indexesWithOperatorClass) {
+        for (IndexColumn indexColumn : index.getColumns()) {
+          // Find the line that corresponds with the deleted indexColumn, that is, the line that
+          // starts with "indexName.columnName."
+          for (String commentLine : commentLines) {
+            if (commentLine.startsWith(index.getName() + "." + indexColumn.getName() + ".")) {
+              commentLines.remove(commentLine);
+              break;
+            }
+          }
+        }
+      }
+      // Build the comments again, after having removed the unneeded lines
+      String tableComment = StringUtils.join(commentLines.toArray());
+      print("COMMENT ON TABLE " + tableName + " IS '" + tableComment + "'");
+      printEndOfStatement();
+    }
+  }
+
+  /**
+   * Given a table, returns its comment, stored in the all_tab_comments table
+   * 
+   * @param tableName
+   *          the name of the table whose comments will be returned
+   * @return the comments of the given table
+   */
+  private String getCommentOfTable(String tableName) {
+    String tableComment = null;
+    try {
+      PreparedStatement st = null;
+      Connection con = getPlatform().getDataSource().getConnection();
+
+      st = con
+          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
+      st.setString(1, tableName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        tableComment = rs.getString(1);
+      }
+    } catch (SQLException e) {
+      _log.error("Error while getting the comment of the table " + tableName, e);
+    }
+    return tableComment;
   }
 }
