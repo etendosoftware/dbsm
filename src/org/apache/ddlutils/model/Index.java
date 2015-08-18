@@ -24,6 +24,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.PlatformInfo;
 
 /**
  * Base class for indices.
@@ -151,13 +152,13 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    * @return true if the two indexes are equal, false otherwise
    */
   @SuppressWarnings("unchecked")
-  public boolean equals(Index other, boolean emptyStringIsNull) {
-    if (!emptyStringIsNull) {
+  public boolean equals(Index other, PlatformInfo platformInfo) {
+    if (platformInfo == null) {
       return equals(other);
     } else {
       return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
           .isEquals()
-          && columnsAreEqual(_columns, other._columns, emptyStringIsNull);
+          && columnsAreEqual(_columns, other._columns, platformInfo);
     }
   }
 
@@ -174,9 +175,9 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    * @return true if the two index column arrays are equal, false otherwise
    */
   private boolean columnsAreEqual(ArrayList<IndexColumn> columns,
-      ArrayList<IndexColumn> otherColumns, boolean emptyStringIsNull) {
+      ArrayList<IndexColumn> otherColumns, PlatformInfo platformInfo) {
     for (int idx = 0; idx < getColumnCount(); idx++) {
-      if (!columns.get(idx).equals(otherColumns.get(idx), emptyStringIsNull)) {
+      if (!columns.get(idx).equals(otherColumns.get(idx), platformInfo)) {
         return false;
       }
     }
@@ -184,8 +185,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   }
 
   public boolean equalsIgnoreCase(Index other) {
-    boolean emptyStringIsNull = false;
-    return equals(other, emptyStringIsNull);
+    PlatformInfo platformInfo = null;
+    return equals(other, platformInfo);
   }
 
   /**
@@ -200,7 +201,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    *          null
    * @return true if the two indexes are equal
    */
-  public boolean equalsIgnoreCase(Index other, boolean emptyStringIsNull) {
+  public boolean equalsIgnoreCase(Index other, PlatformInfo platformInfo) {
     if (other instanceof Index) {
       Index otherIndex = (Index) other;
 
@@ -214,7 +215,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         }
 
         for (int idx = 0; idx < getColumnCount(); idx++) {
-          if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx), emptyStringIsNull)) {
+          if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx), platformInfo)) {
             return false;
           }
         }

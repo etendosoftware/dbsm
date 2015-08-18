@@ -23,6 +23,7 @@ import java.io.Serializable;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.ddlutils.PlatformInfo;
 
 /**
  * Represents a column of an index in the database model.
@@ -186,20 +187,23 @@ public class IndexColumn implements Cloneable, Serializable {
    * {@inheritDoc}
    */
   public boolean equals(Object obj) {
-    boolean emptyStringIsNull = false;
-    return equals(obj, emptyStringIsNull);
+    PlatformInfo platformInfo = null;
+    return equals(obj, platformInfo);
 
   }
 
-  public boolean equals(Object obj, boolean emptyStringIsNull) {
+  public boolean equals(Object obj, PlatformInfo platformInfo) {
     if (obj instanceof IndexColumn) {
       IndexColumn other = (IndexColumn) obj;
 
       String transformedFunctionExpression = _functionExpression;
       String otherTransformedFunctionExpression = other._functionExpression;
-      if (emptyStringIsNull) {
-        transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
-        otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+      if (platformInfo != null) {
+        boolean emptyStringIsNull = platformInfo.emptyStringIsNull();
+        if (emptyStringIsNull) {
+          transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
+          otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+        }
       }
       return new EqualsBuilder().append(_name, other._name).append(_size, other._size)
           .append(transformedFunctionExpression, otherTransformedFunctionExpression).isEquals();
@@ -216,16 +220,19 @@ public class IndexColumn implements Cloneable, Serializable {
    * @return <code>true</code> if this index column is equal (ignoring case) to the given one
    */
   public boolean equalsIgnoreCase(IndexColumn other) {
-    boolean emptyStringIsNull = false;
-    return equalsIgnoreCase(other, emptyStringIsNull);
+    PlatformInfo platformInfo = null;
+    return equalsIgnoreCase(other, platformInfo);
   }
 
-  public boolean equalsIgnoreCase(IndexColumn other, boolean emptyStringIsNull) {
+  public boolean equalsIgnoreCase(IndexColumn other, PlatformInfo platformInfo) {
     String transformedFunctionExpression = _functionExpression;
     String otherTransformedFunctionExpression = other._functionExpression;
-    if (emptyStringIsNull) {
-      transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
-      otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+    if (platformInfo != null) {
+      boolean emptyStringIsNull = platformInfo.emptyStringIsNull();
+      if (emptyStringIsNull) {
+        transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
+        otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+      }
     }
     return new EqualsBuilder().append(_name.toUpperCase(), other._name.toUpperCase())
         .append(_size, other._size)
