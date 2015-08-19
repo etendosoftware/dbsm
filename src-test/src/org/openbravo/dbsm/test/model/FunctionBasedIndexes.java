@@ -41,7 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
 /**
- * Test cases to test the function based indexes
+ * Test cases to test the function based indexes support
  * 
  * @author AugustoMauch
  *
