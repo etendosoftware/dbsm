@@ -28,6 +28,7 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -158,6 +159,8 @@ public abstract class SqlBuilder {
   private DefaultValueHelper _defaultValueHelper = new DefaultValueHelper();
   /** The character sequences that need escaping. */
   private Map _charSequencesToEscape = new ListOrderedMap();
+  /** The map of the tables with its list of indexes that have index columns with operator class */
+  private Map<String, List<Index>> _removedIndexesWithOperatorClassMap;
 
   private Translation _PLSQLFunctionTranslation = new NullTranslation();
   public Translation _PLSQLTriggerTranslation = new NullTranslation();
@@ -785,15 +788,25 @@ public abstract class SqlBuilder {
         }
       } else {
         Iterator it2 = changes.iterator();
+        Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
         while (it2.hasNext()) {
           Object change = it2.next();
           if (change instanceof AddIndexChange) {
             AddIndexChange ichange = ((AddIndexChange) change);
+
+            List<Index> indexesForTable = newIndexesMap.get(ichange.getChangedTable());
+            if (indexesForTable == null) {
+              indexesForTable = new ArrayList<Index>();
+            }
+            indexesForTable.add(ichange.getNewIndex());
+            newIndexesMap.put(ichange.getChangedTable(), indexesForTable);
+
             if (ichange.getChangedTable().getName()
                 .equalsIgnoreCase(desiredModel.getTable(i).getName()))
               processChange(currentModel, desiredModel, params, ichange);
           }
         }
+        newIndexesPostAction(newIndexesMap);
       }
     }
 
@@ -864,6 +877,29 @@ public abstract class SqlBuilder {
       }
     }
 
+  }
+
+  /**
+   * Hook that is executed after all the NewIndexChanges for a list of tables have been created
+   * 
+   * @param newIndexesMap
+   *          a map of all the tables that have new indexes, along with the new indexes
+   * @throws IOException
+   */
+  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+  }
+
+  /**
+   * Hook that is executed after all the NewIndexChanges for a table have been created
+   * 
+   * @param newIndexesMap
+   *          a map of all the tables that have new indexes, along with the new indexes
+   * @throws IOException
+   */
+  private void newIndexesPostAction(Table table, Index[] indexes) throws IOException {
+    Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
+    newIndexesMap.put(table, Arrays.asList(indexes));
+    newIndexesPostAction(newIndexesMap);
   }
 
   public boolean hasBeenRecreated(Table table) {
@@ -977,10 +1013,21 @@ public abstract class SqlBuilder {
         Database.class, Database.class, CreationParameters.class, null }, new Object[] {
         currentModel, desiredModel, params, null });
 
+    // The list of removed indexes that define an operator class
+    // It is populated in processChange(Database currentModel, Database desiredModel,
+    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a paremeter to
+    // applyForSelectedChanges because it is a too generic method, that's why it is defined as a
+    // class attribute
+    _removedIndexesWithOperatorClassMap = new HashMap<String, List<Index>>();
+
     // 1st pass: removing external constraints and indices
     applyForSelectedChanges(changes, new Class[] { RemoveForeignKeyChange.class,
         RemoveUniqueChange.class, RemoveIndexChange.class, RemoveCheckChange.class },
         callbackClosure);
+
+    if (!_removedIndexesWithOperatorClassMap.isEmpty()) {
+      removedOperatorClassIndexesPostAction(_removedIndexesWithOperatorClassMap);
+    }
 
     for (int i = 0; i < currentModel.getViewCount(); i++) {
       dropView(currentModel.getView(i));
@@ -1025,6 +1072,18 @@ public abstract class SqlBuilder {
     applyForSelectedChanges(changes, new Class[] { AddViewChange.class }, callbackClosure);
 
     applyForSelectedChanges(changes, new Class[] { AddTriggerChange.class }, callbackClosure);
+  }
+
+  /**
+   * Hook to execute actions after all the RemoveIndexChanges belonging to indexes that define an
+   * operator class are defined
+   * 
+   * @param removedIndexesWithOperatorClassMap
+   *          a map of all the tables that have new indexes, along with the new indexes
+   * @throws IOException
+   */
+  protected void removedOperatorClassIndexesPostAction(
+      Map<String, List<Index>> removedIndexesWithOperatorClassMap) throws IOException {
   }
 
   /**
@@ -1100,6 +1159,18 @@ public abstract class SqlBuilder {
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, RemoveIndexChange change) throws IOException {
     writeExternalIndexDropStmt(change.getChangedTable(), change.getIndex());
+    if (indexHasColumnWithOperatorClass(change.getIndex())) {
+      // keep track of the removed indexes that use operator classes, as in some platforms is it
+      // required to update the comments of the tables that own them
+      List<Index> operatorClassTableIndexes = _removedIndexesWithOperatorClassMap.get(change
+          .getChangedTable());
+      if (operatorClassTableIndexes == null) {
+        operatorClassTableIndexes = new ArrayList<Index>();
+      }
+      operatorClassTableIndexes.add(change.getIndex());
+      _removedIndexesWithOperatorClassMap.put(change.getChangedTable().getName(),
+          operatorClassTableIndexes);
+    }
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -3313,6 +3384,7 @@ public abstract class SqlBuilder {
    *          The table
    */
   protected void writeExternalIndicesCreateStmt(Table table) throws IOException {
+    Map<String, String> indexColumnsWithOperatorClass = new HashMap<String, String>();
     for (int idx = 0; idx < table.getIndexCount(); idx++) {
       Index index = table.getIndex(idx);
 
@@ -3321,6 +3393,7 @@ public abstract class SqlBuilder {
       }
       writeExternalIndexCreateStmt(table, index);
     }
+    newIndexesPostAction(table, table.getIndices());
   }
 
   /**
@@ -3361,6 +3434,7 @@ public abstract class SqlBuilder {
         printIdentifier(getStructureObjectName(table));
         print(" (");
 
+        List<IndexColumn> columnsWithOperatorClass = new ArrayList<IndexColumn>();
         for (int idx = 0; idx < index.getColumnCount(); idx++) {
           if (idx > 0) {
             print(", ");
@@ -3380,12 +3454,28 @@ public abstract class SqlBuilder {
             }
             printIdentifier(getColumnName(col));
           }
+          if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
+            // Store the index columns that define an operator class, as they will have to be
+            // included in the comments of the table in Oracle
+            columnsWithOperatorClass.add(idxColumn);
+          }
+          writeOperatorClass(idxColumn);
         }
 
         print(")");
         printEndOfStatement();
       }
     }
+  }
+
+  /**
+   * Writes the operator class of the index column, if any.
+   * 
+   * @param idxColumn
+   *          the index column
+   * @throws IOException
+   */
+  protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
   }
 
   /**
@@ -3446,6 +3536,24 @@ public abstract class SqlBuilder {
       printIdentifier(getStructureObjectName(table));
     }
     printEndOfStatement();
+  }
+
+  /**
+   * Checks whether any column of the provided index defines an operator class
+   * 
+   * @param index
+   *          the index that will be checked
+   * @return true if any columns if the provided index defines an operator class, false otherwise
+   */
+  protected boolean indexHasColumnWithOperatorClass(Index index) {
+    boolean hasColumnWithOperatorClass = false;
+    for (IndexColumn indexColumn : index.getColumns()) {
+      if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
+        hasColumnWithOperatorClass = true;
+        break;
+      }
+    }
+    return hasColumnWithOperatorClass;
   }
 
   /**

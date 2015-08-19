@@ -37,6 +37,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
@@ -110,6 +111,16 @@ public class PostgreSqlBuilder extends SqlBuilder {
     print("DROP INDEX ");
     printIdentifier(getConstraintObjectName(index));
     printEndOfStatement();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
+    if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
+      print(" " + idxColumn.getOperatorClass());
+    }
   }
 
   /**

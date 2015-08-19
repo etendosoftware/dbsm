@@ -328,7 +328,7 @@ public class OracleModelLoader extends ModelLoaderBase {
   // Overrides readIndex to be able to discard indexes that use non supported functions
   protected Index readIndex(ResultSet rs) throws SQLException {
     String indexRealName = rs.getString(1);
-    String indexName = indexRealName.toUpperCase();
+    final String indexName = indexRealName.toUpperCase();
 
     final Index inx = new Index();
 
@@ -349,6 +349,10 @@ public class OracleModelLoader extends ModelLoaderBase {
         } else {
           inxcol = new IndexColumn();
           inxcol.setName(columnName);
+        }
+        String operatorClass = getIndexOperatorClass(indexName, inxcol.getName());
+        if (operatorClass != null && !operatorClass.isEmpty()) {
+          inxcol.setOperatorClass(operatorClass);
         }
         inx.addColumn(inxcol);
       }
@@ -373,6 +377,64 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String removeDoubleQuotes(String indexExpression) {
     return indexExpression.replace("\"", "");
+  }
+
+  /**
+   * Given an the name of an index and the name of one of its columns, returns the operator class
+   * that is applied to that index column, if any. In Oracle, the operator classes are stored in the
+   * comments of the table owner of the indexes like this:
+   * "indexName1.indexColumn1.operatorClass=operatorClass1$indexName2.indexColumn2.operatorClass=operatorClass2$..."
+   */
+  private String getIndexOperatorClass(String indexName, String indexColumnName) {
+    String operatorClass = null;
+    try {
+      String tableName = getTableNameFromIndexName(indexName);
+      PreparedStatement st = null;
+      st = _connection
+          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
+      st.setString(1, tableName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      String commentText = null;
+      if (rs.next()) {
+        commentText = rs.getString(1);
+      }
+      if (commentText != null && commentText.contains("$")) {
+        String[] commentLines = commentText.split("\\$");
+        for (String commentLine : commentLines) {
+          if (commentLine.startsWith(indexName + "." + indexColumnName)) {
+            operatorClass = commentLine.substring(commentLine.indexOf("=") + 1);
+          }
+        }
+      }
+    } catch (SQLException e) {
+      _log.error("Error while getting the operator class of the index column " + indexName + "."
+          + indexColumnName, e);
+    }
+    return operatorClass;
+  }
+
+  /**
+   * Given the name of an index, returns the name of the table it belongs to
+   * 
+   * @param indexName
+   *          the name of the index
+   * @return the name of the table it belongs to
+   */
+  private String getTableNameFromIndexName(String indexName) {
+    String tableName = null;
+    try {
+      PreparedStatement st = null;
+      st = _connection
+          .prepareStatement("SELECT table_name FROM USER_INDEXES U WHERE INDEX_NAME = ?");
+      st.setString(1, indexName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        tableName = rs.getString(1);
+      }
+    } catch (SQLException e) {
+      _log.error("Error while checking the table where the index " + indexName + " belongs", e);
+    }
+    return tableName;
   }
 
   /*

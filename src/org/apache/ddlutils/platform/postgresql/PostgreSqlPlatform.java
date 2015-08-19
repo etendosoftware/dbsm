@@ -112,6 +112,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     info.setHasSize(Types.VARBINARY, false);
 
     info.setNcharsupported(true);
+    info.setOperatorClassesSupported(true);
 
     info.setColumnOrderManaged(false);
 

@@ -276,7 +276,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and pc.conname = ? and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
             + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
 
-    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, PG_GET_EXPR(PG_INDEX.indexprs,PG_INDEX.indrelid, true)"
+    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, PG_GET_EXPR(PG_INDEX.indexprs,PG_INDEX.indrelid, true), PG_INDEX.indclass"
         + " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE"
         + " WHERE PG_INDEX.indexrelid = PG_CLASS.OID"
         + " AND PG_INDEX.indrelid = PG_CLASS1.OID"
@@ -988,7 +988,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     inx.setName(indexName);
     inx.setUnique(translateUniqueness(rs.getString(2)));
-
     /*
      * Note: only element 0 of this list will ever be used.
      * 
@@ -1048,7 +1047,40 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         }
       }
     }
+    // Obtain the operatorClassOids of each index column
+    String[] operatorClassOids = rs.getString(4).split(" ");
+    int i = 0;
+    for (IndexColumn indexColumn : inx.getColumns()) {
+      String operatorClassName = getOperatorClassName(operatorClassOids[i++]);
+      if (operatorClassName.toUpperCase().contains("PATTERN")) {
+        indexColumn.setOperatorClass(operatorClassName);
+      }
+    }
     return inx;
+  }
+
+  /**
+   * Given the OID of an operator class, returns its name
+   * 
+   * @param operatorClassOid
+   *          the OID of an operator class
+   * @return the name of the operator class
+   */
+  private String getOperatorClassName(String operatorClassOid) {
+    String operatorClassName = null;
+    try {
+      PreparedStatement st = _connection
+          .prepareStatement("select opcname from PG_OPCLASS where oid = ?");
+      st.setInt(1, Integer.parseInt(operatorClassOid));
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        operatorClassName = rs.getString(1);
+      }
+    } catch (SQLException e) {
+      _log.error("Error while getting the name of the operator class with oid " + operatorClassOid,
+          e);
+    }
+    return operatorClassName;
   }
 
   private IndexColumn getIndexColumnFromExpression(String indexExpression) {
