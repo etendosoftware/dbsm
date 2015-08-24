@@ -708,9 +708,10 @@ public class Oracle8Builder extends SqlBuilder {
    */
   private String getCommentOfTable(String tableName) {
     String tableComment = null;
+    Connection con = null;
     try {
       PreparedStatement st = null;
-      Connection con = getPlatform().getDataSource().getConnection();
+      con = getPlatform().getDataSource().getConnection();
 
       st = con
           .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
@@ -720,7 +721,14 @@ public class Oracle8Builder extends SqlBuilder {
         tableComment = rs.getString(1);
       }
     } catch (SQLException e) {
-      _log.error("Error while getting the comment of the table " + tableName, e);
+    } finally {
+      if (con != null) {
+        try {
+          con.close();
+        } catch (SQLException e) {
+          _log.error("Error while closing the connection", e);
+        }
+      }
     }
     return tableComment;
   }
