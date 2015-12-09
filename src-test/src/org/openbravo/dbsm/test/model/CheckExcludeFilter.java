@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.View;
@@ -111,6 +112,22 @@ public class CheckExcludeFilter extends DbsmTest {
     assertThat(excludedFile.exists(), equalTo(false));
   }
 
+  @Test
+  // Tests that tables in the exclude filter are not exported
+  public void sequenceIsExcluded() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEQUENCE.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeSequence.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/sequences/EXCLUDED_SEQUENCE.xml");
+    assertThat(excludedSequenceExistsInDb(), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
   private boolean excludedFunctionExistsInDb() {
     Platform platform = getPlatform();
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
@@ -137,5 +154,12 @@ public class CheckExcludeFilter extends DbsmTest {
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
     Trigger trigger = database.findTrigger("EXCLUDED_TRIGGER");
     return (trigger != null);
+  }
+
+  private boolean excludedSequenceExistsInDb() {
+    Platform platform = getPlatform();
+    Database database = platform.loadModelFromDatabase(new ExcludeFilter());
+    Sequence sequence = database.findSequence("EXCLUDED_SEQUENCE");
+    return (sequence != null);
   }
 }

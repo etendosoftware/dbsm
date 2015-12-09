@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+  <database name="EXCLUDED SEQUENCE TEST">
+    <sequence name="NOT_EXCLUDED_SEQUENCE" start="10" increment="1"/>
+    <sequence name="EXCLUDED_SEQUENCE" start="10" increment="1"/>
+  </database>
