@@ -94,6 +94,7 @@ public class DbsmTest {
   private Rdbms rdbms;
   private Platform platform;
   private SQLBatchEvaluator evaluator;
+  private ExcludeFilter excludeFilter;
   protected RecreationMode recreationMode = RecreationMode.standard;
 
   public enum Rdbms {
@@ -199,7 +200,14 @@ public class DbsmTest {
   }
 
   protected ExcludeFilter getExcludeFilter() {
-    return new OpenbravoExcludeFilter();
+    if (excludeFilter == null) {
+      excludeFilter = new OpenbravoExcludeFilter();
+    }
+    return excludeFilter;
+  }
+
+  public void setExcludeFilter(ExcludeFilter excludeFilter) {
+    this.excludeFilter = excludeFilter;
   }
 
   protected BasicDataSource getDataSource() {
