@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="NOT_EXCLUDED_TABLE" primaryKey="NOT_EXCLUDED_TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+    <table name="EXCLUDED_TABLE" primaryKey="EXCLUDED_TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

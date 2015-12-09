@@ -36,6 +36,7 @@ CheckConstraints.class, //
     CreateDefault.class, //
     FunctionBasedIndexes.class, //
     OperatorClassIndexes.class, //
+    CheckExcludeFilter.class, //
     Functions.class })
 public class ModelSuite {
 
