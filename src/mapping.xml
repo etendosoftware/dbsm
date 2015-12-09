@@ -277,4 +277,10 @@ under the License.
     </element>
   </class>
   
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedSequence">
+    <element name="excludedSequence">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>  
+  
 </betwixt-config>

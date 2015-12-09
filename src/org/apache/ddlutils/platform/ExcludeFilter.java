@@ -18,6 +18,7 @@ import java.util.Vector;
 
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedFunction;
+import org.apache.ddlutils.platform.modelexclusion.ExcludedSequence;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedTable;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedTrigger;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedView;
@@ -45,6 +46,7 @@ public class ExcludeFilter implements Cloneable {
   Vector<String> excludedFunctions = new Vector<String>();
   Vector<String> excludedTriggers = new Vector<String>();
   Vector<String> excludedViews = new Vector<String>();
+  Vector<String> excludedSequences = new Vector<String>();
 
   private Logger log4j = Logger.getLogger(getClass());
 
@@ -64,6 +66,10 @@ public class ExcludeFilter implements Cloneable {
     }
     sb.append("***Filtered functions: " + "\n");
     for (String s : excludedFunctions) {
+      sb.append("  -" + s + "\n");
+    }
+    sb.append("***Filtered sequences: " + "\n");
+    for (String s : excludedSequences) {
       sb.append("  -" + s + "\n");
     }
     return sb.toString();
@@ -87,6 +93,7 @@ public class ExcludeFilter implements Cloneable {
     filter.excludedViews.addAll(excludedViews);
     filter.excludedTriggers.addAll(excludedTriggers);
     filter.excludedFunctions.addAll(excludedFunctions);
+    filter.excludedSequences.addAll(excludedSequences);
 
     for (ExceptionRow row : exceptions) {
       filter.exceptions.add((ExceptionRow) row.clone());
@@ -112,6 +119,8 @@ public class ExcludeFilter implements Cloneable {
           excludedFunctions.add(((ExcludedFunction) obj).getName());
         } else if (obj instanceof ExcludedTrigger) {
           excludedTriggers.add(((ExcludedTrigger) obj).getName());
+        } else if (obj instanceof ExcludedSequence) {
+          excludedSequences.add(((ExcludedSequence) obj).getName());
         }
       }
     } catch (Exception e) {
@@ -144,6 +153,11 @@ public class ExcludeFilter implements Cloneable {
         v.add(new ExcludedTrigger(trigger));
       }
 
+      String[] sequences = getExcludedSequences();
+      for (String sequence : sequences) {
+        v.add(new ExcludedSequence(sequence));
+      }
+
       DatabaseIO dbIO = new DatabaseIO();
       dbIO.writeExcludedObjects(file, v);
     } catch (Exception e) {
@@ -160,7 +174,7 @@ public class ExcludeFilter implements Cloneable {
   }
 
   public String[] getExcludedSequences() {
-    return new String[0];
+    return excludedSequences.toArray(new String[0]);
   }
 
   public String[] getExcludedFunctions() {
@@ -209,7 +223,7 @@ public class ExcludeFilter implements Cloneable {
   }
 
   private boolean hasPrefix(String name, String prefix) {
-    if(prefix.equalsIgnoreCase(name)){
+    if (prefix.equalsIgnoreCase(name)) {
       return true;
     }
     return name.toUpperCase().startsWith(prefix.toUpperCase() + "_");
