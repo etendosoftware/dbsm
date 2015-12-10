@@ -59,7 +59,7 @@ public class CheckExcludeFilter extends DbsmTest {
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/tables/NOT_EXCLUDED_TABLE.xml");
     File excludedFile = new File(EXPORT_DIR + "/tables/EXCLUDED_TABLE.xml");
-    assertThat(excludedTableExistsInDb(), equalTo(true));
+    assertThat(excludedTableExistsInDb("EXCLUDED_TABLE"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
   }
@@ -75,7 +75,7 @@ public class CheckExcludeFilter extends DbsmTest {
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/views/NOT_EXCLUDED_VIEW.xml");
     File excludedFile = new File(EXPORT_DIR + "/views/EXCLUDED_VIEW.xml");
-    assertThat(excludedViewExistsInDb(), equalTo(true));
+    assertThat(excludedViewExistsInDb("EXCLUDED_VIEW"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
   }
@@ -91,7 +91,7 @@ public class CheckExcludeFilter extends DbsmTest {
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/triggers/NOT_EXCLUDED_TRIGGER.xml");
     File excludedFile = new File(EXPORT_DIR + "/triggers/EXCLUDED_TRIGGER.xml");
-    assertThat(excludedTriggerExistsInDb(), equalTo(true));
+    assertThat(excludedTriggerExistsInDb("EXCLUDED_TRIGGER"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
   }
@@ -107,7 +107,7 @@ public class CheckExcludeFilter extends DbsmTest {
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/functions/NOT_EXCLUDED_FUNCTION.xml");
     File excludedFile = new File(EXPORT_DIR + "/functions/EXCLUDED_FUNCTION.xml");
-    assertThat(excludedFunctionExistsInDb(), equalTo(true));
+    assertThat(excludedFunctionExistsInDb("EXCLUDED_FUNCTION"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
   }
@@ -123,43 +123,43 @@ public class CheckExcludeFilter extends DbsmTest {
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");
     File excludedFile = new File(EXPORT_DIR + "/sequences/EXCLUDED_SEQUENCE.xml");
-    assertThat(excludedSequenceExistsInDb(), equalTo(true));
+    assertThat(excludedSequenceExistsInDb("EXCLUDED_SEQUENCE"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
   }
 
-  private boolean excludedFunctionExistsInDb() {
+  private boolean excludedFunctionExistsInDb(String functionName) {
     Platform platform = getPlatform();
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
-    Function function = database.findFunction("EXCLUDED_FUNCTION");
+    Function function = database.findFunction(functionName);
     return (function != null);
   }
 
-  private boolean excludedTableExistsInDb() {
+  private boolean excludedTableExistsInDb(String tableName) {
     Platform platform = getPlatform();
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
-    Table table = database.findTable("EXCLUDED_TABLE");
+    Table table = database.findTable(tableName);
     return (table != null);
   }
 
-  private boolean excludedViewExistsInDb() {
+  private boolean excludedViewExistsInDb(String viewName) {
     Platform platform = getPlatform();
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
-    View view = database.findView("EXCLUDED_VIEW");
+    View view = database.findView(viewName);
     return (view != null);
   }
 
-  private boolean excludedTriggerExistsInDb() {
+  private boolean excludedTriggerExistsInDb(String triggerName) {
     Platform platform = getPlatform();
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
-    Trigger trigger = database.findTrigger("EXCLUDED_TRIGGER");
+    Trigger trigger = database.findTrigger(triggerName);
     return (trigger != null);
   }
 
-  private boolean excludedSequenceExistsInDb() {
+  private boolean excludedSequenceExistsInDb(String sequenceName) {
     Platform platform = getPlatform();
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
-    Sequence sequence = database.findSequence("EXCLUDED_SEQUENCE");
+    Sequence sequence = database.findSequence(sequenceName);
     return (sequence != null);
   }
 }
