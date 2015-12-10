@@ -52,9 +52,10 @@ public class OracleModelLoader extends ModelLoaderBase {
   protected void initMetadataSentences() throws SQLException {
     String sql;
     boolean firstExpressionInWhereClause = true;
+    String escapeClause = "ESCAPE '\\'";
     _stmt_listtables = _connection.prepareStatement("SELECT TABLE_NAME FROM USER_TABLES "
         + _filter.getExcludeFilterWhereClause("TABLE_NAME", _filter.getExcludedTables(),
-            firstExpressionInWhereClause) + " ORDER BY TABLE_NAME");
+            firstExpressionInWhereClause, escapeClause) + " ORDER BY TABLE_NAME");
     _stmt_pkname = _connection
         .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ?");
     _stmt_pkname_prefix = _connection
@@ -125,7 +126,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     firstExpressionInWhereClause = true;
     sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS "
         + _filter.getExcludeFilterWhereClause("VIEW_NAME", _filter.getExcludedViews(),
-            firstExpressionInWhereClause);
+            firstExpressionInWhereClause, escapeClause);
     if (_prefix != null)
       sql += " AND (UPPER(VIEW_NAME) LIKE '"
           + _prefix
@@ -135,7 +136,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     firstExpressionInWhereClause = true;
     sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES "
         + _filter.getExcludeFilterWhereClause("SEQUENCE_NAME", _filter.getExcludedSequences(),
-            firstExpressionInWhereClause);
+            firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
       if (!sql.contains("WHERE"))
         sql += " WHERE 1=1";
@@ -145,7 +146,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     firstExpressionInWhereClause = false;
     sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE UPPER(TRIGGER_NAME) NOT LIKE 'AU\\_%' ESCAPE '\\' "
         + _filter.getExcludeFilterWhereClause("TRIGGER_NAME", _filter.getExcludedTriggers(),
-            firstExpressionInWhereClause);
+            firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
       if (!sql.contains("WHERE"))
         sql += " WHERE 1=1";
@@ -159,7 +160,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     firstExpressionInWhereClause = false;
     sql = "SELECT DISTINCT NAME FROM USER_SOURCE WHERE (TYPE = 'PROCEDURE' OR TYPE = 'FUNCTION') "
         + _filter.getExcludeFilterWhereClause("NAME", _filter.getExcludedFunctions(),
-            firstExpressionInWhereClause);
+            firstExpressionInWhereClause, escapeClause);
     if (_prefix != null)
       sql += " AND (UPPER(NAME) LIKE '"
           + _prefix

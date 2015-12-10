@@ -13,9 +13,13 @@
 package org.apache.ddlutils.platform;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedFunction;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedSequence;
@@ -305,11 +309,22 @@ public class ExcludeFilter implements Cloneable {
     return false;
   }
 
-  /**
-   * Returns the where clause that should be used to exclude the provided list of excluded objects
-   */
   public String getExcludeFilterWhereClause(String fieldIdentifier, String[] excludedObjects,
       boolean firstExpressionInWhereClause) {
+    // if no escape clause is provided, then use none
+    // those dialects that require it (i.e. Oracle) will use the method that accepts a escape clause
+    String escapeClause = null;
+    return getExcludeFilterWhereClause(fieldIdentifier, excludedObjects,
+        firstExpressionInWhereClause, escapeClause);
+  }
+
+  /**
+   * Returns the where clause that should be used to exclude the provided list of excluded objects.
+   * It supports using wildcards. In this case, the exclusion will be handled like a wildcard if it
+   * contains the '%' character
+   */
+  public String getExcludeFilterWhereClause(String fieldIdentifier, String[] excludedObjects,
+      boolean firstExpressionInWhereClause, String escapeClause) {
     StringBuilder whereClause = new StringBuilder();
     if (excludedObjects.length > 0) {
       if (firstExpressionInWhereClause) {
@@ -317,11 +332,74 @@ public class ExcludeFilter implements Cloneable {
       } else {
         whereClause.append(" AND ");
       }
-      whereClause.append("UPPER(" + fieldIdentifier + ") NOT IN (");
-      whereClause.append(getListObjects(excludedObjects));
-      whereClause.append(") ");
+      List<String> nonWildcardExcludedObjects = new ArrayList<String>();
+      List<String> wildcardExcludedObjects = new ArrayList<String>();
+      // exclusions defined with wild cards must be handled differently that those not defined with
+      // wild cards. the ones defined with wildcards will add clauses like this:
+      // AND UPPER(fieldname) NOT LIKE UPPER(wildcard_exclusion1) AND UPPER(fieldname) NOT LIKE
+      // UPPER(wildcard_exclusion2) ...
+      // while the ones not defined with wildcards will add a clause like this one:
+      // AND UPPER(fieldname) NOT IN (exclusion1, exclusion2, ...)
+      separateWildcardAndNonWildcardExcludedObjects(excludedObjects, nonWildcardExcludedObjects,
+          wildcardExcludedObjects);
+      if (!nonWildcardExcludedObjects.isEmpty()) {
+        whereClause.append(buildNonWildcardExcludeFilterWhereClause(fieldIdentifier,
+            nonWildcardExcludedObjects));
+      }
+      if (!wildcardExcludedObjects.isEmpty()) {
+        if (!nonWildcardExcludedObjects.isEmpty()) {
+          whereClause.append(" AND ");
+        }
+        whereClause.append(buildwildcardExcludeFilterWhereClause(fieldIdentifier,
+            wildcardExcludedObjects, escapeClause));
+      }
     }
     return whereClause.toString();
+  }
+
+  private String buildNonWildcardExcludeFilterWhereClause(String fieldIdentifier,
+      List<String> nonWildcardExcludedObjects) {
+    StringBuilder whereClause = new StringBuilder();
+
+    whereClause.append("UPPER(" + fieldIdentifier + ") NOT IN (");
+    whereClause.append(getListObjects((String[]) nonWildcardExcludedObjects
+        .toArray(new String[nonWildcardExcludedObjects.size()])));
+    whereClause.append(") ");
+
+    return whereClause.toString();
+  }
+
+  private Object buildwildcardExcludeFilterWhereClause(String fieldIdentifier,
+      List<String> wildcardExcludedObjects, String escapeClause) {
+    StringBuilder whereClause = new StringBuilder();
+    Iterator<String> iterator = wildcardExcludedObjects.iterator();
+    while (iterator.hasNext()) {
+      whereClause.append(" UPPER(" + fieldIdentifier + ")");
+      whereClause.append(" NOT LIKE UPPER('" + iterator.next() + "')");
+      if (!StringUtils.isBlank(escapeClause)) {
+        whereClause.append(" " + escapeClause + " ");
+      }
+      if (iterator.hasNext()) {
+        whereClause.append(" AND ");
+      }
+    }
+    return whereClause.toString();
+  }
+
+  /**
+   * Given a String array that represents exclusions, returns two lists, one with the exclusions
+   * defined with wildcards and another one with the exclusions not defined with wildcards. A
+   * exclusion is considered to be defined with a wildcard if it contains the character '%'
+   */
+  private void separateWildcardAndNonWildcardExcludedObjects(String[] excludedObjects,
+      List<String> nonWildcardExcludedObjects, List<String> wildcardExcludedObjects) {
+    for (String excludedObject : excludedObjects) {
+      if (excludedObject.contains("%")) {
+        wildcardExcludedObjects.add(excludedObject);
+      } else {
+        nonWildcardExcludedObjects.add(excludedObject);
+      }
+    }
   }
 
   private String getListObjects(String[] list) {
