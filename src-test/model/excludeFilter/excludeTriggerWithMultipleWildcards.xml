@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+  <vector>
+    <excludedTrigger name="EXCLUDED\_%"/>
+    <excludedTrigger name="ALSO_EXCLUDED\_%"/>
+  </vector>
+

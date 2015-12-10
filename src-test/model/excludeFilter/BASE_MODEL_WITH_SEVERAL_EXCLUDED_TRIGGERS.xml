@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="NOT_EXCLUDED_TABLE" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+    
+    <trigger name="NOT_EXCLUDED_TRIGGER" table="NOT_EXCLUDED_TABLE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+BEGIN
+END NOT_EXCLUDED_TRIGGER
+]]></body>
+    </trigger>
+    <trigger name="EXCLUDED_TRIGGER" table="NOT_EXCLUDED_TABLE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+BEGIN
+END EXCLUDED_TRIGGER
+]]></body>
+    </trigger>
+    <trigger name="ALSO_EXCLUDED_TRIGGER" table="NOT_EXCLUDED_TABLE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+BEGIN
+END ALSO_EXCLUDED_TRIGGER
+]]></body>
+    </trigger>      
+  </database>

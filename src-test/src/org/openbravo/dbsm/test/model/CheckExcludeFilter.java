@@ -65,7 +65,65 @@ public class CheckExcludeFilter extends DbsmTest {
   }
 
   @Test
-  // Tests that tables in the exclude filter are not exported
+  // Tests that tables defined in the exclude filter using wildcards are not exported
+  public void tableIsExcludedWithWildCard() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_TABLE.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeTableWithWildcard.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/tables/NOT_EXCLUDED_TABLE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/tables/EXCLUDED_TABLE.xml");
+    assertThat(excludedTableExistsInDb("EXCLUDED_TABLE"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded tables are not exported having several wildcards defined in the exclude
+  // filter
+  public void tableIsExcludedWithMultipleWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TABLES.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeTableWithMultipleWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/tables/NOT_EXCLUDED_TABLE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/tables/EXCLUDED_TABLE.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/tables/ALSO_EXCLUDED_TABLE.xml");
+    assertThat(excludedTableExistsInDb("EXCLUDED_TABLE"), equalTo(true));
+    assertThat(excludedTableExistsInDb("ALSO_EXCLUDED_TABLE"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded tables are not exported mixing wildcards and non wildcards in the exclude
+  // filter
+  public void tableIsExcludedWithWildcardsAndNonWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TABLES.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeTableWithWildcardsAndNonWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/tables/NOT_EXCLUDED_TABLE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/tables/EXCLUDED_TABLE.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/tables/ALSO_EXCLUDED_TABLE.xml");
+    assertThat(excludedTableExistsInDb("EXCLUDED_TABLE"), equalTo(true));
+    assertThat(excludedTableExistsInDb("ALSO_EXCLUDED_TABLE"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that views in the exclude filter are not exported
   public void viewIsExcluded() throws IOException {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_VIEW.xml");
@@ -81,7 +139,65 @@ public class CheckExcludeFilter extends DbsmTest {
   }
 
   @Test
-  // Tests that tables in the exclude filter are not exported
+  // Tests that views defined in the exclude filter using wildcards are not exported
+  public void viewIsExcludedWithWildCard() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_VIEW.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeViewWithWildcard.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/views/NOT_EXCLUDED_VIEW.xml");
+    File excludedFile = new File(EXPORT_DIR + "/views/EXCLUDED_VIEW.xml");
+    assertThat(excludedViewExistsInDb("EXCLUDED_VIEW"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded views are not exported having several wildcards defined in the exclude
+  // filter
+  public void viewIsExcludedWithMultipleWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_VIEWS.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeViewWithMultipleWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/views/NOT_EXCLUDED_VIEW.xml");
+    File excludedFile = new File(EXPORT_DIR + "/views/EXCLUDED_VIEW.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/views/ALSO_EXCLUDED_VIEW.xml");
+    assertThat(excludedViewExistsInDb("EXCLUDED_VIEW"), equalTo(true));
+    assertThat(excludedViewExistsInDb("ALSO_EXCLUDED_VIEW"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded views are not exported mixing wildcards and non wildcards in the exclude
+  // filter
+  public void viewIsExcludedWithWildcardsAndNonWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_VIEWS.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeViewWithWildcardsAndNonWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/views/NOT_EXCLUDED_VIEW.xml");
+    File excludedFile = new File(EXPORT_DIR + "/views/EXCLUDED_VIEW.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/views/ALSO_EXCLUDED_VIEW.xml");
+    assertThat(excludedViewExistsInDb("EXCLUDED_VIEW"), equalTo(true));
+    assertThat(excludedViewExistsInDb("ALSO_EXCLUDED_VIEW"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that triggers in the exclude filter are not exported
   public void triggerIsExcluded() throws IOException {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_TRIGGER.xml");
@@ -97,7 +213,65 @@ public class CheckExcludeFilter extends DbsmTest {
   }
 
   @Test
-  // Tests that tables in the exclude filter are not exported
+  // Tests that triggers defined in the exclude filter using wildcards are not exported
+  public void triggerIsExcludedWithWildCard() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_TRIGGER.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeTriggerWithWildcard.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/triggers/NOT_EXCLUDED_TRIGGER.xml");
+    File excludedFile = new File(EXPORT_DIR + "/triggers/EXCLUDED_TRIGGER.xml");
+    assertThat(excludedTriggerExistsInDb("EXCLUDED_TRIGGER"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded triggers are not exported having several wildcards defined in the exclude
+  // filter
+  public void triggerIsExcludedWithMultipleWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TRIGGERS.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeTriggerWithMultipleWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/triggers/NOT_EXCLUDED_TRIGGER.xml");
+    File excludedFile = new File(EXPORT_DIR + "/triggers/EXCLUDED_TRIGGER.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/triggers/ALSO_EXCLUDED_TRIGGER.xml");
+    assertThat(excludedTriggerExistsInDb("EXCLUDED_TRIGGER"), equalTo(true));
+    assertThat(excludedTriggerExistsInDb("ALSO_EXCLUDED_TRIGGER"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded triggers are not exported mixing wildcards and non wildcards in the exclude
+  // filter
+  public void triggerIsExcludedWithWildcardsAndNonWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TRIGGERS.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeTriggerWithWildcardsAndNonWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/triggers/NOT_EXCLUDED_TRIGGER.xml");
+    File excludedFile = new File(EXPORT_DIR + "/triggers/EXCLUDED_TRIGGER.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/triggers/ALSO_EXCLUDED_TRIGGER.xml");
+    assertThat(excludedTriggerExistsInDb("EXCLUDED_TRIGGER"), equalTo(true));
+    assertThat(excludedTriggerExistsInDb("ALSO_EXCLUDED_TRIGGER"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that functions in the exclude filter are not exported
   public void functionIsExcluded() throws IOException {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_FUNCTION.xml");
@@ -113,7 +287,65 @@ public class CheckExcludeFilter extends DbsmTest {
   }
 
   @Test
-  // Tests that tables in the exclude filter are not exported
+  // Tests that functions defined in the exclude filter using wildcards are not exported
+  public void functionIsExcludedWithWildCard() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_FUNCTION.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeFunctionWithWildcard.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/functions/NOT_EXCLUDED_FUNCTION.xml");
+    File excludedFile = new File(EXPORT_DIR + "/functions/EXCLUDED_FUNCTION.xml");
+    assertThat(excludedFunctionExistsInDb("EXCLUDED_FUNCTION"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded functions are not exported having several wildcards defined in the exclude
+  // filter
+  public void functionIsExcludedWithMultipleWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_FUNCTIONS.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeFunctionWithMultipleWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/functions/NOT_EXCLUDED_FUNCTION.xml");
+    File excludedFile = new File(EXPORT_DIR + "/functions/EXCLUDED_FUNCTION.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/functions/ALSO_EXCLUDED_FUNCTION.xml");
+    assertThat(excludedFunctionExistsInDb("EXCLUDED_FUNCTION"), equalTo(true));
+    assertThat(excludedFunctionExistsInDb("ALSO_EXCLUDED_FUNCTION"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded functions are not exported mixing wildcards and non wildcards in the
+  // exclude filter
+  public void functionIsExcludedWithWildcardsAndNonWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_FUNCTIONS.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeFunctionWithWildcardsAndNonWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/functions/NOT_EXCLUDED_FUNCTION.xml");
+    File excludedFile = new File(EXPORT_DIR + "/functions/EXCLUDED_FUNCTION.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/functions/ALSO_EXCLUDED_FUNCTION.xml");
+    assertThat(excludedFunctionExistsInDb("EXCLUDED_FUNCTION"), equalTo(true));
+    assertThat(excludedFunctionExistsInDb("ALSO_EXCLUDED_FUNCTION"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that sequences in the exclude filter are not exported
   public void sequenceIsExcluded() throws IOException {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEQUENCE.xml");
@@ -126,6 +358,64 @@ public class CheckExcludeFilter extends DbsmTest {
     assertThat(excludedSequenceExistsInDb("EXCLUDED_SEQUENCE"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that sequences defined in the exclude filter using wildcards are not exported
+  public void sequenceIsExcludedWithWildCard() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEQUENCE.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeSequenceWithWildcard.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/sequences/EXCLUDED_SEQUENCE.xml");
+    assertThat(excludedSequenceExistsInDb("EXCLUDED_SEQUENCE"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded sequences are not exported having several wildcards defined in the exclude
+  // filter
+  public void sequenceIsExcludedWithMultipleWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_SEQUENCES.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeSequenceWithMultipleWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/sequences/EXCLUDED_SEQUENCE.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/sequences/ALSO_EXCLUDED_SEQUENCE.xml");
+    assertThat(excludedSequenceExistsInDb("EXCLUDED_SEQUENCE"), equalTo(true));
+    assertThat(excludedSequenceExistsInDb("ALSO_EXCLUDED_SEQUENCE"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that excluded sequences are not exported mixing wildcards and non wildcards in the
+  // exclude filter
+  public void sequenceIsExcludedWithWildcardsAndNonWildcards() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_SEQUENCES.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File(
+        "model/excludeFilter/excludeSequenceWithWildcardsAndNonWildcards.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");
+    File excludedFile = new File(EXPORT_DIR + "/sequences/EXCLUDED_SEQUENCE.xml");
+    File alsoExcludedFile = new File(EXPORT_DIR + "/functions/ALSO_EXCLUDED_SEQUENCE.xml");
+    assertThat(excludedSequenceExistsInDb("EXCLUDED_SEQUENCE"), equalTo(true));
+    assertThat(excludedSequenceExistsInDb("ALSO_EXCLUDED_SEQUENCE"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+    assertThat(alsoExcludedFile.exists(), equalTo(false));
   }
 
   private boolean excludedFunctionExistsInDb(String functionName) {

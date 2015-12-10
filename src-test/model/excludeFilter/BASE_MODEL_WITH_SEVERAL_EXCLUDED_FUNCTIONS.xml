@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <function name="NOT_EXCLUDED_FUNCTION" type="NUMERIC">
+      <body><![CDATA[BEGIN
+  RETURN(0) ;
+END NOT_EXCLUDED_FUNCTION
+]]></body>
+    </function>
+    <function name="EXCLUDED_FUNCTION" type="NUMERIC">
+      <body><![CDATA[BEGIN
+  RETURN(0) ;
+END EXCLUDED_FUNCTION
+]]></body>
+    </function>
+    <function name="ALSO_EXCLUDED_FUNCTION" type="NUMERIC">
+      <body><![CDATA[BEGIN
+  RETURN(0) ;
+END ALSO_EXCLUDED_FUNCTION
+]]></body>
+    </function>   
+  </database>

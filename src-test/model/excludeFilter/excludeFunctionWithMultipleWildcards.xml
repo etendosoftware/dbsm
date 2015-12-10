@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+  <vector>
+    <excludedFunction name="EXCLUDED\_%"/>
+    <excludedFunction name="ALSO_EXCLUDED\_%"/>
+  </vector>
+
