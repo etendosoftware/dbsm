@@ -164,18 +164,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   @Override
   protected void initMetadataSentences() throws SQLException {
     String sql;
-
-    if (_filter.getExcludedTables().length == 0) {
-      _stmt_listtables = _connection
-          .prepareStatement("SELECT UPPER(TABLENAME) FROM PG_TABLES WHERE SCHEMANAME = CURRENT_SCHEMA()"
-              + " ORDER BY UPPER(TABLENAME)");
-    } else {
-      _stmt_listtables = _connection
-          .prepareStatement("SELECT UPPER(TABLENAME) FROM PG_TABLES WHERE SCHEMANAME = CURRENT_SCHEMA()"
-              + " AND UPPER(TABLENAME) NOT IN ("
-              + getListObjects(_filter.getExcludedTables())
-              + ")" + " ORDER BY UPPER(TABLENAME)");
-    }
+    boolean firstExpressionInWhereClause = false;
+    _stmt_listtables = _connection
+        .prepareStatement("SELECT UPPER(TABLENAME) FROM PG_TABLES WHERE SCHEMANAME = CURRENT_SCHEMA() "
+            + _filter.getExcludeFilterWhereClause("TABLENAME", _filter.getExcludedTables(),
+                firstExpressionInWhereClause) + " ORDER BY UPPER(TABLENAME)");
 
     sql = "SELECT PG_CONSTRAINT.CONNAME FROM PG_CONSTRAINT JOIN PG_CLASS ON PG_CLASS.OID = PG_CONSTRAINT.CONRELID WHERE PG_CONSTRAINT.CONTYPE = 'p' AND PG_CLASS.RELNAME =  ?";
     _stmt_pkname = _connection.prepareStatement(sql);
@@ -328,15 +321,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " FROM pg_constraint, pg_class, pg_attribute"
             + " WHERE pg_constraint.conrelid = pg_class.oid AND pg_attribute.attrelid = pg_constraint.conrelid AND (pg_attribute.attnum = ANY (pg_constraint.conkey))"
             + " AND pg_constraint.conname = ?" + " ORDER BY pg_attribute.attnum");
-
-    if (_filter.getExcludedViews().length == 0) {
-      sql = "SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views "
-          + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND viewname !~ '^pg_' ";
-    } else {
-      sql = "SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views "
-          + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND viewname !~ '^pg_'"
-          + "AND upper(viewname) NOT IN (" + getListObjects(_filter.getExcludedViews()) + ")";
-    }
+    firstExpressionInWhereClause = false;
+    sql = "SELECT upper(viewname), pg_get_viewdef(viewname, true) FROM pg_views "
+        + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND viewname !~ '^pg_'"
+        + _filter.getExcludeFilterWhereClause("viewname", _filter.getExcludedViews(),
+            firstExpressionInWhereClause);
     if (_prefix != null) {
       sql += " AND (upper(viewname) LIKE '"
           + _prefix
@@ -347,59 +336,37 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     // sequences are partially loaded from catalog, details (start number and increment) are read by
     // readSequences method
-    if (_filter.getExcludedSequences().length == 0) {
-      sql = "SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S'";
-    } else {
-      sql = "SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S' AND upper(relname) NOT IN ("
-          + getListObjects(_filter.getExcludedSequences()) + ")";
-    }
+    firstExpressionInWhereClause = false;
+    sql = "SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S' "
+        + _filter.getExcludeFilterWhereClause("relname", _filter.getExcludedSequences(),
+            firstExpressionInWhereClause);
     if (_prefix != null) {
       sql += " AND upper(relname) LIKE '" + _prefix + "\\\\_%'";
     }
     _stmt_listsequences = _connection.prepareStatement(sql);
+    firstExpressionInWhereClause = false;
+    sql = "SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, "
+        + "CASE trg.tgtype & cast(3 as int2) "
+        + "WHEN 0 THEN 'AFTER EACH STATEMENT' "
+        + "WHEN 1 THEN 'AFTER EACH ROW' "
+        + "WHEN 2 THEN 'BEFORE EACH STATEMENT' "
+        + "WHEN 3 THEN 'BEFORE EACH ROW' "
+        + "END AS trigger_type, "
+        + "CASE trg.tgtype & cast(28 as int2) WHEN 16 THEN 'UPDATE' "
+        + "WHEN  8 THEN 'DELETE' "
+        + "WHEN  4 THEN 'INSERT' "
+        + "WHEN 20 THEN 'INSERT, UPDATE' "
+        + "WHEN 28 THEN 'INSERT, UPDATE, DELETE' "
+        + "WHEN 24 THEN 'UPDATE, DELETE' "
+        + "WHEN 12 THEN 'INSERT, DELETE' "
+        + "END AS trigger_event, "
+        + "p.prosrc AS function_code "
+        + "FROM pg_trigger trg, pg_class tbl, pg_proc p "
+        + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
+        + " AND upper(trg.tgname) NOT LIKE 'AU\\\\_%'"
+        + _filter.getExcludeFilterWhereClause("trg.tgname", _filter.getExcludedTriggers(),
+            firstExpressionInWhereClause);
 
-    if (_filter.getExcludedTriggers().length == 0) {
-      sql = "SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, "
-          + "CASE trg.tgtype & cast(3 as int2) "
-          + "WHEN 0 THEN 'AFTER EACH STATEMENT' "
-          + "WHEN 1 THEN 'AFTER EACH ROW' "
-          + "WHEN 2 THEN 'BEFORE EACH STATEMENT' "
-          + "WHEN 3 THEN 'BEFORE EACH ROW' "
-          + "END AS trigger_type, "
-          + "CASE trg.tgtype & cast(28 as int2) WHEN 16 THEN 'UPDATE' "
-          + "WHEN  8 THEN 'DELETE' "
-          + "WHEN  4 THEN 'INSERT' "
-          + "WHEN 20 THEN 'INSERT, UPDATE' "
-          + "WHEN 28 THEN 'INSERT, UPDATE, DELETE' "
-          + "WHEN 24 THEN 'UPDATE, DELETE' "
-          + "WHEN 12 THEN 'INSERT, DELETE' "
-          + "END AS trigger_event, "
-          + "p.prosrc AS function_code "
-          + "FROM pg_trigger trg, pg_class tbl, pg_proc p "
-          + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
-          + " AND upper(trg.tgname) NOT LIKE 'AU\\\\_%' ";
-    } else {
-      sql = "SELECT upper(trg.tgname) AS trigger_name, upper(tbl.relname) AS table_name, "
-          + "CASE trg.tgtype & cast(3 as int2) "
-          + "WHEN 0 THEN 'AFTER EACH STATEMENT' "
-          + "WHEN 1 THEN 'AFTER EACH ROW' "
-          + "WHEN 2 THEN 'BEFORE EACH STATEMENT' "
-          + "WHEN 3 THEN 'BEFORE EACH ROW' "
-          + "END AS trigger_type, "
-          + "CASE trg.tgtype & cast(28 as int2) WHEN 16 THEN 'UPDATE' "
-          + "WHEN  8 THEN 'DELETE' "
-          + "WHEN  4 THEN 'INSERT' "
-          + "WHEN 20 THEN 'INSERT, UPDATE' "
-          + "WHEN 28 THEN 'INSERT, UPDATE, DELETE' "
-          + "WHEN 24 THEN 'UPDATE, DELETE' "
-          + "WHEN 12 THEN 'INSERT, DELETE' "
-          + "END AS trigger_event, "
-          + "p.prosrc AS function_code "
-          + "FROM pg_trigger trg, pg_class tbl, pg_proc p "
-          + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
-          + " AND upper(trg.tgname) NOT LIKE 'AU\\\\_%'" + " AND upper(trg.tgname) NOT IN ("
-          + getListObjects(_filter.getExcludedTriggers()) + ")";
-    }
     if (_prefix != null) {
       sql += "AND (upper(trg.tgname) LIKE '"
           + _prefix
@@ -407,17 +374,14 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
           + _moduleId + "')))";
     }
     _stmt_listtriggers = _connection.prepareStatement(sql);
-
-    if (_filter.getExcludedFunctions().length == 0) {
-      sql = "select distinct proname from pg_proc p, pg_namespace n "
-          + "where  pronamespace = n.oid " + "and n.nspname=current_schema() "
-          + "and p.oid not in (select tgfoid " + "from pg_trigger) ";
-    } else {
-      sql = "select distinct proname from pg_proc p, pg_namespace n "
-          + "where  pronamespace = n.oid " + "and n.nspname=current_schema() "
-          + "and p.oid not in (select tgfoid " + "from pg_trigger) "
-          + "AND upper(p.proname) NOT IN (" + getListObjects(_filter.getExcludedFunctions()) + ")";
-    }
+    firstExpressionInWhereClause = false;
+    sql = "select distinct proname from pg_proc p, pg_namespace n "
+        + "where  pronamespace = n.oid "
+        + "and n.nspname=current_schema() "
+        + "and p.oid not in (select tgfoid "
+        + "from pg_trigger) "
+        + _filter.getExcludeFilterWhereClause("p.proname", _filter.getExcludedFunctions(),
+            firstExpressionInWhereClause);
     if (_prefix != null) {
       sql += " AND (upper(proname) LIKE '"
           + _prefix

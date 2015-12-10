@@ -878,19 +878,6 @@ public abstract class ModelLoaderBase implements ModelLoader {
     }
   }
 
-  protected String getListObjects(String[] list) {
-    StringBuffer s = new StringBuffer();
-    for (int i = 0; i < list.length; i++) {
-      if (i > 0) {
-        s.append(", ");
-      }
-      s.append('\'');
-      s.append(list[i]);
-      s.append('\'');
-    }
-    return s.toString();
-  }
-
   public boolean isOnlyLoadTableColumns() {
     return onlyLoadTableColumns;
   }

@@ -304,4 +304,36 @@ public class ExcludeFilter implements Cloneable {
         return true;
     return false;
   }
+
+  /**
+   * Returns the where clause that should be used to exclude the provided list of excluded objects
+   */
+  public String getExcludeFilterWhereClause(String fieldIdentifier, String[] excludedObjects,
+      boolean firstExpressionInWhereClause) {
+    StringBuilder whereClause = new StringBuilder();
+    if (excludedObjects.length > 0) {
+      if (firstExpressionInWhereClause) {
+        whereClause.append(" WHERE ");
+      } else {
+        whereClause.append(" AND ");
+      }
+      whereClause.append("UPPER(" + fieldIdentifier + ") NOT IN (");
+      whereClause.append(getListObjects(excludedObjects));
+      whereClause.append(") ");
+    }
+    return whereClause.toString();
+  }
+
+  private String getListObjects(String[] list) {
+    StringBuffer s = new StringBuffer();
+    for (int i = 0; i < list.length; i++) {
+      if (i > 0) {
+        s.append(", ");
+      }
+      s.append('\'');
+      s.append(list[i]);
+      s.append('\'');
+    }
+    return s.toString();
+  }
 }

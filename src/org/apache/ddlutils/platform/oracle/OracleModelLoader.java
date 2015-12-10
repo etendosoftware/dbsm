@@ -51,15 +51,10 @@ public class OracleModelLoader extends ModelLoaderBase {
   @Override
   protected void initMetadataSentences() throws SQLException {
     String sql;
-
-    if (_filter.getExcludedTables().length == 0) {
-      _stmt_listtables = _connection
-          .prepareStatement("SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME");
-    } else {
-      _stmt_listtables = _connection
-          .prepareStatement("SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME NOT IN ("
-              + getListObjects(_filter.getExcludedTables()) + ") ORDER BY TABLE_NAME");
-    }
+    boolean firstExpressionInWhereClause = true;
+    _stmt_listtables = _connection.prepareStatement("SELECT TABLE_NAME FROM USER_TABLES "
+        + _filter.getExcludeFilterWhereClause("TABLE_NAME", _filter.getExcludedTables(),
+            firstExpressionInWhereClause) + " ORDER BY TABLE_NAME");
     _stmt_pkname = _connection
         .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ?");
     _stmt_pkname_prefix = _connection
@@ -127,39 +122,30 @@ public class OracleModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
     _stmt_uniquecolumns = _connection
         .prepareStatement("SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
-
-    if (_filter.getExcludedViews().length == 0) {
-      sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS";
-    } else {
-      sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS WHERE VIEW_NAME NOT IN ("
-          + getListObjects(_filter.getExcludedViews()) + ")";
-    }
+    firstExpressionInWhereClause = true;
+    sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS "
+        + _filter.getExcludeFilterWhereClause("VIEW_NAME", _filter.getExcludedViews(),
+            firstExpressionInWhereClause);
     if (_prefix != null)
       sql += " AND (UPPER(VIEW_NAME) LIKE '"
           + _prefix
           + "\\_%' ESCAPE '\\' OR (upper(VIEW_NAME) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     _stmt_listviews = _connection.prepareStatement(sql);
-
-    if (_filter.getExcludedSequences().length == 0) {
-      sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES";
-    } else {
-      sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES WHERE SEQUENCE_NAME NOT IN ("
-          + getListObjects(_filter.getExcludedSequences()) + ")";
-    }
+    firstExpressionInWhereClause = true;
+    sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES "
+        + _filter.getExcludeFilterWhereClause("SEQUENCE_NAME", _filter.getExcludedSequences(),
+            firstExpressionInWhereClause);
     if (_prefix != null) {
       if (!sql.contains("WHERE"))
         sql += " WHERE 1=1";
       sql += " AND UPPER(SEQUENCE_NAME) LIKE '" + _prefix + "\\_%' ESCAPE '\\'";
     }
     _stmt_listsequences = _connection.prepareStatement(sql);
-
-    if (_filter.getExcludedTriggers().length == 0) {
-      sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE UPPER(TRIGGER_NAME) NOT LIKE 'AU\\_%' ESCAPE '\\'";
-    } else {
-      sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE UPPER(TRIGGER_NAME) NOT LIKE 'AU\\_%' ESCAPE '\\' AND TRIGGER_NAME NOT IN ("
-          + getListObjects(_filter.getExcludedTriggers()) + ")";
-    }
+    firstExpressionInWhereClause = false;
+    sql = "SELECT TRIGGER_NAME, TABLE_NAME, TRIGGER_TYPE, TRIGGERING_EVENT, TRIGGER_BODY FROM USER_TRIGGERS WHERE UPPER(TRIGGER_NAME) NOT LIKE 'AU\\_%' ESCAPE '\\' "
+        + _filter.getExcludeFilterWhereClause("TRIGGER_NAME", _filter.getExcludedTriggers(),
+            firstExpressionInWhereClause);
     if (_prefix != null) {
       if (!sql.contains("WHERE"))
         sql += " WHERE 1=1";
@@ -170,12 +156,10 @@ public class OracleModelLoader extends ModelLoaderBase {
     }
     _stmt_listtriggers = _connection.prepareStatement(sql);
 
-    if (_filter.getExcludedFunctions().length == 0) {
-      sql = "SELECT DISTINCT NAME FROM USER_SOURCE WHERE TYPE = 'PROCEDURE' OR TYPE = 'FUNCTION'";
-    } else {
-      sql = "SELECT DISTINCT NAME FROM USER_SOURCE WHERE (TYPE = 'PROCEDURE' OR TYPE = 'FUNCTION') AND NAME NOT IN ("
-          + getListObjects(_filter.getExcludedFunctions()) + ")";
-    }
+    firstExpressionInWhereClause = false;
+    sql = "SELECT DISTINCT NAME FROM USER_SOURCE WHERE (TYPE = 'PROCEDURE' OR TYPE = 'FUNCTION') "
+        + _filter.getExcludeFilterWhereClause("NAME", _filter.getExcludedFunctions(),
+            firstExpressionInWhereClause);
     if (_prefix != null)
       sql += " AND (UPPER(NAME) LIKE '"
           + _prefix
