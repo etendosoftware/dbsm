@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
   <vector>
     <excludedTrigger name="EXCLUDED_TRIGGER"/>
-    <excludedTrigger name="ALSO_EXCLUDED\_%"/>
+    <excludedTrigger name="ALSO\_EXCLUDED\_%"/>
   </vector>
 

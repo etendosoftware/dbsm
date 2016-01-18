@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
   <vector>
     <excludedSequence name="EXCLUDED_SEQUENCE"/>
-    <excludedSequence name="ALSO_EXCLUDED\_%"/>
+    <excludedSequence name="ALSO\_EXCLUDED\_%"/>
   </vector>
   
