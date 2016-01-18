@@ -332,16 +332,14 @@ public class ExcludeFilter implements Cloneable {
       } else {
         whereClause.append(" AND ");
       }
-      List<String> nonWildcardExcludedObjects = new ArrayList<String>();
-      List<String> wildcardExcludedObjects = new ArrayList<String>();
       // exclusions defined with wild cards must be handled differently that those not defined with
       // wild cards. the ones defined with wildcards will add clauses like this:
       // AND UPPER(fieldname) NOT LIKE UPPER(wildcard_exclusion1) AND UPPER(fieldname) NOT LIKE
       // UPPER(wildcard_exclusion2) ...
       // while the ones not defined with wildcards will add a clause like this one:
       // AND UPPER(fieldname) NOT IN (exclusion1, exclusion2, ...)
-      separateWildcardAndNonWildcardExcludedObjects(excludedObjects, nonWildcardExcludedObjects,
-          wildcardExcludedObjects);
+      List<String> nonWildcardExcludedObjects = getNonWildcardExcludedObjects(excludedObjects);
+      List<String> wildcardExcludedObjects = getWildcardExcludedObjects(excludedObjects);
       if (!nonWildcardExcludedObjects.isEmpty()) {
         whereClause.append(buildNonWildcardExcludeFilterWhereClause(fieldIdentifier,
             nonWildcardExcludedObjects));
@@ -386,20 +384,24 @@ public class ExcludeFilter implements Cloneable {
     return whereClause.toString();
   }
 
-  /**
-   * Given a String array that represents exclusions, returns two lists, one with the exclusions
-   * defined with wildcards and another one with the exclusions not defined with wildcards. A
-   * exclusion is considered to be defined with a wildcard if it contains the character '%'
-   */
-  private void separateWildcardAndNonWildcardExcludedObjects(String[] excludedObjects,
-      List<String> nonWildcardExcludedObjects, List<String> wildcardExcludedObjects) {
+  private List<String> getNonWildcardExcludedObjects(String[] excludedObjects) {
+    List<String> nonWildcardExcludedObjects = new ArrayList<String>();
     for (String excludedObject : excludedObjects) {
-      if (excludedObject.contains("%")) {
-        wildcardExcludedObjects.add(excludedObject);
-      } else {
+      if (!excludedObject.contains("%")) {
         nonWildcardExcludedObjects.add(excludedObject);
       }
     }
+    return nonWildcardExcludedObjects;
+  }
+
+  private List<String> getWildcardExcludedObjects(String[] excludedObjects) {
+    List<String> wildcardExcludedObjects = new ArrayList<String>();
+    for (String excludedObject : excludedObjects) {
+      if (excludedObject.contains("%")) {
+        wildcardExcludedObjects.add(excludedObject);
+      }
+    }
+    return wildcardExcludedObjects;
   }
 
   private String getListObjects(String[] list) {
