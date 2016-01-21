@@ -37,6 +37,7 @@ CheckConstraints.class, //
     FunctionBasedIndexes.class, //
     OperatorClassIndexes.class, //
     CheckExcludeFilter.class, //
+    CheckPlSqlStandardizationOnModelLoad.class, //
     Functions.class })
 public class ModelSuite {
 

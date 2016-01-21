@@ -413,8 +413,14 @@ public class DbsmTest {
 
   /** Exports current test DB to xml files within path directory */
   protected void exportDatabase(String path) {
+    boolean doPlSqlStandardization = true;
+    exportDatabase(path, doPlSqlStandardization);
+  }
+
+  /** Exports current test DB to xml files within path directory */
+  protected void exportDatabase(String path, boolean doPlSqlStandardization) {
     final DatabaseIO io = new DatabaseIO();
-    Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
+    Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
     io.writeToDir(originalDB, new File(path));
   }
 
