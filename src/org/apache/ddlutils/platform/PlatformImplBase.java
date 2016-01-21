@@ -2213,11 +2213,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException {
+    boolean doPlSqlStandardization = true;
+    return loadModelFromDatabase(filter, doPlSqlStandardization);
+  }
+
+  public Database loadModelFromDatabase(ExcludeFilter filter, boolean doPlSqlStandardization)
+      throws DatabaseOperationException {
 
     Connection connection = borrowConnection();
     try {
       getModelLoader().setLog(_log);
-      return getModelLoader().getDatabase(connection, filter);
+      return getModelLoader().getDatabase(connection, filter, doPlSqlStandardization);
     } catch (SQLException ex) {
       throw new DatabaseOperationException(ex);
     } finally {

@@ -26,6 +26,9 @@ public interface ModelLoader {
 
   public Database getDatabase(Connection connection, ExcludeFilter filter) throws SQLException;
 
+  public Database getDatabase(Connection connection, ExcludeFilter filter,
+      boolean doPlSqlStandardization) throws SQLException;
+
   public Database getDatabase(Connection connection, ExcludeFilter filter, String prefix,
       boolean loadCompleteTables, String moduleId) throws SQLException;
 

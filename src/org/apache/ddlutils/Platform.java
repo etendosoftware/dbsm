@@ -1174,6 +1174,8 @@ public interface Platform {
 
   public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
 
+  public Database loadModelFromDatabase(ExcludeFilter filter, boolean doPlSqlStandardization) throws DatabaseOperationException;
+
   public Database loadTablesFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
 
   public Database loadModelFromDatabase(ExcludeFilter filter, String prefix,

@@ -80,8 +80,21 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
   @Override
   protected Database readDatabase() throws SQLException {
-    Database db = super.readDatabase();
+    boolean doPlSqlStandardization = true;
+    return readDatabase(doPlSqlStandardization);
+  }
 
+  @Override
+  protected Database readDatabase(boolean doPlSqlStandardization) throws SQLException {
+    Database db = super.readDatabase(doPlSqlStandardization);
+    if (doPlSqlStandardization) {
+      standardizePlSql(db);
+    }
+    return db;
+
+  }
+
+  private void standardizePlSql(Database db) {
     _log.info("Starting function and trigger standardization.");
     PostgrePLSQLStandarization.generateOutPatterns(db);
     for (int i = 0; i < db.getFunctionCount(); i++) {
@@ -142,9 +155,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       standardizedBody = standardizedBody.trim();
       db.getView(i).setStatement(standardizedBody);
     }
-
-    return db;
-
   }
 
   @Override

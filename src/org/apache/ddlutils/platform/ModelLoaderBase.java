@@ -113,6 +113,12 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   public Database getDatabase(Connection connection, ExcludeFilter filter) throws SQLException {
+    boolean doPlSqlStandardization = true;
+    return getDatabase(connection, filter, doPlSqlStandardization);
+  }
+
+  public Database getDatabase(Connection connection, ExcludeFilter filter,
+      boolean doPlSqlStandardization) throws SQLException {
 
     _filter = filter == null ? new ExcludeFilter() : filter;
 
@@ -121,7 +127,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
 
       initMetadataSentences();
 
-      return readDatabase();
+      return readDatabase(doPlSqlStandardization);
 
     } finally {
       closeMetadataSentences();
@@ -183,6 +189,11 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Database readDatabase() throws SQLException {
+    boolean doPlSqlStandardization = true;
+    return readDatabase(doPlSqlStandardization);
+  }
+
+  protected Database readDatabase(boolean doPlSqlStandardization) throws SQLException {
     Database db = new Database();
     db.setName(readName());
     _log.info("Reading tables...");
