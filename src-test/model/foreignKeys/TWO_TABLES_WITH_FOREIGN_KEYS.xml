@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST1" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>     
+    </table>
+    <table name="TEST2" primaryKey="TEST2_ID">
+      <column name="TEST2_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TEST_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>      
+      <foreign-key foreignTable="TEST1" name="TEST1_FK">
+        <reference local="TEST_ID" foreign="TEST_ID"/>
+      </foreign-key>           
+    </table>    
+    <table name="TEST3" primaryKey="TEST3_ID">
+      <column name="TEST3_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TEST2_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>      
+      <foreign-key foreignTable="TEST2" name="TEST2_FK">
+        <reference local="TEST2_ID" foreign="TEST2_ID"/>
+      </foreign-key>           
+    </table>        
+  </database>

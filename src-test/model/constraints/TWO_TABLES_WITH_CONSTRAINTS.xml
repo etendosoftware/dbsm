@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST1" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <check name="TEST1_CONSTRAINT"><![CDATA[TEST_ID IN ('Y', 'N')]]></check>
+    </table>
+    <table name="TEST2" primaryKey="TEST2_ID">
+      <column name="TEST2_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <check name="TEST2_CONSTRAINT"><![CDATA[TEST2_ID IN ('Y', 'N')]]></check>
+    </table>    
+  </database>
