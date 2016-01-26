@@ -39,6 +39,7 @@ import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
@@ -302,6 +303,23 @@ public class PostgreSqlPlatform extends PlatformImplBase {
    * {@inheritDoc}
    */
   @Override
+  public void disableAllFkForTable(Connection connection, Table table, boolean continueOnError)
+      throws DatabaseOperationException {
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().dropExternalForeignKeys(table);
+      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new DatabaseOperationException("Error while disabling foreign key ", e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
 
@@ -323,6 +341,22 @@ public class PostgreSqlPlatform extends PlatformImplBase {
        */
     } catch (Exception e) {
       e.printStackTrace();
+      throw new DatabaseOperationException("Error while enabling foreign key ", e);
+    }
+  }
+
+  public boolean enableAllFkForTable(Connection connection, Database model, Table table,
+      boolean continueOnError) throws DatabaseOperationException {
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().createExternalForeignKeys(model, table);
+      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      if (numErrors > 0) {
+        return false;
+      }
+      return true;
+    } catch (Exception e) {
       throw new DatabaseOperationException("Error while enabling foreign key ", e);
     }
   }

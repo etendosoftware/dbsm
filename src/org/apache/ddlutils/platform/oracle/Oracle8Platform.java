@@ -33,6 +33,7 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
@@ -138,17 +139,40 @@ public class Oracle8Platform extends PlatformImplBase {
     return DATABASENAME;
   }
 
+  @Override
+  public void disableAllFkForTable(Connection connection, Table table, boolean continueOnError)
+      throws DatabaseOperationException {
+    disableAllFK(connection, null, table, continueOnError);
+  }
+
   /**
    * {@inheritDoc}
    */
   public void disableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
+    Table table = null;
+    disableAllFK(connection, model, table, continueOnError);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void disableAllFK(Connection connection, Database model, Table table,
+      boolean continueOnError) throws DatabaseOperationException {
 
     String current = null;
     try {
       connection.prepareCall("PURGE RECYCLEBIN").execute();
       current = "SELECT 'ALTER TABLE'|| ' ' || TABLE_NAME || ' ' || 'DISABLE CONSTRAINT' || ' ' || CONSTRAINT_NAME  SQL_STR FROM USER_CONSTRAINTS WHERE  CONSTRAINT_TYPE='R' ";
-      PreparedStatement pstmt = connection.prepareStatement(current);
+      PreparedStatement pstmt = null;
+      if (table != null) {
+        current = current + " AND UPPER(TABLE_NAME) = ?";
+        pstmt = connection.prepareStatement(current);
+        pstmt.setString(1, table.getName());
+      } else {
+        pstmt = connection.prepareStatement(current);
+      }
+
       ResultSet rs = pstmt.executeQuery();
 
       while (rs.next()) {

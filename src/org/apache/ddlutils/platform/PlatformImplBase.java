@@ -2324,6 +2324,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   @Override
+  public void disableAllFkForTable(Connection connection, Table table, boolean continueOnError)
+      throws DatabaseOperationException {
+    throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  @Override
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException {
     try {
@@ -2376,6 +2382,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
+    throw new DatabaseOperationException("Error: Operation not supported");
+  }
+
+  public boolean enableAllFkForTable(Connection connection, Database model, Table table,
+      boolean continueOnError) throws DatabaseOperationException {
     throw new DatabaseOperationException("Error: Operation not supported");
   }
 
@@ -3074,9 +3085,21 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
         if (enable) {
           _log.debug("disabling check constraints for table " + table.getName());
-          getSqlBuilder().disableAllChecks(database.getTable(i));
+          getSqlBuilder().disableAllChecks(table);
         }
       }
+      evaluateBatchRealBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void disableCheckConstraintsForTable(Connection connection, Table table) {
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      _log.debug("disabling check constraints for table " + table.getName());
+      getSqlBuilder().disableAllChecks(table);
       evaluateBatchRealBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -3206,6 +3229,18 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       evaluateBatchRealBatch(connection, buffer.toString(), true);
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  public void enableCheckConstraintsForTable(Connection connection, Table table) {
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      _log.debug("enabling check constraints for table " + table.getName());
+      getSqlBuilder().disableAllChecks(table);
+      evaluateBatchRealBatch(connection, buffer.toString(), true);
+    } catch (IOException e) {
+      _log.error("Error while enabling the check constraints of the table " + table, e);
     }
   }
 

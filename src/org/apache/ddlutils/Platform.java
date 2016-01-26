@@ -1174,7 +1174,8 @@ public interface Platform {
 
   public Database loadModelFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
 
-  public Database loadModelFromDatabase(ExcludeFilter filter, boolean doPlSqlStandardization) throws DatabaseOperationException;
+  public Database loadModelFromDatabase(ExcludeFilter filter, boolean doPlSqlStandardization)
+      throws DatabaseOperationException;
 
   public Database loadTablesFromDatabase(ExcludeFilter filter) throws DatabaseOperationException;
 
@@ -1291,6 +1292,20 @@ public interface Platform {
   public void disableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
 
+  /**
+   * Disable all the foreign keys of a given table
+   * 
+   * @param connection
+   *          the connection to the database
+   * @param table
+   *          the table whose foreign keys are going to be disabled
+   * @param continueOnError
+   *          Whether to continue executing the sql commands when an error occurred
+   * @throws DatabaseOperationException
+   */
+  public void disableAllFkForTable(Connection connection, Table table, boolean continueOnError)
+      throws DatabaseOperationException;
+
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException;
 
@@ -1306,6 +1321,23 @@ public interface Platform {
    */
   public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
+
+  /**
+   * Enables all the foreign keys of a given table
+   * 
+   * @param connection
+   *          The connection to the database
+   * @param model
+   *          The database model
+   * @param table
+   *          The table whose foreign keys will be enabled
+   * @param continueOnError
+   *          Whether to continue executing the sql commands when an error occurred
+   * @return true if there have been errors, false otherwise
+   * @throws DatabaseOperationException
+   */
+  public boolean enableAllFkForTable(Connection connection, Database model, Table table,
+      boolean continueOnError) throws DatabaseOperationException;
 
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError) throws DatabaseOperationException;
@@ -1390,11 +1422,31 @@ public interface Platform {
 
   public void enableNOTNULLColumns(Database database, OBDataset dataset);
 
+  /**
+   * Disables all the constraints for a given table
+   * 
+   * @param connection
+   *          The connection to the database
+   * @param table
+   *          The table whose constraints are going to be disabled
+   */
+  public void disableCheckConstraintsForTable(Connection connection, Table table);
+
   public void disableCheckConstraints(Database database);
 
   public void disableCheckConstraints(Database database, OBDataset dataset);
 
   public void disableCheckConstraints(Connection connection, Database database, OBDataset dataset);
+
+  /**
+   * Enables all the constraints for a given table
+   * 
+   * @param connection
+   *          The connection to the database
+   * @param table
+   *          The table whose constraints are going to be enabled
+   */
+  public void enableCheckConstraintsForTable(Connection connection, Table table);
 
   public void enableCheckConstraints(Database database);
 
