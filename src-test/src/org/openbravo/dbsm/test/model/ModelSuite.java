@@ -39,6 +39,7 @@ CheckConstraints.class, //
     CheckExcludeFilter.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
+    CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
     Functions.class })
 public class ModelSuite {
 
