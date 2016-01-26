@@ -375,6 +375,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         "Database creation is not supported for the database platform " + getName());
   }
 
+  @Override
+  public void dropTrigger(Connection connection, Database model, Trigger trigger)
+      throws DatabaseOperationException {
+    throw new UnsupportedOperationException(
+        "Dropping triggers is not supported for the database platform " + getName());
+  }
+
+  @Override
+  public void createTrigger(Connection connection, Database model, Trigger trigger,
+      List<String> triggersToFollow) throws DatabaseOperationException {
+    throw new UnsupportedOperationException(
+        "Creating triggers is not supported for the database platform " + getName());
+  }
+
   /**
    * {@inheritDoc}
    */

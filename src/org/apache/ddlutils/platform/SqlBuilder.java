@@ -4122,13 +4122,19 @@ public abstract class SqlBuilder {
     }
   }
 
+  public void createTrigger(Database database, Trigger trigger) throws IOException {
+    List<String> follows = new ArrayList<String>();
+    createTrigger(database, trigger, follows);
+  }
+
   /**
    * Writes the given trigger .
    * 
    * @param trigger
    *          The trigger
    */
-  public void createTrigger(Database database, Trigger trigger) throws IOException {
+  public void createTrigger(Database database, Trigger trigger, List<String> follows)
+      throws IOException {
 
     if (getPlatformInfo().isTriggersSupported()) {
 
@@ -4180,10 +4186,23 @@ public abstract class SqlBuilder {
           break;
         }
         println();
+        writeFollows(follows);
         writeTriggerExecuteStmt(trigger);
         printEndOfStatement(getStructureObjectName(trigger));
       }
     }
+  }
+
+  /**
+   * Writes a clause before the DECLARE statement to ensure that the trigger being created is
+   * invoked after other triggers of the same type (only applicable in Oracle)
+   * 
+   * @param follows
+   *          The list of names of the triggers that should be invoked before the trigger being
+   *          created
+   * @throws IOException
+   */
+  protected void writeFollows(List<String> follows) throws IOException {
   }
 
   public void writeCreateTriggerFunction(Trigger trigger) throws IOException {

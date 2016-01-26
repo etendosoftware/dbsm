@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -112,7 +113,21 @@ public class Oracle8Builder extends SqlBuilder {
     for (int idx = 0; idx < columns.length; idx++) {
       createAutoIncrementTrigger(table, columns[idx]);
     }
+  }
 
+  @Override
+  protected void writeFollows(List<String> follows) throws IOException {
+    if (!follows.isEmpty()) {
+      print(" FOLLOWS ");
+      Iterator<String> triggersToFollow = follows.iterator();
+      while (triggersToFollow.hasNext()) {
+        print(" " + triggersToFollow.next());
+        if (triggersToFollow.hasNext()) {
+          print(", ");
+        }
+      }
+      println();
+    }
   }
 
   @Override

@@ -35,6 +35,7 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.JdbcModelReader;
@@ -1461,6 +1462,36 @@ public interface Platform {
   public String disableNOTNULLColumnsSql(Database database, OBDataset dataset);
 
   public String enableNOTNULLColumnsSql(Database database, OBDataset dataset);
+
+  /**
+   * Drops a trigger
+   * 
+   * @param connection
+   *          The connection to the database
+   * @param model
+   *          The database model
+   * @param trigger
+   *          the trigger being dropped
+   */
+  public void dropTrigger(Connection connection, Database model, Trigger trigger)
+      throws DatabaseOperationException;
+
+  /**
+   * Creates a trigger
+   * 
+   * @param connection
+   *          The connection to the database
+   * @param model
+   *          The database model
+   * @param trigger
+   *          the trigger being dropped
+   * @param triggersToFollow
+   *          the list of triggers of the same type that should be invoked before the trigger about
+   *          to be created. It only has effect in Oracle, in PostgreSQL triggers of the same type
+   *          are executed alphabetically
+   */
+  public void createTrigger(Connection connection, Database model, Trigger trigger,
+      List<String> triggersToFollow) throws DatabaseOperationException;
 
   boolean areWarnsIgnored();
 

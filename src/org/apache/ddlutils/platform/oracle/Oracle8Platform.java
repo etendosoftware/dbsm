@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.ddlutils.DatabaseOperationException;
@@ -352,6 +353,34 @@ public class Oracle8Platform extends PlatformImplBase {
       System.out.println("SQL command failed with " + e.getMessage());
       System.out.println(current);
       throw new DatabaseOperationException("Error while enabling triggers ", e);
+    }
+  }
+
+  @Override
+  public void dropTrigger(Connection connection, Database model, Trigger trigger)
+      throws DatabaseOperationException {
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().dropTrigger(model, trigger);
+      evaluateBatchRealBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      throw new DatabaseOperationException("Error while dropping a trigger", e);
+    }
+  }
+
+  @Override
+  public void createTrigger(Connection connection, Database model, Trigger trigger,
+      List<String> triggersToFollow) throws DatabaseOperationException {
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().createTrigger(model, trigger, triggersToFollow);
+      evaluateBatchRealBatch(connection, buffer.toString(), true);
+    } catch (Exception e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      throw new DatabaseOperationException("Error while createing a trigger", e);
     }
   }
 
