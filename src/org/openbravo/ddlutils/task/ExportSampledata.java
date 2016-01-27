@@ -120,10 +120,8 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       log.info("Creating folder " + clientName + " in: " + sampledataFolder);
 
-      // Override ds whereclause always with 'filter by client' as we don't understand hql here
       for (OBDatasetTable dsTable : tableList) {
-        String whereClause = "ad_client_id = '" + clientid + "'";
-        dsTable.setWhereclause(whereClause);
+        setDataSetWhereClause(dsTable, clientid);
       }
 
       File path = new File(sampledataFolder, clientName);
@@ -175,6 +173,13 @@ public class ExportSampledata extends BaseDatabaseTask {
     } catch (Exception e) {
       throw new BuildException(e);
     }
+  }
+
+  protected void setDataSetWhereClause(OBDatasetTable dsTable, String clientid) {
+    // To export the sample data, the where clause defined in the dataset is overwritten with a
+    // client filter
+    String whereClause = "ad_client_id = '" + clientid + "'";
+    dsTable.setWhereclause(whereClause);
   }
 
   protected boolean exportTableToXML(final Platform platform, Database db,
