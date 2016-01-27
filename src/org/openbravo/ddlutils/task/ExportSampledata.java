@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2013 Openbravo S.L.U.
+ * Copyright (C) 2013-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -56,8 +56,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(basedir));
+    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
 
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
@@ -76,7 +75,8 @@ public class ExportSampledata extends BaseDatabaseTask {
       db.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(db);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
-          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", new File(basedir, "src-db/database/sourcedata"));
+          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata",
+          new File(basedir, "src-db/database/sourcedata"));
 
       getLog().info("Exporting client " + client + " to module: " + module);
 
@@ -153,22 +153,22 @@ public class ExportSampledata extends BaseDatabaseTask {
           final OutputStream out = new FileOutputStream(tableFile);
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
-          final boolean b = dbdio.writeDataForTableToXML(platform, db, table,
-              bufOut, encoding, moduleToExport.idMod);
+          final boolean b = dbdio.writeDataForTableToXML(platform, db, table, bufOut, encoding,
+              moduleToExport.idMod);
           if (!b) {
             tableFile.delete();
           } else {
-            getLog().info(
-                "Exported table: " + table.getName());
+            getLog().info("Exported table: " + table.getName());
           }
           bufOut.flush();
           out.flush();
           bufOut.close();
           out.close();
         } catch (Exception e) {
-          getLog().error(
-              "Error while exporting table" + table.getName() + " to module "
-                  + moduleToExport.name);
+          getLog()
+              .error(
+                  "Error while exporting table" + table.getName() + " to module "
+                      + moduleToExport.name);
         }
       }
 
@@ -184,8 +184,8 @@ public class ExportSampledata extends BaseDatabaseTask {
     OBDatasetTable dsTable = new OBDatasetTable();
     dsTable.setWhereclause("1=1");
     dsTable.setSecondarywhereclause("name" + "=" + "'" + client + "'");
-    Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db,
-        table, dsTable, null);
+    Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db, table,
+        dsTable, null);
     platform.returnConnection(connection);
     return rowsNewData;
   }
