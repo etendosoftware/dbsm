@@ -44,7 +44,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   private String basedir;
 
-  private final String encoding = "UTF-8";
+  protected final String encoding = "UTF-8";
 
   private ExcludeFilter excludeFilter;
 
@@ -80,7 +80,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       getLog().info("Exporting client " + client + " to module: " + module);
 
-      final String dataSetCode = "Client Definition";
+      final String dataSetCode = getDataSet();
       OBDataset dataset = new OBDataset(databaseOrgData, dataSetCode);
       final Vector<OBDatasetTable> tableList = dataset.getTableList();
 
@@ -153,8 +153,7 @@ public class ExportSampledata extends BaseDatabaseTask {
           final OutputStream out = new FileOutputStream(tableFile);
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
-          final boolean b = dbdio.writeDataForTableToXML(platform, db, table, bufOut, encoding,
-              moduleToExport.idMod);
+          final boolean b = exportTableToXML(platform, db, moduleToExport, dbdio, table, bufOut);
           if (!b) {
             tableFile.delete();
           } else {
@@ -175,6 +174,13 @@ public class ExportSampledata extends BaseDatabaseTask {
     } catch (Exception e) {
       throw new BuildException(e);
     }
+  }
+
+  protected boolean exportTableToXML(final Platform platform, Database db,
+      ModuleRow moduleToExport, final DatabaseDataIO dbdio, final OBDatasetTable table,
+      BufferedOutputStream bufOut) {
+    return dbdio
+        .writeDataForTableToXML(platform, db, table, bufOut, encoding, moduleToExport.idMod);
   }
 
   private Vector<DynaBean> findClient(final Platform platform, Database db) {
@@ -227,6 +233,13 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   public void setModule(String module) {
     this.module = module;
+  }
+
+  /**
+   * Returns the name of the dataset this task will export
+   */
+  protected String getDataSet() {
+    return "Client Definition";
   }
 
 }
