@@ -81,6 +81,7 @@ public class ExportSampledata extends BaseDatabaseTask {
       getLog().info("Exporting client " + client + " to module: " + module);
 
       final String dataSetCode = getDataSet();
+      getLog().info("Exporting dataset " + dataSetCode);
       OBDataset dataset = new OBDataset(databaseOrgData, dataSetCode);
       final Vector<OBDatasetTable> tableList = dataset.getTableList();
 
