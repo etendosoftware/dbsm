@@ -15,6 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.util.Collections;
@@ -146,33 +147,60 @@ public class ExportSampledata extends BaseDatabaseTask {
         }
       });
 
+      String previousTableName = null;
+      File tableFile = null;
+      OutputStream out = null;
+      BufferedOutputStream bufOut = null;
+      boolean dataExported = false;
       for (final OBDatasetTable table : tableList) {
         try {
-          final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
-          final OutputStream out = new FileOutputStream(tableFile);
-          BufferedOutputStream bufOut = new BufferedOutputStream(out);
+          String tableName = table.getName().toUpperCase();
+          boolean exportToNewXMLFile = shouldExportToNewXMLFile(tableName, previousTableName);
+          if (exportToNewXMLFile) {
+            cleanUp(tableFile, out, bufOut, dataExported);
+            tableFile = new File(path, tableName + ".xml");
+            out = new FileOutputStream(tableFile);
+            bufOut = new BufferedOutputStream(out);
+            dataExported = false;
+          }
           // reads table data directly from db
-          final boolean b = exportTableToXML(platform, db, moduleToExport, dbdio, table, bufOut);
-          if (!b) {
-            tableFile.delete();
-          } else {
+          dataExported |= exportTableToXML(platform, db, moduleToExport, dbdio, table, bufOut,
+              exportToNewXMLFile);
+          if (dataExported) {
             getLog().info("Exported table: " + table.getName());
           }
-          bufOut.flush();
-          out.flush();
-          bufOut.close();
-          out.close();
+          previousTableName = table.getName().toUpperCase();
         } catch (Exception e) {
           getLog()
               .error(
                   "Error while exporting table" + table.getName() + " to module "
-                      + moduleToExport.name);
+                      + moduleToExport.name, e);
         }
       }
+      cleanUp(tableFile, out, bufOut, dataExported);
 
     } catch (Exception e) {
       throw new BuildException(e);
     }
+  }
+
+  protected void cleanUp(File file, OutputStream out, BufferedOutputStream bufOut,
+      boolean dataExported) throws IOException {
+    if (!dataExported && file != null && file.exists()) {
+      file.delete();
+    }
+    if (bufOut != null) {
+      bufOut.flush();
+      out.flush();
+      bufOut.close();
+      out.close();
+    }
+  }
+
+  protected boolean shouldExportToNewXMLFile(String tableName, String previousTableName) {
+    // ExportSampledata does not support defining several dataset tables for the same table, so each
+    // table is exported to its own xml file
+    return true;
   }
 
   protected void setDataSetWhereClause(OBDatasetTable dsTable, String clientid) {
@@ -184,7 +212,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   protected boolean exportTableToXML(final Platform platform, Database db,
       ModuleRow moduleToExport, final DatabaseDataIO dbdio, final OBDatasetTable table,
-      BufferedOutputStream bufOut) {
+      BufferedOutputStream bufOut, boolean exportToNewXMLFile) {
     return dbdio
         .writeDataForTableToXML(platform, db, table, bufOut, encoding, moduleToExport.idMod);
   }
