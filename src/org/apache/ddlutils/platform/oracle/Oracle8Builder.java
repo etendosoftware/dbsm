@@ -118,7 +118,7 @@ public class Oracle8Builder extends SqlBuilder {
   @Override
   protected void writeFollows(List<String> follows) throws IOException {
     if (!follows.isEmpty()) {
-      print(" FOLLOWS ");
+      print(" FOLLOWS");
       Iterator<String> triggersToFollow = follows.iterator();
       while (triggersToFollow.hasNext()) {
         print(" " + triggersToFollow.next());

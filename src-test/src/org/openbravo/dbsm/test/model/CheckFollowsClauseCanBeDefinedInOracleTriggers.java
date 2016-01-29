@@ -79,7 +79,7 @@ public class CheckFollowsClauseCanBeDefinedInOracleTriggers extends DbsmTest {
       cn = getDataSource().getConnection();
       PreparedStatement st = null;
       st = cn
-          .prepareStatement("SELECT count(*) FROM user_triggers WHERE upper(trigger_name) = 'TEST_TRIGGER_SECOND' and UPPER(description) like '%FOLLOWS  TEST_TRIGGER_FIRST%'");
+          .prepareStatement("SELECT count(*) FROM user_triggers WHERE upper(trigger_name) = 'TEST_TRIGGER_SECOND' and UPPER(description) like '%FOLLOWS TEST_TRIGGER_FIRST%'");
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
         int nRecords = rs.getInt(1);
