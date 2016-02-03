@@ -127,7 +127,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       File path = new File(sampledataFolder, clientName);
 
-      final DatabaseDataIO dbdio = new DatabaseDataIO();
+      final DatabaseDataIO dbdio = getDatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
       // for sampledata do not write a primary key comment onto each line to save space
       dbdio.setWritePrimaryKeyComment(false);
@@ -182,6 +182,10 @@ public class ExportSampledata extends BaseDatabaseTask {
     } catch (Exception e) {
       throw new BuildException(e);
     }
+  }
+
+  protected DatabaseDataIO getDatabaseDataIO() {
+    return new DatabaseDataIO();
   }
 
   protected void cleanUp(File file, OutputStream out, BufferedOutputStream bufOut,
