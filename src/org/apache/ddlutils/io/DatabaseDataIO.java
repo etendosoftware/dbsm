@@ -224,7 +224,7 @@ public class DatabaseDataIO {
    * @param converterConf
    *          The converter configuration
    */
-  private void registerConverters(ConverterConfiguration converterConf) throws DdlUtilsException {
+  public void registerConverters(ConverterConfiguration converterConf) throws DdlUtilsException {
     for (Iterator it = _converters.iterator(); it.hasNext();) {
       DataConverterRegistration registrationInfo = (DataConverterRegistration) it.next();
 
