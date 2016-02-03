@@ -181,16 +181,17 @@ public class DatabaseDataIO {
   }
 
   /**
-   * Specifies if the output should contain <!-- primaryKeyValue --> in each line.
-   * Default value is true
+   * Specifies if the output should contain <!-- primaryKeyValue --> in each line. Default value is
+   * true
    */
   public void setWritePrimaryKeyComment(boolean _writePrimaryKeyComment) {
     this._writePrimaryKeyComment = _writePrimaryKeyComment;
   }
 
   /**
-   * Kept as org.openbravo.ezattributes module in at least version 2.0.5 (for 3.0) is still calling it.
-   * The method is changed to do nothing, as in case of that module the existing call was useless.
+   * Kept as org.openbravo.ezattributes module in at least version 2.0.5 (for 3.0) is still calling
+   * it. The method is changed to do nothing, as in case of that module the existing call was
+   * useless.
    */
   @Deprecated
   public void setDatabaseFilter(DatabaseFilter value) {
@@ -228,8 +229,8 @@ public class DatabaseDataIO {
       DataConverterRegistration registrationInfo = (DataConverterRegistration) it.next();
 
       if (registrationInfo.getTypeCode() != Integer.MIN_VALUE) {
-        converterConf.registerConverter(registrationInfo.getTypeCode(), registrationInfo
-            .getConverter());
+        converterConf.registerConverter(registrationInfo.getTypeCode(),
+            registrationInfo.getConverter());
       } else {
         if ((registrationInfo.getTable() == null) || (registrationInfo.getColumn() == null)) {
           throw new DdlUtilsException(
@@ -729,8 +730,8 @@ public class DatabaseDataIO {
       while (it.hasNext()) {
         dbs.add((DynaBean) it.next());
       }
-      Collections.sort(dbs, new BaseDynaBeanIDHexComparator(table.getPrimaryKeyColumns()[0]
-          .getName()));
+      Collections.sort(dbs,
+          new BaseDynaBeanIDHexComparator(table.getPrimaryKeyColumns()[0].getName()));
       return dbs;
     } catch (SQLException ex) {
       _log.error("SQL command to read rows from table failed: " + sqlstatement);
