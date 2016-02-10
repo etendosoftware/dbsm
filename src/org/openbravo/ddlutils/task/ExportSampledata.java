@@ -15,11 +15,12 @@ package org.openbravo.ddlutils.task;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -51,6 +52,8 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   private String client;
   private String module;
+
+  private Map<String, Integer> exportedTablesCount = null;
 
   public ExportSampledata() {
   }
@@ -146,30 +149,25 @@ public class ExportSampledata extends BaseDatabaseTask {
           return arg0.getName().compareTo(arg1.getName());
         }
       });
-
-      String previousTableName = null;
-      File tableFile = null;
-      OutputStream out = null;
-      BufferedOutputStream bufOut = null;
-      boolean dataExported = false;
+      exportedTablesCount = new HashMap<String, Integer>();
       for (final OBDatasetTable table : tableList) {
         try {
-          String tableName = table.getName().toUpperCase();
-          boolean exportToNewXMLFile = shouldExportToNewXMLFile(tableName, previousTableName);
-          if (exportToNewXMLFile) {
-            cleanUp(tableFile, out, bufOut, dataExported);
-            tableFile = new File(path, tableName + ".xml");
-            out = new FileOutputStream(tableFile);
-            bufOut = new BufferedOutputStream(out);
-            dataExported = false;
-          }
+          final File tableFile = getFile(path, table);
+          final OutputStream out = new FileOutputStream(tableFile);
+          BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
-          dataExported |= exportTableToXML(platform, db, moduleToExport, dbdio, table, bufOut,
-              exportToNewXMLFile);
+          boolean dataExported = dbdio.writeDataForTableToXML(platform, db, table, bufOut,
+              encoding, moduleToExport.idMod);
           if (dataExported) {
             getLog().info("Exported table: " + table.getName());
+            addTableToExportedTablesMap(table.getName());
+          } else {
+            tableFile.delete();
           }
-          previousTableName = table.getName().toUpperCase();
+          bufOut.flush();
+          out.flush();
+          bufOut.close();
+          out.close();
         } catch (Exception e) {
           getLog()
               .error(
@@ -177,48 +175,46 @@ public class ExportSampledata extends BaseDatabaseTask {
                       + moduleToExport.name, e);
         }
       }
-      cleanUp(tableFile, out, bufOut, dataExported);
 
     } catch (Exception e) {
       throw new BuildException(e);
     }
   }
 
+  private void addTableToExportedTablesMap(String name) {
+    Integer count = (exportedTablesCount.get(name) == null) ? 0 : exportedTablesCount.get(name);
+    exportedTablesCount.put(name, count + 1);
+  }
+
+  private File getFile(File path, OBDatasetTable table) {
+    File f = new File(path, table.getName().toUpperCase() + ".xml");
+    if (f.exists()) {
+      Integer count = exportedTablesCount.get(table.getName());
+      f = new File(path, table.getName().toUpperCase() + "_" + count + ".xml");
+    }
+    return f;
+  }
+
+  /**
+   * Returns the instance of DatabaseDataIO that will be used to export the dataset tables to XML
+   */
   protected DatabaseDataIO getDatabaseDataIO() {
     return new DatabaseDataIO();
   }
 
-  protected void cleanUp(File file, OutputStream out, BufferedOutputStream bufOut,
-      boolean dataExported) throws IOException {
-    if (!dataExported && file != null && file.exists()) {
-      file.delete();
-    }
-    if (bufOut != null) {
-      bufOut.flush();
-      out.flush();
-      bufOut.close();
-      out.close();
-    }
-  }
-
-  protected boolean shouldExportToNewXMLFile(String tableName, String previousTableName) {
-    // ExportSampledata does not support defining several dataset tables for the same table, so each
-    // table is exported to its own xml file
-    return true;
-  }
-
+  /**
+   * Manages the dataset where clause
+   * 
+   * @param dsTable
+   *          the dataset table
+   * @param clientid
+   *          the id of the client being exported
+   */
   protected void setDataSetWhereClause(OBDatasetTable dsTable, String clientid) {
     // To export the sample data, the where clause defined in the dataset is overwritten with a
     // client filter
     String whereClause = "ad_client_id = '" + clientid + "'";
     dsTable.setWhereclause(whereClause);
-  }
-
-  protected boolean exportTableToXML(final Platform platform, Database db,
-      ModuleRow moduleToExport, final DatabaseDataIO dbdio, final OBDatasetTable table,
-      BufferedOutputStream bufOut, boolean exportToNewXMLFile) {
-    return dbdio
-        .writeDataForTableToXML(platform, db, table, bufOut, encoding, moduleToExport.idMod);
   }
 
   private Vector<DynaBean> findClient(final Platform platform, Database db) {

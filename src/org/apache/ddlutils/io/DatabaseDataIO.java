@@ -80,7 +80,7 @@ public class DatabaseDataIO {
    */
   private String _schemaPattern;
 
-  private boolean _writePrimaryKeyComment = true;
+  protected boolean _writePrimaryKeyComment = true;
 
   private final Log _log = LogFactory.getLog(DatabaseDataIO.class);
 
@@ -224,7 +224,7 @@ public class DatabaseDataIO {
    * @param converterConf
    *          The converter configuration
    */
-  public void registerConverters(ConverterConfiguration converterConf) throws DdlUtilsException {
+  protected void registerConverters(ConverterConfiguration converterConf) throws DdlUtilsException {
     for (Iterator it = _converters.iterator(); it.hasNext();) {
       DataConverterRegistration registrationInfo = (DataConverterRegistration) it.next();
 
