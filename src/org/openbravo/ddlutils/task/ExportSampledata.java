@@ -101,25 +101,10 @@ public class ExportSampledata extends BaseDatabaseTask {
       String clientid = (String) clientToExport.get("AD_CLIENT_ID");
       String clientName = getExportFileName(client);
 
-      ModuleRow moduleToExport = null;
-      for (int i = 0; i < util.getModuleCount(); i++) {
-        ModuleRow m = util.getModule(i);
-        if (m.dir.equals(module)) {
-          moduleToExport = m;
-          break;
-        }
-      }
-      if (moduleToExport == null) {
-        log.error("Specified module: " + module + " not found.");
-        System.exit(1);
-      }
-
-      File basePath;
-      if (moduleToExport.name.equalsIgnoreCase("CORE")) {
-        basePath = new File(basedir);
-      } else {
-        basePath = new File(new File(basedir, "modules"), moduleToExport.dir);
-      }
+      ModuleRow moduleToExport = getModuleToExport(util);
+      String moduleId = moduleToExport != null ? moduleToExport.idMod : "";
+      String moduleName = moduleToExport != null ? moduleToExport.name : null;
+      File basePath = getBasePath(util, moduleToExport);
       File sampledataFolder = new File(basePath, "referencedata/sampledata");
 
       log.info("Creating folder " + clientName + " in: " + sampledataFolder);
@@ -157,7 +142,7 @@ public class ExportSampledata extends BaseDatabaseTask {
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
           boolean dataExported = dbdio.writeDataForTableToXML(platform, db, table, bufOut,
-              encoding, moduleToExport.idMod);
+              encoding, moduleId);
           if (dataExported) {
             getLog().info("Exported table: " + table.getName());
             addTableToExportedTablesMap(table.getName());
@@ -169,10 +154,8 @@ public class ExportSampledata extends BaseDatabaseTask {
           bufOut.close();
           out.close();
         } catch (Exception e) {
-          getLog()
-              .error(
-                  "Error while exporting table" + table.getName() + " to module "
-                      + moduleToExport.name, e);
+          getLog().error(
+              "Error while exporting table" + table.getName() + " to module " + moduleName, e);
         }
       }
 
@@ -274,6 +257,49 @@ public class ExportSampledata extends BaseDatabaseTask {
    */
   protected String getDataSet() {
     return "Client Definition";
+  }
+
+  /**
+   * Returns the base path where the data will be exported. The data will be exported to the
+   * referencedata/sampledata subfolder of the returned path
+   * 
+   * @param util
+   * @param moduleToExport
+   * @return the base path where the data will be exported
+   */
+  protected File getBasePath(DBSMOBUtil util, ModuleRow moduleToExport)
+      throws IllegalArgumentException {
+    getLog().info("Exporting client " + client + " to module: " + module);
+    File basePath;
+    if (moduleToExport.name.equalsIgnoreCase("CORE")) {
+      basePath = new File(basedir);
+    } else {
+      basePath = new File(new File(basedir, "modules"), moduleToExport.dir);
+    }
+    return basePath;
+  }
+
+  /**
+   * Returns a ModuleRow that represents the module being exported, or null if no particular module
+   * is being exported
+   * 
+   * @param util
+   *          DBSMOBUtil object that contains utilities to inquire about the installed modules
+   */
+  protected ModuleRow getModuleToExport(DBSMOBUtil util) {
+    ModuleRow moduleToExport = null;
+    for (int i = 0; i < util.getModuleCount(); i++) {
+      ModuleRow m = util.getModule(i);
+      if (m.dir.equals(module)) {
+        moduleToExport = m;
+        break;
+      }
+    }
+    if (moduleToExport == null) {
+      log.error("Specified module: " + module + " not found.");
+      System.exit(1);
+    }
+    return moduleToExport;
   }
 
 }
