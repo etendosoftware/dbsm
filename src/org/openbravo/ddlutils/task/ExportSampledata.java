@@ -261,7 +261,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   /**
    * Returns the base path where the data will be exported. The data will be exported to the
-   * referencedata/sampledata subfolder of the returned path
+   * referencedata/sampledata subfolder of the returned path.
    * 
    * @param util
    * @param moduleToExport
