@@ -10,7 +10,7 @@
  ************************************************************************************
  */
 
-package org.openbravo.dbsm.test.module.functions;
+package org.openbravo.dbsm.test.model;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -24,9 +24,9 @@ import org.apache.ddlutils.model.Function;
 import org.junit.Test;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
-public class Funtions extends DbsmTest {
+public class Functions extends DbsmTest {
 
-  public Funtions(String rdbms, String driver, String url, String sid, String user,
+  public Functions(String rdbms, String driver, String url, String sid, String user,
       String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
   }

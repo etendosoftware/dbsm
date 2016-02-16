@@ -18,8 +18,6 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.openbravo.dbsm.test.model.data.CreateDefault;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 
-import com.google.common.base.Functions;
-
 /**
  * Test suite grouping all cases for database model
  * 
