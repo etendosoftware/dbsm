@@ -420,7 +420,11 @@ public class DbsmTest {
   /** Exports current test DB to xml files within path directory */
   protected void exportDatabase(String path, boolean doPlSqlStandardization) {
     final DatabaseIO io = new DatabaseIO();
-    Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
+    if (platform == null) {
+      platform = getPlatform();
+    }
+    Database originalDB = platform
+        .loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
     io.writeToDir(originalDB, new File(path));
   }
 
