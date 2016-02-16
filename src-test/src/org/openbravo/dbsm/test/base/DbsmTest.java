@@ -170,6 +170,12 @@ public class DbsmTest {
 
   @After
   public void thereShouldNoBeErrorsInLog() {
+    try {
+      if (ds != null) {
+        ds.close();
+      }
+    } catch (SQLException ignore) {
+    }
     assertThat(TestLogAppender.getWarnAndErrors(), is(empty()));
   }
 
