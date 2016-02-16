@@ -1717,7 +1717,7 @@ public abstract class SqlBuilder {
     recreatedTables.add(sourceTable.getName());
 
     createTable(desiredModel, realTargetTable, parameters);
-    disableAllNOTNULLColumns(realTargetTable, originallyRecreatedTables);
+    disableAllNOTNULLColumns(realTargetTable, originallyRecreatedTables, desiredModel);
     writeCopyDataStatement(tempTable, targetTable);
     dropTemporaryTable(desiredModel, tempTable);
 
@@ -1787,26 +1787,43 @@ public abstract class SqlBuilder {
   }
 
   protected void disableAllNOTNULLColumns(Table table) throws IOException {
-    disableAllNOTNULLColumns(table, recreatedTables);
+    disableAllNOTNULLColumns(table, recreatedTables, null);
   }
 
-  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls)
+  protected void disableAllNOTNULLColumns(Table table, Database database) throws IOException {
+    disableAllNOTNULLColumns(table, recreatedTables, database);
+  }
+
+  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls, Database database)
       throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
-      if (column.isRequired() && !column.isPrimaryKey() && !recreatedTbls.contains(table.getName())) {
-        if (getSqlType(column).equalsIgnoreCase("CLOB")) {
-          // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
-          // the null/not null constraint
-          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + "  NULL");
-        } else {
-          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
-              + getSqlType(column) + " NULL");
-        }
-        printEndOfStatement();
-      }
 
+      if (shouldDisableNotNull(table, column, recreatedTbls, database)) {
+        disableNotNull(table.getName(), column);
+      }
     }
+  }
+
+  protected void disableNotNull(String tableName, Column column) throws IOException {
+    // Not implemented
+
+  }
+
+  private boolean shouldDisableNotNull(Table table, Column column, List<String> recreatedTbls,
+      Database database) {
+    if (!(column.isRequired() && !column.isPrimaryKey() && !recreatedTbls.contains(table.getName()))) {
+      return false;
+    }
+
+    if (database == null) {
+      return true;
+    }
+    // do not disable columns with non literal on create default which are referred because their
+    // not null constraint is not enabled yet
+    boolean nonLiteralDeferredOnCreateDefault = database.isDeferredDefault(table, column)
+        && column.getOnCreateDefault() != null && column.getLiteralOnCreateDefault() == null;
+    return !nonLiteralDeferredOnCreateDefault;
   }
 
   protected void disableAllChecks(Table table) throws IOException {
@@ -1823,18 +1840,8 @@ public abstract class SqlBuilder {
     for (int i = 0; i < newColumns.size(); i++) {
       Column column = newColumns.get(i).getNewColumn();
       if (column.isRequired() && !column.isPrimaryKey()) {
-        if (getSqlType(column).equalsIgnoreCase("CLOB")) {
-          // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
-          // the null/not null constraint
-          println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + "_ MODIFY "
-              + getColumnName(column) + " NULL");
-        } else {
-          println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + "_ MODIFY "
-              + getColumnName(column) + " " + getSqlType(column) + " NULL");
-        }
-        printEndOfStatement();
+        disableNotNull(newColumns.get(i).getChangedTable().getName() + "_", column);
       }
-
     }
   }
 

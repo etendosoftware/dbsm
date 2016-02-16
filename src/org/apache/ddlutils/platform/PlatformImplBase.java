@@ -3022,15 +3022,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  public void disableNOTNULLColumns(Database database) {
-    disableNOTNULLColumns(database, null);
-  }
-
-  public void disableNOTNULLColumns(Database database, OBDataset dataset) {
-
+  @Override
+  public void disableNOTNULLColumns(Database db, OBDataset ad) {
     Connection connection = borrowConnection();
     try {
-      evaluateBatch(connection, disableNOTNULLColumnsSql(database, dataset), true);
+      evaluateBatch(connection, disableNOTNULLColumnsSql(db, ad), true);
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
@@ -3038,6 +3034,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
+  @Override
   public String disableNOTNULLColumnsSql(Database database, OBDataset dataset) {
     StringWriter buffer = new StringWriter();
 
@@ -3055,9 +3052,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         }
       }
       if (enable) {
-        _log.debug("disabling notnulls for table " + table.getName());
+        _log.debug("disabling not nulls for table " + table.getName());
         try {
-          getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i));
+          getSqlBuilder().disableAllNOTNULLColumns(database.getTable(i), database);
         } catch (IOException e) {
           e.printStackTrace();
         }

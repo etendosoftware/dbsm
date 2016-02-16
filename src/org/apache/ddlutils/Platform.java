@@ -1415,8 +1415,6 @@ public interface Platform {
 
   public void removeDeletedFKTriggers(Database modifiedDatabase, Database fullXMLDatabase);
 
-  public void disableNOTNULLColumns(Database database);
-
   public void disableNOTNULLColumns(Database database, OBDataset dataset);
 
   public void enableNOTNULLColumns(Database database);
@@ -1498,4 +1496,5 @@ public interface Platform {
   public void setBatchEvaluator(SQLBatchEvaluator batchEvaluator);
 
   public SQLBatchEvaluator getBatchEvaluator();
+
 }

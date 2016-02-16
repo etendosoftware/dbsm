@@ -629,6 +629,19 @@ public class Oracle8Builder extends SqlBuilder {
     }
   }
 
+  @Override
+  protected void disableNotNull(String tableName, Column column) throws IOException {
+    if (getSqlType(column).equalsIgnoreCase("CLOB")) {
+      // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
+      // the null/not null constraint
+      println("ALTER TABLE " + tableName + " MODIFY " + getColumnName(column) + "  NULL");
+    } else {
+      println("ALTER TABLE " + tableName + " MODIFY " + getColumnName(column) + " "
+          + getSqlType(column) + " NULL");
+    }
+    printEndOfStatement();
+  }
+
   /**
    * Creates a SQL command to include in the comments of a table the info about the operator classes
    * used in its indexes. The format of the comment will be:

@@ -21,7 +21,6 @@ package org.apache.ddlutils.platform.postgresql;
 
 import java.io.IOException;
 import java.sql.Types;
-import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -211,30 +210,10 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement();
   }
 
-  protected void disableAllNOTNULLColumns(Table table) throws IOException {
-    for (int i = 0; i < table.getColumnCount(); i++) {
-      Column column = table.getColumn(i);
-      if (column.isRequired() && !column.isPrimaryKey()
-          && !recreatedTables.contains(table.getName())) {
-        println("ALTER TABLE " + table.getName() + " ALTER " + getColumnName(column)
-            + " DROP NOT NULL");
-        printEndOfStatement();
-      }
-
-    }
-  }
-
   @Override
-  protected void disableTempNOTNULLColumns(Vector<AddColumnChange> newColumns) throws IOException {
-    for (int i = 0; i < newColumns.size(); i++) {
-      Column column = newColumns.get(i).getNewColumn();
-      if (column.isRequired()) {
-        println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + "_ ALTER "
-            + getColumnName(column) + " DROP NOT NULL");
-        printEndOfStatement();
-      }
-
-    }
+  protected void disableNotNull(String tableName, Column column) throws IOException {
+    println("ALTER TABLE " + tableName + " ALTER " + getColumnName(column) + " DROP NOT NULL");
+    printEndOfStatement();
   }
 
   @Override
@@ -965,19 +944,5 @@ public class PostgreSqlBuilder extends SqlBuilder {
       print(" DROP NOT NULL");
     }
     printEndOfStatement();
-  }
-
-  @Override
-  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls)
-      throws IOException {
-    for (int i = 0; i < table.getColumnCount(); i++) {
-      Column column = table.getColumn(i);
-      if (column.isRequired() && !column.isPrimaryKey() && !recreatedTbls.contains(table.getName())) {
-        println("ALTER TABLE " + table.getName() + " ALTER COLUMN " + getColumnName(column)
-            + " DROP  NOT NULL");
-        printEndOfStatement();
-      }
-
-    }
   }
 }
