@@ -60,6 +60,8 @@ import org.apache.log4j.PropertyConfigurator;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -161,15 +163,27 @@ public class DbsmTest {
     return configs;
   }
 
+  @Before
+  public void resetLogAppender() {
+    TestLogAppender.reset();
+  }
+
+  @After
+  public void thereShouldNoBeErrorsInLog() {
+    assertThat(TestLogAppender.getWarnAndErrors(), is(empty()));
+  }
+
   private void initLogging() {
     final Properties props = new Properties();
     final String level = Level.DEBUG.toString();
 
-    props.setProperty("log4j.rootCategory", level + ",A");
+    props.setProperty("log4j.rootCategory", level + ",A, T");
     props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
 
     props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
     props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-4r %-5p %c - %m%n");
+
+    props.setProperty("log4j.appender.T", "org.openbravo.dbsm.test.TestLogAppender");
 
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
     props.setProperty("log4j.logger.org.apache.ddlutils.util.JdbcSupport", "WARN");
