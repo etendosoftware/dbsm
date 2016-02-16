@@ -183,7 +183,7 @@ public class DbsmTest {
     props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
     props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-4r %-5p %c - %m%n");
 
-    props.setProperty("log4j.appender.T", "org.openbravo.dbsm.test.TestLogAppender");
+    props.setProperty("log4j.appender.T", "org.openbravo.dbsm.test.base.TestLogAppender");
 
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
     props.setProperty("log4j.logger.org.apache.ddlutils.util.JdbcSupport", "WARN");
