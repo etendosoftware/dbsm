@@ -1805,9 +1805,9 @@ public abstract class SqlBuilder {
     }
   }
 
+  /** Print SQL statement to disable not-null contratint in for a given column. */
   protected void disableNotNull(String tableName, Column column) throws IOException {
-    // Not implemented
-
+    // Not implemented: it should be implemented based on platform
   }
 
   private boolean shouldDisableNotNull(Table table, Column column, List<String> recreatedTbls,
