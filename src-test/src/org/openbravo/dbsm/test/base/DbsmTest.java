@@ -92,7 +92,7 @@ public class DbsmTest {
   private String url;
   protected Logger log;
   protected String modelPath;
-  private BasicDataSource ds;
+  private static BasicDataSource ds;
   private Rdbms rdbms;
   private Platform platform;
   private SQLBatchEvaluator evaluator;
@@ -130,7 +130,9 @@ public class DbsmTest {
     this.driver = driver;
     this.url = ownerUrl;
 
-    this.ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    if (ds == null) {
+      ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    }
   }
 
   /**
@@ -170,12 +172,6 @@ public class DbsmTest {
 
   @After
   public void thereShouldNoBeErrorsInLog() {
-    try {
-      if (ds != null) {
-        ds.close();
-      }
-    } catch (SQLException ignore) {
-    }
     assertThat(TestLogAppender.getWarnAndErrors(), is(empty()));
   }
 
@@ -273,108 +269,112 @@ public class DbsmTest {
    */
   protected Database updateDatabase(String dbModelPath, String adDirectoryName,
       List<String> adTableNames, boolean assertDBisCorrect) {
-
-    boolean failOnError = true;
-    File dbModel = new File("model", dbModelPath);
-    final Platform platform = getPlatform();
-    if (recreationMode == RecreationMode.forced) {
-      platform.getSqlBuilder().setForcedRecreation("all");
-    }
-
-    Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
-    Database newDB = DatabaseUtils.readDatabase(dbModel);
-
-    final DatabaseData databaseOrgData = new DatabaseData(newDB);
-    databaseOrgData.setStrictMode(false);
-
-    if (adDirectoryName != null) {
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originalDB, newDB,
-          new File(adDirectoryName).getAbsolutePath(), "none", new File(adDirectoryName), false,
-          false);
-    }
-    OBDataset ad = new OBDataset(databaseOrgData);
-
-    if (adDirectoryName != null && adTableNames != null) {
-      Vector<OBDatasetTable> adTables = new Vector<OBDatasetTable>();
-      for (String tName : adTableNames) {
-        OBDatasetTable t = new OBDatasetTable();
-        t.setName(tName);
-        t.setIncludeAllColumns(true);
-        adTables.add(t);
+    Connection connection = null;
+    try {
+      boolean failOnError = true;
+      File dbModel = new File("model", dbModelPath);
+      final Platform platform = getPlatform();
+      if (recreationMode == RecreationMode.forced) {
+        platform.getSqlBuilder().setForcedRecreation("all");
       }
-      ad.setTables(adTables);
+
+      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter());
+      Database newDB = DatabaseUtils.readDatabase(dbModel);
+
+      final DatabaseData databaseOrgData = new DatabaseData(newDB);
+      databaseOrgData.setStrictMode(false);
+
+      if (adDirectoryName != null) {
+        DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originalDB, newDB,
+            new File(adDirectoryName).getAbsolutePath(), "none", new File(adDirectoryName), false,
+            false);
+      }
+      OBDataset ad = new OBDataset(databaseOrgData);
+
+      if (adDirectoryName != null && adTableNames != null) {
+        Vector<OBDatasetTable> adTables = new Vector<OBDatasetTable>();
+        for (String tName : adTableNames) {
+          OBDatasetTable t = new OBDatasetTable();
+          t.setName(tName);
+          t.setIncludeAllColumns(true);
+          adTables.add(t);
+        }
+        ad.setTables(adTables);
+      }
+
+      Database oldModel;
+      try {
+        oldModel = (Database) originalDB.clone();
+      } catch (CloneNotSupportedException e1) {
+        throw new RuntimeException(e1);
+      }
+      log.info("Updating database model...");
+      platform.alterTables(originalDB, newDB, false);
+      log.info("Model update complete.");
+
+      if (false) {
+        DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
+      }
+      log.info("Disabling foreign keys");
+      connection = platform.borrowConnection();
+      platform.disableDatasetFK(connection, originalDB, ad, false);
+      log.info("Disabling triggers");
+      platform.disableAllTriggers(connection, newDB, false);
+      platform.disableNOTNULLColumns(newDB, ad);
+
+      // // Executing modulescripts
+      //
+      // ModuleScriptHandler hd = new ModuleScriptHandler();
+      // hd.setBasedir(new File(basedir + "/../"));
+      // hd.execute();
+      //
+      // // Now we apply the configuration scripts
+      // DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
+      // true);
+
+      log.info("Comparing databases to find differences");
+      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      try {
+        dataComparator.compareToUpdate(newDB, platform, databaseOrgData, ad, null);
+      } catch (SQLException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      log.info("Updating Application Dictionary data...");
+      platform.alterData(connection, newDB, dataComparator.getChanges());
+      log.info("Removing invalid rows.");
+      platform.deleteInvalidConstraintRows(newDB, ad, false);
+      log.info("Recreating Primary Keys");
+      List changes = platform.alterTablesRecreatePKs(oldModel, newDB, false);
+      log.info("Executing oncreatedefault statements for mandatory columns");
+      platform.executeOnCreateDefaultForMandatoryColumns(newDB, ad);
+      log.info("Recreating not null constraints");
+      platform.enableNOTNULLColumns(newDB, ad);
+      log.info("Executing update final script (dropping temporary tables)");
+      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, false, changes,
+          null, ad);
+
+      // assertThat("Postscript should be correct", postscriptCorrect, is(true));
+
+      log.info("Enabling Foreign Keys and Triggers");
+      boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true);
+      boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
+
+      // Now check the new model updated in db is as it should
+      if (assertDBisCorrect) {
+        ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
+            platform.isDelimitedIdentifierModeOn());
+        @SuppressWarnings("unchecked")
+        List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+            platform.loadModelFromDatabase(getExcludeFilter()));
+        assertThat("changes between updated db and target db", newChanges, is(empty()));
+      }
+
+      return newDB;
+    } finally {
+      platform.returnConnection(connection);
     }
-
-    Database oldModel;
-    try {
-      oldModel = (Database) originalDB.clone();
-    } catch (CloneNotSupportedException e1) {
-      throw new RuntimeException(e1);
-    }
-    log.info("Updating database model...");
-    platform.alterTables(originalDB, newDB, false);
-    log.info("Model update complete.");
-
-    if (false) {
-      DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
-    }
-    log.info("Disabling foreign keys");
-    final Connection connection = platform.borrowConnection();
-    platform.disableDatasetFK(connection, originalDB, ad, false);
-    log.info("Disabling triggers");
-    platform.disableAllTriggers(connection, newDB, false);
-    platform.disableNOTNULLColumns(newDB, ad);
-
-    // // Executing modulescripts
-    //
-    // ModuleScriptHandler hd = new ModuleScriptHandler();
-    // hd.setBasedir(new File(basedir + "/../"));
-    // hd.execute();
-    //
-    // // Now we apply the configuration scripts
-    // DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-    // true);
-
-    log.info("Comparing databases to find differences");
-    final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-    try {
-      dataComparator.compareToUpdate(newDB, platform, databaseOrgData, ad, null);
-    } catch (SQLException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    log.info("Updating Application Dictionary data...");
-    platform.alterData(connection, newDB, dataComparator.getChanges());
-    log.info("Removing invalid rows.");
-    platform.deleteInvalidConstraintRows(newDB, ad, false);
-    log.info("Recreating Primary Keys");
-    List changes = platform.alterTablesRecreatePKs(oldModel, newDB, false);
-    log.info("Executing oncreatedefault statements for mandatory columns");
-    platform.executeOnCreateDefaultForMandatoryColumns(newDB, ad);
-    log.info("Recreating not null constraints");
-    platform.enableNOTNULLColumns(newDB, ad);
-    log.info("Executing update final script (dropping temporary tables)");
-    boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, false, changes,
-        null, ad);
-
-    // assertThat("Postscript should be correct", postscriptCorrect, is(true));
-
-    log.info("Enabling Foreign Keys and Triggers");
-    boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true);
-    boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
-
-    // Now check the new model updated in db is as it should
-    if (assertDBisCorrect) {
-      ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
-          platform.isDelimitedIdentifierModeOn());
-      @SuppressWarnings("unchecked")
-      List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
-          platform.loadModelFromDatabase(getExcludeFilter()));
-      assertThat("changes between updated db and target db", newChanges, is(empty()));
-    }
-
-    return newDB;
   }
 
   protected Database createDatabase(String dbModelPath) {
@@ -411,15 +411,22 @@ public class DbsmTest {
     updateDatabase("empty");
     if (rdbms == Rdbms.PG) {
       Connection cn = null;
+      PreparedStatement st = null;
       try {
         cn = getDataSource().getConnection();
 
-        PreparedStatement st = cn
-            .prepareStatement("CREATE OR REPLACE VIEW DUAL AS SELECT 'X'::text AS dummy");
+        st = cn.prepareStatement("CREATE OR REPLACE VIEW DUAL AS SELECT 'X'::text AS dummy");
         st.execute();
       } catch (Exception e) {
         log.error("Error creating DUAL in PG");
       } finally {
+        if (st != null) {
+          try {
+            st.close();
+          } catch (SQLException e) {
+            log.error("Error closing statement", e);
+          }
+        }
         if (cn != null) {
           try {
             cn.close();
@@ -533,12 +540,20 @@ public class DbsmTest {
     sql += ") values (" + values + ")";
     System.out.println(sql);
     Connection cn = null;
+    PreparedStatement st = null;
     try {
       cn = getDataSource().getConnection();
 
-      PreparedStatement st = cn.prepareStatement(sql);
+      st = cn.prepareStatement(sql);
       st.execute();
     } finally {
+      if (st != null) {
+        try {
+          st.close();
+        } catch (SQLException e) {
+          log.error("Error closing statement", e);
+        }
+      }
       if (cn != null) {
         try {
           cn.close();
@@ -554,10 +569,9 @@ public class DbsmTest {
   /** gets first value in DB for given column */
   protected String getActualValue(String tableName, String columnName) throws SQLException {
     Connection cn = null;
+    PreparedStatement st = null;
     try {
       cn = getDataSource().getConnection();
-
-      PreparedStatement st;
 
       st = cn.prepareStatement("select " + columnName + " from " + tableName);
 
@@ -566,6 +580,13 @@ public class DbsmTest {
       rs.next();
       return rs.getString(1);
     } finally {
+      if (st != null) {
+        try {
+          st.close();
+        } catch (SQLException e) {
+          log.error("Error closing statement", e);
+        }
+      }
       if (cn != null) {
         cn.close();
       }
