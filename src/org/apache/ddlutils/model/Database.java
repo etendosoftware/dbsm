@@ -1625,6 +1625,18 @@ public class Database implements Serializable, Cloneable {
     return deferredNotNulls;
   }
 
+  public boolean isDeferredNotNull(Table table, Column column) {
+    final String tableName = table.getName();
+    final String columnName = column.getName();
+    for (ColumnChange deferred : getDeferedNotNulls()) {
+      if (tableName.equals(deferred.getChangedTable().getName())
+          && columnName.equals(deferred.getChangedColumn().getName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public List<AddColumnChange> getDeferredDefaults() {
     return deferredDefaults;
   }

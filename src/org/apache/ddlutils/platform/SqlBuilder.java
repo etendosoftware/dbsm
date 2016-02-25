@@ -1819,11 +1819,9 @@ public abstract class SqlBuilder {
     if (database == null) {
       return true;
     }
-    // do not disable columns with non literal on create default which are referred because their
-    // not null constraint is not enabled yet
-    boolean nonLiteralDeferredOnCreateDefault = database.isDeferredDefault(table, column)
-        && column.getOnCreateDefault() != null && column.getLiteralOnCreateDefault() == null;
-    return !nonLiteralDeferredOnCreateDefault;
+
+    // do not disable not null columns with deferred constraint because it is not enabled yet
+    return !database.isDeferredNotNull(table, column);
   }
 
   protected void disableAllChecks(Table table) throws IOException {
