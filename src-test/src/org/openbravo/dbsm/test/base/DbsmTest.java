@@ -98,6 +98,7 @@ public class DbsmTest {
   private SQLBatchEvaluator evaluator;
   private ExcludeFilter excludeFilter;
   protected RecreationMode recreationMode = RecreationMode.standard;
+  private boolean logErrorsAllowed = false;
 
   public enum Rdbms {
     PG, ORA
@@ -167,12 +168,20 @@ public class DbsmTest {
 
   @Before
   public void resetLogAppender() {
+    logErrorsAllowed = false;
     TestLogAppender.reset();
   }
 
   @After
   public void thereShouldNoBeErrorsInLog() {
-    assertThat(TestLogAppender.getWarnAndErrors(), is(empty()));
+    if (!logErrorsAllowed) {
+      assertThat(TestLogAppender.getWarnAndErrors(), is(empty()));
+    }
+  }
+
+  /** do not fail if this test cases logs errors or warnings */
+  protected void allowLogErrorsForThisTest() {
+    logErrorsAllowed = true;
   }
 
   private void initLogging() {

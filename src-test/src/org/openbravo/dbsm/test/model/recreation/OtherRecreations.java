@@ -73,9 +73,7 @@ public class OtherRecreations extends TableRecreationBaseTest {
 
   @Test(expected = AssertionError.class)
   public void mandatoryNoDefaultNorOCDDataNeedsFix() throws SQLException {
-
-    // resetDB();
-    // assertTablesAreNotRecreated("RM1.xml", "RM2.xml", true);
+    allowLogErrorsForThisTest();
 
     resetDB();
     Database db = updateDatabase("recreation/RM1.xml");
