@@ -66,6 +66,26 @@ public class OtherDefaults extends DbsmTest {
     resetDB();
     updateDatabase("createDefault/NM3.xml", "data/newCreateDefault", Arrays.asList("TEST"));
     updateDatabase("createDefault/NM31.xml", "data/newCreateDefault", Arrays.asList("TEST"));
+  }
 
+  @Test
+  public void setMandatoryInstance() throws SQLException {
+    resetDB();
+    updateDatabase("createDefault/NM3.xml");
+    updateDatabase("createDefault/NM31.xml");
+  }
+
+  @Test
+  public void unsetMandatoryInAD() throws SQLException {
+    resetDB();
+    updateDatabase("createDefault/NM31.xml", "data/newCreateDefault", Arrays.asList("TEST"));
+    updateDatabase("createDefault/NM3.xml", "data/newCreateDefault", Arrays.asList("TEST"));
+  }
+
+  @Test
+  public void unsetMandatoryInstance() throws SQLException {
+    resetDB();
+    updateDatabase("createDefault/NM31.xml");
+    updateDatabase("createDefault/NM3.xml");
   }
 }
