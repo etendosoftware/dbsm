@@ -15,6 +15,7 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -51,8 +52,21 @@ public class OtherRecreations extends TableRecreationBaseTest {
   }
 
   @Test
-  public void realADTableMP17to15Q2() {
-    assertTablesAreNotRecreated("AD_TABLE-MP17.xml", "AD_TABLE-PR15Q2.xml", false);
+  public void realADTableMP17to16Q1() throws SQLException {
+    if (getRdbms() == Rdbms.ORA) {
+      assertTablesAreNotRecreated("AD_TABLE-MP17.xml", "AD_TABLE-PR16Q1.xml", false);
+    } else {
+      // In PG do not check MP17 model as changes are expected becuase of PG9.5 check
+      // transformations
+      Database originalModel = updateDatabase(MODEL_DIRECTORY + "/AD_TABLE-MP17.xml", false);
+      Database newModel = updateDatabase(MODEL_DIRECTORY + "/AD_TABLE-PR16Q1.xml");
+
+      if (recreationMode == RecreationMode.standard) {
+        List<String> oldTableInternalId = getOIds(originalModel);
+        List<String> newTableInternalId = getOIds(newModel);
+        assertThat("Table OID changed", newTableInternalId, contains(oldTableInternalId.toArray()));
+      }
+    }
   }
 
   @Test

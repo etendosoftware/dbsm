@@ -33,7 +33,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
 public class TableRecreationBaseTest extends DbsmTest {
-  private static final String MODEL_DIRECTORY = "recreation/";
+  protected static final String MODEL_DIRECTORY = "recreation/";
 
   protected enum ActionType {
     append, prepend, drop
@@ -106,7 +106,7 @@ public class TableRecreationBaseTest extends DbsmTest {
     }
   }
 
-  private List<String> getOIds(Database originalModel) throws SQLException {
+  protected List<String> getOIds(Database originalModel) throws SQLException {
     List<String> oids = new ArrayList<String>();
     for (Table table : originalModel.getTables()) {
       oids.add(table.getName() + ":" + getTableDBOId(table.getName()));
@@ -114,7 +114,7 @@ public class TableRecreationBaseTest extends DbsmTest {
     return oids;
   }
 
-  private String getTableDBOId(String testTableName) throws SQLException {
+  protected String getTableDBOId(String testTableName) throws SQLException {
     Connection cn = null;
     try {
       cn = getDataSource().getConnection();

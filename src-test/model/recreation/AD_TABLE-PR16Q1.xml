@@ -145,7 +145,8 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <!-- foreign-key foreignTable="OBSERDS_DATASOURCE" name="AD_COLUMN_DATASOURCE">
+      <!-- do not consider FKs as we are not creating referred tables
+      <foreign-key foreignTable="OBSERDS_DATASOURCE" name="AD_COLUMN_DATASOURCE">
         <reference local="OBSERDS_DATASOURCE_ID" foreign="OBSERDS_DATASOURCE_ID"/>
       </foreign-key>
       <foreign-key foreignTable="AD_COLUMN" name="AD_COLUMN_TABLE">
@@ -165,7 +166,8 @@
       </foreign-key>
       <foreign-key foreignTable="AD_WINDOW" name="AD_WINDOW_TABLE" onDelete="setnull">
         <reference local="AD_WINDOW_ID" foreign="AD_WINDOW_ID"/>
-      </foreign-key-->
+      </foreign-key>
+       -->
       <index name="AD_TABLE_PACKAGE_IDX" unique="false">
         <index-column name="AD_PACKAGE_ID"/>
       </index>
@@ -175,14 +177,14 @@
       <unique name="AD_TABLE_TREETYPE_UN">
         <unique-column name="TREETYPE"/>
       </unique>
-      <check name="AD_TABLE_CLASSNAME_CHK"><![CDATA[((UPPER((DATAORIGINTYPE)) = 'DATASOURCE') OR (UPPER((DATAORIGINTYPE)) = 'HQL')) OR (CLASSNAME IS NOT NULL)]]></check>
-      <check name="AD_TABLE_DATASOURCE_CHK"><![CDATA[(UPPER((DATAORIGINTYPE)) <> 'DATASOURCE') OR (OBSERDS_DATASOURCE_ID IS NOT NULL)]]></check>
-      <check name="AD_TABLE_HQL_CHK"><![CDATA[(UPPER((DATAORIGINTYPE)) <> 'HQL') OR (HQLQUERY IS NOT NULL)]]></check>
+      <check name="AD_TABLE_CLASSNAME_CHK"><![CDATA[UPPER(DATAORIGINTYPE) = 'DATASOURCE' OR UPPER(DATAORIGINTYPE) = 'HQL' OR CLASSNAME IS NOT NULL]]></check>
+      <check name="AD_TABLE_DATASOURCE_CHK"><![CDATA[UPPER(DATAORIGINTYPE) <> 'DATASOURCE' OR OBSERDS_DATASOURCE_ID IS NOT NULL]]></check>
+      <check name="AD_TABLE_HQL_CHK"><![CDATA[UPPER(DATAORIGINTYPE) <> 'HQL' OR HQLQUERY IS NOT NULL]]></check>
       <check name="AD_TABLE_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
       <check name="AD_TABLE_ISAUDITINS_CHK"><![CDATA[ISAUDITINSERTS IN ('Y', 'N')]]></check>
       <check name="AD_TABLE_ISDELETEABLE_CHK"><![CDATA[ISDELETEABLE IN ('Y', 'N')]]></check>
       <check name="AD_TABLE_ISFULLYAUDITED_CHK"><![CDATA[ISFULLYAUDITED IN ('Y', 'N')]]></check>
-      <check name="AD_TABLE_ISFULLYAUDITED_CHK2"><![CDATA[(ISFULLYAUDITED = 'N') OR (UPPER((TABLENAME)) <> 'AD_AUDIT_TRAIL')]]></check>
+      <check name="AD_TABLE_ISFULLYAUDITED_CHK2"><![CDATA[ISFULLYAUDITED = 'N' OR UPPER(TABLENAME) <> 'AD_AUDIT_TRAIL']]></check>
       <check name="AD_TABLE_ISHIGHVOLUME_CHK"><![CDATA[ISHIGHVOLUME IN ('Y', 'N')]]></check>
       <check name="AD_TABLE_ISSECUR_YENABLED_CHK"><![CDATA[ISSECURITYENABLED IN ('Y', 'N')]]></check>
       <check name="AD_TABLE_ISTREE_CHK"><![CDATA[ISTREE IN ('Y', 'N')]]></check>
