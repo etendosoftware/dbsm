@@ -1625,6 +1625,7 @@ public class Database implements Serializable, Cloneable {
     return deferredNotNulls;
   }
 
+  /** Returns whether a not null constraint is deferred for a column */
   public boolean isDeferredNotNull(Table table, Column column) {
     final String tableName = table.getName();
     final String columnName = column.getName();
