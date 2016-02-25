@@ -16,7 +16,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.openbravo.dbsm.test.model.data.CreateDefault;
+import org.openbravo.dbsm.test.model.data.OtherDefaults;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
+import org.openbravo.dbsm.test.model.recreation.AddDropConstraints;
+import org.openbravo.dbsm.test.model.recreation.DataTypeChanges;
+import org.openbravo.dbsm.test.model.recreation.OtherRecreations;
+import org.openbravo.dbsm.test.model.recreation.SQLCommands;
 
 /**
  * Test suite grouping all cases for database model
@@ -38,7 +43,13 @@ CheckConstraints.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
-    Functions.class })
+    Functions.class,//
+
+    AddDropConstraints.class,//
+    DataTypeChanges.class, //
+    OtherDefaults.class, //
+    SQLCommands.class, //
+    OtherRecreations.class })
 public class ModelSuite {
 
 }
