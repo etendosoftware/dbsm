@@ -203,9 +203,10 @@ public class OperatorClassIndexes extends DbsmTest {
    */
   private String getCommentOfTableInOracle(String tableName) {
     String tableComment = null;
+    Connection con = null;
     try {
       PreparedStatement st = null;
-      Connection con = getPlatform().getDataSource().getConnection();
+      con = getPlatform().getDataSource().getConnection();
       st = con
           .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
       st.setString(1, tableName.toUpperCase());
@@ -215,6 +216,8 @@ public class OperatorClassIndexes extends DbsmTest {
       }
     } catch (SQLException e) {
       log.error("Error while getting the comment of the table " + tableName, e);
+    } finally {
+      getPlatform().returnConnection(con);
     }
     return tableComment;
   }

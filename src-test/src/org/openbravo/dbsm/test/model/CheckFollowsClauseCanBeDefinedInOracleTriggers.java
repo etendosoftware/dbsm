@@ -64,6 +64,7 @@ public class CheckFollowsClauseCanBeDefinedInOracleTriggers extends DbsmTest {
     getPlatform().createTrigger(con, db, t, triggersToFollow);
     expected = true;
     assertFirstTriggerFollowsSecondTrigger(expected);
+    getPlatform().returnConnection(con);
   }
 
   public void assertFirstTriggerFollowsSecondTrigger(boolean expectedValue) {
