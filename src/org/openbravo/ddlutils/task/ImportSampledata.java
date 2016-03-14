@@ -42,6 +42,8 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   private String basedir;
 
+  private boolean executeModuleScripts = true;
+
   public ImportSampledata() {
     doOBRebuildAppender = false;
   }
@@ -158,14 +160,16 @@ public class ImportSampledata extends BaseDatabaseTask {
         }
       }
 
-      log.info("Running modulescripts...");
-      try {
-        ModuleScriptHandler hd = new ModuleScriptHandler();
-        hd.setModulesVersionMap(new HashMap<String, String>());
-        hd.setBasedir(new File(basedir));
-        hd.execute();
-      } catch (Exception e) {
-        e.printStackTrace();
+      if (executeModuleScripts) {
+        log.info("Running modulescripts...");
+        try {
+          ModuleScriptHandler hd = new ModuleScriptHandler();
+          hd.setModulesVersionMap(new HashMap<String, String>());
+          hd.setBasedir(new File(basedir));
+          hd.execute();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
 
       log.info("Enabling constraints...");
@@ -232,6 +236,10 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   public void setBasedir(String basedir) {
     this.basedir = basedir;
+  }
+
+  public void setExecuteModuleScripts(boolean executeModuleScripts) {
+    this.executeModuleScripts = executeModuleScripts;
   }
 
 }
