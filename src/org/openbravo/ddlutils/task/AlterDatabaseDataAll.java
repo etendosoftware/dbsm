@@ -70,6 +70,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   private String forcedRecreation = "";
 
+  private boolean executeModuleScripts = true;
+
   public AlterDatabaseDataAll() {
     super();
   }
@@ -182,9 +184,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db, ad);
 
-      // Executing modulescripts
-      hd.setBasedir(new File(basedir + "/../"));
-      hd.execute();
+      if (executeModuleScripts) {
+        // Executing modulescripts
+        hd.setBasedir(new File(basedir + "/../"));
+        hd.execute();
+      }
 
       // Now we apply the configuration scripts
       DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
@@ -475,5 +479,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   public void setForcedRecreation(String forcedRecreation) {
     this.forcedRecreation = forcedRecreation;
+  }
+
+  public void setExecuteModuleScripts(boolean executeModuleScripts) {
+    this.executeModuleScripts = executeModuleScripts;
   }
 }
