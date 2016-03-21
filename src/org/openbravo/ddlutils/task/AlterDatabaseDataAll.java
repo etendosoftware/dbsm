@@ -185,9 +185,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       platform.disableNOTNULLColumns(db, ad);
 
       if (executeModuleScripts) {
+        getLog().info("Running modulescripts...");
         // Executing modulescripts
         hd.setBasedir(new File(basedir + "/../"));
         hd.execute();
+      } else {
+        getLog().info("Skipping modulescripts...");
       }
 
       // Now we apply the configuration scripts

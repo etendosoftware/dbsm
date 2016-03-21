@@ -170,6 +170,8 @@ public class ImportSampledata extends BaseDatabaseTask {
         } catch (Exception e) {
           e.printStackTrace();
         }
+      } else {
+        log.info("Skipping modulescripts...");
       }
 
       log.info("Enabling constraints...");
