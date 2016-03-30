@@ -3248,7 +3248,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
       _log.debug("enabling check constraints for table " + table.getName());
-      getSqlBuilder().disableAllChecks(table);
+      getSqlBuilder().enableAllChecks(table);
       evaluateBatchRealBatch(connection, buffer.toString(), true);
     } catch (IOException e) {
       _log.error("Error while enabling the check constraints of the table " + table, e);
