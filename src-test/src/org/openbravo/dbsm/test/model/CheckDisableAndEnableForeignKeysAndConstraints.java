@@ -50,10 +50,13 @@ public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
     Database db = updateDatabase("constraints/TWO_TABLES_WITH_CONSTRAINTS.xml");
     Connection con = getPlatform().borrowConnection();
     getPlatform().disableCheckConstraints(con, db, null);
-    getPlatform().returnConnection(con);
     // both constraints should be disabled
     assertIsConstraintEnabled("test1_constraint", false);
     assertIsConstraintEnabled("test2_constraint", false);
+    getPlatform().enableCheckConstraints(con, db, null);
+    assertIsConstraintEnabled("test1_constraint", true);
+    assertIsConstraintEnabled("test2_constraint", true);
+    getPlatform().returnConnection(con);
   }
 
   @Test
@@ -63,10 +66,11 @@ public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
     Table t = db.findTable("TEST2");
     Connection con = getPlatform().borrowConnection();
     getPlatform().disableCheckConstraintsForTable(con, t);
-    getPlatform().returnConnection(con);
     // only table test2´s constraint should be disabled
     assertIsConstraintEnabled("test1_constraint", true);
     assertIsConstraintEnabled("test2_constraint", false);
+    getPlatform().enableCheckConstraintsForTable(con, t);
+    getPlatform().returnConnection(con);
   }
 
   @Test
@@ -75,11 +79,15 @@ public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
     Database db = updateDatabase("foreignKeys/TWO_TABLES_WITH_FOREIGN_KEYS.xml");
     Connection con = getPlatform().borrowConnection();
     getPlatform().disableAllFK(con, db, false);
-    getPlatform().returnConnection(con);
-
     // both foreign keys should be disabled
     assertIsConstraintEnabled("test1_fk", false);
     assertIsConstraintEnabled("test2_fk", false);
+
+    getPlatform().enableAllFK(con, db, false);
+    // both foreign keys should be disabled
+    assertIsConstraintEnabled("test1_fk", true);
+    assertIsConstraintEnabled("test2_fk", true);
+    getPlatform().returnConnection(con);
   }
 
   @Test
@@ -89,11 +97,15 @@ public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
     Table t = db.findTable("TEST2");
     Connection con = getPlatform().borrowConnection();
     getPlatform().disableAllFkForTable(con, t, false);
-    getPlatform().returnConnection(con);
     // only table test2´s foreign keys should be disabled (test1_fk is a foreign key defined on
     // test2 that points to the primary key of test1)
     assertIsConstraintEnabled("test1_fk", false);
     assertIsConstraintEnabled("test2_fk", true);
+
+    getPlatform().enableAllFkForTable(con, db, t, false);
+    assertIsConstraintEnabled("test1_fk", true);
+    assertIsConstraintEnabled("test2_fk", true);
+    getPlatform().returnConnection(con);
   }
 
   private void assertIsConstraintEnabled(String constraintName, boolean expectedValue) {
