@@ -219,6 +219,31 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
+  public boolean enableAllFkForTable(Connection connection, Database model, Table table,
+      boolean continueOnError) throws DatabaseOperationException {
+    String current = null;
+    try {
+      current = "SELECT 'ALTER TABLE'|| ' ' || TABLE_NAME || ' ' || 'ENABLE CONSTRAINT' || ' ' || CONSTRAINT_NAME  SQL_STR FROM USER_CONSTRAINTS WHERE  CONSTRAINT_TYPE='R' AND UPPER(TABLE_NAME) = UPPER('"
+          + table.getName() + "')";
+      PreparedStatement pstmt = connection.prepareStatement(current);
+      ResultSet rs = pstmt.executeQuery();
+
+      while (rs.next()) {
+        current = rs.getString("SQL_STR");
+        PreparedStatement pstmtd = connection.prepareStatement(current);
+        pstmtd.executeUpdate();
+        pstmtd.close();
+      }
+      rs.close();
+      pstmt.close();
+      return true;
+    } catch (SQLException e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
+      throw new DatabaseOperationException("Error while enabling foreign key ", e);
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
