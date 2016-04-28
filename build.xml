@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
 ************************************************************************************
-* Copyright (C) 2001-2008 Openbravo S.L.U.
+* Copyright (C) 2001-2016 Openbravo S.L.U.
 * Licensed under the Apache Software License version 2.0
 * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -48,7 +48,22 @@
       <arg value="id"/>
       <arg value="-i"/>
     </exec>
-    <echo message="${hg.id}" file="${build.db.classes}/rev.id"/>
+
+   <fail message="couldn't get revision id">
+     <condition>
+       <not>
+         <isset property="hg.id"/>
+       </not>
+     </condition>
+   </fail>
+
+   <fail message="there are local changes, jar will not be generated">
+     <condition>
+       <matches pattern="\+" string="${hg.id}"/>
+     </condition>
+   </fail>
+
+   <echo message="${hg.id}" file="${build.db.classes}/rev.id"/>
   </target>
   
   <target name="compile" depends="init">
@@ -60,7 +75,7 @@
     </copy>
   </target>
 
-  <target name="build.jar">
+  <target name="build.jar" depends="set.code.rev">
     <jar destfile="${build.db.lib}/dbsourcemanager.jar">
       <fileset dir="${build.db.classes}" />
       <manifest>
@@ -69,14 +84,13 @@
     </jar>
   </target>
 
-
   <target name="doc" depends="init" description="Generate api">
     <javadoc packagenames="*" sourcepath="${build.db.src}" destdir="${build.db.docs}" author="true" version="true" use="true" docencoding="UTF-8" encoding="UTF-8" failonerror="false" windowtitle="${ant.project.name}">
       <classpath refid="db.class.path" />
     </javadoc>
   </target>
 
-  <target name="jar" depends="set.code.rev, compile, build.jar">
+  <target name="jar" depends="compile, build.jar">
   </target>
 
   <target name="build" depends="jar, doc">
