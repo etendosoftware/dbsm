@@ -19,13 +19,16 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.util.Vector;
 
+import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.ValidateAPIData;
@@ -42,6 +45,15 @@ import org.openbravo.ddlutils.util.ValidateAPIModel;
 public class CheckAPIDistribution extends BaseDatabaseTask {
   File stableDBdir;
   File testDBdir;
+  String modules;
+
+  public String getModules() {
+    return modules;
+  }
+
+  public void setModules(String modules) {
+    this.modules = modules;
+  }
 
   public File getStableDBdir() {
     return stableDBdir;
@@ -70,13 +82,43 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     log.info("Using stableDBdir: " + stableDBdir);
     log.info("Using testDBDir:   " + testDBdir);
 
+    Database dbModelStable;
+    DatabaseData dbDataStable;
+    Database dbModelTest;
+    DatabaseData dbDataTest;
+    String modulesList;
+    if (getModules() != null && !getModules().equals("")) {
+      modulesList = getModules();
+    } else {
+      modulesList = null;
+    }
+
     getLog().info("Reading full stable reference model (core+all modules) ...");
-    Database dbModelStable = readModelRecursiveHelper(stableDBdir);
-    DatabaseData dbDataStable = readDataRecursiveHelper(platform, stableDBdir, dbModelStable);
+    if (modulesList != null) {
+      // In case of API check for modules, we use the testDBDir to create both the database model
+      // and the data loading, for the ERP part, when building the stable database and databasedata.
+      //
+      // In this way, no API changes in either structure or data in Core will be detected, only
+      // changes in modules will be detected
+      dbModelStable = readModelRecursiveHelper(testDBdir, stableDBdir);
+      dbDataStable = readDataRecursiveHelper(platform, testDBdir, stableDBdir, dbModelStable,
+          modulesList.split(","));
+    } else {
+      dbModelStable = readModelRecursiveHelper(stableDBdir, stableDBdir);
+      dbDataStable = readDataRecursiveHelper(platform, stableDBdir, stableDBdir, dbModelStable,
+          null);
+    }
 
     getLog().info("Reading model to be tested (core+all modules) ...");
-    Database dbModelTest = readModelRecursiveHelper(testDBdir);
-    DatabaseData dbDataTest = readDataRecursiveHelper(platform, testDBdir, dbModelTest);
+    dbModelTest = readModelRecursiveHelper(testDBdir, testDBdir);
+    dbDataTest = readDataRecursiveHelper(platform, testDBdir, testDBdir, dbModelTest,
+        modulesList != null ? modulesList.split(",") : null);
+
+    if (modulesList != null) {
+      String[] modulePackages = modulesList.split(",");
+      dbModelStable = getDatabaseForModules(dbModelStable, dbDataStable, modulePackages);
+      dbModelTest = getDatabaseForModules(dbModelTest, dbDataTest, modulePackages);
+    }
 
     getLog().info("Comparing data models");
     final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
@@ -107,24 +149,74 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     }
   }
 
-  private Database readModelRecursiveHelper(File erpBaseDir) {
+  private Database getDatabaseForModules(Database dbModelStable, DatabaseData databaseData,
+      String[] modulePackages) {
+    Database db = new Database();
+    for (String modulePackage : modulePackages) {
+      ExcludeFilter filterForModule = getFilterForModule(databaseData, modulePackage);
+      Database dbI = null;
+      try {
+        dbI = (Database) dbModelStable.clone();
+      } catch (final Exception e) {
+        log.error("Error while cloning the database model" + e.getMessage());
+        return null;
+      }
+      dbI.applyNamingConventionFilter(filterForModule);
+      db.mergeWith(dbI);
+      db.moveModifiedToTables();
+    }
+    return db;
+  }
+
+  private ExcludeFilter getFilterForModule(DatabaseData dbDataTest, String modulePackage) {
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(getTestDBdir().getAbsolutePath()));
+
+    Vector<DynaBean> moduleDbs = dbDataTest.getRowsFromTable("AD_MODULE");
+    for (DynaBean module : moduleDbs) {
+      if (module.get("JAVAPACKAGE").equals(modulePackage)) {
+        Vector<DynaBean> modulePrefixDbs = dbDataTest.getRowsFromTable("AD_MODULE_DBPREFIX");
+        for (DynaBean prefixDb : modulePrefixDbs) {
+          if (prefixDb.get("AD_MODULE_ID").equals(module.get("AD_MODULE_ID"))) {
+            excludeFilter.addPrefix(prefixDb.get("NAME").toString());
+          }
+        }
+      }
+    }
+
+    return excludeFilter;
+  }
+
+  private Database readModelRecursiveHelper(File erpBaseDir, File modulesBaseDir) {
     String modelFilter = "*/src-db/database/model";
     File modelFolder = new File(erpBaseDir, "src-db/database/model");
-    String basedir = erpBaseDir + "/modules/";
+    String basedir = modulesBaseDir + "/modules/";
 
     Database fullModelToBeTested = DatabaseUtils.readDatabaseModel(modelFolder, basedir,
         modelFilter);
     return fullModelToBeTested;
   }
 
-  private DatabaseData readDataRecursiveHelper(Platform platform, File erpBaseDir, Database model) {
+  private DatabaseData readDataRecursiveHelper(Platform platform, File erpBaseDir,
+      File baseDirForModules, Database model, String[] modulesArray) {
     final boolean strict = false;
 
     DatabaseData databaseOrgData = new DatabaseData(model);
     databaseOrgData.setStrictMode(strict);
 
-    String basedir = erpBaseDir + "/modules/";
-    String dataFilter = "*/src-db/database/sourcedata";
+    String basedir = baseDirForModules + "/modules/";
+    String dataFilter;
+    if (modulesArray == null) {
+      dataFilter = "*/src-db/database/sourcedata";
+    } else {
+      dataFilter = "";
+      for (String module : modulesArray) {
+        if (!dataFilter.equals("")) {
+          dataFilter += ",";
+        }
+        dataFilter += module + "/src-db/database/sourcedata";
+      }
+    }
     File dataFolder = new File(erpBaseDir, "src-db/database/sourcedata");
 
     log.info("Reading dataset AD sourcedata"); // to find prefixes
@@ -133,5 +225,4 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
 
     return databaseOrgData;
   }
-
 }

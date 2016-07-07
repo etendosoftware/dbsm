@@ -911,7 +911,7 @@ public class DBSMOBUtil {
     final String token = datafilter;
     final DirectoryScanner dirScanner = new DirectoryScanner();
     dirScanner.setBasedir(new File(basedir));
-    final String[] dirFilterA = { token };
+    final String[] dirFilterA = token.split(",");
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
