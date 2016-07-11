@@ -29,6 +29,7 @@ import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.ValidateAPIData;
@@ -87,37 +88,30 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     Database dbModelTest;
     DatabaseData dbDataTest;
     String modulesList;
-    if (getModules() != null && !getModules().equals("")) {
-      modulesList = getModules();
-    } else {
-      modulesList = null;
-    }
 
     getLog().info("Reading full stable reference model (core+all modules) ...");
     dbModelStable = readModelRecursiveHelper(stableDBdir, stableDBdir);
-    if (modulesList != null) {
+    getLog().info("Reading model to be tested (core+all modules) ...");
+    dbModelTest = readModelRecursiveHelper(testDBdir, testDBdir);
+    if (getModules() != null && !getModules().equals("")) {
+      modulesList = getModules();
       // In case of API check for modules, we use the testDBDir for the data loading, for the
       // ERP part, when building the stable databasedata.
       //
       // In this way, no API changes in data in Core will be detected, only
       // changes in modules will be detected
-      dbModelStable = readModelRecursiveHelper(testDBdir, stableDBdir);
-      dbDataStable = readDataRecursiveHelper(platform, testDBdir, stableDBdir, dbModelStable,
-          modulesList.split(","));
-    } else {
-      dbDataStable = readDataRecursiveHelper(platform, stableDBdir, stableDBdir, dbModelStable,
-          null);
-    }
-
-    getLog().info("Reading model to be tested (core+all modules) ...");
-    dbModelTest = readModelRecursiveHelper(testDBdir, testDBdir);
-    dbDataTest = readDataRecursiveHelper(platform, testDBdir, testDBdir, dbModelTest,
-        modulesList != null ? modulesList.split(",") : null);
-
-    if (modulesList != null) {
       String[] modulePackages = modulesList.split(",");
+      dbDataStable = readDataRecursiveHelper(platform, testDBdir, stableDBdir, dbModelStable,
+          modulePackages);
+      dbDataTest = readDataRecursiveHelper(platform, testDBdir, testDBdir, dbModelTest,
+          modulePackages);
       dbModelStable = getDatabaseForModules(dbModelStable, dbDataStable, modulePackages);
       dbModelTest = getDatabaseForModules(dbModelTest, dbDataTest, modulePackages);
+    } else {
+      modulesList = null;
+      dbDataStable = readDataRecursiveHelper(platform, stableDBdir, stableDBdir, dbModelStable,
+          null);
+      dbDataTest = readDataRecursiveHelper(platform, testDBdir, testDBdir, dbModelTest, null);
     }
 
     getLog().info("Comparing data models");
@@ -149,6 +143,10 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     }
   }
 
+  /**
+   * Returns a filtered model containing only the database objects belonging to the specified
+   * modules
+   * */
   private Database getDatabaseForModules(Database dbModelStable, DatabaseData databaseData,
       String[] modulePackages) {
     Database db = new Database();
@@ -158,8 +156,7 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
       try {
         dbI = (Database) dbModelStable.clone();
       } catch (final Exception e) {
-        log.error("Error while cloning the database model" + e.getMessage());
-        return null;
+        throw new OBException("Error while cloning the database model", e);
       }
       dbI.applyNamingConventionFilter(filterForModule);
       db.mergeWith(dbI);
@@ -168,8 +165,12 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     return db;
   }
 
+  /**
+   * Computes a valid excludeFilter for the specified module, by reading the data XML file
+   * information and retrieving the needed dbprefixes from there
+   */
   private ExcludeFilter getFilterForModule(DatabaseData dbDataTest, String modulePackage) {
-    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+    ExcludeFilter filterForModule = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(getTestDBdir().getAbsolutePath()));
 
     Vector<DynaBean> moduleDbs = dbDataTest.getRowsFromTable("AD_MODULE");
@@ -178,13 +179,13 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
         Vector<DynaBean> modulePrefixDbs = dbDataTest.getRowsFromTable("AD_MODULE_DBPREFIX");
         for (DynaBean prefixDb : modulePrefixDbs) {
           if (prefixDb.get("AD_MODULE_ID").equals(module.get("AD_MODULE_ID"))) {
-            excludeFilter.addPrefix(prefixDb.get("NAME").toString());
+            filterForModule.addPrefix(prefixDb.get("NAME").toString());
           }
         }
       }
     }
 
-    return excludeFilter;
+    return filterForModule;
   }
 
   private Database readModelRecursiveHelper(File erpBaseDir, File modulesBaseDir) {
