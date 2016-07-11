@@ -94,17 +94,17 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     }
 
     getLog().info("Reading full stable reference model (core+all modules) ...");
+    dbModelStable = readModelRecursiveHelper(stableDBdir, stableDBdir);
     if (modulesList != null) {
-      // In case of API check for modules, we use the testDBDir to create both the database model
-      // and the data loading, for the ERP part, when building the stable database and databasedata.
+      // In case of API check for modules, we use the testDBDir for the data loading, for the
+      // ERP part, when building the stable databasedata.
       //
-      // In this way, no API changes in either structure or data in Core will be detected, only
+      // In this way, no API changes in data in Core will be detected, only
       // changes in modules will be detected
       dbModelStable = readModelRecursiveHelper(testDBdir, stableDBdir);
       dbDataStable = readDataRecursiveHelper(platform, testDBdir, stableDBdir, dbModelStable,
           modulesList.split(","));
     } else {
-      dbModelStable = readModelRecursiveHelper(stableDBdir, stableDBdir);
       dbDataStable = readDataRecursiveHelper(platform, stableDBdir, stableDBdir, dbModelStable,
           null);
     }
