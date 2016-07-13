@@ -87,14 +87,13 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     DatabaseData dbDataStable;
     Database dbModelTest;
     DatabaseData dbDataTest;
-    String modulesList;
 
     getLog().info("Reading full stable reference model (core+all modules) ...");
     dbModelStable = readModelRecursiveHelper(stableDBdir, stableDBdir);
     getLog().info("Reading model to be tested (core+all modules) ...");
     dbModelTest = readModelRecursiveHelper(testDBdir, testDBdir);
     if (getModules() != null && !getModules().equals("")) {
-      modulesList = getModules();
+      String modulesList = getModules();
       // In case of API check for modules, we use the testDBDir for the data loading, for the
       // ERP part, when building the stable databasedata.
       //
@@ -108,7 +107,6 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
       dbModelStable = getDatabaseForModules(dbModelStable, dbDataStable, modulePackages);
       dbModelTest = getDatabaseForModules(dbModelTest, dbDataTest, modulePackages);
     } else {
-      modulesList = null;
       dbDataStable = readDataRecursiveHelper(platform, stableDBdir, stableDBdir, dbModelStable,
           null);
       dbDataTest = readDataRecursiveHelper(platform, testDBdir, testDBdir, dbModelTest, null);
