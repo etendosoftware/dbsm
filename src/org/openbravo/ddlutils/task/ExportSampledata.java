@@ -27,7 +27,9 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.io.DataSetTableExporter;
 import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.PgCopyDatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
@@ -52,6 +54,11 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   private String client;
   private String module;
+  private String exportFormat;
+  private String rdbms;
+  private static final String POSTGRE_RDBMS = "POSTGRE";
+  private static final String COPY_EXTENSION = ".copy";
+  private static final String XML_EXTENSION = ".xml";
 
   private Map<String, Integer> exportedTablesCount = null;
 
@@ -115,10 +122,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       File path = new File(sampledataFolder, clientName);
 
-      final DatabaseDataIO dbdio = getDatabaseDataIO();
-      dbdio.setEnsureFKOrder(false);
-      // for sampledata do not write a primary key comment onto each line to save space
-      dbdio.setWritePrimaryKeyComment(false);
+      final DataSetTableExporter dsTableExporter = getDataSetTableExporter();
 
       path.mkdirs();
       final File[] filestodelete = path.listFiles();
@@ -135,14 +139,19 @@ public class ExportSampledata extends BaseDatabaseTask {
         }
       });
       exportedTablesCount = new HashMap<String, Integer>();
+
+      Map<String, Object> dsTableExporterExtraParams = new HashMap<String, Object>();
+      dsTableExporterExtraParams.put("platform", platform);
+      dsTableExporterExtraParams.put("xmlEncoding", encoding);
+
       for (final OBDatasetTable table : tableList) {
         try {
           final File tableFile = getFile(path, table);
           final OutputStream out = new FileOutputStream(tableFile);
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
-          boolean dataExported = dbdio.writeDataForTableToXML(platform, db, table, bufOut,
-              encoding, moduleId);
+          boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
+              dsTableExporterExtraParams);
           if (dataExported) {
             getLog().info("Exported table: " + table.getName());
             addTableToExportedTablesMap(table.getName());
@@ -170,19 +179,53 @@ public class ExportSampledata extends BaseDatabaseTask {
   }
 
   private File getFile(File path, OBDatasetTable table) {
-    File f = new File(path, table.getName().toUpperCase() + ".xml");
+    String fileExtension = getFileExtension();
+    File f = new File(path, table.getName().toUpperCase() + fileExtension);
     if (f.exists()) {
       Integer count = exportedTablesCount.get(table.getName());
-      f = new File(path, table.getName().toUpperCase() + "_" + count + ".xml");
+      f = new File(path, table.getName().toUpperCase() + "_" + count + fileExtension);
     }
     return f;
+  }
+
+  public void setExportFormat(String exportFormat) {
+    this.exportFormat = exportFormat;
+  }
+
+  public void setRdbms(String rdbms) {
+    this.rdbms = rdbms;
+  }
+
+  protected String getFileExtension() {
+    String fileExtension = null;
+    if ("copy".equals(exportFormat)) {
+      if (POSTGRE_RDBMS.equals(rdbms)) {
+        fileExtension = COPY_EXTENSION;
+      } else {
+        getLog()
+            .warn(
+                "The copy file extension is only supported in PostgreSQL. The default xml file extension will be used");
+        fileExtension = XML_EXTENSION;
+      }
+    } else {
+      fileExtension = XML_EXTENSION;
+    }
+    return fileExtension;
   }
 
   /**
    * Returns the instance of DatabaseDataIO that will be used to export the dataset tables to XML
    */
-  protected DatabaseDataIO getDatabaseDataIO() {
-    return new DatabaseDataIO();
+  protected DataSetTableExporter getDataSetTableExporter() {
+    if ("copy".equals(exportFormat) && POSTGRE_RDBMS.equals(rdbms)) {
+      return new PgCopyDatabaseDataIO();
+    } else {
+      DatabaseDataIO databaseDataIO = new DatabaseDataIO();
+      databaseDataIO.setEnsureFKOrder(false);
+      // for sampledata do not write a primary key comment onto each line to save space
+      databaseDataIO.setWritePrimaryKeyComment(false);
+      return databaseDataIO;
+    }
   }
 
   /**

@@ -57,7 +57,7 @@ import org.openbravo.ddlutils.util.OBDatasetTable;
  * 
  * @version $Revision: $
  */
-public class DatabaseDataIO {
+public class DatabaseDataIO implements DataSetTableExporter {
   /**
    * The converters to use for converting between data and its XML representation.
    */
@@ -377,6 +377,14 @@ public class DatabaseDataIO {
       platform.returnConnection(con);
     }
     databaseData.reorderAllTables();
+  }
+
+  @Override
+  public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
+      String moduleId, Map<String, Object> customParams) {
+    String xmlEncoding = (String) customParams.get("xmlEncoding");
+    Platform platform = (Platform) customParams.get("platform");
+    return writeDataForTableToXML(platform, model, dsTable, output, xmlEncoding, moduleId);
   }
 
   public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
