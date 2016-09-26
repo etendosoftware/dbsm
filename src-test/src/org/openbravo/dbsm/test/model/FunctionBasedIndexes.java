@@ -25,7 +25,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -294,11 +294,14 @@ public class FunctionBasedIndexes extends DbsmTest {
     Connection cn = null;
     try {
       cn = getDataSource().getConnection();
-      Statement st = cn.createStatement();
-      ResultSet rs = st.executeQuery(getColumnsFromIndexPostgreSqlQuery(indexName));
+      PreparedStatement st = null;
+      st = cn.prepareStatement(getColumnsFromIndexPostgreSqlQuery());
+      st.setString(1, indexName);
+      ResultSet rs = st.executeQuery();
       if (rs.next()) {
         Array array = rs.getArray(1);
-        return array.toString();
+        String[] actualArray = (String[]) array.getArray();
+        return "{" + StringUtils.join(actualArray, ",") + "}";
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -313,7 +316,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     return "";
   }
 
-  private String getColumnsFromIndexPostgreSqlQuery(String indexName) {
+  private String getColumnsFromIndexPostgreSqlQuery() {
     StringBuilder query = new StringBuilder();
     query.append("SELECT ARRAY(");
     query.append("       SELECT pg_get_indexdef(PG_INDEX.indexrelid, k + 1, true) ");
@@ -325,7 +328,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     query.append("AND PG_CLASS.RELNAMESPACE = PG_NAMESPACE.OID ");
     query.append("AND PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA() ");
     query.append("AND PG_INDEX.INDISPRIMARY ='f' ");
-    query.append("AND PG_CLASS.RELNAME = '" + indexName + "'");
+    query.append("AND PG_CLASS.RELNAME = ? ");
     query.append("AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text  ");
     query.append("FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid ");
     query.append("WHERE pg_constraint.contype = 'u') ");
