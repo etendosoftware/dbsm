@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -106,7 +107,7 @@ public class FunctionBasedIndexes extends DbsmTest {
   }
 
   private void createDatabaseIfNeeded(boolean forceCreation) {
-    // Only start from the base model if the testType if onUpdate or if creation is forced
+    // Only start from the base model if the testType is onUpdate or if creation is forced
     if (forceCreation || testType == TestType.onUpdate) {
       updateDatabase("indexes/BASE_MODEL.xml");
     }
@@ -293,10 +294,8 @@ public class FunctionBasedIndexes extends DbsmTest {
     Connection cn = null;
     try {
       cn = getDataSource().getConnection();
-      PreparedStatement st = null;
-      st = cn.prepareStatement(getColumnsFromIndexPostgreSqlQuery());
-      st.setString(1, indexName);
-      ResultSet rs = st.executeQuery();
+      Statement st = cn.createStatement();
+      ResultSet rs = st.executeQuery(getColumnsFromIndexPostgreSqlQuery(indexName));
       if (rs.next()) {
         Array array = rs.getArray(1);
         return array.toString();
@@ -314,7 +313,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     return "";
   }
 
-  private String getColumnsFromIndexPostgreSqlQuery() {
+  private String getColumnsFromIndexPostgreSqlQuery(String indexName) {
     StringBuilder query = new StringBuilder();
     query.append("SELECT ARRAY(");
     query.append("       SELECT pg_get_indexdef(PG_INDEX.indexrelid, k + 1, true) ");
@@ -326,7 +325,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     query.append("AND PG_CLASS.RELNAMESPACE = PG_NAMESPACE.OID ");
     query.append("AND PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA() ");
     query.append("AND PG_INDEX.INDISPRIMARY ='f' ");
-    query.append("AND PG_CLASS.RELNAME = ? ");
+    query.append("AND PG_CLASS.RELNAME = '" + indexName + "'");
     query.append("AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text  ");
     query.append("FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid ");
     query.append("WHERE pg_constraint.contype = 'u') ");
