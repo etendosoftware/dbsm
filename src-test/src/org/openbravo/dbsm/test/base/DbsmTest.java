@@ -24,6 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -607,12 +608,10 @@ public class DbsmTest {
     try {
       cn = getDataSource().getConnection();
 
-      PreparedStatement st;
+      Statement st = cn.createStatement();
 
-      st = cn.prepareStatement("select *  from " + tableName + " where " + tableName + "_id=?");
-      st.setString(1, pk);
-
-      ResultSet rs = st.executeQuery();
+      ResultSet rs = st.executeQuery("select *  from " + tableName + " where " + tableName
+          + "_id='" + pk + "'");
       ResultSetMetaData md = rs.getMetaData();
       rs.next();
       Row row = new Row();
