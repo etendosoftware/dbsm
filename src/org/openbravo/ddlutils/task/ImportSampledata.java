@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2013 Openbravo S.L.U.
+ * Copyright (C) 2013-2015 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -12,10 +12,16 @@
 
 package org.openbravo.ddlutils.task;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -26,6 +32,7 @@ import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
+import org.apache.ddlutils.io.PgCopyDatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.tools.ant.BuildException;
@@ -42,7 +49,10 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   private String basedir;
 
+  private static final String POSTGRE_RDBMS = "POSTGRE";
+
   private boolean executeModuleScripts = true;
+  private String rdbms;
 
   public ImportSampledata() {
     doOBRebuildAppender = false;
@@ -121,11 +131,8 @@ public class ImportSampledata extends BaseDatabaseTask {
            * existing clients.
            * 
            */
-          File clientFile = new File(entry, "AD_CLIENT.xml");
-          if (clientFile.exists()) {
-            Vector<DynaBean> clients = readOneDataXml(db, clientFile);
-            DynaBean client = clients.get(0);
-            String clientId = (String) client.get("AD_CLIENT_ID");
+          if (clientFileIsDefined(entry)) {
+            String clientId = getClientIdFromEntry(entry, db);
             DynaBean dbClient = findClient(platform, db, clientId);
             if (dbClient != null) {
               log.info("Client is already present in the database, skipping import");
@@ -134,29 +141,26 @@ public class ImportSampledata extends BaseDatabaseTask {
           }
 
           final Vector<File> files = new Vector<File>();
-          final File[] fileArray = DatabaseUtils.readFileArray(entry);
-          Arrays.sort(fileArray);
-          for (int i = 0; i < fileArray.length; i++) {
-            files.add(fileArray[i]);
-          }
+          files.addAll(Arrays.asList(DatabaseUtils.readFileArray(entry)));
+          files.addAll(Arrays.asList(DatabaseUtils.readCopyFileArray(entry)));
+          Collections.sort(files);
           getLog().debug("Number of files read: " + files.size());
 
           getLog().info("Inserting data into the database...");
-          // Now we insert the data into the database
-          final DatabaseDataIO dbdio = new DatabaseDataIO();
-          dbdio.setEnsureFKOrder(false);
-          DataReader dataReader = null;
-          dbdio.setUseBatchMode(true);
-
-          dataReader = dbdio.getConfiguredDataReader(platform, db);
-          dataReader.getSink().start();
 
           for (int i = 0; i < files.size(); i++) {
+            File f = files.get(i);
             getLog().debug("Importing data from file: " + files.get(i).getName());
-            dbdio.writeDataToDatabase(dataReader, files.get(i));
+            if (f.getName().endsWith(".xml")) {
+              importXmlFile(f, platform, db);
+            } else if (f.getName().endsWith(".copy")) {
+              if (POSTGRE_RDBMS.equals(rdbms)) {
+                importPgCopyFile(f);
+              } else {
+                getLog().warn("File " + f.getName() + " cannot be export in Oracle");
+              }
+            }
           }
-
-          dataReader.getSink().end();
         }
       }
 
@@ -193,6 +197,63 @@ public class ImportSampledata extends BaseDatabaseTask {
       e.printStackTrace();
       throw new BuildException(e);
     }
+  }
+
+  private String getClientIdFromEntry(File referenceDataFolder, Database db) {
+    String clientId = null;
+    File clientFileXML = new File(referenceDataFolder, "AD_CLIENT.xml");
+    File clientFileCopy = new File(referenceDataFolder, "AD_CLIENT.copy");
+    if (clientFileXML.exists()) {
+      try {
+        Vector<DynaBean> clients = readOneDataXml(db, clientFileXML);
+        DynaBean client = clients.get(0);
+        clientId = (String) client.get("AD_CLIENT_ID");
+      } catch (Exception e) {
+        getLog().error("Error while obtaining the client ID from a XML file");
+      }
+    } else {
+      clientId = getClientIdFromCopyFile(clientFileCopy);
+    }
+    return clientId;
+  }
+
+  // the client file can be stored as .xml and .copy
+  private boolean clientFileIsDefined(File entry) {
+    File clientFileXML = new File(entry, "AD_CLIENT.xml");
+    File clientFileCopy = new File(entry, "AD_CLIENT.copy");
+    return (clientFileXML.exists() || clientFileCopy.exists());
+  }
+
+  private String getClientIdFromCopyFile(File clientFileCopy) {
+    InputStream fis = null;
+    String clientId = null;
+    BufferedReader br = null;
+    try {
+      fis = new FileInputStream(clientFileCopy);
+      InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+      br = new BufferedReader(isr);
+      // skips the first line, it contains the column names
+      br.readLine();
+      // the values for the client is in the second line
+      String values = br.readLine();
+      clientId = values.substring(0, values.indexOf(","));
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      if (br != null) {
+        try {
+          br.close();
+        } catch (IOException ignore) {
+        }
+      }
+      if (fis != null) {
+        try {
+          fis.close();
+        } catch (IOException ignore) {
+        }
+      }
+    }
+    return clientId;
   }
 
   /**
@@ -240,8 +301,28 @@ public class ImportSampledata extends BaseDatabaseTask {
     this.basedir = basedir;
   }
 
+  public void setRdbms(String rdbms) {
+    this.rdbms = rdbms;
+  }
+
   public void setExecuteModuleScripts(boolean executeModuleScripts) {
     this.executeModuleScripts = executeModuleScripts;
+  }
+
+  private void importXmlFile(File file, Platform platform, Database db) {
+    final DatabaseDataIO dbdio = new DatabaseDataIO();
+    dbdio.setEnsureFKOrder(false);
+    DataReader dataReader = null;
+    dbdio.setUseBatchMode(true);
+    dataReader = dbdio.getConfiguredDataReader(platform, db);
+    dataReader.getSink().start();
+    dbdio.writeDataToDatabase(dataReader, file);
+    dataReader.getSink().end();
+  }
+
+  private void importPgCopyFile(File file) {
+    final PgCopyDatabaseDataIO dbdio = new PgCopyDatabaseDataIO();
+    dbdio.importCopyFile(file);
   }
 
 }

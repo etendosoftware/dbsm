@@ -94,22 +94,26 @@ public class DatabaseUtils {
   }
 
   public static File[] readFileArray(File f) {
+    return fileFileArrayOfType(f, new XMLFiles());
+  }
 
-    if (f.isDirectory()) {
+  public static File[] readCopyFileArray(File f) {
+    return fileFileArrayOfType(f, new CopyFiles());
+  }
 
+  public static File[] fileFileArrayOfType(File folder, FileFilter filter) {
+    if (folder.isDirectory()) {
       ArrayList<File> fileslist = new ArrayList<File>();
-
-      File[] directoryfiles = f.listFiles(new XMLFiles());
+      File[] directoryfiles = folder.listFiles(filter);
       for (File file : directoryfiles) {
         File[] ff = readFileArray(file);
         for (File fileint : ff) {
           fileslist.add(fileint);
         }
       }
-
       return fileslist.toArray(new File[fileslist.size()]);
     } else {
-      return new File[] { f };
+      return new File[] { folder };
     }
   }
 
@@ -231,6 +235,12 @@ public class DatabaseUtils {
   private static class XMLFiles implements FileFilter {
     public boolean accept(File pathname) {
       return pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(".xml"));
+    }
+  }
+
+  private static class CopyFiles implements FileFilter {
+    public boolean accept(File pathname) {
+      return pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(".copy"));
     }
   }
 

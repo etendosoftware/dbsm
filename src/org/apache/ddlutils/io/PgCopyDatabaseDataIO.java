@@ -19,6 +19,13 @@
 
 package org.apache.ddlutils.io;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,11 +40,11 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.OBDatasetTable;
-import org.openbravo.retail.storeserver.synchronization.task.PostgreSqlCopyDatabaseDataIO;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 
@@ -48,7 +55,7 @@ import org.postgresql.core.BaseConnection;
  */
 public class PgCopyDatabaseDataIO implements DataSetTableExporter {
 
-  private final Log log = LogFactory.getLog(PostgreSqlCopyDatabaseDataIO.class);
+  private final Log log = LogFactory.getLog(PgCopyDatabaseDataIO.class);
 
   private static List<String> auditColumnNames = Arrays.asList("CREATED", "UPDATED", "CREATEDBY",
       "UPDATEDBY");
@@ -133,6 +140,88 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
     return listStringified.toString();
   }
 
+  /**
+   * Imports into the database a CSV file that has been exported using PostgreSQL's COPY
+   * 
+   * @param file
+   *          The file being imported
+   * @throws DdlUtilsException
+   *           if the file cannot be imported using PostgreSQL's COPY
+   */
+  public void importCopyFile(File file) throws DdlUtilsException {
+    BaseConnection connection = null;
+    InputStream inputStream = null;
+    try {
+      String tableName = getTableName(file);
+      connection = getPgBaseConnection();
+      CopyManager copyManager = new CopyManager(connection);
+      inputStream = new FileInputStream(file);
+      InputStream bufferedInStream = new BufferedInputStream(inputStream, 65536);
+      StringBuilder copyCommand = new StringBuilder();
+      System.out.println("Importing " + tableName);
+      copyCommand.append("COPY " + tableName + " ");
+      copyCommand.append("(" + getColumnNames(file) + " ) ");
+      copyCommand.append("FROM STDIN WITH (FORMAT CSV, HEADER TRUE) ");
+      long tTotal = System.currentTimeMillis();
+      long nRecords = copyManager.copyIn(copyCommand.toString(), bufferedInStream);
+      System.out.println("Importing " + nRecords + " took " + (System.currentTimeMillis() - tTotal)
+          + " milliseconds");
+      connection.commit();
+    } catch (Exception e) {
+      log.error("Error while importing file " + file.getName() + ": " + e.getMessage());
+      e.printStackTrace();
+      if (connection != null) {
+        try {
+          connection.rollback();
+        } catch (SQLException ignore) {
+        }
+      }
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (Exception e) {
+        }
+      }
+      if (connection != null) {
+        try {
+          connection.close();
+        } catch (SQLException e) {
+        }
+      }
+    }
+  }
+
+  // the names of the exported columns are placed in the first line of the file
+  private String getColumnNames(File file) {
+    BufferedReader br = null;
+    String columnNames = null;
+    InputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(file);
+      br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+      columnNames = br.readLine();
+    } catch (Exception e) {
+      log.error("Error while reading the column names of a .copy file", e);
+    } finally {
+      try {
+        if (inputStream != null) {
+          inputStream.close();
+        }
+      } catch (IOException e) {
+        log.error("Error while resetting the input stream", e);
+      }
+      try {
+        if (br != null) {
+          br.close();
+        }
+      } catch (IOException e) {
+        log.error("Error while resetting the input stream", e);
+      }
+    }
+    return columnNames;
+  }
+
   private BaseConnection getPgBaseConnection() throws SQLException {
     Properties obProperties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
     String user = obProperties.getProperty("bbdd.user");
@@ -143,4 +232,14 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
     connection.setAutoCommit(false);
     return (BaseConnection) connection;
   }
+
+  private String getTableName(File file) {
+    String fileName = file.getName();
+    String tableName = fileName.substring(0, fileName.lastIndexOf("."));
+    if (Character.isDigit(tableName.charAt(tableName.length() - 1))) {
+      tableName = tableName.substring(0, tableName.lastIndexOf("_"));
+    }
+    return tableName;
+  }
+
 }
