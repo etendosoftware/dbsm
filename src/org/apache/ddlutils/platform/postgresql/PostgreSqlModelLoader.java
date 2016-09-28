@@ -68,7 +68,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected Map<Integer, Integer> _paramtypes = new HashMap<Integer, Integer>();
 
   private static final String FUNCTION_BASED_COLUMN_INDEX_POSITION = "0";
-  private static final String PG_CASTED_NULL = "NULL::character varying";
 
   /** Creates a new instance of PostgreSqlModelLoader */
   public PostgreSqlModelLoader() {
@@ -940,14 +939,6 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     } else {
       return DatabaseMetaData.importedKeyNoAction;
     }
-  }
-
-  @Override
-  protected String translateColumnDefault(String value, int type) {
-    if (PG_CASTED_NULL.equalsIgnoreCase(value)) {
-      return null;
-    }
-    return super.translateColumnDefault(value, type);
   }
 
   private static class FinalBoolean {
