@@ -55,10 +55,27 @@ public class RemoveTriggerChange implements ModelChange {
     return _trigger;
   }
 
+  /**
+   * Returns the trigger name.
+   * 
+   * @return The trigger name
+   */
   public String getTriggerName() {
-    return _triggerName != null ? _triggerName : _trigger.getName();
+    if (_triggerName != null) {
+      return _triggerName;
+    }
+    if (_trigger != null) {
+      return _trigger.getName();
+    }
+    return null;
   }
 
+  /**
+   * Sets the trigger name.
+   * 
+   * @param triggerName
+   *          The name to be set for the trigger
+   */
   public void setTriggerName(String triggerName) {
     _triggerName = triggerName;
   }
@@ -79,6 +96,6 @@ public class RemoveTriggerChange implements ModelChange {
 
   @Override
   public String toString() {
-    return "RemoveTriggerChange. Name: " + _trigger.getName();
+    return "RemoveTriggerChange. Trigger Name: " + getTriggerName();
   }
 }
