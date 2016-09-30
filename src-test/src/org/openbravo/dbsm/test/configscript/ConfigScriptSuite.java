@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015-2016 Openbravo S.L.U.
+ * Copyright (C) 2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -9,23 +9,25 @@
  * specific language governing permissions and limitations under the License.
  ************************************************************************************
  */
-
-package org.openbravo.dbsm.test;
+package org.openbravo.dbsm.test.configscript;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.openbravo.dbsm.test.configscript.ConfigScriptSuite;
-import org.openbravo.dbsm.test.model.ModelSuite;
 
 /**
- * Test suite including all tests to be executed for DBSM
+ * Test suite grouping all cases for configuration script testing
  * 
- * @author alostale
+ * @author caristu
  *
  */
 @RunWith(Suite.class)
-@SuiteClasses({ ModelSuite.class, ConfigScriptSuite.class })
-public class DBSMTestSuite {
+@SuiteClasses({ //
+ConfigScriptColumnDataChange.class, //
+    ConfigScriptColumnSizeChange.class, //
+    ConfigScriptColumnRequiredChange.class,//
+    ConfigScriptRemoveCheckChange.class, //
+    ConfigScriptRemoveTriggerChange.class })
+public class ConfigScriptSuite {
 
 }

@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -43,7 +43,10 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.alteration.Change;
+import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Column;
@@ -261,8 +264,20 @@ public class DbsmTest {
     return res;
   }
 
+  protected List<String> sqlStatmentsForUpdate(String dbModelPath, List<String> configScripts) {
+    evaluator = new TestBatchEvaluator();
+    updateDatabase(dbModelPath, null, null, false, configScripts);
+    List<String> res = ((TestBatchEvaluator) evaluator).getSQLStatements();
+    evaluator = null;
+    return res;
+  }
+
   protected Database updateDatabase(String dbModelPath) {
     return updateDatabase(dbModelPath, null, null);
+  }
+
+  protected Database updateDatabase(String dbModelPath, List<String> configScripts) {
+    return updateDatabase(dbModelPath, null, null, false, configScripts);
   }
 
   protected Database updateDatabase(String dbModelPath, boolean assertDBisCorrect) {
@@ -274,14 +289,18 @@ public class DbsmTest {
     return updateDatabase(dbModelPath, adDirectoryName, adTableNames, true);
   }
 
+  protected Database updateDatabase(String dbModelPath, String adDirectoryName,
+      List<String> adTableNames, boolean assertDBisCorrect) {
+    return updateDatabase(dbModelPath, adDirectoryName, adTableNames, assertDBisCorrect, null);
+  }
+
   /**
    * Utility method to to update current DB to model defined in dbModelPath
    */
   protected Database updateDatabase(String dbModelPath, String adDirectoryName,
-      List<String> adTableNames, boolean assertDBisCorrect) {
+      List<String> adTableNames, boolean assertDBisCorrect, List<String> configScripts) {
     Connection connection = null;
     try {
-      boolean failOnError = true;
       File dbModel = new File("model", dbModelPath);
       final Platform platform = getPlatform();
       if (recreationMode == RecreationMode.forced) {
@@ -299,6 +318,10 @@ public class DbsmTest {
             new File(adDirectoryName).getAbsolutePath(), "none", new File(adDirectoryName), false,
             false);
       }
+      if (configScripts != null) {
+        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, false);
+      }
+
       OBDataset ad = new OBDataset(databaseOrgData);
 
       if (adDirectoryName != null && adTableNames != null) {
@@ -338,9 +361,10 @@ public class DbsmTest {
       // hd.setBasedir(new File(basedir + "/../"));
       // hd.execute();
       //
-      // // Now we apply the configuration scripts
-      // DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-      // true);
+      // Now we apply the data part of the configuration scripts
+      if (configScripts != null) {
+        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
+      }
 
       log.info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
@@ -385,6 +409,44 @@ public class DbsmTest {
     } finally {
       platform.returnConnection(connection);
     }
+  }
+
+  private void applyConfigScripts(List<String> templates, Platform currentPlatform,
+      DatabaseData databaseOrgData, Database db, boolean applyConfigScriptData) {
+
+    log.info("Loading and applying configuration scripts");
+    Vector<File> configScripts = new Vector<File>();
+    for (String template : templates) {
+      File configScript = new File(template);
+      if (configScript.exists()) {
+        configScripts.add(configScript);
+        DatabaseIO dbIO = new DatabaseIO();
+        log.info("Loading configuration script: " + configScript.getAbsolutePath());
+        Vector<Change> changes = dbIO.readChanges(configScript);
+        for (Change change : changes) {
+          if (change instanceof ModelChange)
+            ((ModelChange) change).apply(db, currentPlatform.isDelimitedIdentifierModeOn());
+          else if (change instanceof DataChange && applyConfigScriptData) {
+            if (isValidChange(change)) {
+              ((DataChange) change).apply(databaseOrgData,
+                  currentPlatform.isDelimitedIdentifierModeOn());
+            }
+          }
+          log.info("Change: " + change);
+        }
+      } else {
+        log.info("Couldn't find configuration script for template: " + template + " (file: "
+            + configScript.getAbsolutePath() + ")");
+      }
+    }
+  }
+
+  private boolean isValidChange(Change change) {
+    if (!(change instanceof ColumnDataChange)) {
+      return true;
+    }
+    return !(((ColumnDataChange) change).getColumnname().equals("SEQNO") && ((ColumnDataChange) change)
+        .getTablename().equalsIgnoreCase("AD_FIELD"));
   }
 
   protected Database createDatabase(String dbModelPath) {
@@ -463,6 +525,58 @@ public class DbsmTest {
     Database originalDB = platform
         .loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
     io.writeToDir(originalDB, new File(path));
+  }
+
+  /** Reads a Configuration Script and returns the changes it contains */
+  protected Vector<Change> readConfigScript(String configScriptPath) {
+    File configScriptFile = new File(configScriptPath);
+    if (configScriptFile.exists()) {
+      log.info("Loading configuration script " + configScriptFile.getAbsolutePath());
+      final DatabaseIO dbIO = new DatabaseIO();
+      return dbIO.readChanges(configScriptFile);
+    }
+    log.error("Couldn't find configuration script " + configScriptFile.getAbsolutePath());
+    return null;
+  }
+
+  /** Exports the changes found between two models into a Configuration Script */
+  protected Map<Change, Boolean> exportToConfigScript(Database xmlModel, Database currentDB,
+      String exportPath) {
+    log.info("Loading model from XML files");
+    final DatabaseData databaseOrgData = new DatabaseData(xmlModel);
+    log.info("Loading complete model from current database");
+    File configScript = new File(exportPath, "configScript.xml");
+    Map<Change, Boolean> allChanges = new HashMap<Change, Boolean>();
+    try {
+      log.info("Comparing models");
+      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      OBDataset ad = new OBDataset(databaseOrgData);
+      dataComparator.compare(xmlModel, currentDB, platform, databaseOrgData, ad, null);
+      Vector<Change> changes = new Vector<Change>();
+      Vector<Change> notExportedChanges = new Vector<Change>();
+      dataComparator.generateConfigScript(changes, notExportedChanges);
+      if (!configScript.exists()) {
+        configScript.createNewFile();
+      }
+      log.info("Exporting changes to " + configScript.getAbsolutePath());
+      DatabaseIO dbIO = new DatabaseIO();
+      dbIO.write(configScript, changes);
+      for (final Change c : changes) {
+        allChanges.put(c, Boolean.TRUE);
+      }
+      if (notExportedChanges.size() > 0) {
+        log.info("Changes that couldn't be exported to the config script:");
+        log.info("*******************************************************");
+        for (final Change c : notExportedChanges) {
+          allChanges.put(c, Boolean.FALSE);
+          log.info(c);
+        }
+      }
+    } catch (Exception ex) {
+      log.error("Error exporting changes to config script " + configScript.getAbsolutePath(), ex);
+    }
+    return allChanges;
   }
 
   /** returns platform for current execution */
