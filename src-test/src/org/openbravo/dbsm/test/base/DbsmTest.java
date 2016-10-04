@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -48,6 +50,7 @@ import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
+import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -348,9 +351,30 @@ public class DbsmTest {
       if (false) {
         DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
       }
-      log.info("Disabling foreign keys");
       connection = platform.borrowConnection();
-      platform.disableDatasetFK(connection, originalDB, ad, false);
+      log.info("Comparing databases to find differences");
+      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      try {
+        dataComparator.compareToUpdate(newDB, platform, databaseOrgData, ad, null);
+      } catch (SQLException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
+      Iterator<Change> tableChanges = dataComparator.getChanges().iterator();
+      while (tableChanges.hasNext()) {
+        Change dataChange = tableChanges.next();
+        if (dataChange instanceof RemoveRowChange) {
+          Table table = ((RemoveRowChange) dataChange).getTable();
+          String tableName = table.getName();
+          if (ad.getTable(tableName) != null) {
+            adTablesWithRemovedRecords.add(tableName);
+          }
+        }
+      }
+      log.info("Disabling foreign keys");
+      platform.disableDatasetFK(connection, originalDB, ad, false, adTablesWithRemovedRecords);
       log.info("Disabling triggers");
       platform.disableAllTriggers(connection, newDB, false);
       platform.disableNOTNULLColumns(newDB, ad);
@@ -366,15 +390,6 @@ public class DbsmTest {
         applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
       }
 
-      log.info("Comparing databases to find differences");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      try {
-        dataComparator.compareToUpdate(newDB, platform, databaseOrgData, ad, null);
-      } catch (SQLException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
       log.info("Updating Application Dictionary data...");
       platform.alterData(connection, newDB, dataComparator.getChanges());
       log.info("Removing invalid rows.");
@@ -392,7 +407,8 @@ public class DbsmTest {
       // assertThat("Postscript should be correct", postscriptCorrect, is(true));
 
       log.info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true);
+      boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true,
+          adTablesWithRemovedRecords);
       boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
 
       // Now check the new model updated in db is as it should
