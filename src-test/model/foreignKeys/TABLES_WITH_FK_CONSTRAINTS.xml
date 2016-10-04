@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+  <database name="TABLE1">
+    <table name="TABLE1" primaryKey="TABLE1_ID">
+      <column name="TABLE1_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>     
+    </table>
+    <table name="TABLE2" primaryKey="TABLE2_ID">
+      <column name="TABLE2_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>     
+    </table>
+     <table name="TABLE3" primaryKey="TABLE3_ID">
+      <column name="TABLE3_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TABLE1_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TABLE2_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TABLE4_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>      
+      <foreign-key foreignTable="TABLE1" name="TABLE1_FK">
+        <reference local="TABLE1_ID" foreign="TABLE1_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="TABLE2" name="TABLE2_FK">
+        <reference local="TABLE2_ID" foreign="TABLE2_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="TABLE4" name="TABLE4_FK">
+        <reference local="TABLE4_ID" foreign="TABLE4_ID"/>
+      </foreign-key>           
+    </table>  
+     <table name="TABLE4" primaryKey="TABLE4_ID">
+      <column name="TABLE4_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>           
+    </table>           
+  </database>

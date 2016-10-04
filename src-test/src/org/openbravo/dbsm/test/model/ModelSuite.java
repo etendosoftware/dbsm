@@ -51,7 +51,8 @@ CheckConstraints.class, //
     DataTypeChanges.class, //
     OtherDefaults.class, //
     SQLCommands.class, //
-    OtherRecreations.class })
+    OtherRecreations.class, //
+    PreventConstraintDeletion.class })
 public class ModelSuite {
 
 }
