@@ -41,6 +41,7 @@ CheckConstraints.class, //
     CreateDefault.class, //
     FunctionBasedIndexes.class, //
     OperatorClassIndexes.class, //
+    PartialIndexes.class, //
     CheckExcludeFilter.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //

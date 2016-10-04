@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -22,25 +22,17 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.openbravo.dbsm.test.base.DbsmTest;
 
 /**
  * Test cases to test the index operator class support
@@ -49,46 +41,11 @@ import org.openbravo.dbsm.test.base.DbsmTest;
  *
  */
 @RunWith(Parameterized.class)
-public class OperatorClassIndexes extends DbsmTest {
-
-  private static final String EXPORT_DIR = "/tmp/export-test";
-
-  private enum TestType {
-    onCreate, onUpdate
-  }
-
-  private TestType testType;
+public class OperatorClassIndexes extends IndexBaseTest {
 
   public OperatorClassIndexes(String rdbms, String driver, String url, String sid, String user,
       String password, String name, TestType testType) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name);
-    this.testType = testType;
-  }
-
-  @Parameters(name = "DB: {6} - {7}")
-  public static Collection<Object[]> parameters() throws IOException, JSONException {
-    List<Object[]> configs = new ArrayList<Object[]>();
-
-    for (String[] param : DbsmTest.params()) {
-      for (TestType type : TestType.values()) {
-        List<Object> p = new ArrayList<Object>(Arrays.asList(param));
-        p.add(type);
-        configs.add(p.toArray());
-      }
-    }
-    return configs;
-  }
-
-  private void createDatabaseIfNeeded() {
-    boolean forceCreation = false;
-    createDatabaseIfNeeded(forceCreation);
-  }
-
-  private void createDatabaseIfNeeded(boolean forceCreation) {
-    // Only start from the base model if the testType if onUpdate or if creation is forced
-    if (forceCreation || testType == TestType.onUpdate) {
-      updateDatabase("indexes/BASE_MODEL.xml");
-    }
+    super(rdbms, driver, url, sid, user, password, name, testType);
   }
 
   @Test
@@ -172,7 +129,7 @@ public class OperatorClassIndexes extends DbsmTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
-    assertExport("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
+    assertExport("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
   }
 
   @Test
@@ -181,7 +138,7 @@ public class OperatorClassIndexes extends DbsmTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_INDEX_WITH_OPERATOR_CLASS.xml");
-    assertExport("indexes/BASIC_INDEX_WITH_OPERATOR_CLASS.xml");
+    assertExport("indexes/BASIC_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
   }
 
   @Test
@@ -191,7 +148,7 @@ public class OperatorClassIndexes extends DbsmTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
     updateDatabase("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
-    assertExport("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
+    assertExport("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
   }
 
   /**
@@ -220,22 +177,6 @@ public class OperatorClassIndexes extends DbsmTest {
       getPlatform().returnConnection(con);
     }
     return tableComment;
-  }
-
-  private void assertExport(String modelFileToCompare) throws IOException {
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat("exported table exists", exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
-    assertThat("exported contents", exportedContents, equalTo(originalContents));
   }
 
   /**
