@@ -45,6 +45,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -2345,34 +2346,30 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException {
+      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
       ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        if (recreatedTables.contains(table.getName())) {
+        if (isTableContainedInRecreatedTables(recreatedTables, table)) {
           // this table has been already recreated and its FKs are not present at this point because
           // they will be recreated later, so no need to drop FKs again
           continue;
         }
-        if (dataset.getTable(table.getName()) != null) {
-          for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
-            ForeignKey fk = table.getForeignKey(idx);
-            if (!recreatedTables.contains(fk.getForeignTableName())) {
-              // FKs to recreated tables are already dropped
-              getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
-            }
+        for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
+          ForeignKey fk = table.getForeignKey(idx);
+          String tableReferencedByForeignKey = fk.getForeignTableName();
+          if (isReferencedTableInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
+            // FKs to recreated tables are already dropped
+            continue;
           }
-        } else {
-          for (int j = 0; j < table.getForeignKeyCount(); j++) {
-            ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null
-                && !recreatedTables.contains(fk.getForeignTableName())) {
-              // FKs to recreated tables are already dropped
-              getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
-            }
+          if (isTableContainedInDataset(dataset, table)
+              || recordsHaveBeenDeletedFromTable(tableReferencedByForeignKey,
+                  datasetTablesWithRemovedRecords)) {
+            getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
           }
         }
       }
@@ -2381,6 +2378,24 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       e.printStackTrace();
       throw new DatabaseOperationException("Error while disabling foreign key ", e);
     }
+  }
+
+  private boolean isTableContainedInDataset(OBDataset dataset, Table table) {
+    return dataset.getTable(table.getName()) != null;
+  }
+
+  private boolean recordsHaveBeenDeletedFromTable(String tableName,
+      Set<String> datasetTablesWithRemovedRecords) {
+    return datasetTablesWithRemovedRecords.contains(tableName);
+  }
+
+  private boolean isTableContainedInRecreatedTables(ArrayList<String> recreatedTables, Table table) {
+    return recreatedTables.contains(table.getName());
+  }
+
+  private boolean isReferencedTableInRecreatedTables(ArrayList<String> recreatedTables,
+      String tableReferencedByForeignKey) {
+    return recreatedTables.contains(tableReferencedByForeignKey);
   }
 
   /**
@@ -2406,21 +2421,23 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException {
+      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
       ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        if (dataset.getTable(table.getName()) != null) {
+        if (isTableContainedInDataset(dataset, table)) {
           getSqlBuilder().createExternalForeignKeys(model, table, true);
         } else {
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
-            if ((recreatedTables.contains(table.getName()) || dataset.getTable(fk
-                .getForeignTableName()) != null)
-                && !recreatedTables.contains(fk.getForeignTableName())) {
+            String tableReferencedByForeignKey = fk.getForeignTableName();
+            if ((isTableContainedInRecreatedTables(recreatedTables, table) || recordsHaveBeenDeletedFromTable(
+                tableReferencedByForeignKey, datasetTablesWithRemovedRecords))
+                && !isReferencedTableInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
               getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
             }
           }

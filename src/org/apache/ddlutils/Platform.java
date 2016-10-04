@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.sql.DataSource;
@@ -1308,7 +1309,8 @@ public interface Platform {
       throws DatabaseOperationException;
 
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException;
+      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      throws DatabaseOperationException;
 
   /**
    * Enable all Foreign key.
@@ -1341,7 +1343,8 @@ public interface Platform {
       boolean continueOnError) throws DatabaseOperationException;
 
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException;
+      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      throws DatabaseOperationException;
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException;
