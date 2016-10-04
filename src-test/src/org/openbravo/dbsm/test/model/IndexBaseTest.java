@@ -94,11 +94,9 @@ public class IndexBaseTest extends DbsmTest {
     assertThat("exported table exists", exportedTable.exists(), is(true));
 
     String exportedContents = FileUtils.readFileToString(exportedTable);
-    System.out.println(exportedContents);
-    System.out.println("-------------------");
+    log.debug("exported Contents " + exportedContents);
     String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
-    System.out.println(originalContents);
-    System.out.println("-------------------");
+    log.debug("original Contents " + originalContents);
     assertThat("exported contents", exportedContents, equalTo(originalContents));
   }
 

@@ -3468,6 +3468,8 @@ public abstract class SqlBuilder {
         }
 
         print(")");
+        // Add the where clause (if defined) for partial indexing
+        writeWhereClause(index);
         printEndOfStatement();
       }
     }
@@ -3481,6 +3483,16 @@ public abstract class SqlBuilder {
    * @throws IOException
    */
   protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
+  }
+
+  /**
+   * Writes the where clause of a partial index, if any
+   * 
+   * @param index
+   *          the index
+   * @throws IOException
+   */
+  protected void writeWhereClause(Index index) throws IOException {
   }
 
   /**

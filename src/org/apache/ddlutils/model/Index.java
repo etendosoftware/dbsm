@@ -34,8 +34,10 @@ import org.apache.ddlutils.PlatformInfo;
 public class Index implements ConstraintObject, Cloneable, Serializable {
   /** The name of the index. */
   protected String _name;
-  /** Te index is unique */
+  /** Whether the index is unique */
   protected boolean _unique = false;
+  /** The where clause expression used for partial indexing **/
+  protected String _whereClause;
   /** The columns making up the index. */
   protected ArrayList _columns = new ArrayList();
 
@@ -130,12 +132,26 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  public String getWhereClause() {
+    return _whereClause;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void setWhereClause(String whereClause) {
+    _whereClause = whereClause;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public boolean equals(Object obj) {
     if (obj instanceof Index) {
       Index other = (Index) obj;
 
       return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
-          .append(_columns, other._columns).isEquals();
+          .append(_whereClause, other._whereClause).append(_columns, other._columns).isEquals();
     } else {
       return false;
     }
@@ -147,8 +163,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    * 
    * @param other
    *          the index that will be compared with the current class
-   * @param emptyStringIsNull
-   *          a boolean that defines whether the empty strings are treated as null
+   * @param platformInfo
+   *          platform information of the current dbms
    * @return true if the two indexes are equal, false otherwise
    */
   @SuppressWarnings("unchecked")
@@ -157,7 +173,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
       return equals(other);
     } else {
       return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
-          .isEquals()
+          .append(_whereClause, other._whereClause).isEquals()
           && columnsAreEqual(_columns, other._columns, platformInfo);
     }
   }
@@ -170,8 +186,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    *          the first index column arrays
    * @param otherColumns
    *          the second index column array
-   * @param emptyStringIsNull
-   *          a boolean that defines whether in the current dbms empty strings are handled like NULL
+   * @param platformInfo
+   *          platform information of the current dbms
    * @return true if the two index column arrays are equal, false otherwise
    */
   private boolean columnsAreEqual(ArrayList<IndexColumn> columns,
@@ -191,14 +207,13 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
 
   /**
    * Compares two indexes without taking into account the casing of their names or of their columns
-   * names. It also takes into account in in the current database empty strings are treated as null
+   * names. It also takes into account if in the current database empty strings are treated as null
    * (relevant when comparing the functions of the index columns)
    * 
    * @param other
    *          the index being compared with the current one
-   * @param emptyStringIsNull
-   *          a flag that determines whether in the current database empty strings are treated as
-   *          null
+   * @param platformInfo
+   *          platform information of the current dbms
    * @return true if the two indexes are equal
    */
   public boolean equalsIgnoreCase(Index other, PlatformInfo platformInfo) {
@@ -213,7 +228,11 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         if (_unique != other._unique) {
           return false;
         }
-
+        if ((_whereClause != null && !_whereClause.equalsIgnoreCase(otherIndex._whereClause))
+            || (otherIndex._whereClause != null && !otherIndex._whereClause
+                .equalsIgnoreCase(_whereClause))) {
+          return false;
+        }
         for (int idx = 0; idx < getColumnCount(); idx++) {
           if (!getColumn(idx).equalsIgnoreCase(otherIndex.getColumn(idx), platformInfo)) {
             return false;
@@ -229,7 +248,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    * {@inheritDoc}
    */
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_columns).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_whereClause)
+        .append(_columns).toHashCode();
   }
 
   /**
@@ -242,6 +262,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     result.append(getName());
     result.append("; unique =");
     result.append(isUnique());
+    result.append("; where clause =");
+    result.append(getWhereClause());
     result.append("; ");
     result.append(getColumnCount());
     result.append(" columns]");
@@ -259,6 +281,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     result.append(getName());
     result.append("; unique =");
     result.append(isUnique());
+    result.append("; where clause =");
+    result.append(getWhereClause());
     result.append("] columns:");
     for (int idx = 0; idx < getColumnCount(); idx++) {
       result.append(" ");
@@ -276,6 +300,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
 
     result._name = _name;
     result._unique = _unique;
+    result._whereClause = _whereClause;
     result._columns = (ArrayList) _columns.clone();
 
     return result;
