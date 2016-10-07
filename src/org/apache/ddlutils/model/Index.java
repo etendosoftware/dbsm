@@ -172,9 +172,12 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     if (platformInfo == null) {
       return equals(other);
     } else {
-      return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
-          .append(_whereClause, other._whereClause).isEquals()
-          && columnsAreEqual(_columns, other._columns, platformInfo);
+      EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name).append(_unique,
+          other._unique);
+      if (platformInfo.isPartialIndexesSupported()) {
+        equalsBuilder.append(_whereClause, other._whereClause);
+      }
+      return equalsBuilder.isEquals() && columnsAreEqual(_columns, other._columns, platformInfo);
     }
   }
 
@@ -228,9 +231,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         if (_unique != other._unique) {
           return false;
         }
-        if ((_whereClause != null && !_whereClause.equalsIgnoreCase(otherIndex._whereClause))
-            || (otherIndex._whereClause != null && !otherIndex._whereClause
-                .equalsIgnoreCase(_whereClause))) {
+        if (platformInfo.isPartialIndexesSupported()
+            && !isSameWhereClause(_whereClause, other._whereClause)) {
           return false;
         }
         for (int idx = 0; idx < getColumnCount(); idx++) {
@@ -242,6 +244,13 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
       }
     }
     return false;
+  }
+
+  private boolean isSameWhereClause(String whereClause, String otherWhereClause) {
+    if (whereClause != null) {
+      return whereClause.equalsIgnoreCase(otherWhereClause);
+    }
+    return otherWhereClause == null;
   }
 
   /**

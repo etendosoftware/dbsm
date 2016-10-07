@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -54,7 +55,9 @@ public class PartialIndexes extends IndexBaseTest {
       String indexWhereClause = getWhereClauseForIndexFromDb("BASIC_INDEX");
       assertThat(indexWhereClause.toUpperCase(), equalTo("(COL1 IS NOT NULL)"));
     } else if (Rdbms.ORA.equals(getRdbms())) {
-      // In Oracle, the partial index definition should be stored in the comment of the column
+      // In Oracle, the partial index definition should be stored in the comment of the first column
+      assertThat(getCommentOfColumnInOracle("TEST", "COL1"),
+          equalTo("BASIC_INDEX.whereClause=(COL1 IS NOT NULL)$"));
     }
   }
 
@@ -128,6 +131,20 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASE_MODEL.xml");
     String tableComment = getCommentOfColumnInOracle("TEST", "COL1");
     assertThat(tableComment, anyOf(isEmptyString(), nullValue()));
+  }
+
+  @Test
+  // Tests that the comment associated to the partial index in Oracle is always placed within the
+  // first column of the index
+  public void indexCommentShouldBeInFirstColumn() {
+    assumeThat("not executing in Postgres", getRdbms(), is(Rdbms.ORA));
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml");
+    // In Oracle, the partial index definition should be stored in the comment of the first column
+    assertThat(getCommentOfColumnInOracle("TEST", "COL1"),
+        equalTo("MULTIPLE_INDEX.whereClause=(COL1 IS NOT NULL AND COL2 IS NOT NULL)$"));
+    assertNull(getCommentOfColumnInOracle("TEST", "COL2"));
   }
 
   @Test

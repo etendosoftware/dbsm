@@ -615,16 +615,23 @@ public class Oracle8Builder extends SqlBuilder {
   @Override
   protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
     // Updates the comments of the tables that have new indexes, to prevent losing the info about
-    // the operator class of the indexes columns
+    // the operator class or partial indexing of the indexed columns
     for (Table table : newIndexesMap.keySet()) {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
+      List<Index> partialIndexes = new ArrayList<Index>();
       for (Index index : newIndexesMap.get(table)) {
         if (indexHasColumnWithOperatorClass(index)) {
           indexesWithOperatorClass.add(index);
         }
+        if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
+          partialIndexes.add(index);
+        }
       }
       if (!indexesWithOperatorClass.isEmpty()) {
         includeOperatorClassInTableComment(table, indexesWithOperatorClass);
+      }
+      if (!partialIndexes.isEmpty()) {
+        includeWhereClauseInColumnComment(table, partialIndexes);
       }
     }
   }
@@ -675,6 +682,35 @@ public class Oracle8Builder extends SqlBuilder {
     }
   }
 
+  /**
+   * Creates a SQL command to include in the comments of a column the info about the partial
+   * indexes. The format of the comment will be:
+   * "indexName1.whereClause=whereClause1$indexName2.whereClause=whereClause2$..."
+   * 
+   * @param table
+   *          the table of the index. The comment of the first column in the index will be used to
+   *          keep the info about the partial index
+   * @param partialIndexes
+   *          the list of partial indexes
+   * @throws IOException
+   */
+  private void includeWhereClauseInColumnComment(Table table, List<Index> partialIndexes)
+      throws IOException {
+    // If the column already has comments, the new comment will be appended
+    for (Index index : partialIndexes) {
+      IndexColumn firstIndexColumn = index.getColumn(0);
+      String currentComments = getCommentOfColumn(table.getName(), firstIndexColumn.getName());
+      StringBuilder columnComment = new StringBuilder();
+      if (currentComments != null) {
+        columnComment.append(currentComments);
+      }
+      columnComment.append(index.getName() + ".whereClause=" + index.getWhereClause() + "$");
+      print("COMMENT ON COLUMN " + table.getName() + "." + firstIndexColumn.getName() + " IS '"
+          + columnComment.toString() + "'");
+      printEndOfStatement();
+    }
+  }
+
   @Override
   protected void removedOperatorClassIndexesPostAction(Map<String, List<Index>> removedIndexesMap)
       throws IOException {
@@ -689,6 +725,24 @@ public class Oracle8Builder extends SqlBuilder {
       }
       if (!indexesWithOperatorClass.isEmpty()) {
         removeOperatorClassInTableComment(tableName, indexesWithOperatorClass);
+      }
+    }
+  }
+
+  @Override
+  protected void removedPartialIndexesPostAction(Map<String, List<Index>> removedIndexesMap)
+      throws IOException {
+    // Updates the comments of the tables whose indexes have been deleted, to delete the info about
+    // the partial indexes (where clause)
+    for (String tableName : removedIndexesMap.keySet()) {
+      List<Index> partialIndexes = new ArrayList<Index>();
+      for (Index index : removedIndexesMap.get(tableName)) {
+        if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
+          partialIndexes.add(index);
+        }
+      }
+      if (!partialIndexes.isEmpty()) {
+        removeWhereClauseInColumnComment(tableName, partialIndexes);
       }
     }
   }
@@ -728,6 +782,38 @@ public class Oracle8Builder extends SqlBuilder {
   }
 
   /**
+   * Given a table and a list of removed partial indexes for that table, updates the comments of the
+   * first column of every index, to delete the info associated with the deleted partial indexes
+   * 
+   * @param tableName
+   *          the table of the column whose comments will be updated
+   * @param partialIndexes
+   *          the deleted indexes
+   * @throws IOException
+   */
+  private void removeWhereClauseInColumnComment(String tableName, List<Index> partialIndexes)
+      throws IOException {
+    if (!partialIndexes.isEmpty()) {
+      for (Index index : partialIndexes) {
+        String columnName = index.getColumn(0).getName();
+        String currentComments = getCommentOfColumn(tableName, columnName);
+        List<String> commentLines = new ArrayList<String>(Arrays.asList(currentComments
+            .split("\\$")));
+        for (String commentLine : commentLines) {
+          if (commentLine.startsWith(index.getName() + ".whereClause")) {
+            commentLines.remove(commentLine);
+            break;
+          }
+        }
+        // Build the comments again, after having removed the unneeded lines
+        String tableComment = StringUtils.join(commentLines.toArray());
+        print("COMMENT ON COLUMN " + tableName + "." + columnName + " IS '" + tableComment + "'");
+        printEndOfStatement();
+      }
+    }
+  }
+
+  /**
    * Given a table, returns its comment, stored in the all_tab_comments table
    * 
    * @param tableName
@@ -744,6 +830,43 @@ public class Oracle8Builder extends SqlBuilder {
       st = con
           .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
       st.setString(1, tableName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        tableComment = rs.getString(1);
+      }
+    } catch (SQLException e) {
+    } finally {
+      if (con != null) {
+        try {
+          con.close();
+        } catch (SQLException e) {
+          _log.error("Error while closing the connection", e);
+        }
+      }
+    }
+    return tableComment;
+  }
+
+  /**
+   * Given the name of a column and its table name, returns the comment of the column
+   * 
+   * @param tableName
+   *          the name of the table to which the column belongs
+   * @param columnName
+   *          the name of the column
+   * @return the comment of the given column
+   */
+  private String getCommentOfColumn(String tableName, String columnName) {
+    String tableComment = null;
+    Connection con = null;
+    try {
+      PreparedStatement st = null;
+      con = getPlatform().getDataSource().getConnection();
+
+      st = con
+          .prepareStatement("SELECT comments FROM all_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
+      st.setString(1, tableName.toUpperCase());
+      st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
         tableComment = rs.getString(1);

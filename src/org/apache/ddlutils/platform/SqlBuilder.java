@@ -161,6 +161,8 @@ public abstract class SqlBuilder {
   private Map _charSequencesToEscape = new ListOrderedMap();
   /** The map of the tables with its list of indexes that have index columns with operator class */
   private Map<String, List<Index>> _removedIndexesWithOperatorClassMap;
+  /** The map of the tables with its list of partial indexes */
+  private Map<String, List<Index>> _removedIndexesWithWhereClause;
 
   private Translation _PLSQLFunctionTranslation = new NullTranslation();
   public Translation _PLSQLTriggerTranslation = new NullTranslation();
@@ -1015,10 +1017,14 @@ public abstract class SqlBuilder {
 
     // The list of removed indexes that define an operator class
     // It is populated in processChange(Database currentModel, Database desiredModel,
-    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a paremeter to
+    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a parameter to
     // applyForSelectedChanges because it is a too generic method, that's why it is defined as a
     // class attribute
     _removedIndexesWithOperatorClassMap = new HashMap<String, List<Index>>();
+
+    // The list of removed partial index, populated also in processChange(Database currentModel,
+    // Database desiredModel, CreationParameters params, RemoveIndexChange change)
+    _removedIndexesWithWhereClause = new HashMap<String, List<Index>>();
 
     // 1st pass: removing external constraints and indices
     applyForSelectedChanges(changes, new Class[] { RemoveForeignKeyChange.class,
@@ -1027,6 +1033,10 @@ public abstract class SqlBuilder {
 
     if (!_removedIndexesWithOperatorClassMap.isEmpty()) {
       removedOperatorClassIndexesPostAction(_removedIndexesWithOperatorClassMap);
+    }
+
+    if (!_removedIndexesWithWhereClause.isEmpty()) {
+      removedPartialIndexesPostAction(_removedIndexesWithWhereClause);
     }
 
     for (int i = 0; i < currentModel.getViewCount(); i++) {
@@ -1079,11 +1089,25 @@ public abstract class SqlBuilder {
    * operator class are defined
    * 
    * @param removedIndexesWithOperatorClassMap
-   *          a map of all the tables that have new indexes, along with the new indexes
+   *          a map of all the tables that have indexes (with an operator class) to be removed,
+   *          along with the removed indexes
    * @throws IOException
    */
   protected void removedOperatorClassIndexesPostAction(
       Map<String, List<Index>> removedIndexesWithOperatorClassMap) throws IOException {
+  }
+
+  /**
+   * Hook to execute actions after all the RemoveIndexChanges belonging to partial indexes are
+   * defined
+   * 
+   * @param removedIndexesWithWhereClause
+   *          a map of all the tables that have partial indexes to be removed, along with the
+   *          removed partial indexes
+   * @throws IOException
+   */
+  protected void removedPartialIndexesPostAction(
+      Map<String, List<Index>> removedIndexesWithWhereClause) throws IOException {
   }
 
   /**
@@ -1158,20 +1182,29 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, RemoveIndexChange change) throws IOException {
-    writeExternalIndexDropStmt(change.getChangedTable(), change.getIndex());
-    if (indexHasColumnWithOperatorClass(change.getIndex())) {
+    Index removedIndex = change.getIndex();
+    writeExternalIndexDropStmt(change.getChangedTable(), removedIndex);
+    if (indexHasColumnWithOperatorClass(removedIndex)) {
       // keep track of the removed indexes that use operator classes, as in some platforms is it
       // required to update the comments of the tables that own them
-      List<Index> operatorClassTableIndexes = _removedIndexesWithOperatorClassMap.get(change
-          .getChangedTable());
-      if (operatorClassTableIndexes == null) {
-        operatorClassTableIndexes = new ArrayList<Index>();
-      }
-      operatorClassTableIndexes.add(change.getIndex());
-      _removedIndexesWithOperatorClassMap.put(change.getChangedTable().getName(),
-          operatorClassTableIndexes);
+      putRemovedIndex(_removedIndexesWithOperatorClassMap, change);
+    }
+    if (removedIndex.getWhereClause() != null && !removedIndex.getWhereClause().isEmpty()) {
+      // keep track of the removed partial indexes, as in some platforms is it
+      // required to update the comments of the tables that own them
+      putRemovedIndex(_removedIndexesWithWhereClause, change);
     }
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+  }
+
+  private void putRemovedIndex(Map<String, List<Index>> removedIndexesMap, RemoveIndexChange change) {
+    String tableName = change.getChangedTable().getName();
+    List<Index> indexList = removedIndexesMap.get(tableName);
+    if (indexList == null) {
+      indexList = new ArrayList<Index>();
+    }
+    indexList.add(change.getIndex());
+    removedIndexesMap.put(tableName, indexList);
   }
 
   /**
