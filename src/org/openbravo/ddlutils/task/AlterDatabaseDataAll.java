@@ -28,6 +28,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.RemoveRowChange;
@@ -186,7 +187,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
+      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
       dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
       Iterator<Change> tableChanges = dataComparator.getChanges().iterator();
       while (tableChanges.hasNext()) {
@@ -195,13 +196,19 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           Table table = ((RemoveRowChange) dataChange).getTable();
           String tableName = table.getName();
           if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedRecords.add(tableName);
+            adTablesWithRemovedOrInsertedRecords.add(tableName);
+          }
+        } else if (dataChange instanceof AddRowChange) {
+          Table table = ((AddRowChange) dataChange).getTable();
+          String tableName = table.getName();
+          if (ad.getTable(tableName) != null) {
+            adTablesWithRemovedOrInsertedRecords.add(tableName);
           }
         }
       }
       getLog().info("Disabling foreign keys");
       platform.disableDatasetFK(connection, originaldb, ad, !isFailonerror(),
-          adTablesWithRemovedRecords);
+          adTablesWithRemovedOrInsertedRecords);
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db, ad);
@@ -234,7 +241,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       getLog().info("Enabling Foreign Keys and Triggers");
       boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad, true,
-          adTablesWithRemovedRecords);
+          adTablesWithRemovedOrInsertedRecords);
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
 
       // execute the post-script
