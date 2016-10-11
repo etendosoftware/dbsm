@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -2890,20 +2891,30 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError) {
+    Set<String> allDatasetTables = new HashSet<String>();
+    Vector<OBDatasetTable> datasetTables = dataset.getTableList();
+    for (int i = 0; i < datasetTables.size(); i++) {
+      allDatasetTables.add(datasetTables.get(i).getName());
+    }
+    deleteInvalidConstraintRows(model, dataset, continueOnError, allDatasetTables);
+  }
+
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      boolean continueOnError, Set<String> tablesWithRemovedRecords) {
 
     Connection connection = borrowConnection();
-    deleteInvalidConstraintRows(connection, model, dataset, continueOnError);
+    deleteInvalidConstraintRows(connection, model, dataset, continueOnError,
+        tablesWithRemovedRecords);
     returnConnection(connection);
-
   }
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) {
+      boolean continueOnError, Set<String> tablesWithRemovedRecords) {
 
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, true);
+    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, true, tablesWithRemovedRecords);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 

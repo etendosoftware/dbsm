@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -188,6 +188,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
+      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
       dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
       Iterator<Change> tableChanges = dataComparator.getChanges().iterator();
       while (tableChanges.hasNext()) {
@@ -197,6 +198,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           String tableName = table.getName();
           if (ad.getTable(tableName) != null) {
             adTablesWithRemovedOrInsertedRecords.add(tableName);
+            adTablesWithRemovedRecords.add(tableName);
           }
         } else if (dataChange instanceof AddRowChange) {
           Table table = ((AddRowChange) dataChange).getTable();
@@ -228,7 +230,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(db, ad, !isFailonerror());
+      platform.deleteInvalidConstraintRows(db, ad, !isFailonerror(), adTablesWithRemovedRecords);
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing oncreatedefault statements for mandatory columns");

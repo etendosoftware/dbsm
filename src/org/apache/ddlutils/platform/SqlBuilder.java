@@ -117,6 +117,7 @@ import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
 import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop
@@ -585,6 +586,16 @@ public abstract class SqlBuilder {
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
       boolean onlyOnDeleteCascade) {
+    Set<String> allDatasetTables = new HashSet<String>();
+    Vector<OBDatasetTable> datasetTables = dataset.getTableList();
+    for (int i = 0; i < datasetTables.size(); i++) {
+      allDatasetTables.add(datasetTables.get(i).getName());
+    }
+    deleteInvalidConstraintRows(model, dataset, onlyOnDeleteCascade, allDatasetTables);
+  }
+
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      boolean onlyOnDeleteCascade, Set<String> tablesWithRemovedRecords) {
 
     try {
       // We will now delete the rows in tables which have a foreign key
@@ -599,7 +610,9 @@ public abstract class SqlBuilder {
           List<ForeignKey> fks = new ArrayList<ForeignKey>();
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
+            String foreignTableName = fk.getForeignTableName();
+            if (dataset.getTable(foreignTableName) != null
+                && (tablesWithRemovedRecords.contains(foreignTableName))) {
               fks.add(fk);
             }
           }
