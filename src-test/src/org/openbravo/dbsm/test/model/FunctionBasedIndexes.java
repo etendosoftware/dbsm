@@ -160,7 +160,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
   }
 
   @Test
-  // Tests that it is possible to define indexes ethat use nested functions
+  // Tests that it is possible to define indexes that use nested functions
   public void testNestedFunctionBasedIndex() throws IOException {
     resetDB();
     boolean forceCreation = true;
