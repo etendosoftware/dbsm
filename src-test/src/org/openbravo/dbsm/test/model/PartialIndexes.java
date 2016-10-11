@@ -209,7 +209,7 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
-  // Tests that it is possible to define indexes that make use of nested functions
+  // Tests that it is possible to define partial indexes that make use of nested functions
   public void exportNestedFunctionPartialIndex() throws IOException {
     resetDB();
     boolean forceCreation = true;
