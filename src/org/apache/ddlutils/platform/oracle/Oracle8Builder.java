@@ -704,11 +704,19 @@ public class Oracle8Builder extends SqlBuilder {
       if (currentComments != null) {
         columnComment.append(currentComments);
       }
-      columnComment.append(index.getName() + ".whereClause=" + index.getWhereClause() + "$");
+      columnComment.append(index.getName() + ".whereClause="
+          + transformWhereClauseForComment(index.getWhereClause()) + "$");
       print("COMMENT ON COLUMN " + table.getName() + "." + firstIndexColumn.getName() + " IS '"
           + columnComment.toString() + "'");
       printEndOfStatement();
     }
+  }
+
+  private String transformWhereClauseForComment(String whereClause) {
+    if (whereClause == null) {
+      return null;
+    }
+    return whereClause.replaceAll("'", "''"); // escape single quotes
   }
 
   @Override
@@ -732,8 +740,8 @@ public class Oracle8Builder extends SqlBuilder {
   @Override
   protected void removedPartialIndexesPostAction(Map<String, List<Index>> removedIndexesMap)
       throws IOException {
-    // Updates the comments of the tables whose indexes have been deleted, to delete the info about
-    // the partial indexes (where clause)
+    // Updates the comments of the columns present on partial indexes that have been removed, to
+    // delete the info about the partial indexing (where clause)
     for (String tableName : removedIndexesMap.keySet()) {
       List<Index> partialIndexes = new ArrayList<Index>();
       for (Index index : removedIndexesMap.get(tableName)) {
