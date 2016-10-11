@@ -755,6 +755,33 @@ public class Oracle8Builder extends SqlBuilder {
     }
   }
 
+  @Override
+  protected void updatePartialIndexAction(Table table, Index index, String oldWhereClause,
+      String newWhereClause) throws IOException {
+    // Updates the comments of the columns present on indexes whose where clause have been modified,
+    // to update the info about the partial indexes
+    String columnName = index.getColumn(0).getName();
+    String currentComments = getCommentOfColumn(table.getName(), columnName);
+    String newComments;
+
+    if (currentComments == null) {
+      currentComments = "";
+    }
+
+    if (oldWhereClause == null) {
+      newComments = currentComments + index.getName() + ".whereClause=" + newWhereClause + "$";
+    } else if (newWhereClause == null) {
+      newComments = currentComments.replace(index.getName() + ".whereClause=" + oldWhereClause
+          + "$", "");
+    } else {
+      newComments = currentComments.replace(index.getName() + ".whereClause=" + oldWhereClause,
+          index.getName() + ".whereClause=" + newWhereClause);
+    }
+
+    print("COMMENT ON COLUMN " + table.getName() + "." + columnName + " IS '" + newComments + "'");
+    printEndOfStatement();
+  }
+
   /**
    * Given a table and a list of removed indexes that define operator classes, updates the comments
    * of the table to delete the info associated with the deleted indexes

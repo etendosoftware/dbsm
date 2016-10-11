@@ -231,8 +231,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         if (_unique != other._unique) {
           return false;
         }
-        if (platformInfo.isPartialIndexesSupported()
-            && !isSameWhereClause(_whereClause, other._whereClause)) {
+        if (platformInfo.isPartialIndexesSupported() && !isSameWhereClause(other)) {
           return false;
         }
         for (int idx = 0; idx < getColumnCount(); idx++) {
@@ -246,11 +245,11 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     return false;
   }
 
-  private boolean isSameWhereClause(String whereClause, String otherWhereClause) {
-    if (whereClause != null) {
-      return whereClause.equalsIgnoreCase(otherWhereClause);
+  public boolean isSameWhereClause(Index otherIndex) {
+    if (_whereClause != null) {
+      return _whereClause.equalsIgnoreCase(otherIndex._whereClause);
     }
-    return otherWhereClause == null;
+    return otherIndex._whereClause == null;
   }
 
   /**

@@ -75,6 +75,7 @@ import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
+import org.apache.ddlutils.alteration.PartialIndexInformationChange;
 import org.apache.ddlutils.alteration.PrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
@@ -1082,6 +1083,11 @@ public abstract class SqlBuilder {
     applyForSelectedChanges(changes, new Class[] { AddViewChange.class }, callbackClosure);
 
     applyForSelectedChanges(changes, new Class[] { AddTriggerChange.class }, callbackClosure);
+
+    if (!getPlatformInfo().isPartialIndexesSupported()) {
+      applyForSelectedChanges(changes, new Class[] { PartialIndexInformationChange.class },
+          callbackClosure);
+    }
   }
 
   /**
@@ -1108,6 +1114,24 @@ public abstract class SqlBuilder {
    */
   protected void removedPartialIndexesPostAction(
       Map<String, List<Index>> removedIndexesWithWhereClause) throws IOException {
+  }
+
+  /**
+   * Action to be executed when a change on the where clause of an index is detected. It must be
+   * implemented for those platforms where partial indexing is not supported.
+   * 
+   * @param table
+   *          the table where the changed index belongs
+   * @param index
+   *          the modified index
+   * @param oldWhereClause
+   *          the former where clause
+   * @param newWhereClause
+   *          the new where clause
+   * @throws IOException
+   */
+  protected void updatePartialIndexAction(Table table, Index index, String oldWhereClause,
+      String newWhereClause) throws IOException {
   }
 
   /**
@@ -1205,6 +1229,29 @@ public abstract class SqlBuilder {
     }
     indexList.add(change.getIndex());
     removedIndexesMap.put(tableName, indexList);
+  }
+
+  /**
+   * Processes the change representing modifications in the information of partial indexes which is
+   * stored to maintain consistency between the XML model and the database. This changes only apply
+   * for those platforms where partial indexes are not supported as they are used just to keep
+   * updated that information.
+   * 
+   * @param currentModel
+   *          The current database schema
+   * @param desiredModel
+   *          The desired database schema
+   * @param params
+   *          The parameters used in the creation of new tables. Note that for existing tables, the
+   *          parameters won't be applied
+   * @param change
+   *          The change object
+   */
+  protected void processChange(Database currentModel, Database desiredModel,
+      CreationParameters params, PartialIndexInformationChange change) throws IOException {
+    updatePartialIndexAction(change.getChangedTable(), change.getIndex(),
+        change.getOldWhereClause(), change.getNewWhereClause());
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
   /**
