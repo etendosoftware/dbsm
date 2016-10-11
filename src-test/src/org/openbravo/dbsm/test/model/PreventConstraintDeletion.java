@@ -86,7 +86,7 @@ public class PreventConstraintDeletion extends DbsmTest {
     updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable2FkOidBeforeUpdate = obtainFkData(TABLE2_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
+    updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable2FkOidAfterUpdate = obtainFkData(TABLE2_FK_NAME);
     assertThat(adTable2FkOidBeforeUpdate, equalTo(adTable2FkOidAfterUpdate));
@@ -105,17 +105,17 @@ public class PreventConstraintDeletion extends DbsmTest {
     assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
   }
 
-  // When a new record is inserted in an AD table, the constraints which reference that table don't
+  // When a new record is inserted in an AD table, the constraints which reference that table
   // have to be recreated.
   @Test
-  public void constraintsOfADTablesAreNotRecreatedWhenInsertingARecordInATable() {
+  public void constraintsOfADTablesAreRecreatedWhenInsertingARecordInATable() {
     updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
     updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
-    assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
+    assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
   }
 
   private String obtainFkData(String fkName) {

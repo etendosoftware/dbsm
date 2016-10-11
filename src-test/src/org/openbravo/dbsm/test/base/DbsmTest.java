@@ -44,6 +44,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.DataChange;
@@ -361,6 +362,7 @@ public class DbsmTest {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
+      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
       Set<String> adTablesWithRemovedRecords = new HashSet<String>();
       Iterator<Change> tableChanges = dataComparator.getChanges().iterator();
       while (tableChanges.hasNext()) {
@@ -369,12 +371,20 @@ public class DbsmTest {
           Table table = ((RemoveRowChange) dataChange).getTable();
           String tableName = table.getName();
           if (ad.getTable(tableName) != null) {
+            adTablesWithRemovedOrInsertedRecords.add(tableName);
             adTablesWithRemovedRecords.add(tableName);
+          }
+        } else if (dataChange instanceof AddRowChange) {
+          Table table = ((AddRowChange) dataChange).getTable();
+          String tableName = table.getName();
+          if (ad.getTable(tableName) != null) {
+            adTablesWithRemovedOrInsertedRecords.add(tableName);
           }
         }
       }
       log.info("Disabling foreign keys");
-      platform.disableDatasetFK(connection, originalDB, ad, false, adTablesWithRemovedRecords);
+      platform.disableDatasetFK(connection, originalDB, ad, false,
+          adTablesWithRemovedOrInsertedRecords);
       log.info("Disabling triggers");
       platform.disableAllTriggers(connection, newDB, false);
       platform.disableNOTNULLColumns(newDB, ad);
@@ -393,7 +403,7 @@ public class DbsmTest {
       log.info("Updating Application Dictionary data...");
       platform.alterData(connection, newDB, dataComparator.getChanges());
       log.info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(newDB, ad, false);
+      platform.deleteInvalidConstraintRows(newDB, ad, false, adTablesWithRemovedRecords);
       log.info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, newDB, false);
       log.info("Executing oncreatedefault statements for mandatory columns");
@@ -408,7 +418,7 @@ public class DbsmTest {
 
       log.info("Enabling Foreign Keys and Triggers");
       boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true,
-          adTablesWithRemovedRecords);
+          adTablesWithRemovedOrInsertedRecords);
       boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
 
       // Now check the new model updated in db is as it should
