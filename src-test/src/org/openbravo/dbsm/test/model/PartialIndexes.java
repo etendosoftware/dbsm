@@ -89,14 +89,15 @@ public class PartialIndexes extends IndexBaseTest {
    */
   private String getWhereClauseForIndexFromDb(String indexName) {
     String indexWhereClause = null;
+    Connection connection = null;
     try {
-      Connection cn = getDataSource().getConnection();
+      connection = getDataSource().getConnection();
       StringBuilder query = new StringBuilder();
       query.append("SELECT PG_GET_EXPR(PG_INDEX.indpred, PG_INDEX.indrelid, true) ");
       query.append("FROM PG_INDEX, PG_CLASS ");
       query.append("WHERE PG_INDEX.indexrelid = PG_CLASS.OID ");
       query.append("AND UPPER(PG_CLASS.relname) = UPPER(?)");
-      PreparedStatement st = cn.prepareStatement(query.toString());
+      PreparedStatement st = connection.prepareStatement(query.toString());
       st.setString(1, indexName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
@@ -104,6 +105,8 @@ public class PartialIndexes extends IndexBaseTest {
       }
     } catch (SQLException e) {
       log.error("Error while getting the where clause of the index " + indexName, e);
+    } finally {
+      getPlatform().returnConnection(connection);
     }
     return indexWhereClause;
   }
