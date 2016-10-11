@@ -13,7 +13,7 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="BASIC_INDEX" unique="false" whereClause="(COL1 IS NOT NULL)">
+      <index name="BASIC_INDEX" unique="false" whereClause="COL1 IS NOT NULL">
         <index-column name="COL1"/>
       </index>
     </table>

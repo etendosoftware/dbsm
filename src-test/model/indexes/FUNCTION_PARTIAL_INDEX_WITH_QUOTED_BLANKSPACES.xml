@@ -13,9 +13,8 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="MULTIPLE_INDEX" unique="false" whereClause="COL1 IS NOT NULL AND COL2 IS NOT NULL">
+      <index name="NESTED_FUNCTION_INDEX" unique="false" whereClause="UPPER(REPLACE(COL1,&apos; a &apos;,&apos; b &apos;))=&apos; B &apos;">
         <index-column name="COL1"/>
-        <index-column name="COL2"/>
       </index>
     </table>
   </database>

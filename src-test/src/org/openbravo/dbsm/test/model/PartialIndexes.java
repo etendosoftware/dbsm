@@ -11,13 +11,14 @@
  */
 package org.openbravo.dbsm.test.model;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
@@ -28,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -53,11 +55,28 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
       String indexWhereClause = getWhereClauseForIndexFromDb("BASIC_INDEX");
-      assertThat(indexWhereClause.toUpperCase(), equalTo("(COL1 IS NOT NULL)"));
+      assertThat(indexWhereClause.toUpperCase(), equalTo("COL1 IS NOT NULL"));
     } else if (Rdbms.ORA.equals(getRdbms())) {
       // In Oracle, the partial index definition should be stored in the comment of the first column
       assertThat(getCommentOfColumnInOracle("TEST", "COL1"),
-          equalTo("BASIC_INDEX.whereClause=(COL1 IS NOT NULL)$"));
+          equalTo("BASIC_INDEX.whereClause=COL1 IS NOT NULL$"));
+    }
+  }
+
+  @Test
+  // Tests that partial indexes which make use of functions within the where clause are properly
+  // imported
+  public void importFunctionPartialIndex() {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/FUNCTION_PARTIAL_INDEX.xml");
+    if (Rdbms.PG.equals(getRdbms())) {
+      String indexWhereClause = getWhereClauseForIndexFromDb("FUNCTION_INDEX");
+      assertThat(indexWhereClause.toUpperCase(), equalTo("UPPER(COL1::TEXT) = ''::TEXT"));
+    } else if (Rdbms.ORA.equals(getRdbms())) {
+      // In Oracle, the partial index definition should be stored in the comment of the first column
+      assertThat(getCommentOfColumnInOracle("TEST", "COL1"),
+          equalTo("FUNCTION_INDEX.whereClause=UPPER(COL1)=''$"));
     }
   }
 
@@ -73,7 +92,7 @@ public class PartialIndexes extends IndexBaseTest {
     try {
       Connection cn = getDataSource().getConnection();
       StringBuilder query = new StringBuilder();
-      query.append("SELECT PG_GET_EXPR(PG_INDEX.indpred, PG_INDEX.indrelid) ");
+      query.append("SELECT PG_GET_EXPR(PG_INDEX.indpred, PG_INDEX.indrelid, true) ");
       query.append("FROM PG_INDEX, PG_CLASS ");
       query.append("WHERE PG_INDEX.indexrelid = PG_CLASS.OID ");
       query.append("AND UPPER(PG_CLASS.relname) = UPPER(?)");
@@ -90,6 +109,26 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that an existing basic index can be changed as partial
+  public void changeIndexFromBasicToPartial() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_INDEX.xml");
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that an existing partial index can be changed as not partial
+  public void changeIndexFromPartialToBasic() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
+    updateDatabase("indexes/BASIC_INDEX.xml");
+    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that if an index is changed as partial, that index is recreated in postgres
   // but not in oracle
   public void recreationToChangeIndexAsPartial() {
@@ -98,11 +137,13 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASIC_INDEX.xml");
     List<String> commands = sqlStatmentsForUpdate("indexes/BASIC_PARTIAL_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
-      assertThat(commands, is(not(empty())));
+      assertThat("Index is dropped", commands, hasItem(containsString("DROP INDEX BASIC_INDEX")));
+      assertThat("Index is created", commands, hasItem(containsString("CREATE INDEX BASIC_INDEX")));
     } else if (Rdbms.ORA.equals(getRdbms())) {
-      assertThat(commands, empty());
+      List<String> commentUpdateCommand = Arrays
+          .asList("COMMENT ON COLUMN TEST.COL1 IS 'BASIC_INDEX.whereClause=COL1 IS NOT NULL$'\n");
+      assertEquals("Not recreating index", commentUpdateCommand, commands);
     }
-
   }
 
   @Test
@@ -114,9 +155,11 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
     List<String> commands = sqlStatmentsForUpdate("indexes/BASIC_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
-      assertThat(commands, is(not(empty())));
+      assertThat("Index is dropped", commands, hasItem(containsString("DROP INDEX BASIC_INDEX")));
+      assertThat("Index is created", commands, hasItem(containsString("CREATE INDEX BASIC_INDEX")));
     } else if (Rdbms.ORA.equals(getRdbms())) {
-      assertThat(commands, empty());
+      List<String> commentUpdateCommand = Arrays.asList("COMMENT ON COLUMN TEST.COL1 IS ''\n");
+      assertEquals("Not recreating index", commentUpdateCommand, commands);
     }
   }
 
@@ -143,16 +186,45 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml");
     // In Oracle, the partial index definition should be stored in the comment of the first column
     assertThat(getCommentOfColumnInOracle("TEST", "COL1"),
-        equalTo("MULTIPLE_INDEX.whereClause=(COL1 IS NOT NULL AND COL2 IS NOT NULL)$"));
+        equalTo("MULTIPLE_INDEX.whereClause=COL1 IS NOT NULL AND COL2 IS NOT NULL$"));
     assertNull(getCommentOfColumnInOracle("TEST", "COL2"));
   }
 
   @Test
-  // Tests if partial indexes are properly exported
+  // Tests if basic partial indexes are properly exported
   public void exportBasicPartialIndex() throws IOException {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
     assertExport("indexes/BASIC_PARTIAL_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to define partial indexes which make use of functions
+  public void exportFunctionPartialIndex() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/FUNCTION_PARTIAL_INDEX.xml");
+    assertExport("indexes/FUNCTION_PARTIAL_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to define indexes that make use of nested functions
+  public void exportNestedFunctionPartialIndex() throws IOException {
+    resetDB();
+    boolean forceCreation = true;
+    createDatabaseIfNeeded(forceCreation);
+    updateDatabase("indexes/NESTED_FUNCTION_PARTIAL_INDEX.xml");
+    assertExport("indexes/NESTED_FUNCTION_PARTIAL_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that if a partial index makes use of an expression with whitespaces inside quotes, those
+  // whitespaces are not removed
+  public void exportQuotedBlankSpacesInPartialIndex() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml");
+    assertExport("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml", "tables/TEST.xml");
   }
 }
