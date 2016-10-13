@@ -27,6 +27,7 @@ ConfigScriptColumnDataChange.class, //
     ConfigScriptColumnSizeChange.class, //
     ConfigScriptColumnRequiredChange.class,//
     ConfigScriptRemoveCheckChange.class, //
+    ConfigScriptRemoveIndexChange.class, //
     ConfigScriptRemoveTriggerChange.class })
 public class ConfigScriptSuite {
 

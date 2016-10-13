@@ -248,6 +248,14 @@ under the License.
     </element>
   </class>
     
+  <class name="org.apache.ddlutils.alteration.RemoveIndexChange">
+    <element name="removeIndexChange">
+      <attribute name="tableName" property="tableName"/>
+      <attribute name="indexName" property="indexName"/>
+      <element name="index" property="index"/>
+    </element>
+  </class>
+
   <class name="org.apache.ddlutils.alteration.VersionInfo">
     <element name="versionInfo">
       <attribute name="version" property="version"/>
