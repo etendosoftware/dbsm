@@ -17,6 +17,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -298,10 +301,14 @@ public class OracleModelLoader extends ModelLoaderBase {
         }
       });
       if (commentCol != null && !commentCol.equals("")) {
+        List<String> commentLines = new ArrayList<String>(Arrays.asList(commentCol.split("\\$")));
         Pattern pat3 = Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*?)--");
-        Matcher match3 = pat3.matcher(commentCol);
-        if (match3.matches()) {
-          t.getColumn(i).setOnCreateDefault(match3.group(1));
+        for (String comment : commentLines) {
+          Matcher match3 = pat3.matcher(comment);
+          if (match3.matches()) {
+            t.getColumn(i).setOnCreateDefault(match3.group(1));
+            break;
+          }
         }
       }
     }

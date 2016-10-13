@@ -230,4 +230,36 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml");
     assertExport("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml", "tables/TEST.xml");
   }
+
+  @Test
+  // Tests that it is possible to add a column with a partial index and an on create default
+  // statement within the same update
+  public void exportPartialIndexAndOnCreateDefault() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to add a partial index on a column which has an on create default
+  // statement
+  public void exportAddPartialIndexOnColumnWithOnCreateDefault() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml");
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to drop a partial index on a column which has an on create default
+  // statement
+  public void exportDropPartialIndexOnColumnWithOnCreateDefault() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    updateDatabase("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml");
+    assertExport("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+  }
 }

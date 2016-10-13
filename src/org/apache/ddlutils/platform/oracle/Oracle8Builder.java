@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +73,8 @@ public class Oracle8Builder extends SqlBuilder {
    * The regular expression pattern for ISO timestamps, i.e. 'YYYY-MM-DD HH:MI:SS.fffffffff'.
    */
   private Pattern _isoTimestampPattern;
+
+  private Map<String, String> _onCreateDefaultColumns;
 
   /**
    * Creates a new builder instance.
@@ -156,7 +159,15 @@ public class Oracle8Builder extends SqlBuilder {
         else
           oncreatedefault += tchar;
       }
-      comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--";
+      comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--$";
+    }
+    if (!comment.equals("")) {
+      // keep the columns which have on create default, to prevent losing the related comment if new
+      // partial indexes are added later to those columns
+      if (_onCreateDefaultColumns == null) {
+        _onCreateDefaultColumns = new HashMap<String, String>();
+      }
+      _onCreateDefaultColumns.put(table.getName() + "." + column.getName(), comment);
     }
     println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
         + "'");
@@ -634,6 +645,10 @@ public class Oracle8Builder extends SqlBuilder {
         includeWhereClauseInColumnComment(table, partialIndexes);
       }
     }
+
+    if (_onCreateDefaultColumns != null) {
+      _onCreateDefaultColumns.clear();
+    }
   }
 
   @Override
@@ -700,23 +715,29 @@ public class Oracle8Builder extends SqlBuilder {
     for (Index index : partialIndexes) {
       IndexColumn firstIndexColumn = index.getColumn(0);
       String currentComments = getCommentOfColumn(table.getName(), firstIndexColumn.getName());
-      StringBuilder columnComment = new StringBuilder();
+      String columnName = table.getName() + "." + firstIndexColumn.getName();
+      StringBuilder columnComment;
+      if (_onCreateDefaultColumns != null && _onCreateDefaultColumns.containsKey(columnName)) {
+        // prevent losing on create default comment when it has been newly added
+        columnComment = new StringBuilder(_onCreateDefaultColumns.get(columnName));
+      } else {
+        columnComment = new StringBuilder();
+      }
       if (currentComments != null) {
-        columnComment.append(currentComments);
+        columnComment.append(transformInOracleComment(currentComments));
       }
       columnComment.append(index.getName() + ".whereClause="
-          + transformWhereClauseForComment(index.getWhereClause()) + "$");
-      print("COMMENT ON COLUMN " + table.getName() + "." + firstIndexColumn.getName() + " IS '"
-          + columnComment.toString() + "'");
+          + transformInOracleComment(index.getWhereClause()) + "$");
+      print("COMMENT ON COLUMN " + columnName + " IS '" + columnComment.toString() + "'");
       printEndOfStatement();
     }
   }
 
-  private String transformWhereClauseForComment(String whereClause) {
-    if (whereClause == null) {
+  private String transformInOracleComment(String comment) {
+    if (comment == null) {
       return null;
     }
-    return whereClause.replaceAll("'", "''"); // escape single quotes
+    return comment.replaceAll("'", "''"); // escape single quotes
   }
 
   @Override
@@ -841,8 +862,8 @@ public class Oracle8Builder extends SqlBuilder {
           }
         }
         // Build the comments again, after having removed the unneeded lines
-        String tableComment = StringUtils.join(commentLines.toArray());
-        print("COMMENT ON COLUMN " + tableName + "." + columnName + " IS '" + tableComment + "'");
+        String columnComment = transformInOracleComment(StringUtils.join(commentLines.toArray()));
+        print("COMMENT ON COLUMN " + tableName + "." + columnName + " IS '" + columnComment + "'");
         printEndOfStatement();
       }
     }
