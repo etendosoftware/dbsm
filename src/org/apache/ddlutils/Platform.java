@@ -1309,13 +1309,13 @@ public interface Platform {
       throws DatabaseOperationException;
 
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException;
 
   /**
    * Enable all Foreign key.
    * 
-   * @param connection
+   * @param connectionenableDatasetFK
    *          The connection to the database
    * @param model
    *          The database model
@@ -1343,7 +1343,7 @@ public interface Platform {
       boolean continueOnError) throws DatabaseOperationException;
 
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException;
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)

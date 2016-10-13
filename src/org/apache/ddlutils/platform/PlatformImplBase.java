@@ -2347,7 +2347,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
@@ -2369,7 +2369,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           }
           if (isTableContainedInDataset(dataset, table)
               || recordsHaveBeenDeletedFromTable(tableReferencedByForeignKey,
-                  datasetTablesWithRemovedRecords)) {
+                  datasetTablesWithRemovedOrInsertedRecords)) {
             getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
           }
         }
@@ -2386,8 +2386,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   private boolean recordsHaveBeenDeletedFromTable(String tableName,
-      Set<String> datasetTablesWithRemovedRecords) {
-    return datasetTablesWithRemovedRecords.contains(tableName);
+      Set<String> datasetTablesWithRemovedOrInsertedRecords) {
+    return datasetTablesWithRemovedOrInsertedRecords.contains(tableName);
   }
 
   private boolean isTableContainedInRecreatedTables(ArrayList<String> recreatedTables, Table table) {
@@ -2422,7 +2422,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> datasetTablesWithRemovedRecords)
+      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
@@ -2437,7 +2437,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             ForeignKey fk = table.getForeignKey(j);
             String tableReferencedByForeignKey = fk.getForeignTableName();
             if ((isTableContainedInRecreatedTables(recreatedTables, table) || recordsHaveBeenDeletedFromTable(
-                tableReferencedByForeignKey, datasetTablesWithRemovedRecords))
+                tableReferencedByForeignKey, datasetTablesWithRemovedOrInsertedRecords))
                 && !isReferencedTableInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
               getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
             }
