@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+  <database name="TEST">
+    <table name="TABLE1" primaryKey="TABLE1_ID">
+      <column name="TABLE1_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TABLE2_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="TABLE2" name="TABLE2_FK" onDelete="cascade">
+        <reference local="TABLE2_ID" foreign="TABLE2_ID"/>
+      </foreign-key>     
+    </table>
+    <table name="TABLE2" primaryKey="TABLE2_ID">
+      <column name="TABLE2_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TABLE3_ID" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="TABLE3" name="TABLE3_FK" onDelete="cascade">
+        <reference local="TABLE3_ID" foreign="TABLE3_ID"/>
+      </foreign-key>    
+    </table>
+     <table name="TABLE3" primaryKey="TABLE3_ID">
+      <column name="TABLE3_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>         
+    </table>         
+  </database>
