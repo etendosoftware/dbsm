@@ -587,9 +587,11 @@ public abstract class SqlBuilder {
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
       boolean onlyOnDeleteCascade) {
     Set<String> allDatasetTables = new HashSet<String>();
-    Vector<OBDatasetTable> datasetTables = dataset.getTableList();
-    for (int i = 0; i < datasetTables.size(); i++) {
-      allDatasetTables.add(datasetTables.get(i).getName());
+    if (dataset != null) {
+      Vector<OBDatasetTable> datasetTables = dataset.getTableList();
+      for (int i = 0; i < datasetTables.size(); i++) {
+        allDatasetTables.add(datasetTables.get(i).getName());
+      }
     }
     deleteInvalidConstraintRows(model, dataset, onlyOnDeleteCascade, allDatasetTables);
   }
