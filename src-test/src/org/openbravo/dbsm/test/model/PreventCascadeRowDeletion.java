@@ -58,9 +58,9 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   public void adTableHasDeletedRowAndNonADTableReferencesIt() {
     resetDB();
     updateDatabase(MODEL_NAME, "data/table3WithTwoRecordsCascadeDeletion",
-        Arrays.asList(TABLE2_NAME, TABLE3_NAME));
+        Arrays.asList(TABLE3_NAME));
     List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
-        Arrays.asList(TABLE2_NAME, TABLE3_NAME));
+        Arrays.asList(TABLE3_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
       allSts.append(st);
@@ -68,15 +68,15 @@ public class PreventCascadeRowDeletion extends DbsmTest {
     assertThat(allSts.toString(), containsString("DELETE FROM "));
   }
 
-  // When a record of a non AD table is deleted, if an AD table references that table, the records
-  // which were referenced by the foreign key mustn't be deleted.
+  // When an AD table has no changes of remove type, the records which were referenced by the
+  // foreign key mustn't be deleted.
   @Test
-  public void nonADTableHAsDeletedRowAndADTableReferencesIt() {
+  public void adTableHasNoChangesOnUpdateDatabase() {
     resetDB();
     updateDatabase(MODEL_NAME, "data/table2WithTwoRecordsCascadeDeletion",
         Arrays.asList(TABLE3_NAME));
-    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table2OneRecordCascadeDeletion",
-        Arrays.asList(TABLE3_NAME));
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME,
+        "data/table2WithTwoRecordsCascadeDeletion", Arrays.asList(TABLE3_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
       allSts.append(st);
