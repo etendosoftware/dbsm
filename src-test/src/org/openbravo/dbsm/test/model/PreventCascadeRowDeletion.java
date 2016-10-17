@@ -30,6 +30,9 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   private static final String TABLE2_NAME = "TABLE2";
   private static final String TABLE3_NAME = "TABLE3";
   private static final String TABLE1_NAME = "TABLE1";
+  private static final String TABLE4_NAME = "TABLE4";
+  private static final String TABLE5_NAME = "TABLE5";
+  private static final String TABLE6_NAME = "TABLE6";
 
   public PreventCascadeRowDeletion(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
@@ -82,5 +85,28 @@ public class PreventCascadeRowDeletion extends DbsmTest {
       allSts.append(st);
     }
     assertThat(allSts.toString(), not(containsString("DELETE FROM ")));
+  }
+
+  // When a record of an AD table is deleted, if a non AD table references that table, the records
+  // which were referenced by the foreign key must be deleted. But if that non AD table references
+  // also another AD table which has not deleted records, the records that where referenced by that
+  // FK will not be deleted.
+  @Test
+  public void adTableHasDeletedRowAndNonADTableReferencesItAndAnotherADTable() {
+    resetDB();
+    updateDatabase(MODEL_NAME, "data/table5TwoRecordsCascadeDeletion",
+        Arrays.asList(TABLE5_NAME, TABLE6_NAME));
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table5OneRecordCascadeDeletion",
+        Arrays.asList(TABLE5_NAME, TABLE6_NAME));
+    StringBuilder allSts = new StringBuilder();
+    for (String st : list) {
+      allSts.append(st);
+    }
+    assertThat(
+        allSts.toString(),
+        (containsString("DELETE FROM TABLE4 t  WHERE NOT EXISTS (SELECT 1 FROM TABLE5 WHERE t.TABLE5_ID=TABLE5.TABLE5_ID) AND t.TABLE5_ID IS NOT NULL")));
+    assertThat(
+        allSts.toString(),
+        not(containsString("DELETE FROM TABLE4 t  WHERE NOT EXISTS (SELECT 1 FROM TABLE6 WHERE t.TABLE6_ID=TABLE6.TABLE6_ID) AND t.TABLE6_ID IS NOT NULL")));
   }
 }
