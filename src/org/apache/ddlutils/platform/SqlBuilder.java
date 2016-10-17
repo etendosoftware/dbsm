@@ -4500,15 +4500,6 @@ public abstract class SqlBuilder {
     return new UID().toString().replace(':', '_').replace('-', '_');
   }
 
-  public void getConfigScript(Database database, Vector<Change> changes) throws IOException {
-    for (Change change : changes) {
-      if (change instanceof ColumnDataChange)
-        printColumnDataChange(database, (ColumnDataChange) change);
-      else if (change instanceof ColumnSizeChange)
-        printColumnSizeChange(database, (ColumnSizeChange) change);
-    }
-  }
-
   public void printColumnDataChange(Database database, ColumnDataChange change) throws IOException {
     HashMap map = new HashMap();
     Table table = database.findTable(change.getTablename());

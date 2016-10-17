@@ -67,6 +67,17 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
         getColumnDataChangesColumnValues(), getRowValues(TEST_ROW_ID));
   }
 
+  // This test checks that data changes present in a Configuration Script are applied properly.
+  // Eventually, this test makes use of {@link org.apache.ddlutils.Platform#applyConfigScript}
+  // method.
+  @Test
+  public void isConfigurationScriptApplied() {
+    List<String> adTableNames = Arrays.asList(TEST_TABLE);
+    applyConfigurationScript(BASE_MODEL, adTableNames, CONFIG_SCRIPT);
+    assertEquals("Data changes applied by Configuration Script",
+        getColumnDataChangesColumnValues(), getRowValues(TEST_ROW_ID));
+  }
+
   private static List<String> getColumnDataChangesColumnValues() {
     return new ArrayList<String>(columnDataChanges.values());
   }
