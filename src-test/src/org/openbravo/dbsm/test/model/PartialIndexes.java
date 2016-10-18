@@ -203,6 +203,16 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that it is possible to define a partial index whose where clause is casted (::text) in
+  // PostgresSQL
+  public void exportBasicPartialIndexCasted() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX2.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX2.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that it is possible to define partial indexes which make use of functions
   public void exportFunctionPartialIndex() throws IOException {
     resetDB();

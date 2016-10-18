@@ -1084,28 +1084,18 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   private String removeCastExpressions(String indexExpression) {
-    // look for '::'
-    String transformedIndexExpression = indexExpression;
-    int castIndex = indexExpression.indexOf("::");
-    while (castIndex != -1) {
-      // casts will end either with ')' or with ','
-      int closingParenthesisIndex = transformedIndexExpression.indexOf(")", castIndex);
-      int commaIndex = transformedIndexExpression.indexOf(",", castIndex);
-      int castEndIndex = -1;
-      if (closingParenthesisIndex != -1 && commaIndex != -1) {
-        castEndIndex = Math.min(commaIndex, closingParenthesisIndex);
-      } else if (closingParenthesisIndex == -1) {
-        castEndIndex = commaIndex;
-      } else {
-        castEndIndex = closingParenthesisIndex;
-      }
-      String cast = transformedIndexExpression.substring(castIndex, castEndIndex);
-      // remove the whole cast expression
-      transformedIndexExpression = transformedIndexExpression.replace(cast, "");
-      // look for the next cast expression, if any
-      castIndex = transformedIndexExpression.indexOf("::", castIndex);
+    // casts will start with :: and end either with ')', ',' or ' '
+    // we replace all characters between '::' and one of these ending characters
+
+    Pattern pattern = Pattern.compile("(:{2}[a-z]+)([ \\),])?");
+    Matcher matcher = pattern.matcher(indexExpression);
+    StringBuffer buffer = new StringBuffer();
+    while (matcher.find()) {
+      String replacement = matcher.group(2) != null ? matcher.group(2) : "";
+      matcher.appendReplacement(buffer, replacement);
     }
-    return transformedIndexExpression;
+    matcher.appendTail(buffer);
+    return buffer.toString();
   }
 
   /**
