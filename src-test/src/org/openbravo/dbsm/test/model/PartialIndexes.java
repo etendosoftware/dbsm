@@ -132,6 +132,17 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that it is possible to replace the where clause of an existing partial index
+  public void changeIndexPartialIndexWhereClause() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX2.xml");
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX3.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX3.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that if an index is changed as partial, that index is recreated in postgres
   // but not in oracle
   public void recreationToChangeIndexAsPartial() {
@@ -210,6 +221,15 @@ public class PartialIndexes extends IndexBaseTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX2.xml");
     assertExport("indexes/BASIC_PARTIAL_INDEX2.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to define a partial index whose where clause contains a ';' character
+  public void exportBasicPartialIndexWithSemicolon() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX3.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX3.xml", "tables/TEST.xml");
   }
 
   @Test

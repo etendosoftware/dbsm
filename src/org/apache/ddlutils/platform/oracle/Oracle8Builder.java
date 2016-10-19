@@ -799,7 +799,8 @@ public class Oracle8Builder extends SqlBuilder {
           index.getName() + ".whereClause=" + newWhereClause);
     }
 
-    print("COMMENT ON COLUMN " + table.getName() + "." + columnName + " IS '" + newComments + "'");
+    print("COMMENT ON COLUMN " + table.getName() + "." + columnName + " IS '"
+        + transformInOracleComment(newComments) + "'");
     printEndOfStatement();
   }
 
