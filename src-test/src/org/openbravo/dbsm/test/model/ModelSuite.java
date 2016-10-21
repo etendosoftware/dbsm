@@ -45,6 +45,7 @@ CheckConstraints.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
+    CheckIndexFunctionInPrescripts.class, //
     Functions.class,//
 
     AddDropConstraints.class,//
