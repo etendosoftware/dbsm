@@ -32,6 +32,8 @@ public class PreventConstraintDeletion extends DbsmTest {
   private static final String MODEL_NAME = "foreignKeys/TABLES_WITH_FK_CONSTRAINTS.xml";
   private static final String ADTABLE1_NAME = "TABLE1";
   private static final String ADTABLE2_NAME = "TABLE2";
+  private static final String ADTABLE3_NAME = "TABLE3";
+  private static final String ADTABLE4_NAME = "TABLE4";
   private static final String TABLE1_FK_NAME = "TABLE1_FK";
   private static final String TABLE2_FK_NAME = "TABLE2_FK";
   private static final String TABLE4_FK_NAME = "TABLE4_FK";
@@ -70,6 +72,7 @@ public class PreventConstraintDeletion extends DbsmTest {
   // recreated.
   @Test
   public void constraintsOfADTablesHaveToBeRecreatedWhenDeletingARecordOfTheADTable() {
+    resetDB();
     updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable1FkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
@@ -83,6 +86,7 @@ public class PreventConstraintDeletion extends DbsmTest {
   // recreated, but not other AD constraints.
   @Test
   public void constraintsOfADTablesDontHaveToBeRecreatedWhenDeletingARecordOfAnotherADTable() {
+    resetDB();
     updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable2FkOidBeforeUpdate = obtainFkData(TABLE2_FK_NAME);
@@ -96,6 +100,7 @@ public class PreventConstraintDeletion extends DbsmTest {
   // be recreated.
   @Test
   public void constraintsOfADTablesAreNotRecreatedWhenUpdatingATable() {
+    resetDB();
     updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
@@ -109,11 +114,51 @@ public class PreventConstraintDeletion extends DbsmTest {
   // have to be recreated.
   @Test
   public void constraintsOfADTablesAreRecreatedWhenInsertingARecordInATable() {
+    resetDB();
     updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
     updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
+    String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
+    assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
+  }
+
+  // When there are no changes, the AD table to AD table constraints don't have to be recreated.
+  @Test
+  public void constraintsOfADTablesAreNotRecreatedWhenThereAreNoChanges() {
+    resetDB();
+    updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
+        Arrays.asList(ADTABLE3_NAME, ADTABLE4_NAME));
+    String fkOidBeforeUpdate = obtainFkData(TABLE4_FK_NAME);
+    updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
+        Arrays.asList(ADTABLE3_NAME, ADTABLE4_NAME));
+    String fkOidAfterUpdate = obtainFkData(TABLE4_FK_NAME);
+    assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
+  }
+
+  // When there is an insertion change into an AD table, the constraints have to be recreated.
+  @Test
+  public void constraintsOfADTablesAreRecreatedWhenThereIsAnInsertion() {
+    resetDB();
+    updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
+        Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
+    String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
+    updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
+        Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
+    String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
+    assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
+  }
+
+  // When there is a deletion change into an AD table, the constraints have to be recreated.
+  @Test
+  public void constraintsOfADTablesAreRecreatedWhenThereIsADeletion() {
+    resetDB();
+    updateDatabase(MODEL_NAME, "data/Table1WithTwoRecords",
+        Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
+    String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
+    updateDatabase(MODEL_NAME, "data/Table1WithOneRecord",
+        Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
     assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
   }

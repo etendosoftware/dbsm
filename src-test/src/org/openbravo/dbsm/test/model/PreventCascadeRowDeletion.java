@@ -30,7 +30,6 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   private static final String TABLE2_NAME = "TABLE2";
   private static final String TABLE3_NAME = "TABLE3";
   private static final String TABLE1_NAME = "TABLE1";
-  private static final String TABLE4_NAME = "TABLE4";
   private static final String TABLE5_NAME = "TABLE5";
   private static final String TABLE6_NAME = "TABLE6";
 
@@ -108,5 +107,21 @@ public class PreventCascadeRowDeletion extends DbsmTest {
     assertThat(
         allSts.toString(),
         not(containsString("DELETE FROM TABLE4 t  WHERE NOT EXISTS (SELECT 1 FROM TABLE6 WHERE t.TABLE6_ID=TABLE6.TABLE6_ID) AND t.TABLE6_ID IS NOT NULL")));
+  }
+
+  // When there are no changes in one AD table which references another AD table, the foreign key
+  // mustn't be deleted .
+  @Test
+  public void adTableToAdTableHasNoChangesOnUpdateDatabase() {
+    resetDB();
+    updateDatabase(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
+        Arrays.asList(TABLE2_NAME, TABLE3_NAME));
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
+        Arrays.asList(TABLE2_NAME, TABLE3_NAME));
+    StringBuilder allSts = new StringBuilder();
+    for (String st : list) {
+      allSts.append(st);
+    }
+    assertThat(allSts.toString(), not(containsString("DELETE FROM ")));
   }
 }
