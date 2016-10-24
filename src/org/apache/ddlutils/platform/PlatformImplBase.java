@@ -2367,9 +2367,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             // FKs to recreated tables are already dropped
             continue;
           }
-          if (isTableContainedInDataset(dataset, table)
-              || recordsHaveBeenDeletedFromTable(tableReferencedByForeignKey,
-                  datasetTablesWithRemovedOrInsertedRecords)) {
+          if (recordsHaveBeenDeletedFromTable(tableReferencedByForeignKey,
+              datasetTablesWithRemovedOrInsertedRecords)) {
             getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
           }
         }
@@ -2430,7 +2429,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        if (isTableContainedInDataset(dataset, table)) {
+        if (isTableContainedInDataset(dataset, table)
+            && recordsHaveBeenDeletedFromTable(table.getName(),
+                datasetTablesWithRemovedOrInsertedRecords)) {
           getSqlBuilder().createExternalForeignKeys(model, table, true);
         } else {
           for (int j = 0; j < table.getForeignKeyCount(); j++) {

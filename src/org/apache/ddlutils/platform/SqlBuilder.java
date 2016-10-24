@@ -606,7 +606,8 @@ public abstract class SqlBuilder {
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         ForeignKey[] fksTable;
-        if (dataset == null || dataset.getTable(table.getName()) != null) {
+        if (dataset == null
+            || isDatasetTableWithRemovedRecords(table, dataset, tablesWithRemovedRecords)) {
           fksTable = table.getForeignKeys();
         } else {
           List<ForeignKey> fks = new ArrayList<ForeignKey>();
@@ -676,6 +677,12 @@ public abstract class SqlBuilder {
       System.out.println(e.getMessage());
       _log.error(e.getLocalizedMessage());
     }
+  }
+
+  private boolean isDatasetTableWithRemovedRecords(Table table, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords) {
+    return dataset.getTable(table.getName()) != null
+        && tablesWithRemovedRecords.contains(table.getName());
   }
 
   public List alterDatabaseRecreatePKs(Database currentModel, Database desiredModel,
