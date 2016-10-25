@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Vector;
 
+import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Before;
@@ -95,6 +97,18 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     boolean assertDBisCorrect = Boolean.TRUE;
     // Update database, applying the configuration script data changes also
     updateDatabase(model, DATA_DIRECTORY, adTableNames, assertDBisCorrect, configScripts);
+  }
+
+  protected void applyConfigurationScript(String model, List<String> adTableNames,
+      String configScript) {
+    resetDB();
+    Database database = updateDatabase(model, DATA_DIRECTORY, adTableNames);
+    Vector<Change> changes = readConfigScript(configScript);
+    if (changes == null) {
+      log.info("No changes retrieved from Configuration Script: " + configScript);
+    } else {
+      getPlatform().applyConfigScript(database, changes);
+    }
   }
 
   private void cleanExportDirectory() {
