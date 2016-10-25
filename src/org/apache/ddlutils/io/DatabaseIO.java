@@ -130,7 +130,7 @@ public class DatabaseIO {
   }
 
   /**
-   * Returns a new bean writer configured to writer database models.
+   * Returns a new bean writer configured to write database models.
    * 
    * @param output
    *          The target output writer
@@ -146,6 +146,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().getConfiguration()
           .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
+      writer.getBindingConfiguration().setValueSuppressionStrategy(
+          new DBSMValueSuppressionStrategy());
       writer.enablePrettyPrint();
       // always use linux style line endings
       writer.setEndOfLine("\n");
@@ -157,7 +159,7 @@ public class DatabaseIO {
   }
 
   /**
-   * Returns a new bean writer configured to writer database models.
+   * Returns a new bean writer configured to write database models.
    * 
    * @param output
    *          The target output writer
@@ -173,6 +175,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().getConfiguration()
           .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
+      writer.getBindingConfiguration().setValueSuppressionStrategy(
+          new DBSMValueSuppressionStrategy());
       writer.enablePrettyPrint();
       // always use linux style line endings
       writer.setEndOfLine("\n");

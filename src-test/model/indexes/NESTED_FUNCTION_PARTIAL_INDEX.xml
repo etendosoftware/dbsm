@@ -13,8 +13,9 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="NESTED_FUNCTION_INDEX" unique="false" whereClause="UPPER(REPLACE(COL1,&apos;a&apos;,&apos;b&apos;))=&apos;B&apos;">
+      <index name="NESTED_FUNCTION_INDEX" unique="false">
         <index-column name="COL1"/>
+        <whereClause><![CDATA[UPPER(REPLACE(COL1,'a','b'))='B']]></whereClause>
       </index>
     </table>
   </database>

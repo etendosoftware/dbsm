@@ -94,9 +94,14 @@ under the License.
     <element name="index">
       <attribute name="name" property="name"/>
       <attribute name="unique" property="unique"/>
-      <attribute name="whereClause" property="whereClause"/>
 
       <element name="index-column" property="columns" updater="addColumn"/>
+      <element name="whereClause" property="whereClause">
+        <option>
+          <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+          <value>CDATA</value>
+        </option>
+      </element>
     </element>
   </class>
 

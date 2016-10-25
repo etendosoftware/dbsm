@@ -13,9 +13,10 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="MULTIPLE_INDEX" unique="false" whereClause="COL1 IS NOT NULL AND COL2 IS NOT NULL">
+      <index name="MULTIPLE_INDEX" unique="false">
         <index-column name="COL1"/>
         <index-column name="COL2"/>
+        <whereClause><![CDATA[COL1 IS NOT NULL AND COL2 IS NOT NULL]]></whereClause>
       </index>
     </table>
   </database>

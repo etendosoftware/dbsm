@@ -13,8 +13,9 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="BASIC_INDEX" unique="false" whereClause="COL1=&apos;Y&apos;">
+      <index name="BASIC_INDEX" unique="false">
         <index-column name="COL1"/>
+        <whereClause><![CDATA[COL1='Y']]></whereClause>
       </index>
     </table>
   </database>
