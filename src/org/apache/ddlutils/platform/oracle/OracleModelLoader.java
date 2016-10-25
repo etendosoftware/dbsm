@@ -321,7 +321,6 @@ public class OracleModelLoader extends ModelLoaderBase {
     inx.setUnique(translateUniqueness(rs.getString(2)));
     // The index expression will be defined only for function based indexes
     final String indexExpression = rs.getString(3);
-    // The table owner is the name of the database
     final String databaseOwner = rs.getString(4);
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
