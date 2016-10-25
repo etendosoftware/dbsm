@@ -21,19 +21,24 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
 /**
- * Test case to ensures if a new function is defined in the prescript, an export database is done
- * properly. See issue #33659
+ * Test case to ensure if a new function defined in a prescript and used in a function based index
+ * can be exported properly without changes.
+ *
+ * In case of Oracle, the export database was modifying the function index definition by adding the
+ * database owner at the beginning. This change should not be exported in order to avoid a db
+ * consistency error. See issue #33659
  * 
  * @author inigo.sanchez
  *
@@ -49,25 +54,10 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
-  // Checks that it is possible load the model without standarizing the PLSQL code.
-  // This is done by checking that in Oracle the exported XML is the same as the imported XML (dbsm
-  // exports XML in the Oracle's standarized format) and that in PostgreSQL the exported content is
-  // different, as it has not been standarized
-  @Test
-  public void createNewIndexFunctionInPrescript() throws IOException {
+  @Before
+  public void resetDatabaseAndCreateFunction() {
     resetDB();
-    createFunction();
 
-    ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeIndexFunction.xml"));
-    setExcludeFilter(excludeFilter);
-
-    updateDatabase("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
-    assertExport("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
-    dropIndexFunction();
-  }
-
-  private void createFunction() {
     String sql = null;
     if (getRdbms() == Rdbms.PG) {
       sql = createFunctionPostgresql();
@@ -79,10 +69,42 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
       cn = getDataSource().getConnection();
       PreparedStatement st = null;
       st = cn.prepareStatement(sql);
-      ResultSet isExecuted = st.executeQuery();
-      assertThat("Index Function is not created", isExecuted.isBeforeFirst(), is(true));
+      st.executeQuery();
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("Testing database function could not be created", e);
+    } finally {
+      if (cn != null) {
+        try {
+          cn.close();
+        } catch (SQLException e) {
+        }
+      }
+    }
+  }
+
+  @Test
+  public void isFunctionIndexExportedProperly() throws IOException {
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeIndexFunction.xml"));
+    setExcludeFilter(excludeFilter);
+
+    updateDatabase("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
+    assertExport("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
+  }
+
+  @After
+  public void dropFunction() {
+    StringBuilder query = new StringBuilder();
+    query.append("DROP function OBEQUALS");
+    String sql = query.toString();
+    Connection cn = null;
+    try {
+      cn = getDataSource().getConnection();
+      PreparedStatement st = null;
+      st = cn.prepareStatement(sql);
+      st.executeQuery(sql);
+    } catch (SQLException e) {
+      log.error("Testing database function could not  be dropped", e);
     } finally {
       if (cn != null) {
         try {
@@ -124,29 +146,6 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
     query.append("END IF;");
     query.append("end OBEQUALS;");
     return query.toString();
-  }
-
-  private void dropIndexFunction() {
-    StringBuilder query = new StringBuilder();
-    query.append("DROP function OBEQUALS");
-    String sql = query.toString();
-    Connection cn = null;
-    try {
-      cn = getDataSource().getConnection();
-      PreparedStatement st = null;
-      st = cn.prepareStatement(sql);
-      ResultSet isRemoved = st.executeQuery(sql);
-      assertThat("Function is not removed", isRemoved.isBeforeFirst(), is(true));
-    } catch (SQLException e) {
-      e.printStackTrace();
-    } finally {
-      if (cn != null) {
-        try {
-          cn.close();
-        } catch (SQLException e) {
-        }
-      }
-    }
   }
 
   private void assertExport(String modelFileToCompare) throws IOException {

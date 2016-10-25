@@ -322,7 +322,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     // The index expression will be defined only for function based indexes
     final String indexExpression = rs.getString(3);
     // The table owner is the name of the database
-    final String databaseName = rs.getString(4);
+    final String databaseOwner = rs.getString(4);
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
@@ -332,7 +332,7 @@ public class OracleModelLoader extends ModelLoaderBase {
             && columnName.startsWith(VIRTUAL_COLUMN_PREFIX)) {
           // The name of function based index columns needs to be translated from the name of the
           // virtual column created by Oracle to the name of the column in its table
-          inxcol = getFunctionBasedIndexColumn(indexExpression, databaseName);
+          inxcol = getFunctionBasedIndexColumn(indexExpression, databaseOwner);
         } else {
           inxcol = new IndexColumn();
           inxcol.setName(columnName);
@@ -349,27 +349,24 @@ public class OracleModelLoader extends ModelLoaderBase {
 
   // Given an index expression, returns the name of the referenced column
   // The index expression will be like this: UPPER("COL1")
-  private IndexColumn getFunctionBasedIndexColumn(String indexExpression, String databaseName) {
+  private IndexColumn getFunctionBasedIndexColumn(String indexExpression, String databaseOwner) {
     IndexColumn indexColumn = new IndexColumn();
     indexColumn.setName("functionBasedColumn");
-    indexColumn.setFunctionExpression(removeDatabaseName(removeDoubleQuotes(indexExpression),
-        databaseName));
+    indexColumn.setFunctionExpression(removeDatabaseOwnerFromIndexExpression(
+        removeDoubleQuotes(indexExpression), databaseOwner));
     return indexColumn;
   }
 
-  /**
-   * Remove the database name on indexExpression
-   *
-   * @param indexExpression
-   * @param databaseName
-   * @return
-   */
-  private String removeDatabaseName(String indexExpression, String databaseName) {
-    String expression = indexExpression;
-    if (indexExpression.startsWith(databaseName)) {
-      expression = expression.substring(databaseName.length() + 1);
+  private String removeDatabaseOwnerFromIndexExpression(String indexExpression, String databaseOwner) {
+    if (databaseOwner == null) {
+      return indexExpression;
     }
-    return expression;
+    String dbPrefix = databaseOwner + ".";
+    if (indexExpression.startsWith(dbPrefix)) {
+      return indexExpression.substring(dbPrefix.length());
+    } else {
+      return indexExpression;
+    }
   }
 
   /**
