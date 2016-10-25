@@ -22,6 +22,7 @@
     <trigger name="TEST_TRIGGER" table="TEST" fires="after" insert="true" update="true" delete="false" foreach="row">
       <body><![CDATA[
 BEGIN
+RETURN;
 END TEST_TRIGGER
 ]]></body>
     </trigger>     
