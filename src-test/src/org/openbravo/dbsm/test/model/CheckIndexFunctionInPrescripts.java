@@ -12,9 +12,8 @@
 
 package org.openbravo.dbsm.test.model;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,14 +22,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.openbravo.dbsm.test.base.DbsmTest;
 
 /**
  * Test case to ensure if a new function defined in a prescript and used in a function based index
@@ -45,13 +42,12 @@ import org.openbravo.dbsm.test.base.DbsmTest;
  */
 
 @RunWith(Parameterized.class)
-public class CheckIndexFunctionInPrescripts extends DbsmTest {
-
-  private static final String EXPORT_DIR = "/tmp/export-test";
+public class CheckIndexFunctionInPrescripts extends IndexBaseTest {
 
   public CheckIndexFunctionInPrescripts(String rdbms, String driver, String url, String sid,
-      String user, String password, String name) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name);
+      String user, String password, String name, TestType testType) throws FileNotFoundException,
+      IOException {
+    super(rdbms, driver, url, sid, user, password, name, testType);
   }
 
   @Before
@@ -84,12 +80,13 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
 
   @Test
   public void isFunctionIndexExportedProperly() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
     ExcludeFilter excludeFilter = new ExcludeFilter();
     excludeFilter.fillFromFile(new File("model/excludeFilter/excludeIndexFunction.xml"));
     setExcludeFilter(excludeFilter);
 
     updateDatabase("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
-    assertExport("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
+    assertExport("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml", "tables/TEST.xml");
   }
 
   @After
@@ -151,21 +148,5 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
     query.append("END IF;");
     query.append("end OBEQUALS;");
     return query.toString();
-  }
-
-  private void assertExport(String modelFileToCompare) throws IOException {
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat("exported table exists", exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
-    assertThat("exported contents", exportedContents, equalTo(originalContents));
   }
 }

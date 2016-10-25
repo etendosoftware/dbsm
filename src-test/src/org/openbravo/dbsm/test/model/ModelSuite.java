@@ -40,13 +40,13 @@ CheckConstraints.class, //
     DefaultValuesTest.class, //
     CreateDefault.class, //
     FunctionBasedIndexes.class, //
+    CheckIndexFunctionInPrescripts.class, //
     OperatorClassIndexes.class, //
     PartialIndexes.class, //
     CheckExcludeFilter.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
-    CheckIndexFunctionInPrescripts.class, //
     Functions.class,//
 
     AddDropConstraints.class,//
