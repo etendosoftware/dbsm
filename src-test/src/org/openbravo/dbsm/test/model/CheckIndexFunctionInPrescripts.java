@@ -20,8 +20,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.ddlutils.platform.ExcludeFilter;
@@ -67,9 +67,9 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
     Connection cn = null;
     try {
       cn = getDataSource().getConnection();
-      PreparedStatement st = null;
-      st = cn.prepareStatement(sql);
-      st.executeQuery();
+      Statement st = null;
+      st = cn.createStatement();
+      st.execute(sql);
     } catch (SQLException e) {
       log.error("Testing database function could not be created", e);
     } finally {
@@ -95,14 +95,19 @@ public class CheckIndexFunctionInPrescripts extends DbsmTest {
   @After
   public void dropFunction() {
     StringBuilder query = new StringBuilder();
-    query.append("DROP function OBEQUALS");
+    if (getRdbms() == Rdbms.PG) {
+      query.append("DROP function OBEQUALS(numeric) CASCADE");
+    } else {
+      query.append("DROP function OBEQUALS");
+    }
+
     String sql = query.toString();
     Connection cn = null;
     try {
       cn = getDataSource().getConnection();
-      PreparedStatement st = null;
-      st = cn.prepareStatement(sql);
-      st.executeQuery(sql);
+      Statement st = null;
+      st = cn.createStatement();
+      st.execute(sql);
     } catch (SQLException e) {
       log.error("Testing database function could not  be dropped", e);
     } finally {
