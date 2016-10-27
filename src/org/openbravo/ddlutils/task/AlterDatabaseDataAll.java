@@ -184,6 +184,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       final Connection connection = platform.borrowConnection();
+      // Now we apply the configuration scripts
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
+          true);
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -223,10 +226,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       } else {
         getLog().info("Skipping modulescripts...");
       }
-
-      // Now we apply the configuration scripts
-      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-          true);
       getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
