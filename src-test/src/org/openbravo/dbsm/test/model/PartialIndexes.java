@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -202,6 +203,24 @@ public class PartialIndexes extends IndexBaseTest {
     assertThat(getCommentOfColumnInOracle("TEST", "COL1"),
         equalTo("MULTIPLE_INDEX.whereClause=COL1 IS NOT NULL AND COL2 IS NOT NULL$"));
     assertNull(getCommentOfColumnInOracle("TEST", "COL2"));
+  }
+
+  @Test
+  // Tests that the comments associates to partial indexes in Oracle are not overriden when they are
+  // created for the same column
+  public void commentsShouldNotBeOverriden() {
+    assumeThat("not executing in Postgres", getRdbms(), is(Rdbms.ORA));
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/TWO_PARTIAL_INDEXES.xml");
+
+    // In Oracle, the partial index definition should be stored in the comment of the first column
+    String commentsCol1 = getCommentOfColumnInOracle("TEST", "COL1");
+    String commentsCol2 = getCommentOfColumnInOracle("TEST", "COL2");
+    int numberOfComments[] = { commentsCol1 != null ? commentsCol1.split("\\$").length : 0,
+        commentsCol2 != null ? commentsCol2.split("\\$").length : 0 };
+    int expectedNumberOfComments[] = { 2, 0 };
+    Assert.assertArrayEquals(expectedNumberOfComments, numberOfComments);
   }
 
   @Test

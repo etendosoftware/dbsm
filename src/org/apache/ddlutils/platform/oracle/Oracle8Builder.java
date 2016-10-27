@@ -712,10 +712,17 @@ public class Oracle8Builder extends SqlBuilder {
   private void includeWhereClauseInColumnComment(Table table, List<Index> partialIndexes)
       throws IOException {
     // If the column already has comments, the new comment will be appended
+    Map<String, String> columnComments = new HashMap<String, String>();
     for (Index index : partialIndexes) {
       IndexColumn firstIndexColumn = index.getColumn(0);
-      String currentComments = getCommentOfColumn(table.getName(), firstIndexColumn.getName());
       String columnName = table.getName() + "." + firstIndexColumn.getName();
+      String currentComments;
+      if (columnComments.containsKey(columnName)) {
+        currentComments = columnComments.get(columnName);
+      } else {
+        currentComments = transformInOracleComment(getCommentOfColumn(table.getName(),
+            firstIndexColumn.getName()));
+      }
       StringBuilder columnComment;
       if (_onCreateDefaultColumns != null && _onCreateDefaultColumns.containsKey(columnName)) {
         // prevent losing on create default comment when it has been newly added
@@ -724,11 +731,15 @@ public class Oracle8Builder extends SqlBuilder {
         columnComment = new StringBuilder();
       }
       if (currentComments != null) {
-        columnComment.append(transformInOracleComment(currentComments));
+        columnComment.append(currentComments);
       }
       columnComment.append(index.getName() + ".whereClause="
           + transformInOracleComment(index.getWhereClause()) + "$");
-      print("COMMENT ON COLUMN " + columnName + " IS '" + columnComment.toString() + "'");
+      columnComments.put(columnName, columnComment.toString());
+    }
+    // Set the comments for every first column of the new partial indexes
+    for (String column : columnComments.keySet()) {
+      print("COMMENT ON COLUMN " + column + " IS '" + columnComments.get(column) + "'");
       printEndOfStatement();
     }
   }
@@ -851,9 +862,16 @@ public class Oracle8Builder extends SqlBuilder {
   private void removeWhereClauseInColumnComment(String tableName, List<Index> partialIndexes)
       throws IOException {
     if (!partialIndexes.isEmpty()) {
+      Map<String, String> columnComments = new HashMap<String, String>();
       for (Index index : partialIndexes) {
-        String columnName = index.getColumn(0).getName();
-        String currentComments = getCommentOfColumn(tableName, columnName);
+        String firstColumnName = index.getColumn(0).getName();
+        String columnName = tableName + "." + firstColumnName;
+        String currentComments;
+        if (columnComments.containsKey(columnName)) {
+          currentComments = columnComments.get(columnName);
+        } else {
+          currentComments = transformInOracleComment(getCommentOfColumn(tableName, firstColumnName));
+        }
         List<String> commentLines = new ArrayList<String>(Arrays.asList(currentComments
             .split("\\$")));
         for (String commentLine : commentLines) {
@@ -863,8 +881,12 @@ public class Oracle8Builder extends SqlBuilder {
           }
         }
         // Build the comments again, after having removed the unneeded lines
-        String columnComment = transformInOracleComment(StringUtils.join(commentLines.toArray()));
-        print("COMMENT ON COLUMN " + tableName + "." + columnName + " IS '" + columnComment + "'");
+        String columnComment = StringUtils.join(commentLines.toArray());
+        columnComments.put(columnName, columnComment);
+      }
+      // Build the comments again, after having removed the unneeded lines
+      for (String column : columnComments.keySet()) {
+        print("COMMENT ON COLUMN " + column + " IS '" + columnComments.get(column) + "'");
         printEndOfStatement();
       }
     }
