@@ -330,4 +330,13 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml");
     assertExport("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
   }
+
+  @Test
+  // Tests that it is possible to define several partial indexes for the same table
+  public void exportSeveralPartialIndex() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/SEVERAL_PARTIAL_INDEXES.xml");
+    assertExport("indexes/SEVERAL_PARTIAL_INDEXES.xml", "tables/TEST.xml");
+  }
 }
