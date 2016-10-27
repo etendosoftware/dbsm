@@ -1121,7 +1121,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       int closingQuoteIndex = -1;
       while (openingQuoteIndex != -1) {
         String unquotedExpression = transformedIndexExpression.substring(closingQuoteIndex + 1,
-            openingQuoteIndex);
+            openingQuoteIndex).toUpperCase();
         expressionBuilder.append(removeExtraWhiteSpaces(unquotedExpression));
         closingQuoteIndex = indexExpression.indexOf("'", openingQuoteIndex + 1);
         expressionBuilder.append(transformedIndexExpression.substring(openingQuoteIndex,
@@ -1137,10 +1137,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   private String removeExtraWhiteSpaces(String expression) {
     // we replace all the white spaces present before and/or after database operators (=, >, etc.)
 
-    String expressionUpperCased = expression.toUpperCase();
     String operatorBetweenSpacesRegExp = "(\\s?)([^A-Z\\s]+)(\\s?)";
     int replacementGroup = 2;
-    return replaceRegularExpressionMatchings(expressionUpperCased, operatorBetweenSpacesRegExp,
+    return replaceRegularExpressionMatchings(expression, operatorBetweenSpacesRegExp,
         replacementGroup);
   }
 
