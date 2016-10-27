@@ -233,6 +233,25 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests if partial indexes which apply to multiple columns are properly exported
+  public void exportMultiplePartialIndex() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml");
+    assertExport("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that partial indexes expressions which apply to multiple columns preserve the white
+  // spaces between the DB operators
+  public void exportMultiplePartialIndex2() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX2.xml");
+    assertExport("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX2.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that it is possible to define partial indexes which make use of functions
   public void exportFunctionPartialIndex() throws IOException {
     resetDB();

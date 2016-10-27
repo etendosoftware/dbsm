@@ -1087,11 +1087,18 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     // casts will start with :: and end either with ')', ',' or ' '
     // we replace all characters between '::' and one of these ending characters
 
-    Pattern pattern = Pattern.compile("(:{2}[a-z]+)([ \\),])?");
-    Matcher matcher = pattern.matcher(indexExpression);
+    String castExpressionRegExp = "(:{2}[a-z]+)([ \\),])?";
+    int replacementGroup = 2;
+    return replaceRegularExpressionMatchings(indexExpression, castExpressionRegExp,
+        replacementGroup);
+  }
+
+  private String replaceRegularExpressionMatchings(String string, String regExp, int groupIndex) {
+    Pattern pattern = Pattern.compile(regExp);
+    Matcher matcher = pattern.matcher(string);
     StringBuffer buffer = new StringBuffer();
     while (matcher.find()) {
-      String replacement = matcher.group(2) != null ? matcher.group(2) : "";
+      String replacement = matcher.group(groupIndex) != null ? matcher.group(groupIndex) : "";
       matcher.appendReplacement(buffer, replacement);
     }
     matcher.appendTail(buffer);
@@ -1113,9 +1120,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       StringBuilder expressionBuilder = new StringBuilder();
       int closingQuoteIndex = -1;
       while (openingQuoteIndex != -1) {
-        expressionBuilder.append(transformedIndexExpression
-            .substring(closingQuoteIndex + 1, openingQuoteIndex).toUpperCase()
-            .replaceAll("\\s", ""));
+        String unquotedExpression = transformedIndexExpression.substring(closingQuoteIndex + 1,
+            openingQuoteIndex);
+        expressionBuilder.append(removeExtraWhiteSpaces(unquotedExpression));
         closingQuoteIndex = indexExpression.indexOf("'", openingQuoteIndex + 1);
         expressionBuilder.append(transformedIndexExpression.substring(openingQuoteIndex,
             closingQuoteIndex + 1));
@@ -1125,6 +1132,16 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       transformedIndexExpression = expressionBuilder.toString();
     }
     return transformedIndexExpression;
+  }
+
+  private String removeExtraWhiteSpaces(String expression) {
+    // we replace all the white spaces present before and/or after database operators (=, >, etc.)
+
+    String expressionUpperCased = expression.toUpperCase();
+    String operatorBetweenSpacesRegExp = "(\\s?)([^A-Z\\s]+)(\\s?)";
+    int replacementGroup = 2;
+    return replaceRegularExpressionMatchings(expressionUpperCased, operatorBetweenSpacesRegExp,
+        replacementGroup);
   }
 
   @Override
