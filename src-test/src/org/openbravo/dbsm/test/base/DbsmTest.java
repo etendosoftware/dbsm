@@ -353,6 +353,10 @@ public class DbsmTest {
         DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
       }
       connection = platform.borrowConnection();
+      // Now we apply the data part of the configuration scripts
+      if (configScripts != null) {
+        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
+      }
       log.info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -395,10 +399,6 @@ public class DbsmTest {
       // hd.setBasedir(new File(basedir + "/../"));
       // hd.execute();
       //
-      // Now we apply the data part of the configuration scripts
-      if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
-      }
 
       log.info("Updating Application Dictionary data...");
       platform.alterData(connection, newDB, dataComparator.getChanges());
