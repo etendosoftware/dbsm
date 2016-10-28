@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -106,7 +107,7 @@ public class FunctionBasedIndexes extends DbsmTest {
   }
 
   private void createDatabaseIfNeeded(boolean forceCreation) {
-    // Only start from the base model if the testType if onUpdate or if creation is forced
+    // Only start from the base model if the testType is onUpdate or if creation is forced
     if (forceCreation || testType == TestType.onUpdate) {
       updateDatabase("indexes/BASE_MODEL.xml");
     }
@@ -299,7 +300,8 @@ public class FunctionBasedIndexes extends DbsmTest {
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
         Array array = rs.getArray(1);
-        return array.toString();
+        String[] actualArray = (String[]) array.getArray();
+        return "{" + StringUtils.join(actualArray, ",") + "}";
       }
     } catch (SQLException e) {
       e.printStackTrace();

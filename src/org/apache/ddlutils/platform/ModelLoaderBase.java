@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -787,15 +787,15 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected String translateColumnDefault(String value, int type) {
-
+    String translatedValue;
     if (value == null) {
       return null;
     } else {
-      value = value.trim();
-      if (value.equalsIgnoreCase("NULL")) {
+      translatedValue = value.trim();
+      if (translatedValue.equalsIgnoreCase("NULL")) {
         return null;
       } else {
-        return translateDefault(value, type);
+        return translateDefault(translatedValue, type);
       }
     }
   }

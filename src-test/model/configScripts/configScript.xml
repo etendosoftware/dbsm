@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+  <vector>
+    <columnDataChange tablename="TEST" columnname="COL1" pkRow="1">
+      <oldValue/>
+      <newValue><![CDATA[active='Y']]></newValue>
+    </columnDataChange>
+      <columnDataChange tablename="TEST" columnname="COL2" pkRow="1">
+      <oldValue/>
+      <newValue><![CDATA[This is the first part 
+This is the second part]]></newValue>
+    </columnDataChange>
+  </vector>

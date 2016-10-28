@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -29,6 +30,7 @@ import java.util.List;
 
 import org.apache.ddlutils.model.Database;
 import org.codehaus.jettison.json.JSONException;
+import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
@@ -93,25 +95,25 @@ public class CreateDefault extends DbsmTest {
   @Test
   public void nonMandatoryDefault_NM1() throws SQLException {
     assumeThat(dataMode, not(anyOf(is(DataMode.ADAfterUpdate), is(DataMode.ADAddInUpdate))));
-    assertDefaults("NM1", "A");
+    assertDefaults("NM1", equalTo("A"));
   }
 
   @Test
   public void nonMandatoryOnCreateDefault_NM2() throws SQLException {
     assumeThat(dataMode, not(DataMode.ADAfterUpdate));
-    assertDefaults("NM2", "A");
+    assertDefaults("NM2", equalTo("A"));
   }
 
   @Test
   public void nonMandatorySameDefaultAndOnCreateDefault_NM3() throws SQLException {
     assumeThat(dataMode, not(DataMode.ADAfterUpdate));
-    assertDefaults("NM3", "A");
+    assertDefaults("NM3", equalTo("A"));
   }
 
   @Test
   public void nonMandatoryDifferentDefaultAndOnCreateDefault_NM4() throws SQLException {
     assumeThat(dataMode, not(DataMode.ADAfterUpdate));
-    assertDefaults("NM4", "B");
+    assertDefaults("NM4", equalTo("B"));
   }
 
   // ---- Mandatory columns ----
@@ -120,30 +122,30 @@ public class CreateDefault extends DbsmTest {
   public void mandatoryDefault_M1() throws SQLException {
     assumeThat(dataMode, not(anyOf(is(DataMode.ADAfterUpdate), is(DataMode.ADAddInUpdate))));
 
-    assertDefaults("M1", "A");
+    assertDefaults("M1", equalTo("A"));
   }
 
   @Test
   public void mandatoryOnCreateDefault_M2() throws SQLException {
-    assertDefaults("M2", "A");
+    assertDefaults("M2", equalTo("A"));
   }
 
   @Test
   public void mandatorySameDefaultAndOnCreateDefault_M3() throws SQLException {
-    assertDefaults("M3", "A");
+    assertDefaults("M3", equalTo("A"));
   }
 
   @Test
   public void mandatoryDifferentDefaultAndOnCreateDefault_M4() throws SQLException {
-    assertDefaults("M4", "B");
+    assertDefaults("M4", equalTo("B"));
   }
 
   @Test
   public void mandatoryNonLiteralOnCreateDefault_M5() throws SQLException {
-    assertDefaults("M5", "1970-01-01 00:00:00");
+    assertDefaults("M5", startsWith("1970-01-01 00:00:00"));
   }
 
-  private void assertDefaults(String columnName, String value) throws SQLException {
+  private void assertDefaults(String columnName, Matcher<String> matcher) throws SQLException {
     resetDB();
 
     String originalModelName = mode == AdditionMode.append ? "createDefault/BASE_MODEL.xml"
@@ -186,7 +188,7 @@ public class CreateDefault extends DbsmTest {
     }
 
     assertThat("Value for column " + columnName, getActualValue(TEST_TABLE_NAME, columnName),
-        equalTo(value));
+        matcher);
 
     if (dataMode == DataMode.instance) {
       pk = generateRow(newModel, TEST_TABLE_NAME);

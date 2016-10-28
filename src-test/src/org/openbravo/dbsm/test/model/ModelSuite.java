@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.openbravo.dbsm.test.model.data.CreateDefault;
+import org.openbravo.dbsm.test.model.data.DefaultValuesTest;
 import org.openbravo.dbsm.test.model.data.OtherDefaults;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 import org.openbravo.dbsm.test.model.recreation.AddDropConstraints;
@@ -36,6 +37,7 @@ CheckConstraints.class, //
     Sequences.class, //
     NumericScaleChanges.class, //
     AddDropColumn.class, //
+    DefaultValuesTest.class, //
     CreateDefault.class, //
     FunctionBasedIndexes.class, //
     OperatorClassIndexes.class, //
@@ -43,6 +45,7 @@ CheckConstraints.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
+    CheckIndexFunctionInPrescripts.class, //
     Functions.class,//
 
     AddDropConstraints.class,//

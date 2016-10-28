@@ -896,17 +896,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
       return;
     }
 
-    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " ALTER COLUMN "
-        + col.getName());
-    String dafaultValue = getDefaultValue(col);
-
-    if (dafaultValue != null) {
-      print(" SET DEFAULT " + dafaultValue);
-    } else {
-      print(" DROP DEFAULT");
-    }
-
-    printEndOfStatement();
+    printAlterColumnDefaultStatement(deferredDefault.getChangedTable(), col);
   }
 
   @Override
@@ -914,10 +904,19 @@ public class PostgreSqlBuilder extends SqlBuilder {
       ColumnDefaultValueChange change) throws IOException {
 
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
-    print("ALTER TABLE " + change.getChangedTable().getName() + " ALTER COLUMN ");
-    printIdentifier(getColumnName(change.getChangedColumn()));
-    print(" SET DEFAULT ");
-    print(getDefaultValue(change.getChangedColumn()));
+
+    printAlterColumnDefaultStatement(change.getChangedTable(), change.getChangedColumn());
+  }
+
+  private void printAlterColumnDefaultStatement(Table table, Column column) throws IOException {
+    String defaultValue = getDefaultValue(column);
+    print("ALTER TABLE " + table.getName() + " ALTER COLUMN ");
+    printIdentifier(getColumnName(column));
+    if (defaultValue != null) {
+      print(" SET DEFAULT " + defaultValue);
+    } else {
+      print(" DROP DEFAULT");
+    }
     printEndOfStatement();
   }
 

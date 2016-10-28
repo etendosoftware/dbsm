@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -101,14 +101,14 @@ public class OracleModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONS_COLUMNS C2 WHERE C.CONSTRAINT_NAME = ? and C2.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
 
     _stmt_listindexes = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION, U.TABLE_OWNER FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
     _stmt_listindexes_prefix = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION, U.TABLE_OWNER FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(U.INDEX_NAME)||UPPER(U.TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "'))) ORDER BY U.INDEX_NAME");
     _stmt_listindexes_noprefix = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION, U.TABLE_OWNER FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
     _stmt_indexcolumns = _connection
         .prepareStatement("SELECT COLUMN_NAME FROM USER_IND_COLUMNS WHERE INDEX_NAME = ? ORDER BY COLUMN_POSITION");
 
@@ -321,6 +321,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     inx.setUnique(translateUniqueness(rs.getString(2)));
     // The index expression will be defined only for function based indexes
     final String indexExpression = rs.getString(3);
+    final String databaseOwner = rs.getString(4);
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
@@ -330,7 +331,7 @@ public class OracleModelLoader extends ModelLoaderBase {
             && columnName.startsWith(VIRTUAL_COLUMN_PREFIX)) {
           // The name of function based index columns needs to be translated from the name of the
           // virtual column created by Oracle to the name of the column in its table
-          inxcol = getFunctionBasedIndexColumn(indexExpression);
+          inxcol = getFunctionBasedIndexColumn(indexExpression, databaseOwner);
         } else {
           inxcol = new IndexColumn();
           inxcol.setName(columnName);
@@ -347,11 +348,24 @@ public class OracleModelLoader extends ModelLoaderBase {
 
   // Given an index expression, returns the name of the referenced column
   // The index expression will be like this: UPPER("COL1")
-  private IndexColumn getFunctionBasedIndexColumn(String indexExpression) {
+  private IndexColumn getFunctionBasedIndexColumn(String indexExpression, String databaseOwner) {
     IndexColumn indexColumn = new IndexColumn();
     indexColumn.setName("functionBasedColumn");
-    indexColumn.setFunctionExpression(removeDoubleQuotes(indexExpression));
+    indexColumn.setFunctionExpression(removeDatabaseOwnerFromIndexExpression(
+        removeDoubleQuotes(indexExpression), databaseOwner));
     return indexColumn;
+  }
+
+  private String removeDatabaseOwnerFromIndexExpression(String indexExpression, String databaseOwner) {
+    if (databaseOwner == null) {
+      return indexExpression;
+    }
+    String dbPrefix = databaseOwner + ".";
+    if (indexExpression.startsWith(dbPrefix)) {
+      return indexExpression.substring(dbPrefix.length());
+    } else {
+      return indexExpression;
+    }
   }
 
   /**

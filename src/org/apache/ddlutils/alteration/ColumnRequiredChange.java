@@ -119,7 +119,8 @@ public class ColumnRequiredChange extends TableChangeImplBase implements ColumnC
 
   @Override
   public String toString() {
-    return "ColumnRequiredChange. Column: " + _column.getName();
+    return "ColumnRequiredChange. Column: " + getTableName() + "." + getColumnName()
+        + " - required: " + getRequired();
   }
 
   public void applyInReverse(Database database, boolean caseSensitive) {

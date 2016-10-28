@@ -62,6 +62,7 @@ import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
@@ -2909,16 +2910,44 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void applyConfigScript(Database database, Vector<Change> changes) {
-    StringWriter buffer = new StringWriter();
+    Vector<Change> columnDataChanges = new Vector<Change>();
+    Vector<Change> modelChanges = new Vector<Change>();
+    for (Change change : changes) {
+      if (change instanceof ColumnDataChange) {
+        columnDataChanges.add(change);
+      } else {
+        modelChanges.add(change);
+      }
+    }
+    applyConfigScriptModelChanges(database, modelChanges);
+    applyConfigScriptColumnDataChanges(database, columnDataChanges);
+  }
 
+  private void applyConfigScriptModelChanges(Database database, Vector<Change> changes) {
+    StringWriter buffer = new StringWriter();
     getSqlBuilder().setWriter(buffer);
     try {
-      getSqlBuilder().getConfigScript(database, changes);
+      for (Change change : changes) {
+        if (change instanceof ColumnSizeChange) {
+          getSqlBuilder().printColumnSizeChange(database, (ColumnSizeChange) change);
+        }
+      }
       Connection connection = borrowConnection();
       evaluateBatch(connection, buffer.toString(), true);
       connection.close();
     } catch (Exception e) {
-      e.printStackTrace();
+      _log.error("Error applying Configuration Script Column Data changes", e);
+    }
+  }
+
+  private void applyConfigScriptColumnDataChanges(Database database,
+      Vector<Change> columnDataChanges) {
+    try {
+      Connection connection = borrowConnection();
+      alterData(connection, database, columnDataChanges);
+      connection.close();
+    } catch (Exception e) {
+      _log.error("Error applying Configuration Script Column Data changes", e);
     }
   }
 
