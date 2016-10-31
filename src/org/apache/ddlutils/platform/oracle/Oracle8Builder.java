@@ -716,32 +716,40 @@ public class Oracle8Builder extends SqlBuilder {
     for (Index index : partialIndexes) {
       IndexColumn firstIndexColumn = index.getColumn(0);
       String columnName = table.getName() + "." + firstIndexColumn.getName();
-      String currentComments;
+      String currentColumnComment;
       if (columnComments.containsKey(columnName)) {
-        currentComments = columnComments.get(columnName);
+        currentColumnComment = columnComments.get(columnName);
       } else {
-        currentComments = transformInOracleComment(getCommentOfColumn(table.getName(),
+        String commentFromDatabase = transformInOracleComment(getCommentOfColumn(table.getName(),
             firstIndexColumn.getName()));
+        currentColumnComment = commentFromDatabase != null ? commentFromDatabase : "";
       }
-      StringBuilder columnComment;
-      if (_onCreateDefaultColumns != null && _onCreateDefaultColumns.containsKey(columnName)) {
+      StringBuilder updatedColumnComment = new StringBuilder();
+      String onCreateDefaultComment = getOnCreateDefaultComment(columnName);
+      if (onCreateDefaultComment != null && !columnComments.containsKey(columnName)
+          && !currentColumnComment.contains(onCreateDefaultComment)) {
         // prevent losing on create default comment when it has been newly added
-        columnComment = new StringBuilder(_onCreateDefaultColumns.get(columnName));
-      } else {
-        columnComment = new StringBuilder();
+        // it is also avoided to duplicate these column comments by checking 'columnComments' map
+        // and the current column comment in database
+        updatedColumnComment.append(onCreateDefaultComment);
       }
-      if (currentComments != null) {
-        columnComment.append(currentComments);
-      }
-      columnComment.append(index.getName() + ".whereClause="
+      updatedColumnComment.append(currentColumnComment);
+      updatedColumnComment.append(index.getName() + ".whereClause="
           + transformInOracleComment(index.getWhereClause()) + "$");
-      columnComments.put(columnName, columnComment.toString());
+      columnComments.put(columnName, updatedColumnComment.toString());
     }
     // Set the comments for every first column of the new partial indexes
     for (String column : columnComments.keySet()) {
       print("COMMENT ON COLUMN " + column + " IS '" + columnComments.get(column) + "'");
       printEndOfStatement();
     }
+  }
+
+  private String getOnCreateDefaultComment(String columnName) {
+    if (_onCreateDefaultColumns != null) {
+      return _onCreateDefaultColumns.get(columnName);
+    }
+    return null;
   }
 
   private String transformInOracleComment(String comment) {

@@ -310,6 +310,16 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that it is possible to define several partial indexes and on create default
+  // statements on different columns within the same update
+  public void exportPartialIndexesAndOnCreateDefault() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
+    assertExport("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that it is possible to add a partial index on a column which has an on create default
   // statement
   public void exportAddPartialIndexOnColumnWithOnCreateDefault() throws IOException {
