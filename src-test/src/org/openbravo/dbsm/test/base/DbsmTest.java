@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -368,9 +367,7 @@ public class DbsmTest {
       }
       Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
       Set<String> adTablesWithRemovedRecords = new HashSet<String>();
-      Iterator<Change> tableChanges = dataComparator.getChanges().iterator();
-      while (tableChanges.hasNext()) {
-        Change dataChange = tableChanges.next();
+      for (Change dataChange : dataComparator.getChanges()) {
         if (dataChange instanceof RemoveRowChange) {
           Table table = ((RemoveRowChange) dataChange).getTable();
           String tableName = table.getName();

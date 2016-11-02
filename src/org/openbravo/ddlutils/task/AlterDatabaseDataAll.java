@@ -18,7 +18,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -193,9 +192,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
       Set<String> adTablesWithRemovedRecords = new HashSet<String>();
       dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
-      Iterator<Change> tableChanges = dataComparator.getChanges().iterator();
-      while (tableChanges.hasNext()) {
-        Change dataChange = tableChanges.next();
+      for (Change dataChange : dataComparator.getChanges()) {
         if (dataChange instanceof RemoveRowChange) {
           Table table = ((RemoveRowChange) dataChange).getTable();
           String tableName = table.getName();
