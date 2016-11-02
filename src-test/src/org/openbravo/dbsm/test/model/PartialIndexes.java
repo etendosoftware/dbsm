@@ -349,4 +349,27 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/SEVERAL_PARTIAL_INDEXES.xml");
     assertExport("indexes/SEVERAL_PARTIAL_INDEXES.xml", "tables/TEST.xml");
   }
+
+  @Test
+  // Tests that it is possible to update the model with a new model that transforms several indexes
+  // into partial indexes and also adds on create default statements on different columns
+  public void addPartialIndexesAndOnCreateDefaults() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASE_MODEL_WITH_INDEXES.xml");
+    updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
+    assertExport("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to update the model with a new model that transforms several partial
+  // indexes into not partial indexes and also removes on create default statements on different
+  // columns
+  public void removePartialIndexesAndOnCreateDefaults() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
+    updateDatabase("indexes/BASE_MODEL_WITH_INDEXES.xml");
+    assertExport("indexes/BASE_MODEL_WITH_INDEXES.xml", "tables/TEST.xml");
+  }
 }

@@ -75,6 +75,7 @@ public class Oracle8Builder extends SqlBuilder {
   private Pattern _isoTimestampPattern;
 
   private Map<String, String> _onCreateDefaultColumns;
+  private Map<String, String> _columnsWithUpdatedComments;
 
   /**
    * Creates a new builder instance.
@@ -800,27 +801,68 @@ public class Oracle8Builder extends SqlBuilder {
       String newWhereClause) throws IOException {
     // Updates the comments of the columns present on indexes whose where clause have been modified,
     // to update the info about the partial indexes
-    String columnName = index.getColumn(0).getName();
-    String currentComments = getCommentOfColumn(table.getName(), columnName);
-    String newComments;
+    String firstColumnName = index.getColumn(0).getName();
+    String tableName = table.getName();
+    String columnName = tableName + "." + firstColumnName;
+    StringBuilder newComments = new StringBuilder();
+    String updatedComment;
+    String onCreateDefaultComment;
+    String currentComments;
+
+    if (_columnsWithUpdatedComments == null) {
+      _columnsWithUpdatedComments = new HashMap<String, String>();
+    }
+
+    if (_columnsWithUpdatedComments.containsKey(columnName)) {
+      currentComments = _columnsWithUpdatedComments.get(columnName);
+    } else {
+      currentComments = transformInOracleComment(getCommentOfColumn(tableName, firstColumnName));
+    }
 
     if (currentComments == null) {
       currentComments = "";
     }
 
     if (oldWhereClause == null) {
-      newComments = currentComments + index.getName() + ".whereClause=" + newWhereClause + "$";
+      updatedComment = currentComments + index.getName() + ".whereClause="
+          + transformInOracleComment(newWhereClause) + "$";
     } else if (newWhereClause == null) {
-      newComments = currentComments.replace(index.getName() + ".whereClause=" + oldWhereClause
-          + "$", "");
+      updatedComment = currentComments.replace(index.getName() + ".whereClause="
+          + transformInOracleComment(oldWhereClause) + "$", "");
     } else {
-      newComments = currentComments.replace(index.getName() + ".whereClause=" + oldWhereClause,
-          index.getName() + ".whereClause=" + newWhereClause);
+      updatedComment = currentComments.replace(index.getName() + ".whereClause="
+          + transformInOracleComment(oldWhereClause), index.getName() + ".whereClause="
+          + transformInOracleComment(newWhereClause));
     }
 
-    print("COMMENT ON COLUMN " + table.getName() + "." + columnName + " IS '"
-        + transformInOracleComment(newComments) + "'");
-    printEndOfStatement();
+    onCreateDefaultComment = getOnCreateDefaultComment(columnName);
+    if (onCreateDefaultComment == null && updatedComment.startsWith("--OBTG:ONCREATEDEFAULT:")) {
+      List<String> commentLines = new ArrayList<String>(Arrays.asList(updatedComment.split("\\$")));
+      commentLines.remove(0); // remove on create default comment: it is the first one, if present
+      updatedComment = StringUtils.join(commentLines.toArray());
+    } else if (onCreateDefaultComment != null && !currentComments.contains(onCreateDefaultComment)) {
+      newComments.append(onCreateDefaultComment);
+    }
+    newComments.append(updatedComment);
+    _columnsWithUpdatedComments.put(columnName, newComments.toString());
+  }
+
+  /**
+   * Action to be executed once all changes in partial indexes have been applied in the model. Here
+   * it is used to update at once all the column comments affected by changes on partial indexes.
+   * 
+   * @throws IOException
+   */
+  @Override
+  protected void updatePartialIndexesPostAction() throws IOException {
+    if (_columnsWithUpdatedComments == null) {
+      return;
+    }
+    for (String column : _columnsWithUpdatedComments.keySet()) {
+      print("COMMENT ON COLUMN " + column + " IS '" + _columnsWithUpdatedComments.get(column) + "'");
+      printEndOfStatement();
+    }
+    _columnsWithUpdatedComments.clear();
   }
 
   /**

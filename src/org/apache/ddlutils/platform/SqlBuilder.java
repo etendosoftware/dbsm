@@ -1087,6 +1087,7 @@ public abstract class SqlBuilder {
     if (!getPlatformInfo().isPartialIndexesSupported()) {
       applyForSelectedChanges(changes, new Class[] { PartialIndexInformationChange.class },
           callbackClosure);
+      updatePartialIndexesPostAction();
     }
   }
 
@@ -1132,6 +1133,14 @@ public abstract class SqlBuilder {
    */
   protected void updatePartialIndexAction(Table table, Index index, String oldWhereClause,
       String newWhereClause) throws IOException {
+  }
+
+  /**
+   * Action to be executed once all changes in partial indexes have been applied in the model
+   * 
+   * @throws IOException
+   */
+  protected void updatePartialIndexesPostAction() throws IOException {
   }
 
   /**
