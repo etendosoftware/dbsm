@@ -157,7 +157,7 @@ public class ImportSampledata extends BaseDatabaseTask {
               if (POSTGRE_RDBMS.equals(rdbms)) {
                 importPgCopyFile(f);
               } else {
-                getLog().warn("File " + f.getName() + " cannot be export in Oracle");
+                getLog().warn("File " + f.getName() + " cannot be imported in Oracle");
               }
             }
           }
