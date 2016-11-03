@@ -2356,7 +2356,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        if (isTableContainedInRecreatedTables(recreatedTables, table)) {
+        String tableName = table.getName();
+        if (isTableContainedInRecreatedTables(recreatedTables, tableName)) {
           // this table has been already recreated and its FKs are not present at this point because
           // they will be recreated later, so no need to drop FKs again
           continue;
@@ -2364,7 +2365,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
           ForeignKey fk = table.getForeignKey(idx);
           String tableReferencedByForeignKey = fk.getForeignTableName();
-          if (isReferencedTableInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
+          if (isTableContainedInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
             // FKs to recreated tables are already dropped
             continue;
           }
@@ -2386,13 +2387,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return datasetTablesWithRemovedOrInsertedRecords.contains(tableName);
   }
 
-  private boolean isTableContainedInRecreatedTables(ArrayList<String> recreatedTables, Table table) {
-    return recreatedTables.contains(table.getName());
-  }
-
-  private boolean isReferencedTableInRecreatedTables(ArrayList<String> recreatedTables,
-      String tableReferencedByForeignKey) {
-    return recreatedTables.contains(tableReferencedByForeignKey);
+  private boolean isTableContainedInRecreatedTables(ArrayList<String> recreatedTables,
+      String tableName) {
+    return recreatedTables.contains(tableName);
   }
 
   /**
@@ -2429,9 +2426,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         for (int j = 0; j < table.getForeignKeyCount(); j++) {
           ForeignKey fk = table.getForeignKey(j);
           String tableReferencedByForeignKey = fk.getForeignTableName();
-          if ((isTableContainedInRecreatedTables(recreatedTables, table) || recordsHaveBeenDeletedFromTable(
+          String tableName = table.getName();
+          if ((isTableContainedInRecreatedTables(recreatedTables, tableName) || recordsHaveBeenDeletedFromTable(
               tableReferencedByForeignKey, datasetTablesWithRemovedOrInsertedRecords))
-              && !isReferencedTableInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
+              && !isTableContainedInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
             getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
           }
         }
