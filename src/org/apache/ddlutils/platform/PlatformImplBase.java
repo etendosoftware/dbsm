@@ -2356,7 +2356,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         String tableName = table.getName();
-        if (isTableContainedInRecreatedTables(tableName)) {
+        if (isTableRecreated(tableName)) {
           // this table has been already recreated and its FKs are not present at this point because
           // they will be recreated later, so no need to drop FKs again
           continue;
@@ -2364,7 +2364,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
           ForeignKey fk = table.getForeignKey(idx);
           String tableReferencedByForeignKey = fk.getForeignTableName();
-          if (isTableContainedInRecreatedTables(tableReferencedByForeignKey)) {
+          if (isTableRecreated(tableReferencedByForeignKey)) {
             // FKs to recreated tables are already dropped
             continue;
           }
@@ -2386,7 +2386,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return datasetTablesWithRemovedOrInsertedRecords.contains(tableName);
   }
 
-  private boolean isTableContainedInRecreatedTables(String tableName) {
+  private boolean isTableRecreated(String tableName) {
     ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
     return recreatedTables.contains(tableName);
   }
@@ -2425,9 +2425,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           ForeignKey fk = table.getForeignKey(j);
           String tableReferencedByForeignKey = fk.getForeignTableName();
           String tableName = table.getName();
-          if ((isTableContainedInRecreatedTables(tableName) || recordsHaveBeenDeletedFromTable(
+          if ((isTableRecreated(tableName) || recordsHaveBeenDeletedFromTable(
               tableReferencedByForeignKey, datasetTablesWithRemovedOrInsertedRecords))
-              && !isTableContainedInRecreatedTables(tableReferencedByForeignKey)) {
+              && !isTableRecreated(tableReferencedByForeignKey)) {
             getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
           }
         }
