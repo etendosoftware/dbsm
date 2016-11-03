@@ -162,14 +162,12 @@ public class Oracle8Builder extends SqlBuilder {
       }
       comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--$";
     }
-    if (!comment.equals("")) {
-      // keep the columns which have on create default, to prevent losing the related comment if new
-      // partial indexes are added later to those columns
-      if (_onCreateDefaultColumns == null) {
-        _onCreateDefaultColumns = new HashMap<String, String>();
-      }
-      _onCreateDefaultColumns.put(table.getName() + "." + column.getName(), comment);
+    // keep the columns which have changes on their on create default statement, to prevent losing
+    // the related comment if new partial indexes comments are added later to these columns
+    if (_onCreateDefaultColumns == null) {
+      _onCreateDefaultColumns = new HashMap<String, String>();
     }
+    _onCreateDefaultColumns.put(table.getName() + "." + column.getName(), comment);
     println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
         + "'");
     printEndOfStatement();
@@ -732,6 +730,8 @@ public class Oracle8Builder extends SqlBuilder {
         // prevent losing on create default comment when it has been newly added
         // it is also avoided to duplicate these column comments by checking 'columnComments' map
         // and the current column comment in database
+
+        // place the on create default comment as the first comment
         updatedColumnComment.append(onCreateDefaultComment);
       }
       updatedColumnComment.append(currentColumnComment);
@@ -836,11 +836,21 @@ public class Oracle8Builder extends SqlBuilder {
     }
 
     onCreateDefaultComment = getOnCreateDefaultComment(columnName);
-    if (onCreateDefaultComment == null && updatedComment.startsWith("--OBTG:ONCREATEDEFAULT:")) {
+
+    if ("".equals(onCreateDefaultComment) && updatedComment.startsWith("--OBTG:ONCREATEDEFAULT:")) {
+      // handle case when on create default statement is removed: we remove its related comment
+      // which is the first one, if present
       List<String> commentLines = new ArrayList<String>(Arrays.asList(updatedComment.split("\\$")));
-      commentLines.remove(0); // remove on create default comment: it is the first one, if present
+      commentLines.remove(0);
       updatedComment = StringUtils.join(commentLines.toArray());
-    } else if (onCreateDefaultComment != null && !currentComments.contains(onCreateDefaultComment)) {
+    } else if (onCreateDefaultComment != null
+        && !_columnsWithUpdatedComments.containsKey(columnName)
+        && !currentComments.contains(onCreateDefaultComment)) {
+      // prevent losing on create default comment when there have been changes on partial indexes
+      // it is also avoided to duplicate these column comments by checking the
+      // '_columnsWithUpdatedComments' map and the current column comment in database
+
+      // place the on create default comment as the first comment
       newComments.append(onCreateDefaultComment);
     }
     newComments.append(updatedComment);

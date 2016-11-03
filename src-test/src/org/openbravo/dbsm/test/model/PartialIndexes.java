@@ -123,6 +123,17 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that an existing basic index can be changed as partial without affecting on create
+  // default statements
+  public void changeIndexFromBasicToPartial2() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that an existing partial index can be changed as not partial
   public void changeIndexFromPartialToBasic() throws IOException {
     assumeThat(getTestType(), is(TestType.onCreate));
@@ -130,6 +141,17 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
     updateDatabase("indexes/BASIC_INDEX.xml");
     assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that an existing partial index can be changed as not partial without affecting on create
+  // default statements
+  public void changeIndexFromPartialToBasic2() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    updateDatabase("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml");
+    assertExport("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
   }
 
   @Test
