@@ -2368,7 +2368,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             // FKs to recreated tables are already dropped
             continue;
           }
-          if (recordsHaveBeenDeletedFromTable(tableReferencedByForeignKey,
+          if (insertionsOrDeletionsFromTable(tableReferencedByForeignKey,
               datasetTablesWithRemovedOrInsertedRecords)) {
             getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
           }
@@ -2381,7 +2381,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  private boolean recordsHaveBeenDeletedFromTable(String tableName,
+  private boolean insertionsOrDeletionsFromTable(String tableName,
       Set<String> datasetTablesWithRemovedOrInsertedRecords) {
     return datasetTablesWithRemovedOrInsertedRecords.contains(tableName);
   }
@@ -2425,7 +2425,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           ForeignKey fk = table.getForeignKey(j);
           String tableReferencedByForeignKey = fk.getForeignTableName();
           String tableName = table.getName();
-          if ((isTableRecreated(tableName) || recordsHaveBeenDeletedFromTable(
+          if ((isTableRecreated(tableName) || insertionsOrDeletionsFromTable(
               tableReferencedByForeignKey, datasetTablesWithRemovedOrInsertedRecords))
               && !isTableRecreated(tableReferencedByForeignKey)) {
             getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
