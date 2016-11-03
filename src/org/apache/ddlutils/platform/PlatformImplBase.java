@@ -2353,11 +2353,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
-      ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         String tableName = table.getName();
-        if (isTableContainedInRecreatedTables(recreatedTables, tableName)) {
+        if (isTableContainedInRecreatedTables(tableName)) {
           // this table has been already recreated and its FKs are not present at this point because
           // they will be recreated later, so no need to drop FKs again
           continue;
@@ -2365,7 +2364,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
           ForeignKey fk = table.getForeignKey(idx);
           String tableReferencedByForeignKey = fk.getForeignTableName();
-          if (isTableContainedInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
+          if (isTableContainedInRecreatedTables(tableReferencedByForeignKey)) {
             // FKs to recreated tables are already dropped
             continue;
           }
@@ -2387,8 +2386,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return datasetTablesWithRemovedOrInsertedRecords.contains(tableName);
   }
 
-  private boolean isTableContainedInRecreatedTables(ArrayList<String> recreatedTables,
-      String tableName) {
+  private boolean isTableContainedInRecreatedTables(String tableName) {
+    ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
     return recreatedTables.contains(tableName);
   }
 
@@ -2420,16 +2419,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
-      ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         for (int j = 0; j < table.getForeignKeyCount(); j++) {
           ForeignKey fk = table.getForeignKey(j);
           String tableReferencedByForeignKey = fk.getForeignTableName();
           String tableName = table.getName();
-          if ((isTableContainedInRecreatedTables(recreatedTables, tableName) || recordsHaveBeenDeletedFromTable(
+          if ((isTableContainedInRecreatedTables(tableName) || recordsHaveBeenDeletedFromTable(
               tableReferencedByForeignKey, datasetTablesWithRemovedOrInsertedRecords))
-              && !isTableContainedInRecreatedTables(recreatedTables, tableReferencedByForeignKey)) {
+              && !isTableContainedInRecreatedTables(tableReferencedByForeignKey)) {
             getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
           }
         }
