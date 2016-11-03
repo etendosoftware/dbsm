@@ -162,10 +162,7 @@ public class DataSetTableQueryGenerator {
     return query.toString();
   }
 
-  private String getWhereClause(OBDatasetTable dataSetTable, String optionalModuleId) {
-    // If a null module is provided replace it with null, otherwise the getWhereclause method will
-    // return 1=1 instead of the actual dataset table where clause
-    String moduleId = optionalModuleId != null ? optionalModuleId : "";
+  private String getWhereClause(OBDatasetTable dataSetTable, String moduleId) {
     String whereClause = dataSetTable.getWhereclause(moduleId);
     // if the dataset does not have a where clause the getWhereClause will return null
     // replace it with a clause that is always true to avoid working with null clauses

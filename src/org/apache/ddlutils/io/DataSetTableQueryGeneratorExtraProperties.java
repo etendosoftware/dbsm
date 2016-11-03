@@ -21,7 +21,7 @@ public class DataSetTableQueryGeneratorExtraProperties {
 
   private String orderByClause;
   private String additionalWhereClause;
-  private String moduleId;
+  private String moduleId = "";
 
   public String getOrderByClause() {
     return orderByClause;
