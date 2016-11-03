@@ -2951,7 +2951,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       evaluateBatch(connection, buffer.toString(), true);
       connection.close();
     } catch (Exception e) {
-      _log.error("Error applying Configuration Script Column Data changes", e);
+      _log.error("Error applying Configuration Script model changes", e);
     }
   }
 
@@ -2962,7 +2962,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       alterData(connection, database, columnDataChanges);
       connection.close();
     } catch (Exception e) {
-      _log.error("Error applying Configuration Script Column Data changes", e);
+      _log.error("Error applying Configuration Script column data changes", e);
     }
   }
 
