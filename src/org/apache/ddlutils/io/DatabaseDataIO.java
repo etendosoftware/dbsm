@@ -731,6 +731,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
       DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
       extraProperties.setModuleId(moduleId);
       extraProperties.setOrderByClause(getOrderByClause(table));
+      dsTable.setName(table.getName());
       sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
       resultSet = statement.executeQuery(sqlstatement);
       Iterator it = platform.createResultSetIterator(model, resultSet, atables);
