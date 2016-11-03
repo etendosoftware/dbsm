@@ -1343,7 +1343,7 @@ public interface Platform {
       boolean continueOnError) throws DatabaseOperationException;
 
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
+      Set<String> datasetTablesWithRemovedOrInsertedRecords, boolean continueOnError)
       throws DatabaseOperationException;
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)

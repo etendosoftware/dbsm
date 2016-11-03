@@ -414,8 +414,8 @@ public class DbsmTest {
       // assertThat("Postscript should be correct", postscriptCorrect, is(true));
 
       log.info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad, true,
-          adTablesWithRemovedOrInsertedRecords);
+      boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad,
+          adTablesWithRemovedOrInsertedRecords, true);
       boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
 
       // Now check the new model updated in db is as it should

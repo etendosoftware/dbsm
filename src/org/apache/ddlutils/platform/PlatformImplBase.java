@@ -2414,7 +2414,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
+      Set<String> datasetTablesWithRemovedOrInsertedRecords, boolean continueOnError)
       throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
