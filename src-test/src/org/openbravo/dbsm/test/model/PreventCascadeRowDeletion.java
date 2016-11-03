@@ -43,9 +43,10 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   @Test
   public void adTableHasADeletedRowAndADTableReferencesIt() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/table3WithTwoRecordsCascadeDeletion",
+    updateDatabase(MODEL_NAME, "data/tablesWithTwoRecordsCascadeDeletion",
         Arrays.asList(TABLE2_NAME, TABLE3_NAME, TABLE1_NAME));
-    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME,
+        "data/tablesWithOneRecordCascadeDeletion",
         Arrays.asList(TABLE2_NAME, TABLE3_NAME, TABLE1_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
@@ -59,10 +60,10 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   @Test
   public void adTableHasDeletedRowAndNonADTableReferencesIt() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/table3WithTwoRecordsCascadeDeletion",
+    updateDatabase(MODEL_NAME, "data/tablesWithTwoRecordsCascadeDeletion",
         Arrays.asList(TABLE3_NAME));
-    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
-        Arrays.asList(TABLE3_NAME));
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME,
+        "data/tablesWithOneRecordCascadeDeletion", Arrays.asList(TABLE3_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
       allSts.append(st);
@@ -75,10 +76,10 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   @Test
   public void adTableHasNoChangesOnUpdateDatabase() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/table2WithTwoRecordsCascadeDeletion",
+    updateDatabase(MODEL_NAME, "data/tablesWithTwoRecordsCascadeDeletion",
         Arrays.asList(TABLE3_NAME));
     List<String> list = sqlStatmentsForUpdate(MODEL_NAME,
-        "data/table2WithTwoRecordsCascadeDeletion", Arrays.asList(TABLE3_NAME));
+        "data/tablesWithTwoRecordsCascadeDeletion", Arrays.asList(TABLE3_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
       allSts.append(st);
@@ -93,10 +94,10 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   @Test
   public void adTableHasDeletedRowAndNonADTableReferencesItAndAnotherADTable() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/table5TwoRecordsCascadeDeletion",
+    updateDatabase(MODEL_NAME, "data/tablesWithTwoRecordsCascadeDeletion",
         Arrays.asList(TABLE5_NAME, TABLE6_NAME));
-    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table5OneRecordCascadeDeletion",
-        Arrays.asList(TABLE5_NAME, TABLE6_NAME));
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME,
+        "data/tablesWithOneRecordCascadeDeletion", Arrays.asList(TABLE5_NAME, TABLE6_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
       allSts.append(st);
@@ -114,10 +115,10 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   @Test
   public void adTableToAdTableHasNoChangesOnUpdateDatabase() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
+    updateDatabase(MODEL_NAME, "data/tablesWithOneRecordCascadeDeletion",
         Arrays.asList(TABLE2_NAME, TABLE3_NAME));
-    List<String> list = sqlStatmentsForUpdate(MODEL_NAME, "data/table3OneRecordCascadeDeletion",
-        Arrays.asList(TABLE2_NAME, TABLE3_NAME));
+    List<String> list = sqlStatmentsForUpdate(MODEL_NAME,
+        "data/tablesWithOneRecordCascadeDeletion", Arrays.asList(TABLE2_NAME, TABLE3_NAME));
     StringBuilder allSts = new StringBuilder();
     for (String st : list) {
       allSts.append(st);
