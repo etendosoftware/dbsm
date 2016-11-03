@@ -2884,25 +2884,25 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     for (int i = 0; i < datasetTables.size(); i++) {
       allDatasetTables.add(datasetTables.get(i).getName());
     }
-    deleteInvalidConstraintRows(model, dataset, continueOnError, allDatasetTables);
+    deleteInvalidConstraintRows(model, dataset, allDatasetTables, continueOnError);
   }
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> tablesWithRemovedRecords) {
+      Set<String> tablesWithRemovedRecords, boolean continueOnError) {
 
     Connection connection = borrowConnection();
-    deleteInvalidConstraintRows(connection, model, dataset, continueOnError,
-        tablesWithRemovedRecords);
+    deleteInvalidConstraintRows(connection, model, dataset, tablesWithRemovedRecords,
+        continueOnError);
     returnConnection(connection);
   }
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> tablesWithRemovedRecords) {
+      Set<String> tablesWithRemovedRecords, boolean continueOnError) {
 
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, true, tablesWithRemovedRecords);
+    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, tablesWithRemovedRecords, true);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 

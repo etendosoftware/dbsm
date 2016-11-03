@@ -1397,12 +1397,12 @@ public interface Platform {
   public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> tablesWithRemovedRecords);
+      Set<String> tablesWithRemovedRecords, boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError, Set<String> tablesWithRemovedRecords);
+      Set<String> tablesWithRemovedRecords, boolean continueOnError);
 
   public void applyConfigScript(Database database, Vector<Change> changes);
 

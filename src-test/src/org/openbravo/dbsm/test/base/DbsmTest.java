@@ -400,7 +400,7 @@ public class DbsmTest {
       log.info("Updating Application Dictionary data...");
       platform.alterData(connection, newDB, dataComparator.getChanges());
       log.info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(newDB, ad, false, adTablesWithRemovedRecords);
+      platform.deleteInvalidConstraintRows(newDB, ad, adTablesWithRemovedRecords, false);
       log.info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, newDB, false);
       log.info("Executing oncreatedefault statements for mandatory columns");

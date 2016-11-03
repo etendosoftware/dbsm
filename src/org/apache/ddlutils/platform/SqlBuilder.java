@@ -593,11 +593,11 @@ public abstract class SqlBuilder {
         allDatasetTables.add(datasetTables.get(i).getName());
       }
     }
-    deleteInvalidConstraintRows(model, dataset, onlyOnDeleteCascade, allDatasetTables);
+    deleteInvalidConstraintRows(model, dataset, allDatasetTables, onlyOnDeleteCascade);
   }
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
-      boolean onlyOnDeleteCascade, Set<String> tablesWithRemovedRecords) {
+      Set<String> tablesWithRemovedRecords, boolean onlyOnDeleteCascade) {
 
     try {
       // We will now delete the rows in tables which have a foreign key

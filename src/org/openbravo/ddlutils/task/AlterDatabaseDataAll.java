@@ -226,7 +226,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(db, ad, !isFailonerror(), adTablesWithRemovedRecords);
+      platform.deleteInvalidConstraintRows(db, ad, adTablesWithRemovedRecords, !isFailonerror());
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing oncreatedefault statements for mandatory columns");
