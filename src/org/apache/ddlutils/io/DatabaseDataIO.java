@@ -82,7 +82,17 @@ public class DatabaseDataIO implements DataSetTableExporter {
 
   protected boolean _writePrimaryKeyComment = true;
 
+  private DataSetTableQueryGenerator queryGenerator;
+
   private final Log _log = LogFactory.getLog(DatabaseDataIO.class);
+
+  public DatabaseDataIO() {
+    this.queryGenerator = new DataSetTableQueryGenerator();
+  }
+
+  public DatabaseDataIO(DataSetTableQueryGenerator queryGenerator) {
+    this.queryGenerator = queryGenerator;
+  }
 
   /**
    * Registers a converter.
@@ -712,26 +722,16 @@ public class DatabaseDataIO implements DataSetTableExporter {
 
   public Vector<DynaBean> readRowsFromTableList(Connection connection, Platform platform,
       Database model, Table table, OBDatasetTable dsTable, String moduleId) {
-    String fullwhereclause = dsTable.getWhereclause(moduleId);
-    if (dsTable.getSecondarywhereclause() != null) {
-      fullwhereclause += " AND " + dsTable.getSecondarywhereclause() + " ";
-    }
     Table[] atables = { table };
     Statement statement = null;
     ResultSet resultSet = null;
     String sqlstatement = "";
     try {
       statement = connection.createStatement();
-      sqlstatement = "SELECT * FROM " + table.getName();
-      if (fullwhereclause != null) {
-        sqlstatement += " WHERE " + fullwhereclause;
-      }
-      sqlstatement += " ORDER BY ";
-      for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
-        if (j > 0)
-          sqlstatement += ",";
-        sqlstatement += table.getPrimaryKeyColumns()[j].getName();
-      }
+      DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
+      extraProperties.setModuleId(moduleId);
+      extraProperties.setOrderByClause(getOrderByClause(table));
+      sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
       resultSet = statement.executeQuery(sqlstatement);
       Iterator it = platform.createResultSetIterator(model, resultSet, atables);
       Vector<DynaBean> dbs = new Vector<DynaBean>();
@@ -745,6 +745,20 @@ public class DatabaseDataIO implements DataSetTableExporter {
       _log.error("SQL command to read rows from table failed: " + sqlstatement);
       return null;
     }
+  }
+
+  /**
+   * Given a table, returns an order by clause based on the primary keys of the table
+   */
+  private String getOrderByClause(Table table) {
+    StringBuilder orderByColumns = new StringBuilder();
+    for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
+      if (j > 0) {
+        orderByColumns.append(",");
+      }
+      orderByColumns.append(table.getPrimaryKeyColumns()[j].getName());
+    }
+    return orderByColumns.toString();
   }
 
   private class BaseDynaBeanIDHexComparator implements Comparator<Object> {

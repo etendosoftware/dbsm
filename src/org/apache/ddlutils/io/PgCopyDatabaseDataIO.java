@@ -32,17 +32,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Table;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.postgresql.copy.CopyManager;
@@ -60,22 +57,27 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
   private static List<String> auditColumnNames = Arrays.asList("CREATED", "UPDATED", "CREATEDBY",
       "UPDATEDBY");
 
+  private DataSetTableQueryGenerator queryGenerator;
+
+  public PgCopyDatabaseDataIO() {
+    this.queryGenerator = new DataSetTableQueryGenerator();
+  }
+
+  public PgCopyDatabaseDataIO(DataSetTableQueryGenerator queryGenerator) {
+    this.queryGenerator = queryGenerator;
+  }
+
   @Override
   public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
       String moduleId, Map<String, Object> customParams) {
     long count = 0;
-    Table table = model.findTable(dsTable.getName());
-    String fullwhereclause = dsTable.getWhereclause(moduleId);
-    if (dsTable.getSecondarywhereclause() != null) {
-      fullwhereclause += " AND " + dsTable.getSecondarywhereclause() + " ";
-    }
     BaseConnection connection = null;
     try {
       connection = getPgBaseConnection();
       CopyManager copyManager = new CopyManager(connection);
       StringBuilder copyCommand = new StringBuilder();
       List<String> columns = getNotExcludedColumns(dsTable);
-      String query = getQueryToExportData(table, columns, fullwhereclause);
+      String query = queryGenerator.generateQuery(dsTable, columns);
       copyCommand.append("COPY (" + query + ")");
       copyCommand.append(" TO STDOUT WITH (FORMAT CSV, HEADER true)");
       count = copyManager.copyOut(copyCommand.toString(), output);
@@ -117,27 +119,6 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
       }
     }
     includedColumns.removeAll(columnToDelete);
-  }
-
-  private String getQueryToExportData(Table table, List<String> columns, String fullwhereclause) {
-    StringBuilder query = new StringBuilder();
-    query.append("SELECT " + toCommaSeparatedString(columns) + " FROM " + table.getName());
-    if (!StringUtils.isBlank(fullwhereclause)) {
-      query.append(" WHERE " + fullwhereclause);
-    }
-    return query.toString();
-  }
-
-  private String toCommaSeparatedString(List<String> columns) {
-    StringBuilder listStringified = new StringBuilder();
-    Iterator<String> iterator = columns.iterator();
-    while (iterator.hasNext()) {
-      listStringified.append(iterator.next());
-      if (iterator.hasNext()) {
-        listStringified.append(",");
-      }
-    }
-    return listStringified.toString();
   }
 
   /**

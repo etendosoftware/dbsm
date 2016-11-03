@@ -28,6 +28,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DataSetTableExporter;
+import org.apache.ddlutils.io.DataSetTableQueryGenerator;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.PgCopyDatabaseDataIO;
 import org.apache.ddlutils.model.Database;
@@ -53,6 +54,7 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExcludeFilter excludeFilter;
 
   private String client;
+  private String clientId;
   private String module;
   private String exportFormat;
   private String rdbms;
@@ -63,6 +65,10 @@ public class ExportSampledata extends BaseDatabaseTask {
   private Map<String, Integer> exportedTablesCount = null;
 
   public ExportSampledata() {
+  }
+
+  public String getClientId() {
+    return clientId;
   }
 
   @Override
@@ -105,7 +111,7 @@ public class ExportSampledata extends BaseDatabaseTask {
       // unique constraint on client ensures 1 row here
       DynaBean clientToExport = rowsNewData.get(0);
 
-      String clientid = (String) clientToExport.get("AD_CLIENT_ID");
+      clientId = (String) clientToExport.get("AD_CLIENT_ID");
       String clientName = getExportFileName(client);
 
       ModuleRow moduleToExport = getModuleToExport(util);
@@ -116,8 +122,10 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       log.info("Creating folder " + clientName + " in: " + sampledataFolder);
 
-      for (OBDatasetTable dsTable : tableList) {
-        setDataSetWhereClause(dsTable, clientid);
+      if (overwriteDataSetTableWhereClauseWithClientFilter()) {
+        for (OBDatasetTable dsTable : tableList) {
+          dsTable.setWhereclause("ad_client_id = '" + clientId + "'");
+        }
       }
 
       File path = new File(sampledataFolder, clientName);
@@ -216,11 +224,12 @@ public class ExportSampledata extends BaseDatabaseTask {
   /**
    * Returns the instance of DatabaseDataIO that will be used to export the dataset tables to XML
    */
-  protected DataSetTableExporter getDataSetTableExporter() {
+  private DataSetTableExporter getDataSetTableExporter() {
+    DataSetTableQueryGenerator queryGenerator = getQueryGenerator();
     if ("copy".equals(exportFormat) && POSTGRE_RDBMS.equals(rdbms)) {
-      return new PgCopyDatabaseDataIO();
+      return new PgCopyDatabaseDataIO(queryGenerator);
     } else {
-      DatabaseDataIO databaseDataIO = new DatabaseDataIO();
+      DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
       databaseDataIO.setEnsureFKOrder(false);
       // for sampledata do not write a primary key comment onto each line to save space
       databaseDataIO.setWritePrimaryKeyComment(false);
@@ -228,26 +237,24 @@ public class ExportSampledata extends BaseDatabaseTask {
     }
   }
 
+  protected DataSetTableQueryGenerator getQueryGenerator() {
+    return new DataSetTableQueryGenerator();
+  }
+
   /**
-   * Manages the dataset where clause
-   * 
-   * @param dsTable
-   *          the dataset table
-   * @param clientid
-   *          the id of the client being exported
+   * @return true if the where clause of the exported dataset tables should be replaced with a
+   *         simple client filter
    */
-  protected void setDataSetWhereClause(OBDatasetTable dsTable, String clientid) {
-    // To export the sample data, the where clause defined in the dataset is overwritten with a
-    // client filter
-    String whereClause = "ad_client_id = '" + clientid + "'";
-    dsTable.setWhereclause(whereClause);
+  protected boolean overwriteDataSetTableWhereClauseWithClientFilter() {
+    return true;
   }
 
   private Vector<DynaBean> findClient(final Platform platform, Database db) {
     Connection connection = platform.borrowConnection();
     Table table = db.findTable("AD_CLIENT");
-    DatabaseDataIO dbIO = new DatabaseDataIO();
+    DatabaseDataIO dbIO = new DatabaseDataIO(getQueryGenerator());
     OBDatasetTable dsTable = new OBDatasetTable();
+    dsTable.setName(table.getName());
     dsTable.setWhereclause("1=1");
     dsTable.setSecondarywhereclause("name" + "=" + "'" + client + "'");
     Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db, table,
