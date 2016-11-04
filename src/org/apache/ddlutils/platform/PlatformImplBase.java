@@ -2387,7 +2387,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   private boolean isTableRecreated(String tableName) {
-    ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
+    List<String> recreatedTables = getSqlBuilder().recreatedTables;
     return recreatedTables.contains(tableName);
   }
 
