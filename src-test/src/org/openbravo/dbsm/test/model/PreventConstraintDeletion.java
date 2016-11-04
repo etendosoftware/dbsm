@@ -46,10 +46,13 @@ public class PreventConstraintDeletion extends DbsmTest {
   // When a record of a non AD table is deleted, the constraints don't have to be recreated.
   @Test
   public void constraintsOfNonADTablesAreNotRecreatedWhenDeletingARecord() {
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords",
+    resetDB();
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE4_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE4_FK_NAME);
     assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
@@ -60,9 +63,13 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTableAreNotRecreatedWhenDeletingARecordOfANonADTable() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords", Arrays.asList(ADTABLE2_NAME));
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
+        Arrays.asList(ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE2_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord", Arrays.asList(ADTABLE2_NAME));
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
+        Arrays.asList(ADTABLE2_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE2_FK_NAME);
     assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
   }
@@ -72,10 +79,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesHaveToBeRecreatedWhenDeletingARecordOfTheADTable() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable1FkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable1FkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
     assertThat(adTable1FkOidBeforeUpdate, not(equalTo(adTable1FkOidAfterUpdate)));
@@ -86,10 +95,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesDontHaveToBeRecreatedWhenDeletingARecordOfAnotherADTable() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable2FkOidBeforeUpdate = obtainFkData(TABLE2_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String adTable2FkOidAfterUpdate = obtainFkData(TABLE2_FK_NAME);
     assertThat(adTable2FkOidBeforeUpdate, equalTo(adTable2FkOidAfterUpdate));
@@ -100,10 +111,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesAreNotRecreatedWhenUpdatingATable() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithUpdatedRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithUpdatedRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
     assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
@@ -114,10 +127,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesAreRecreatedWhenInsertingARecordInATable() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE2_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
     assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
@@ -127,10 +142,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesAreNotRecreatedWhenThereAreNoChanges() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE3_NAME, ADTABLE4_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE4_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE3_NAME, ADTABLE4_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE4_FK_NAME);
     assertThat(fkOidBeforeUpdate, equalTo(fkOidAfterUpdate));
@@ -140,10 +157,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesAreRecreatedWhenThereIsAnInsertion() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
     assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
@@ -153,10 +172,12 @@ public class PreventConstraintDeletion extends DbsmTest {
   @Test
   public void constraintsOfADTablesAreRecreatedWhenThereIsADeletion() {
     resetDB();
-    updateDatabase(MODEL_NAME, "data/TablesWithTwoRecords",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithTwoRecordsConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
     String fkOidBeforeUpdate = obtainFkData(TABLE1_FK_NAME);
-    updateDatabase(MODEL_NAME, "data/TablesWithOneRecord",
+    updateDatabase(MODEL_NAME,
+        "data/preventCascadeConstraintDeletion/TablesWithOneRecordConstraint",
         Arrays.asList(ADTABLE1_NAME, ADTABLE3_NAME));
     String fkOidAfterUpdate = obtainFkData(TABLE1_FK_NAME);
     assertThat(fkOidBeforeUpdate, not(equalTo(fkOidAfterUpdate)));
