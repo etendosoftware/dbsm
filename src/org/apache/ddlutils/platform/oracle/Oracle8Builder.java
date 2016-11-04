@@ -1003,7 +1003,7 @@ public class Oracle8Builder extends SqlBuilder {
       con = getPlatform().getDataSource().getConnection();
 
       st = con
-          .prepareStatement("SELECT comments FROM all_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
+          .prepareStatement("SELECT comments FROM all_col_comments WHERE table_name = ? AND column_name = ?");
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();

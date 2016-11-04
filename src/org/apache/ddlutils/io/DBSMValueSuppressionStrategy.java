@@ -17,6 +17,10 @@ import org.apache.commons.betwixt.ElementDescriptor;
 import org.apache.commons.betwixt.strategy.ValueSuppressionStrategy;
 import org.apache.ddlutils.model.Index;
 
+/**
+ * This class defines the strategy used by DBSourceManager to decide which attributes or elements
+ * should be suppressed when exporting the XML model.
+ */
 public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
 
   private static final String WHERE_CLAUSE = "whereClause";
