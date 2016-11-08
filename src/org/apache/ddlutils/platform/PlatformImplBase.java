@@ -41,10 +41,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -2346,34 +2348,29 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException {
+      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
+      throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
-      ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        if (recreatedTables.contains(table.getName())) {
+        String tableName = table.getName();
+        if (isTableRecreated(tableName)) {
           // this table has been already recreated and its FKs are not present at this point because
           // they will be recreated later, so no need to drop FKs again
           continue;
         }
-        if (dataset.getTable(table.getName()) != null) {
-          for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
-            ForeignKey fk = table.getForeignKey(idx);
-            if (!recreatedTables.contains(fk.getForeignTableName())) {
-              // FKs to recreated tables are already dropped
-              getSqlBuilder().writeExternalForeignKeyDropStmt(table, table.getForeignKey(idx));
-            }
+        for (int idx = 0; idx < table.getForeignKeyCount(); idx++) {
+          ForeignKey fk = table.getForeignKey(idx);
+          String tableReferencedByForeignKey = fk.getForeignTableName();
+          if (isTableRecreated(tableReferencedByForeignKey)) {
+            // FKs to recreated tables are already dropped
+            continue;
           }
-        } else {
-          for (int j = 0; j < table.getForeignKeyCount(); j++) {
-            ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null
-                && !recreatedTables.contains(fk.getForeignTableName())) {
-              // FKs to recreated tables are already dropped
-              getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
-            }
+          if (insertionsOrDeletionsFromTable(tableReferencedByForeignKey,
+              datasetTablesWithRemovedOrInsertedRecords)) {
+            getSqlBuilder().writeExternalForeignKeyDropStmt(table, fk);
           }
         }
       }
@@ -2382,6 +2379,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       e.printStackTrace();
       throw new DatabaseOperationException("Error while disabling foreign key ", e);
     }
+  }
+
+  private boolean insertionsOrDeletionsFromTable(String tableName,
+      Set<String> datasetTablesWithRemovedOrInsertedRecords) {
+    return datasetTablesWithRemovedOrInsertedRecords.contains(tableName);
+  }
+
+  private boolean isTableRecreated(String tableName) {
+    List<String> recreatedTables = getSqlBuilder().recreatedTables;
+    return recreatedTables.contains(tableName);
   }
 
   /**
@@ -2407,23 +2414,21 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException {
+      Set<String> datasetTablesWithRemovedOrInsertedRecords, boolean continueOnError)
+      throws DatabaseOperationException {
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
-      ArrayList<String> recreatedTables = getSqlBuilder().recreatedTables;
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
-        if (dataset.getTable(table.getName()) != null) {
-          getSqlBuilder().createExternalForeignKeys(model, table, true);
-        } else {
-          for (int j = 0; j < table.getForeignKeyCount(); j++) {
-            ForeignKey fk = table.getForeignKey(j);
-            if ((recreatedTables.contains(table.getName()) || dataset.getTable(fk
-                .getForeignTableName()) != null)
-                && !recreatedTables.contains(fk.getForeignTableName())) {
-              getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
-            }
+        for (int j = 0; j < table.getForeignKeyCount(); j++) {
+          ForeignKey fk = table.getForeignKey(j);
+          String tableReferencedByForeignKey = fk.getForeignTableName();
+          String tableName = table.getName();
+          if ((isTableRecreated(tableName) || insertionsOrDeletionsFromTable(
+              tableReferencedByForeignKey, datasetTablesWithRemovedOrInsertedRecords))
+              && !isTableRecreated(tableReferencedByForeignKey)) {
+            getSqlBuilder().writeExternalForeignKeyCreateStmt(model, table, fk);
           }
         }
       }
@@ -2874,20 +2879,30 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError) {
+    Set<String> allDatasetTables = new HashSet<String>();
+    Vector<OBDatasetTable> datasetTables = dataset.getTableList();
+    for (int i = 0; i < datasetTables.size(); i++) {
+      allDatasetTables.add(datasetTables.get(i).getName());
+    }
+    deleteInvalidConstraintRows(model, dataset, allDatasetTables, continueOnError);
+  }
+
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords, boolean continueOnError) {
 
     Connection connection = borrowConnection();
-    deleteInvalidConstraintRows(connection, model, dataset, continueOnError);
+    deleteInvalidConstraintRows(connection, model, dataset, tablesWithRemovedRecords,
+        continueOnError);
     returnConnection(connection);
-
   }
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) {
+      Set<String> tablesWithRemovedRecords, boolean continueOnError) {
 
     StringWriter buffer = new StringWriter();
 
     getSqlBuilder().setWriter(buffer);
-    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, true);
+    getSqlBuilder().deleteInvalidConstraintRows(model, dataset, tablesWithRemovedRecords, true);
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 

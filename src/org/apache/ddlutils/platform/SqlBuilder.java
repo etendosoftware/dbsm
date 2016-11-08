@@ -118,6 +118,7 @@ import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
 import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop
@@ -588,6 +589,18 @@ public abstract class SqlBuilder {
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
       boolean onlyOnDeleteCascade) {
+    Set<String> allDatasetTables = new HashSet<String>();
+    if (dataset != null) {
+      Vector<OBDatasetTable> datasetTables = dataset.getTableList();
+      for (int i = 0; i < datasetTables.size(); i++) {
+        allDatasetTables.add(datasetTables.get(i).getName());
+      }
+    }
+    deleteInvalidConstraintRows(model, dataset, allDatasetTables, onlyOnDeleteCascade);
+  }
+
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords, boolean onlyOnDeleteCascade) {
 
     try {
       // We will now delete the rows in tables which have a foreign key
@@ -596,13 +609,16 @@ public abstract class SqlBuilder {
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         ForeignKey[] fksTable;
-        if (dataset == null || dataset.getTable(table.getName()) != null) {
+        if (dataset == null
+            || isDatasetTableWithRemovedRecords(table, dataset, tablesWithRemovedRecords)) {
           fksTable = table.getForeignKeys();
         } else {
           List<ForeignKey> fks = new ArrayList<ForeignKey>();
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
+            String foreignTableName = fk.getForeignTableName();
+            if (dataset.getTable(foreignTableName) != null
+                && (tablesWithRemovedRecords.contains(foreignTableName))) {
               fks.add(fk);
             }
           }
@@ -664,6 +680,12 @@ public abstract class SqlBuilder {
       System.out.println(e.getMessage());
       _log.error(e.getLocalizedMessage());
     }
+  }
+
+  private boolean isDatasetTableWithRemovedRecords(Table table, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords) {
+    return dataset.getTable(table.getName()) != null
+        && tablesWithRemovedRecords.contains(table.getName());
   }
 
   public List alterDatabaseRecreatePKs(Database currentModel, Database desiredModel,
