@@ -12,6 +12,9 @@
 
 package org.apache.ddlutils.io;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class that store optional, additional properties used by the DataSetTableQueryGenerator to
  * generate queries based on dataset tables (the mandatory ones being the dataset tables themselves
@@ -20,7 +23,7 @@ package org.apache.ddlutils.io;
 public class DataSetTableQueryGeneratorExtraProperties {
 
   private String orderByClause;
-  private String additionalWhereClause;
+  private List<WhereClauseSimpleExpression> additionalWhereClauses = new ArrayList<>();
   private String moduleId = "";
 
   public String getOrderByClause() {
@@ -31,12 +34,17 @@ public class DataSetTableQueryGeneratorExtraProperties {
     this.orderByClause = orderByClause;
   }
 
-  public String getAdditionalWhereClause() {
-    return additionalWhereClause;
+  public void addWhereClauseExpression(String columnName, String operator, String value) {
+    WhereClauseSimpleExpression whereClauseExpression = new WhereClauseSimpleExpression(columnName,
+        operator, value);
+    if (additionalWhereClauses == null) {
+      additionalWhereClauses = new ArrayList<>();
+    }
+    additionalWhereClauses.add(whereClauseExpression);
   }
 
-  public void setAdditionalWhereClause(String additionalWhereClause) {
-    this.additionalWhereClause = additionalWhereClause;
+  public List<WhereClauseSimpleExpression> getAdditionalWhereClauses() {
+    return additionalWhereClauses;
   }
 
   public String getModuleId() {
@@ -45,5 +53,42 @@ public class DataSetTableQueryGeneratorExtraProperties {
 
   public void setModuleId(String moduleId) {
     this.moduleId = moduleId;
+  }
+
+  public class WhereClauseSimpleExpression {
+    private String columnName;
+    private String operator;
+    private String value;
+
+    public WhereClauseSimpleExpression(String columnName, String operator, String value) {
+      this.columnName = columnName;
+      this.operator = operator;
+      this.value = value;
+    }
+
+    public String getColumnName() {
+      return columnName;
+    }
+
+    public void setColumnName(String columnName) {
+      this.columnName = columnName;
+    }
+
+    public String getOperator() {
+      return operator;
+    }
+
+    public void setOperator(String operator) {
+      this.operator = operator;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
+
   }
 }

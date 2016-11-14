@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ddlutils.io.DataSetTableQueryGeneratorExtraProperties.WhereClauseSimpleExpression;
+import org.apache.ddlutils.model.Table;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
@@ -118,12 +120,14 @@ public class DataSetTableQueryGenerator {
   public String generateQuery(List<OBDatasetTable> dataSetTables, List<String> columns,
       DataSetTableQueryGeneratorExtraProperties extraProperties) {
     String moduleId = extraProperties.getModuleId();
-    String additionalWhereClause = extraProperties.getAdditionalWhereClause();
+    List<WhereClauseSimpleExpression> additionalWhereClauses = extraProperties
+        .getAdditionalWhereClauses();
     String orderByClause = extraProperties.getOrderByClause();
     // all the dataSetTables reference the same table
     String tableName = dataSetTables.get(0).getName();
     String whereClause = joinWhereClausesWithOrOperator(dataSetTables, moduleId);
-    if (!StringUtils.isBlank(additionalWhereClause)) {
+    if (!additionalWhereClauses.isEmpty()) {
+      String additionalWhereClause = buildAdditionalWhereClause(additionalWhereClauses);
       if (StringUtils.isBlank(whereClause)) {
         whereClause = additionalWhereClause;
       } else {
@@ -131,6 +135,17 @@ public class DataSetTableQueryGenerator {
       }
     }
     return generateQuery(tableName, columns, whereClause, orderByClause);
+  }
+
+  private String buildAdditionalWhereClause(List<WhereClauseSimpleExpression> additionalWhereClauses) {
+    StringBuilder additionalWhereClause = new StringBuilder();
+    Iterator<WhereClauseSimpleExpression> iterator = additionalWhereClauses.iterator();
+    while (iterator.hasNext()) {
+      WhereClauseSimpleExpression expression = iterator.next();
+      additionalWhereClause.append(expression.getColumnName() + " " + expression.getOperator()
+          + " " + expression.getValue());
+    }
+    return additionalWhereClause.toString();
   }
 
   private String joinWhereClausesWithOrOperator(List<OBDatasetTable> dataSetTables, String moduleId) {
@@ -184,6 +199,21 @@ public class DataSetTableQueryGenerator {
    */
   protected String transformWhereClause(String whereClause) {
     return whereClause;
+  }
+
+  /**
+   * Given a table, returns a list of its key columns separated by a colon, so that it can be used
+   * in an orderBy clause
+   */
+  public String buildOrderByClauseUsingKeyColumns(Table table) {
+    StringBuilder orderByColumns = new StringBuilder();
+    for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
+      if (j > 0) {
+        orderByColumns.append(",");
+      }
+      orderByColumns.append(table.getPrimaryKeyColumns()[j].getName());
+    }
+    return orderByColumns.toString();
   }
 
   /**
