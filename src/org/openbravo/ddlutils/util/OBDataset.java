@@ -57,6 +57,7 @@ public class OBDataset {
       DynaBean adTable = DatabaseData.searchDynaBean(adTables, dsTable.get("AD_TABLE_ID")
           .toString(), "AD_TABLE_ID");
       table.setName(adTable.get("TABLENAME").toString());
+      table.setDataSetTableId(dsTable.get("AD_DATASET_TABLE_ID").toString());
       if (table.isIncludeAllColumns()) {
         List<DynaBean> dsCols = searchDynaBeans("AD_DATASET_COLUMN", readFromDb,
             dsTable.get("AD_DATASET_TABLE_ID").toString(), "AD_DATASET_TABLE_ID");
