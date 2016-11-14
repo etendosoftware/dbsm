@@ -391,10 +391,62 @@ public class DatabaseDataIO implements DataSetTableExporter {
 
   @Override
   public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
-      String moduleId, Map<String, Object> customParams) {
+      String moduleId, Map<String, Object> customParams, boolean orderByTableId) {
     String xmlEncoding = (String) customParams.get("xmlEncoding");
     Platform platform = (Platform) customParams.get("platform");
-    return writeDataForTableToXML(platform, model, dsTable, output, xmlEncoding, moduleId);
+    boolean anyRecordsHaveBeenExported = false;
+    if (orderByTableId) {
+      anyRecordsHaveBeenExported = writeDataForTableToXML(platform, model, dsTable, output,
+          xmlEncoding, moduleId);
+    } else {
+      // no need to store the objects in a vector in order to sort them, we write them to the file
+      // as they are being read
+      anyRecordsHaveBeenExported = streamDataForTableToXML(platform, model, dsTable, output,
+          xmlEncoding, moduleId);
+    }
+    return anyRecordsHaveBeenExported;
+  }
+
+  public boolean streamDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
+      OutputStream output, String xmlEncoding, String moduleID) {
+    DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
+    writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
+    registerConverters(writer.getConverterConfiguration());
+    writer.writeDocumentStart();
+    boolean b = false;
+    Table table = model.findTable(dsTable.getName());
+    Connection con = platform.borrowConnection();
+    Iterator<DynaBean> iterator = getDatasetTableDataIterator(con, platform, model, table, dsTable,
+        moduleID);
+    while (iterator.hasNext()) {
+      DynaBean row = (DynaBean) iterator.next();
+      writer.write(model, dsTable, row);
+      b = true;
+    }
+    platform.returnConnection(con);
+    writer.writeDocumentEnd();
+    return b;
+  }
+
+  public Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
+      Database model, Table table, OBDatasetTable dsTable, String moduleId) {
+    Table[] atables = { table };
+    Statement statement = null;
+    ResultSet resultSet = null;
+    String sqlstatement = "";
+    try {
+      System.out.println("Exporting table " + table.getName());
+      statement = connection.createStatement();
+      DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
+      extraProperties.setModuleId(moduleId);
+      dsTable.setName(table.getName());
+      sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
+      resultSet = statement.executeQuery(sqlstatement);
+      return platform.createResultSetIterator(model, resultSet, atables);
+    } catch (SQLException ex) {
+      _log.error("SQL command to read rows from table failed: " + sqlstatement);
+      return null;
+    }
   }
 
   public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
@@ -730,7 +782,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
       statement = connection.createStatement();
       DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
       extraProperties.setModuleId(moduleId);
-      extraProperties.setOrderByClause(getOrderByClause(table));
+      extraProperties.setOrderByClause(queryGenerator.buildOrderByClauseUsingKeyColumns(table));
       dsTable.setName(table.getName());
       sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
       resultSet = statement.executeQuery(sqlstatement);
@@ -746,20 +798,6 @@ public class DatabaseDataIO implements DataSetTableExporter {
       _log.error("SQL command to read rows from table failed: " + sqlstatement);
       return null;
     }
-  }
-
-  /**
-   * Given a table, returns an order by clause based on the primary keys of the table
-   */
-  private String getOrderByClause(Table table) {
-    StringBuilder orderByColumns = new StringBuilder();
-    for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
-      if (j > 0) {
-        orderByColumns.append(",");
-      }
-      orderByColumns.append(table.getPrimaryKeyColumns()[j].getName());
-    }
-    return orderByColumns.toString();
   }
 
   private class BaseDynaBeanIDHexComparator implements Comparator<Object> {

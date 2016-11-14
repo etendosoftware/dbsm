@@ -159,7 +159,7 @@ public class ExportSampledata extends BaseDatabaseTask {
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
           boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
-              dsTableExporterExtraParams);
+              dsTableExporterExtraParams, orderByTableId());
           if (dataExported) {
             getLog().info("Exported table: " + table.getName());
             addTableToExportedTablesMap(table.getName());
@@ -350,6 +350,10 @@ public class ExportSampledata extends BaseDatabaseTask {
       System.exit(1);
     }
     return moduleToExport;
+  }
+
+  protected boolean orderByTableId() {
+    return true;
   }
 
 }

@@ -37,5 +37,5 @@ public interface DataSetTableExporter {
    * @return true if any records have been exported, false otherwise
    */
   public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
-      String moduleId, Map<String, Object> customParams);
+      String moduleId, Map<String, Object> customParams, boolean orderByTableId);
 }

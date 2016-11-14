@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.Table;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.postgresql.copy.CopyManager;
@@ -69,7 +70,7 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
 
   @Override
   public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
-      String moduleId, Map<String, Object> customParams) {
+      String moduleId, Map<String, Object> customParams, boolean orderByTableId) {
     long count = 0;
     BaseConnection connection = null;
     try {
@@ -77,7 +78,13 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
       CopyManager copyManager = new CopyManager(connection);
       StringBuilder copyCommand = new StringBuilder();
       List<String> columns = getNotExcludedColumns(dsTable);
-      String query = queryGenerator.generateQuery(dsTable, columns);
+
+      DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
+      if (orderByTableId) {
+        Table table = model.findTable(dsTable.getName());
+        extraProperties.setOrderByClause(queryGenerator.buildOrderByClauseUsingKeyColumns(table));
+      }
+      String query = queryGenerator.generateQuery(dsTable, columns, extraProperties);
       copyCommand.append("COPY (" + query + ")");
       copyCommand.append(" TO STDOUT WITH (FORMAT CSV, HEADER true)");
       count = copyManager.copyOut(copyCommand.toString(), output);
