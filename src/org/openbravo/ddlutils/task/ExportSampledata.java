@@ -47,6 +47,45 @@ import org.openbravo.ddlutils.util.OBDatasetTable;
  */
 public class ExportSampledata extends BaseDatabaseTask {
 
+  public enum ExportFormat {
+    COPY("copy"), XML("xml");
+    private String name;
+
+    private ExportFormat(String name) {
+      this.name = name;
+    }
+
+    public String getFileExtension() {
+      return "." + name;
+    }
+
+    public static ExportFormat getExportFormatByName(String formatName, String rdbms) {
+      ExportFormat exportFormat = null;
+      if (formatName.equals(COPY.name) && POSTGRE_RDBMS.equals(rdbms)) {
+        exportFormat = COPY;
+      } else {
+        exportFormat = XML;
+      }
+      return exportFormat;
+    }
+
+    /**
+     * Returns the DataSetTableExporter that will be used to export the dataset tables to XML
+     */
+    public DataSetTableExporter getDataSetTableExporter(DataSetTableQueryGenerator queryGenerator) {
+      switch (this) {
+      case COPY:
+        return new PgCopyDatabaseDataIO(queryGenerator);
+      default:
+        DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
+        databaseDataIO.setEnsureFKOrder(false);
+        // for sampledata do not write a primary key comment onto each line to save space
+        databaseDataIO.setWritePrimaryKeyComment(false);
+        return databaseDataIO;
+      }
+    }
+  };
+
   private String basedir;
 
   protected final String encoding = "UTF-8";
@@ -56,7 +95,7 @@ public class ExportSampledata extends BaseDatabaseTask {
   private String client;
   private String clientId;
   private String module;
-  private String exportFormat;
+  private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
   private static final String COPY_EXTENSION = ".copy";
@@ -130,7 +169,8 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       File path = new File(sampledataFolder, clientName);
 
-      final DataSetTableExporter dsTableExporter = getDataSetTableExporter();
+      final DataSetTableExporter dsTableExporter = exportFormat
+          .getDataSetTableExporter(getQueryGenerator());
 
       path.mkdirs();
       final File[] filestodelete = path.listFiles();
@@ -197,7 +237,7 @@ public class ExportSampledata extends BaseDatabaseTask {
   }
 
   public void setExportFormat(String exportFormat) {
-    this.exportFormat = exportFormat;
+    this.exportFormat = ExportFormat.getExportFormatByName(exportFormat, rdbms);
   }
 
   public void setRdbms(String rdbms) {
@@ -205,36 +245,7 @@ public class ExportSampledata extends BaseDatabaseTask {
   }
 
   protected String getFileExtension() {
-    String fileExtension = null;
-    if ("copy".equals(exportFormat)) {
-      if (POSTGRE_RDBMS.equals(rdbms)) {
-        fileExtension = COPY_EXTENSION;
-      } else {
-        getLog()
-            .warn(
-                "The copy file extension is only supported in PostgreSQL. The default xml file extension will be used");
-        fileExtension = XML_EXTENSION;
-      }
-    } else {
-      fileExtension = XML_EXTENSION;
-    }
-    return fileExtension;
-  }
-
-  /**
-   * Returns the instance of DatabaseDataIO that will be used to export the dataset tables to XML
-   */
-  private DataSetTableExporter getDataSetTableExporter() {
-    DataSetTableQueryGenerator queryGenerator = getQueryGenerator();
-    if ("copy".equals(exportFormat) && POSTGRE_RDBMS.equals(rdbms)) {
-      return new PgCopyDatabaseDataIO(queryGenerator);
-    } else {
-      DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
-      databaseDataIO.setEnsureFKOrder(false);
-      // for sampledata do not write a primary key comment onto each line to save space
-      databaseDataIO.setWritePrimaryKeyComment(false);
-      return databaseDataIO;
-    }
+    return exportFormat.getFileExtension();
   }
 
   protected DataSetTableQueryGenerator getQueryGenerator() {
