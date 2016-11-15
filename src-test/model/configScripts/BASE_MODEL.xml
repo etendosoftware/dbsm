@@ -17,6 +17,9 @@
         <default/>
         <onCreateDefault><![CDATA['Y']]></onCreateDefault>
       </column>
+      <index name="TEST_INDEX" unique="false">
+        <index-column name="COL1"/>
+      </index>
       <check name="TEST_CONSTRAINT"><![CDATA[COL3 IN ('Y', 'N')]]></check>
     </table>
     <trigger name="TEST_TRIGGER" table="TEST" fires="after" insert="true" update="true" delete="false" foreach="row">

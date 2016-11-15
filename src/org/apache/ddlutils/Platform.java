@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.sql.DataSource;
@@ -1308,12 +1309,13 @@ public interface Platform {
       throws DatabaseOperationException;
 
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException;
+      boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
+      throws DatabaseOperationException;
 
   /**
    * Enable all Foreign key.
    * 
-   * @param connection
+   * @param connectionenableDatasetFK
    *          The connection to the database
    * @param model
    *          The database model
@@ -1341,7 +1343,8 @@ public interface Platform {
       boolean continueOnError) throws DatabaseOperationException;
 
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError) throws DatabaseOperationException;
+      Set<String> datasetTablesWithRemovedOrInsertedRecords, boolean continueOnError)
+      throws DatabaseOperationException;
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException;
@@ -1393,10 +1396,13 @@ public interface Platform {
   // called by ERP SystemService.java (for delete client)
   public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError);
 
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords, boolean continueOnError);
+
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
-      boolean continueOnError);
+      Set<String> tablesWithRemovedRecords, boolean continueOnError);
 
   public void applyConfigScript(Database database, Vector<Change> changes);
 

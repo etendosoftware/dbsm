@@ -17,6 +17,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -298,10 +301,14 @@ public class OracleModelLoader extends ModelLoaderBase {
         }
       });
       if (commentCol != null && !commentCol.equals("")) {
+        List<String> commentLines = new ArrayList<String>(Arrays.asList(commentCol.split("\\$")));
         Pattern pat3 = Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*?)--");
-        Matcher match3 = pat3.matcher(commentCol);
-        if (match3.matches()) {
-          t.getColumn(i).setOnCreateDefault(match3.group(1));
+        for (String comment : commentLines) {
+          Matcher match3 = pat3.matcher(comment);
+          if (match3.matches()) {
+            t.getColumn(i).setOnCreateDefault(match3.group(1));
+            break;
+          }
         }
       }
     }
@@ -319,6 +326,7 @@ public class OracleModelLoader extends ModelLoaderBase {
 
     inx.setName(indexName);
     inx.setUnique(translateUniqueness(rs.getString(2)));
+
     // The index expression will be defined only for function based indexes
     final String indexExpression = rs.getString(3);
     final String databaseOwner = rs.getString(4);
@@ -343,6 +351,13 @@ public class OracleModelLoader extends ModelLoaderBase {
         inx.addColumn(inxcol);
       }
     });
+
+    // The index where clause will be defined only for partial indexes
+    String indexWhereClause = getIndexWhereClause(indexName);
+    if (indexWhereClause != null && !indexWhereClause.isEmpty()) {
+      inx.setWhereClause(indexWhereClause);
+    }
+
     return inx;
   }
 
@@ -379,8 +394,8 @@ public class OracleModelLoader extends ModelLoaderBase {
   }
 
   /**
-   * Given an the name of an index and the name of one of its columns, returns the operator class
-   * that is applied to that index column, if any. In Oracle, the operator classes are stored in the
+   * Given the name of an index and the name of one of its columns, returns the operator class that
+   * is applied to that index column, if any. In Oracle, the operator classes are stored in the
    * comments of the table owner of the indexes like this:
    * "indexName1.indexColumn1.operatorClass=operatorClass1$indexName2.indexColumn2.operatorClass=operatorClass2$..."
    */
@@ -413,6 +428,40 @@ public class OracleModelLoader extends ModelLoaderBase {
   }
 
   /**
+   * Given the name of an index, returns the where clause of the index, if it was defined as
+   * partial. In Oracle, the where clause is stored in the comments of the first column in the index
+   * like this: "indexName1.whereClause=whereClause1$indexName2.whereClause=whereClause2$..."
+   */
+  private String getIndexWhereClause(String indexName) {
+    String whereClause = null;
+    try {
+      String tableName = getTableNameFromIndexName(indexName);
+      String columnName = getFirstColumnNameFromTableIndex(tableName, indexName);
+      PreparedStatement st = null;
+      st = _connection
+          .prepareStatement("SELECT comments FROM all_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
+      st.setString(1, tableName.toUpperCase());
+      st.setString(2, columnName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      String commentText = null;
+      if (rs.next()) {
+        commentText = rs.getString(1);
+      }
+      if (commentText != null && commentText.contains("$")) {
+        String[] commentLines = commentText.split("\\$");
+        for (String commentLine : commentLines) {
+          if (commentLine.startsWith(indexName + ".whereClause")) {
+            whereClause = commentLine.substring(commentLine.indexOf("=") + 1);
+          }
+        }
+      }
+    } catch (SQLException e) {
+      _log.error("Error while getting the where clause of the index " + indexName, e);
+    }
+    return whereClause;
+  }
+
+  /**
    * Given the name of an index, returns the name of the table it belongs to
    * 
    * @param indexName
@@ -434,6 +483,35 @@ public class OracleModelLoader extends ModelLoaderBase {
       _log.error("Error while checking the table where the index " + indexName + " belongs", e);
     }
     return tableName;
+  }
+
+  /**
+   * Given the index name and the table name it belongs, returns the first column where the index is
+   * applied
+   * 
+   * @param tableName
+   *          the name of the table
+   * @param indexName
+   *          the name of the index
+   * @return the name of the first column where the index is applied
+   */
+  private String getFirstColumnNameFromTableIndex(String tableName, String indexName) {
+    String columnName = null;
+    try {
+      PreparedStatement st = null;
+      st = _connection
+          .prepareStatement("SELECT column_name FROM USER_IND_COLUMNS U WHERE INDEX_NAME = ? AND TABLE_NAME = ? AND COLUMN_POSITION = 1");
+      st.setString(1, indexName.toUpperCase());
+      st.setString(2, tableName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        columnName = rs.getString(1);
+      }
+    } catch (SQLException e) {
+      _log.error("Error while checking the first column where the index " + indexName
+          + "of the table" + tableName + " is applied", e);
+    }
+    return columnName;
   }
 
   /*

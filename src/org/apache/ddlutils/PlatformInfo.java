@@ -83,6 +83,9 @@ public class PlatformInfo {
   /** Whether operator classes in index columns are supported. */
   private boolean _operatorClassesSupported = false;
 
+  /** Whether partial indexes are supported. */
+  private boolean _partialIndexesSupported = false;
+
   /** Whether triggers are supported. */
   private boolean _triggersSupported = true;
 
@@ -540,6 +543,25 @@ public class PlatformInfo {
    */
   public void setOperatorClassesSupported(boolean operatorClassesSupported) {
     _operatorClassesSupported = operatorClassesSupported;
+  }
+
+  /**
+   * Determines whether partial indexes are supported.
+   * 
+   * @return <code>true</code> if partial indexes are supported
+   */
+  public boolean isPartialIndexesSupported() {
+    return _partialIndexesSupported;
+  }
+
+  /**
+   * Specifies whether partial indexes are supported.
+   * 
+   * @param partialIndexesSupported
+   *          <code>true</code> if partial indexes are supported
+   */
+  public void setPartialIndexesSupported(boolean partialIndexesSupported) {
+    _partialIndexesSupported = partialIndexesSupported;
   }
 
   /**

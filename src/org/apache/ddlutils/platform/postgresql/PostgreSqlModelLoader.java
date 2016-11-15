@@ -279,7 +279,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and pc.conname = ? and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
             + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
 
-    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, PG_GET_EXPR(PG_INDEX.indexprs,PG_INDEX.indrelid, true), PG_INDEX.indclass"
+    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, PG_GET_EXPR(PG_INDEX.indexprs,PG_INDEX.indrelid, true), PG_INDEX.indclass, PG_GET_EXPR(PG_INDEX.indpred,PG_INDEX.indrelid,true)"
         + " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE"
         + " WHERE PG_INDEX.indexrelid = PG_CLASS.OID"
         + " AND PG_INDEX.indrelid = PG_CLASS1.OID"
@@ -957,11 +957,16 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected Index readIndex(ResultSet rs) throws SQLException {
     String indexRealName = rs.getString(1);
     String indexName = indexRealName.toUpperCase();
+    String indexWhereClause = rs.getString(5);
 
     final Index inx = new Index();
 
     inx.setName(indexName);
     inx.setUnique(translateUniqueness(rs.getString(2)));
+    if (indexWhereClause != null && !indexWhereClause.isEmpty()) {
+      inx.setWhereClause(transformIndexExpression(indexWhereClause));
+    }
+
     /*
      * Note: only element 0 of this list will ever be used.
      * 
@@ -1079,28 +1084,25 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   private String removeCastExpressions(String indexExpression) {
-    // look for '::'
-    String transformedIndexExpression = indexExpression;
-    int castIndex = indexExpression.indexOf("::");
-    while (castIndex != -1) {
-      // casts will end either with ')' or with ','
-      int closingParenthesisIndex = transformedIndexExpression.indexOf(")", castIndex);
-      int commaIndex = transformedIndexExpression.indexOf(",", castIndex);
-      int castEndIndex = -1;
-      if (closingParenthesisIndex != -1 && commaIndex != -1) {
-        castEndIndex = Math.min(commaIndex, closingParenthesisIndex);
-      } else if (closingParenthesisIndex == -1) {
-        castEndIndex = commaIndex;
-      } else {
-        castEndIndex = closingParenthesisIndex;
-      }
-      String cast = transformedIndexExpression.substring(castIndex, castEndIndex);
-      // remove the whole cast expression
-      transformedIndexExpression = transformedIndexExpression.replace(cast, "");
-      // look for the next cast expression, if any
-      castIndex = transformedIndexExpression.indexOf("::", castIndex);
+    // casts will start with :: and end either with ')', ',' or ' '
+    // we replace all characters between '::' and one of these ending characters
+
+    String castExpressionRegExp = "(:{2}[a-z]+)([ \\),])?";
+    int replacementGroup = 2;
+    return replaceRegularExpressionMatchings(indexExpression, castExpressionRegExp,
+        replacementGroup);
+  }
+
+  private String replaceRegularExpressionMatchings(String string, String regExp, int groupIndex) {
+    Pattern pattern = Pattern.compile(regExp);
+    Matcher matcher = pattern.matcher(string);
+    StringBuffer buffer = new StringBuffer();
+    while (matcher.find()) {
+      String replacement = matcher.group(groupIndex) != null ? matcher.group(groupIndex) : "";
+      matcher.appendReplacement(buffer, replacement);
     }
-    return transformedIndexExpression;
+    matcher.appendTail(buffer);
+    return buffer.toString();
   }
 
   /**
@@ -1118,9 +1120,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       StringBuilder expressionBuilder = new StringBuilder();
       int closingQuoteIndex = -1;
       while (openingQuoteIndex != -1) {
-        expressionBuilder.append(transformedIndexExpression
-            .substring(closingQuoteIndex + 1, openingQuoteIndex).toUpperCase()
-            .replaceAll("\\s", ""));
+        String unquotedExpression = transformedIndexExpression.substring(closingQuoteIndex + 1,
+            openingQuoteIndex).toUpperCase();
+        expressionBuilder.append(removeExtraWhiteSpaces(unquotedExpression));
         closingQuoteIndex = indexExpression.indexOf("'", openingQuoteIndex + 1);
         expressionBuilder.append(transformedIndexExpression.substring(openingQuoteIndex,
             closingQuoteIndex + 1));
@@ -1130,6 +1132,15 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       transformedIndexExpression = expressionBuilder.toString();
     }
     return transformedIndexExpression;
+  }
+
+  private String removeExtraWhiteSpaces(String expression) {
+    // we replace all the white spaces present before and/or after database operators (=, >, etc.)
+
+    String operatorBetweenSpacesRegExp = "(\\s?)([^A-Z\\s]+)(\\s?)";
+    int replacementGroup = 2;
+    return replaceRegularExpressionMatchings(expression, operatorBetweenSpacesRegExp,
+        replacementGroup);
   }
 
   @Override

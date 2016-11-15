@@ -96,6 +96,12 @@ under the License.
       <attribute name="unique" property="unique"/>
 
       <element name="index-column" property="columns" updater="addColumn"/>
+      <element name="whereClause" property="whereClause">
+        <option>
+          <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+          <value>CDATA</value>
+        </option>
+      </element>
     </element>
   </class>
 
@@ -247,6 +253,14 @@ under the License.
     </element>
   </class>
     
+  <class name="org.apache.ddlutils.alteration.RemoveIndexChange">
+    <element name="removeIndexChange">
+      <attribute name="tableName" property="tableName"/>
+      <attribute name="indexName" property="indexName"/>
+      <element name="index" property="index"/>
+    </element>
+  </class>
+
   <class name="org.apache.ddlutils.alteration.VersionInfo">
     <element name="versionInfo">
       <attribute name="version" property="version"/>

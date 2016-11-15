@@ -40,19 +40,22 @@ CheckConstraints.class, //
     DefaultValuesTest.class, //
     CreateDefault.class, //
     FunctionBasedIndexes.class, //
+    CheckIndexFunctionInPrescripts.class, //
     OperatorClassIndexes.class, //
+    PartialIndexes.class, //
     CheckExcludeFilter.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
-    CheckIndexFunctionInPrescripts.class, //
     Functions.class,//
 
     AddDropConstraints.class,//
     DataTypeChanges.class, //
     OtherDefaults.class, //
     SQLCommands.class, //
-    OtherRecreations.class })
+    OtherRecreations.class, //
+    PreventConstraintDeletion.class, //
+    PreventCascadeRowDeletion.class })
 public class ModelSuite {
 
 }

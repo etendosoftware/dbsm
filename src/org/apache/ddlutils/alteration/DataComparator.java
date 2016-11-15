@@ -1,3 +1,14 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2016 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
 package org.apache.ddlutils.alteration;
 
 import java.math.BigInteger;
@@ -417,7 +428,11 @@ public class DataComparator {
   public void generateConfigScript(Vector<Change> finalChanges, Vector<Change> notExportedChanges) {
 
     notExportedChanges.addAll(this.getModelChangesList());
-    for (final Object change : this.getModelChangesList())
+    // check exportable model changes
+    for (final Object change : this.getModelChangesList()) {
+      if (!isExportableToConfigScript(change)) {
+        continue;
+      }
       if (change instanceof RemoveTriggerChange) {
         boolean addTriggerChange = false;
         String triggerName = ((RemoveTriggerChange) change).getTriggerName();
@@ -431,14 +446,12 @@ public class DataComparator {
           finalChanges.add((Change) change);
           notExportedChanges.remove(change);
         }
-      } else if (change instanceof ColumnSizeChange || change instanceof RemoveCheckChange) {
-        finalChanges.add((Change) change);
-        notExportedChanges.remove(change);
-      } else if (change instanceof ColumnRequiredChange) {
+      } else {
         finalChanges.add((Change) change);
         notExportedChanges.remove(change);
       }
-
+    }
+    // check exportable data changes
     Vector<Change> dataChangesL = new Vector<Change>();
     dataChangesL.addAll(dataChanges);
     for (final Change change : dataChanges)
@@ -448,5 +461,11 @@ public class DataComparator {
       }
 
     notExportedChanges.addAll(dataChangesL);
+  }
+
+  private boolean isExportableToConfigScript(Object change) {
+    return change instanceof ColumnSizeChange || change instanceof ColumnRequiredChange
+        || change instanceof RemoveCheckChange || change instanceof RemoveTriggerChange
+        || change instanceof RemoveIndexChange;
   }
 }

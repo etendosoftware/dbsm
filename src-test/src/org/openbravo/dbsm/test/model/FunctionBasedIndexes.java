@@ -17,7 +17,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Array;
@@ -32,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Test;
@@ -48,16 +46,9 @@ import org.openbravo.dbsm.test.base.DbsmTest;
  *
  */
 @RunWith(Parameterized.class)
-public class FunctionBasedIndexes extends DbsmTest {
+public class FunctionBasedIndexes extends IndexBaseTest {
 
-  private static final String EXPORT_DIR = "/tmp/export-test";
   private static final String VIRTUAL_COLUMN_PREFIX = "SYS_NC";
-
-  private enum TestType {
-    onCreate, onUpdate
-  }
-
-  private TestType testType;
 
   private static final Map<String, String> functionBasedIndexColumnMapPostgreSql;
   static {
@@ -83,8 +74,7 @@ public class FunctionBasedIndexes extends DbsmTest {
 
   public FunctionBasedIndexes(String rdbms, String driver, String url, String sid, String user,
       String password, String name, TestType testType) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name);
-    this.testType = testType;
+    super(rdbms, driver, url, sid, user, password, name, testType);
   }
 
   @Parameters(name = "DB: {6} - {7}")
@@ -99,18 +89,6 @@ public class FunctionBasedIndexes extends DbsmTest {
       }
     }
     return configs;
-  }
-
-  private void createDatabaseIfNeeded() {
-    boolean forceCreation = false;
-    createDatabaseIfNeeded(forceCreation);
-  }
-
-  private void createDatabaseIfNeeded(boolean forceCreation) {
-    // Only start from the base model if the testType is onUpdate or if creation is forced
-    if (forceCreation || testType == TestType.onUpdate) {
-      updateDatabase("indexes/BASE_MODEL.xml");
-    }
   }
 
   @Test
@@ -131,7 +109,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_INDEX.xml");
 
-    assertExport("indexes/BASIC_INDEX.xml");
+    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
@@ -141,7 +119,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml");
-    assertExport("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml");
+    assertExport("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml", "tables/TEST.xml");
   }
 
   @Test
@@ -168,7 +146,7 @@ public class FunctionBasedIndexes extends DbsmTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_BASED_INDEXES.xml");
 
-    assertExport("indexes/FUNCTION_BASED_INDEXES.xml");
+    assertExport("indexes/FUNCTION_BASED_INDEXES.xml", "tables/TEST.xml");
   }
 
   @Test
@@ -178,22 +156,22 @@ public class FunctionBasedIndexes extends DbsmTest {
     boolean forceCreation = true;
     createDatabaseIfNeeded(forceCreation);
     updateDatabase("indexes/NON_MONADIC_FUNCTION_INDEX.xml");
-    assertExport("indexes/NON_MONADIC_FUNCTION_INDEX.xml");
+    assertExport("indexes/NON_MONADIC_FUNCTION_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
-  // Tests that it is possible to define indexes ethat use nested functions
+  // Tests that it is possible to define indexes that use nested functions
   public void testNestedFunctionBasedIndex() throws IOException {
     resetDB();
     boolean forceCreation = true;
     createDatabaseIfNeeded(forceCreation);
     updateDatabase("indexes/NESTED_FUNCTION_INDEX.xml");
-    assertExport("indexes/NESTED_FUNCTION_INDEX.xml");
+    assertExport("indexes/NESTED_FUNCTION_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
   public void recreationFromBasicToFunction() throws IOException {
-    assumeThat(testType, is(TestType.onCreate));
+    assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
     updateDatabase("indexes/BASIC_INDEX.xml");
 
@@ -201,37 +179,21 @@ public class FunctionBasedIndexes extends DbsmTest {
     updateDatabase("indexes/FUNCTION_INDEX.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/FUNCTION_INDEX.xml");
+    assertExport("indexes/FUNCTION_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
   public void recreationFromFunctionToBasic() throws IOException {
-    assumeThat(testType, is(TestType.onCreate));
+    assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
     updateDatabase("indexes/FUNCTION_INDEX.xml");
-    assertExport("indexes/FUNCTION_INDEX.xml");
+    assertExport("indexes/FUNCTION_INDEX.xml", "tables/TEST.xml");
 
     // 2nd update should perform model check, but it doesn't check correctly index type...
     updateDatabase("indexes/BASIC_INDEX.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/BASIC_INDEX.xml");
-  }
-
-  private void assertExport(String modelFileToCompare) throws IOException {
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedTable = new File(EXPORT_DIR, "tables/TEST.xml");
-    assertThat("exported table exists", exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
-    assertThat("exported contents", exportedContents, equalTo(originalContents));
+    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
   }
 
   // Given the name of an index, return a string representation of its column, along with the

@@ -321,6 +321,12 @@ public class ModelComparator {
               + sourceTable.getName() + ")");
         }
         changes.add(new RemoveIndexChange(sourceTable, sourceIndex));
+      } else if (!_platformInfo.isPartialIndexesSupported()
+          && !targetIndex.isSameWhereClause(sourceIndex)) {
+        // keep track of changes in the where clause of the indexes in order to update the partial
+        // index information stored for platforms which does not support partial indexing.
+        changes.add(new PartialIndexInformationChange(sourceTable, sourceIndex, sourceIndex
+            .getWhereClause(), targetIndex.getWhereClause()));
       }
     }
     for (int indexIdx = 0; indexIdx < targetTable.getIndexCount(); indexIdx++) {

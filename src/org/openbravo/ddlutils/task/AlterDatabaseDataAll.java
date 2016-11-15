@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -17,19 +17,24 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
+import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.tools.ant.BuildException;
@@ -177,9 +182,35 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
 
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
-      getLog().info("Disabling foreign keys");
       final Connection connection = platform.borrowConnection();
-      platform.disableDatasetFK(connection, originaldb, ad, !isFailonerror());
+      // Now we apply the configuration scripts
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
+          true);
+      getLog().info("Comparing databases to find differences");
+      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
+      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
+      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
+      for (Change dataChange : dataComparator.getChanges()) {
+        if (dataChange instanceof RemoveRowChange) {
+          Table table = ((RemoveRowChange) dataChange).getTable();
+          String tableName = table.getName();
+          if (ad.getTable(tableName) != null) {
+            adTablesWithRemovedOrInsertedRecords.add(tableName);
+            adTablesWithRemovedRecords.add(tableName);
+          }
+        } else if (dataChange instanceof AddRowChange) {
+          Table table = ((AddRowChange) dataChange).getTable();
+          String tableName = table.getName();
+          if (ad.getTable(tableName) != null) {
+            adTablesWithRemovedOrInsertedRecords.add(tableName);
+          }
+        }
+      }
+      getLog().info("Disabling foreign keys");
+      platform.disableDatasetFK(connection, originaldb, ad, !isFailonerror(),
+          adTablesWithRemovedOrInsertedRecords);
       getLog().info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !isFailonerror());
       platform.disableNOTNULLColumns(db, ad);
@@ -192,19 +223,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       } else {
         getLog().info("Skipping modulescripts...");
       }
-
-      // Now we apply the configuration scripts
-      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-          true);
-
-      getLog().info("Comparing databases to find differences");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
       getLog().info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
       getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(db, ad, !isFailonerror());
+      platform.deleteInvalidConstraintRows(db, ad, adTablesWithRemovedRecords, !isFailonerror());
       getLog().info("Recreating Primary Keys");
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
       getLog().info("Executing oncreatedefault statements for mandatory columns");
@@ -216,7 +238,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           changes, null, ad);
 
       getLog().info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad, true);
+      boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad,
+          adTablesWithRemovedOrInsertedRecords, true);
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
 
       // execute the post-script

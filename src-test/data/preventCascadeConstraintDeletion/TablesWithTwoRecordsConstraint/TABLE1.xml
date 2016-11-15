@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+<!--1--><TABLE1>
+<!--1-->  <TABLE1_ID><![CDATA[1]]></TABLE1_ID>
+<!--1-->  <NAME><![CDATA[Table1Name]]></NAME>
+<!--1--></TABLE1>
+
+<!--2--><TABLE1>
+<!--2-->  <TABLE1_ID><![CDATA[2]]></TABLE1_ID>
+<!--2-->  <NAME><![CDATA[Table1Name2]]></NAME>
+<!--2--></TABLE1>
+</data>

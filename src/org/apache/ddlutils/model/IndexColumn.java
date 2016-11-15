@@ -232,7 +232,7 @@ public class IndexColumn implements Cloneable, Serializable {
           .append(_size, other._size)
           .append(transformedFunctionExpression, otherTransformedFunctionExpression);
       if (operatorClassMatters) {
-        // only compare the operator class if it is relevant in the curren dbms
+        // only compare the operator class if it is relevant in the current dbms
         equalsBuilder.append(_operatorClass, other._operatorClass);
       }
       return equalsBuilder.isEquals();
@@ -269,7 +269,7 @@ public class IndexColumn implements Cloneable, Serializable {
         .append(_name.toUpperCase(), other._name.toUpperCase()).append(_size, other._size)
         .append(transformedFunctionExpression, otherTransformedFunctionExpression);
     if (operatorClassMatters) {
-      // only compare the operator class if it is relevant in the curren dbms
+      // only compare the operator class if it is relevant in the current dbms
       equalsBuilder.append(_operatorClass, other._operatorClass);
     }
     return equalsBuilder.isEquals();

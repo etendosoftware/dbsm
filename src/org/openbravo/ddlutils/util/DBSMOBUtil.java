@@ -26,6 +26,7 @@ import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.VersionInfo;
 import org.apache.ddlutils.dynabean.SqlDynaBean;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
@@ -1108,6 +1109,8 @@ public class DBSMOBUtil {
             ((ColumnSizeChange) change).applyInReverse(database, false);
           else if (change instanceof ColumnRequiredChange)
             ((ColumnRequiredChange) change).applyInReverse(database, false);
+          else if (change instanceof RemoveIndexChange)
+            ((RemoveIndexChange) change).applyInReverse(database, false);
           getLog().debug(change);
         }
       } else {

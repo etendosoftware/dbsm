@@ -126,6 +126,16 @@ public class PostgreSqlBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
+  protected void writeWhereClause(Index index) throws IOException {
+    if (index.getWhereClause() != null) {
+      print(" WHERE " + index.getWhereClause());
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void createTable(Database database, Table table, Map parameters) throws IOException {
     for (int idx = 0; idx < table.getColumnCount(); idx++) {
       Column column = table.getColumn(idx);

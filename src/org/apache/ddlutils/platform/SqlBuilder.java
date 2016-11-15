@@ -75,6 +75,7 @@ import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
+import org.apache.ddlutils.alteration.PartialIndexInformationChange;
 import org.apache.ddlutils.alteration.PrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.alteration.RemoveColumnChange;
@@ -117,6 +118,7 @@ import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.CallbackClosure;
 import org.apache.ddlutils.util.MultiInstanceofPredicate;
 import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * This class is a collection of Strategy methods for creating the DDL required to create and drop
@@ -161,6 +163,8 @@ public abstract class SqlBuilder {
   private Map _charSequencesToEscape = new ListOrderedMap();
   /** The map of the tables with its list of indexes that have index columns with operator class */
   private Map<String, List<Index>> _removedIndexesWithOperatorClassMap;
+  /** The map of the tables with its list of partial indexes */
+  private Map<String, List<Index>> _removedIndexesWithWhereClause;
 
   private Translation _PLSQLFunctionTranslation = new NullTranslation();
   public Translation _PLSQLTriggerTranslation = new NullTranslation();
@@ -585,6 +589,18 @@ public abstract class SqlBuilder {
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
       boolean onlyOnDeleteCascade) {
+    Set<String> allDatasetTables = new HashSet<String>();
+    if (dataset != null) {
+      Vector<OBDatasetTable> datasetTables = dataset.getTableList();
+      for (int i = 0; i < datasetTables.size(); i++) {
+        allDatasetTables.add(datasetTables.get(i).getName());
+      }
+    }
+    deleteInvalidConstraintRows(model, dataset, allDatasetTables, onlyOnDeleteCascade);
+  }
+
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords, boolean onlyOnDeleteCascade) {
 
     try {
       // We will now delete the rows in tables which have a foreign key
@@ -593,13 +609,16 @@ public abstract class SqlBuilder {
       for (int i = 0; i < model.getTableCount(); i++) {
         Table table = model.getTable(i);
         ForeignKey[] fksTable;
-        if (dataset == null || dataset.getTable(table.getName()) != null) {
+        if (dataset == null
+            || isDatasetTableWithRemovedRecords(table, dataset, tablesWithRemovedRecords)) {
           fksTable = table.getForeignKeys();
         } else {
           List<ForeignKey> fks = new ArrayList<ForeignKey>();
           for (int j = 0; j < table.getForeignKeyCount(); j++) {
             ForeignKey fk = table.getForeignKey(j);
-            if (dataset.getTable(fk.getForeignTableName()) != null) {
+            String foreignTableName = fk.getForeignTableName();
+            if (dataset.getTable(foreignTableName) != null
+                && (tablesWithRemovedRecords.contains(foreignTableName))) {
               fks.add(fk);
             }
           }
@@ -661,6 +680,12 @@ public abstract class SqlBuilder {
       System.out.println(e.getMessage());
       _log.error(e.getLocalizedMessage());
     }
+  }
+
+  private boolean isDatasetTableWithRemovedRecords(Table table, OBDataset dataset,
+      Set<String> tablesWithRemovedRecords) {
+    return dataset.getTable(table.getName()) != null
+        && tablesWithRemovedRecords.contains(table.getName());
   }
 
   public List alterDatabaseRecreatePKs(Database currentModel, Database desiredModel,
@@ -1015,10 +1040,14 @@ public abstract class SqlBuilder {
 
     // The list of removed indexes that define an operator class
     // It is populated in processChange(Database currentModel, Database desiredModel,
-    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a paremeter to
+    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a parameter to
     // applyForSelectedChanges because it is a too generic method, that's why it is defined as a
     // class attribute
     _removedIndexesWithOperatorClassMap = new HashMap<String, List<Index>>();
+
+    // The list of removed partial index, populated also in processChange(Database currentModel,
+    // Database desiredModel, CreationParameters params, RemoveIndexChange change)
+    _removedIndexesWithWhereClause = new HashMap<String, List<Index>>();
 
     // 1st pass: removing external constraints and indices
     applyForSelectedChanges(changes, new Class[] { RemoveForeignKeyChange.class,
@@ -1027,6 +1056,10 @@ public abstract class SqlBuilder {
 
     if (!_removedIndexesWithOperatorClassMap.isEmpty()) {
       removedOperatorClassIndexesPostAction(_removedIndexesWithOperatorClassMap);
+    }
+
+    if (!_removedIndexesWithWhereClause.isEmpty()) {
+      removedPartialIndexesPostAction(_removedIndexesWithWhereClause);
     }
 
     for (int i = 0; i < currentModel.getViewCount(); i++) {
@@ -1072,6 +1105,12 @@ public abstract class SqlBuilder {
     applyForSelectedChanges(changes, new Class[] { AddViewChange.class }, callbackClosure);
 
     applyForSelectedChanges(changes, new Class[] { AddTriggerChange.class }, callbackClosure);
+
+    if (!getPlatformInfo().isPartialIndexesSupported()) {
+      applyForSelectedChanges(changes, new Class[] { PartialIndexInformationChange.class },
+          callbackClosure);
+      updatePartialIndexesPostAction();
+    }
   }
 
   /**
@@ -1079,11 +1118,51 @@ public abstract class SqlBuilder {
    * operator class are defined
    * 
    * @param removedIndexesWithOperatorClassMap
-   *          a map of all the tables that have new indexes, along with the new indexes
+   *          a map of all the tables that have indexes (with an operator class) to be removed,
+   *          along with the removed indexes
    * @throws IOException
    */
   protected void removedOperatorClassIndexesPostAction(
       Map<String, List<Index>> removedIndexesWithOperatorClassMap) throws IOException {
+  }
+
+  /**
+   * Hook to execute actions after all the RemoveIndexChanges belonging to partial indexes are
+   * defined
+   * 
+   * @param removedIndexesWithWhereClause
+   *          a map of all the tables that have partial indexes to be removed, along with the
+   *          removed partial indexes
+   * @throws IOException
+   */
+  protected void removedPartialIndexesPostAction(
+      Map<String, List<Index>> removedIndexesWithWhereClause) throws IOException {
+  }
+
+  /**
+   * Action to be executed when a change on the where clause of an index is detected. It must be
+   * implemented for those platforms where partial indexing is not supported.
+   * 
+   * @param table
+   *          the table where the changed index belongs
+   * @param index
+   *          the modified index
+   * @param oldWhereClause
+   *          the former where clause
+   * @param newWhereClause
+   *          the new where clause
+   * @throws IOException
+   */
+  protected void updatePartialIndexAction(Table table, Index index, String oldWhereClause,
+      String newWhereClause) throws IOException {
+  }
+
+  /**
+   * Action to be executed once all changes in partial indexes have been applied in the model
+   * 
+   * @throws IOException
+   */
+  protected void updatePartialIndexesPostAction() throws IOException {
   }
 
   /**
@@ -1158,19 +1237,51 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, RemoveIndexChange change) throws IOException {
-    writeExternalIndexDropStmt(change.getChangedTable(), change.getIndex());
-    if (indexHasColumnWithOperatorClass(change.getIndex())) {
+    Index removedIndex = change.getIndex();
+    writeExternalIndexDropStmt(change.getChangedTable(), removedIndex);
+    if (indexHasColumnWithOperatorClass(removedIndex)) {
       // keep track of the removed indexes that use operator classes, as in some platforms is it
       // required to update the comments of the tables that own them
-      List<Index> operatorClassTableIndexes = _removedIndexesWithOperatorClassMap.get(change
-          .getChangedTable());
-      if (operatorClassTableIndexes == null) {
-        operatorClassTableIndexes = new ArrayList<Index>();
-      }
-      operatorClassTableIndexes.add(change.getIndex());
-      _removedIndexesWithOperatorClassMap.put(change.getChangedTable().getName(),
-          operatorClassTableIndexes);
+      putRemovedIndex(_removedIndexesWithOperatorClassMap, change);
     }
+    if (removedIndex.getWhereClause() != null && !removedIndex.getWhereClause().isEmpty()) {
+      // keep track of the removed partial indexes, as in some platforms is it
+      // required to update the comments of the tables that own them
+      putRemovedIndex(_removedIndexesWithWhereClause, change);
+    }
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+  }
+
+  private void putRemovedIndex(Map<String, List<Index>> removedIndexesMap, RemoveIndexChange change) {
+    String tableName = change.getChangedTable().getName();
+    List<Index> indexList = removedIndexesMap.get(tableName);
+    if (indexList == null) {
+      indexList = new ArrayList<Index>();
+    }
+    indexList.add(change.getIndex());
+    removedIndexesMap.put(tableName, indexList);
+  }
+
+  /**
+   * Processes the change representing modifications in the information of partial indexes which is
+   * stored to maintain consistency between the XML model and the database. This changes only apply
+   * for those platforms where partial indexes are not supported as they are used just to keep
+   * updated that information.
+   * 
+   * @param currentModel
+   *          The current database schema
+   * @param desiredModel
+   *          The desired database schema
+   * @param params
+   *          The parameters used in the creation of new tables. Note that for existing tables, the
+   *          parameters won't be applied
+   * @param change
+   *          The change object
+   */
+  protected void processChange(Database currentModel, Database desiredModel,
+      CreationParameters params, PartialIndexInformationChange change) throws IOException {
+    updatePartialIndexAction(change.getChangedTable(), change.getIndex(),
+        change.getOldWhereClause(), change.getNewWhereClause());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -3468,6 +3579,8 @@ public abstract class SqlBuilder {
         }
 
         print(")");
+        // Add the where clause (if defined) for partial indexing
+        writeWhereClause(index);
         printEndOfStatement();
       }
     }
@@ -3481,6 +3594,16 @@ public abstract class SqlBuilder {
    * @throws IOException
    */
   protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
+  }
+
+  /**
+   * Writes the where clause of a partial index, if any
+   * 
+   * @param index
+   *          the index
+   * @throws IOException
+   */
+  protected void writeWhereClause(Index index) throws IOException {
   }
 
   /**
