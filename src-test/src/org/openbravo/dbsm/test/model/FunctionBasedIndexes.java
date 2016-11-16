@@ -123,6 +123,16 @@ public class FunctionBasedIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that if an index column has a function with several arguments, the arguments must be
+  // separated by commas and without whitespaces
+  public void argumentsSeparatedJustByCommas() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/FUNCTION_INDEX_TWO_ARGUMENTS.xml");
+    assertExport("indexes/FUNCTION_INDEX_TWO_ARGUMENTS.xml", "tables/TEST.xml");
+  }
+
+  @Test
   // Tests that function based indexes are properly imported
   public void importFunctionBasedIndexes() {
     resetDB();
