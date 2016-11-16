@@ -1087,7 +1087,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     // casts will start with :: and end either with ')', ',' or ' '
     // we replace all characters between '::' and one of these ending characters
 
-    String castExpressionRegExp = "(:{2}[a-z]+)([ \\),])?";
+    String castExpressionRegExp = "(:{2}[a-zA-Z0-9]+)([ \\),])?";
     int replacementGroup = 2;
     return replaceRegularExpressionMatchings(indexExpression, castExpressionRegExp,
         replacementGroup);
@@ -1113,8 +1113,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     String transformedIndexExpression = indexExpression;
     int openingQuoteIndex = indexExpression.indexOf("'");
     if (openingQuoteIndex == -1) {
-      // there is no text between quotes, capitalize all the string
-      transformedIndexExpression = transformedIndexExpression.toUpperCase();
+      // there is no text between quotes, leave arguments separated just by commas (by removing
+      // whitespaces) and capitalize all the string
+      transformedIndexExpression = removeExtraWhiteSpaces(transformedIndexExpression).toUpperCase();
     } else {
       // capitalize and remove whitespaces only from the text that is not between quotes
       StringBuilder expressionBuilder = new StringBuilder();
@@ -1135,9 +1136,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   private String removeExtraWhiteSpaces(String expression) {
-    // we replace all the white spaces present before and/or after database operators (=, >, etc.)
+    // we replace all the white spaces present before and/or after a comma or a database operator
+    // like =, >, < etc.
 
-    String operatorBetweenSpacesRegExp = "(\\s?)([^A-Z\\s]+)(\\s?)";
+    String operatorBetweenSpacesRegExp = "(\\s?)([^a-zA-Z0-9\\s]+)(\\s?)";
     int replacementGroup = 2;
     return replaceRegularExpressionMatchings(expression, operatorBetweenSpacesRegExp,
         replacementGroup);
