@@ -202,7 +202,7 @@ public class DataSetTableQueryGenerator {
   }
 
   /**
-   * Given a table, returns a list of its key columns separated by a colon, so that it can be used
+   * Given a table, returns a list of its key columns separated by a comma, so that it can be used
    * in an orderBy clause
    */
   public String buildOrderByClauseUsingKeyColumns(Table table) {
@@ -218,7 +218,7 @@ public class DataSetTableQueryGenerator {
 
   /**
    * Given a list of strings, returns a string with the concatenation of all the strings, separated
-   * with colons
+   * with commas
    */
   private String stringifyColumnNames(List<String> columns) {
     StringBuilder listStringified = new StringBuilder();
