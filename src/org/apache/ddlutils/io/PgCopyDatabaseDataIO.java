@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -47,7 +48,7 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
 
   private final Log log = LogFactory.getLog(PgCopyDatabaseDataIO.class);
 
-  private static List<String> auditColumnNames = Arrays.asList("CREATED", "UPDATED", "CREATEDBY",
+  private static List<String> AUDIT_COLUMN_NAMES = Arrays.asList("CREATED", "UPDATED", "CREATEDBY",
       "UPDATEDBY");
 
   private DataSetTableQueryGenerator queryGenerator;
@@ -98,7 +99,7 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
   private void removeAuditInfoColumns(List<String> includedColumns) {
     List<String> columnToDelete = new ArrayList<String>();
     for (String columnName : includedColumns) {
-      if (auditColumnNames.contains(columnName.toUpperCase())) {
+      if (AUDIT_COLUMN_NAMES.contains(columnName.toUpperCase())) {
         columnToDelete.add(columnName);
       }
     }
@@ -134,7 +135,8 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
   private String getColumnNames(File file) {
     String columnNames = null;
     try (InputStream inputStream = new FileInputStream(file);
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream,
+            StandardCharsets.UTF_8));) {
       columnNames = br.readLine();
     } catch (Exception e) {
       log.error("Error while reading the column names of a .copy file", e);

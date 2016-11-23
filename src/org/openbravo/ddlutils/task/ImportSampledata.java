@@ -18,7 +18,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
@@ -227,7 +227,7 @@ public class ImportSampledata extends BaseDatabaseTask {
   private String getClientIdFromCopyFile(File clientFileCopy) {
     String clientId = null;
     try (InputStream fis = new FileInputStream(clientFileCopy);
-        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+        InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);) {
 
       // skips the first line, it contains the column names
