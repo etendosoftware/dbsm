@@ -142,8 +142,6 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
       copyCommand.append("COPY " + tableName + " ");
       copyCommand.append("(" + getColumnNames(file) + " ) ");
       copyCommand.append("FROM STDIN WITH (FORMAT CSV, HEADER TRUE) ");
-      long tTotal = System.currentTimeMillis();
-      long nRecords = copyManager.copyIn(copyCommand.toString(), bufferedInStream);
       connection.commit();
     } catch (Exception e) {
       log.error("Error while importing file " + file.getName() + ": " + e.getMessage());

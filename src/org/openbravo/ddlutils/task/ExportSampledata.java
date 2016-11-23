@@ -98,8 +98,6 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
-  private static final String COPY_EXTENSION = ".copy";
-  private static final String XML_EXTENSION = ".xml";
 
   private Map<String, Integer> exportedTablesCount = null;
 
