@@ -3500,7 +3500,6 @@ public abstract class SqlBuilder {
    *          The table
    */
   protected void writeExternalIndicesCreateStmt(Table table) throws IOException {
-    Map<String, String> indexColumnsWithOperatorClass = new HashMap<String, String>();
     for (int idx = 0; idx < table.getIndexCount(); idx++) {
       Index index = table.getIndex(idx);
 
