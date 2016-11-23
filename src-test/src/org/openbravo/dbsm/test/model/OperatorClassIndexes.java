@@ -179,33 +179,4 @@ public class OperatorClassIndexes extends IndexBaseTest {
     return tableComment;
   }
 
-  /**
-   * Given the name of an index, returns the operator class of its first column
-   * 
-   * @param indexName
-   *          the name of the index
-   * @return the operator class of the first column of the given index
-   */
-  private String getOperatorClassNameForIndexFromDb(String indexName) {
-    String operatorClassName = null;
-    try {
-      Connection cn = getDataSource().getConnection();
-      StringBuilder query = new StringBuilder();
-      query.append("SELECT PG_OPCLASS.opcname ");
-      query.append("FROM PG_INDEX, PG_CLASS, PG_OPCLASS ");
-      query.append("WHERE PG_INDEX.indexrelid = PG_CLASS.OID ");
-      query.append("AND PG_OPCLASS.OID = PG_INDEX.indclass[0] ");
-      query.append("AND UPPER(PG_CLASS.relname) = ?");
-      PreparedStatement st = cn.prepareStatement(query.toString());
-      st.setString(1, indexName.toUpperCase());
-      ResultSet rs = st.executeQuery();
-      if (rs.next()) {
-        operatorClassName = rs.getString(1);
-      }
-    } catch (SQLException e) {
-      log.error("Error while getting the name of the operator class of the index " + indexName, e);
-    }
-    return operatorClassName;
-  }
-
 }
