@@ -225,13 +225,11 @@ public class ImportSampledata extends BaseDatabaseTask {
   }
 
   private String getClientIdFromCopyFile(File clientFileCopy) {
-    InputStream fis = null;
     String clientId = null;
-    BufferedReader br = null;
-    try {
-      fis = new FileInputStream(clientFileCopy);
-      InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
-      br = new BufferedReader(isr);
+    try (InputStream fis = new FileInputStream(clientFileCopy);
+        InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+        BufferedReader br = new BufferedReader(isr);) {
+
       // skips the first line, it contains the column names
       br.readLine();
       // the values for the client is in the second line
@@ -239,19 +237,6 @@ public class ImportSampledata extends BaseDatabaseTask {
       clientId = values.substring(0, values.indexOf(","));
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      if (br != null) {
-        try {
-          br.close();
-        } catch (IOException ignore) {
-        }
-      }
-      if (fis != null) {
-        try {
-          fis.close();
-        } catch (IOException ignore) {
-        }
-      }
     }
     return clientId;
   }

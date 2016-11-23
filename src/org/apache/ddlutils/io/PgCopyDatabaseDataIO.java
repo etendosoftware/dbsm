@@ -16,7 +16,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -65,9 +64,7 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
   public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
       String moduleId, Map<String, Object> customParams, boolean orderByTableId) {
     long count = 0;
-    BaseConnection connection = null;
-    try {
-      connection = getPgBaseConnection();
+    try (BaseConnection connection = getPgBaseConnection()) {
       CopyManager copyManager = new CopyManager(connection);
       StringBuilder copyCommand = new StringBuilder();
       List<String> columns = getNotExcludedColumns(dsTable);
@@ -86,21 +83,8 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
       }
     } catch (Exception e) {
       log.error("Error while exporting table", e);
-      if (connection != null) {
-        try {
-          connection.rollback();
-        } catch (SQLException ignore) {
-        }
-      }
-    } finally {
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (SQLException ignore) {
-        }
-      }
     }
-    return (count > 0);
+    return count > 0;
   }
 
   private List<String> getNotExcludedColumns(OBDatasetTable dsTable) {
@@ -130,70 +114,30 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
    *           if the file cannot be imported using PostgreSQL's COPY
    */
   public void importCopyFile(File file) throws DdlUtilsException {
-    BaseConnection connection = null;
-    InputStream inputStream = null;
-    try {
-      String tableName = getTableName(file);
-      connection = getPgBaseConnection();
+    String tableName = getTableName(file);
+    try (BaseConnection connection = getPgBaseConnection();
+        InputStream inputStream = new FileInputStream(file);) {
       CopyManager copyManager = new CopyManager(connection);
-      inputStream = new FileInputStream(file);
       InputStream bufferedInStream = new BufferedInputStream(inputStream, 65536);
       StringBuilder copyCommand = new StringBuilder();
       copyCommand.append("COPY " + tableName + " ");
       copyCommand.append("(" + getColumnNames(file) + " ) ");
       copyCommand.append("FROM STDIN WITH (FORMAT CSV, HEADER TRUE) ");
+      copyManager.copyIn(copyCommand.toString(), bufferedInStream);
       connection.commit();
     } catch (Exception e) {
-      log.error("Error while importing file " + file.getName() + ": " + e.getMessage());
-      e.printStackTrace();
-      if (connection != null) {
-        try {
-          connection.rollback();
-        } catch (SQLException ignore) {
-        }
-      }
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (Exception e) {
-        }
-      }
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (SQLException e) {
-        }
-      }
+      log.error("Error while importing file " + file.getName(), e);
     }
   }
 
   // the names of the exported columns are placed in the first line of the file
   private String getColumnNames(File file) {
-    BufferedReader br = null;
     String columnNames = null;
-    InputStream inputStream = null;
-    try {
-      inputStream = new FileInputStream(file);
-      br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+    try (InputStream inputStream = new FileInputStream(file);
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));) {
       columnNames = br.readLine();
     } catch (Exception e) {
       log.error("Error while reading the column names of a .copy file", e);
-    } finally {
-      try {
-        if (inputStream != null) {
-          inputStream.close();
-        }
-      } catch (IOException e) {
-        log.error("Error while resetting the input stream", e);
-      }
-      try {
-        if (br != null) {
-          br.close();
-        }
-      } catch (IOException e) {
-        log.error("Error while resetting the input stream", e);
-      }
     }
     return columnNames;
   }

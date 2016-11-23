@@ -458,8 +458,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
     boolean b = false;
     Table table = model.findTable(dsTable.getName());
     Connection con = platform.borrowConnection();
-    Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
-        moduleID);
+    Vector<DynaBean> rows = readRowsFromTableList(con, platform, model, table, dsTable, moduleID);
     for (DynaBean row : rows) {
       writer.write(model, dsTable, row);
       b = true;

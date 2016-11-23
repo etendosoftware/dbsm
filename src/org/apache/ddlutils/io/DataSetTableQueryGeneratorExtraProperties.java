@@ -37,9 +37,6 @@ public class DataSetTableQueryGeneratorExtraProperties {
   public void addWhereClauseExpression(String columnName, String operator, String value) {
     WhereClauseSimpleExpression whereClauseExpression = new WhereClauseSimpleExpression(columnName,
         operator, value);
-    if (additionalWhereClauses == null) {
-      additionalWhereClauses = new ArrayList<>();
-    }
     additionalWhereClauses.add(whereClauseExpression);
   }
 
