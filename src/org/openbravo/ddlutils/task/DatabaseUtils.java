@@ -94,14 +94,14 @@ public class DatabaseUtils {
   }
 
   public static File[] readFileArray(File f) {
-    return fileFileArrayOfType(f, new XMLFiles());
+    return readFileArrayOfType(f, new XMLFiles());
   }
 
   public static File[] readCopyFileArray(File f) {
-    return fileFileArrayOfType(f, new CopyFiles());
+    return readFileArrayOfType(f, new CopyFiles());
   }
 
-  public static File[] fileFileArrayOfType(File folder, FileFilter filter) {
+  private static File[] readFileArrayOfType(File folder, FileFilter filter) {
     if (folder.isDirectory()) {
       ArrayList<File> fileslist = new ArrayList<File>();
       File[] directoryfiles = folder.listFiles(filter);

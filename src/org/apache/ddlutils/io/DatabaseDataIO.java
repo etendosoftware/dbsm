@@ -407,8 +407,8 @@ public class DatabaseDataIO implements DataSetTableExporter {
     return anyRecordsHaveBeenExported;
   }
 
-  public boolean streamDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
-      OutputStream output, String xmlEncoding, String moduleID) {
+  private boolean streamDataForTableToXML(Platform platform, Database model,
+      OBDatasetTable dsTable, OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
@@ -428,7 +428,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
     return b;
   }
 
-  public Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
+  private Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
       Database model, Table table, OBDatasetTable dsTable, String moduleId) {
     Table[] atables = { table };
     Statement statement = null;
