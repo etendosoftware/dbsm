@@ -236,7 +236,10 @@ public class ImportSampledata extends BaseDatabaseTask {
       String values = br.readLine();
       clientId = values.substring(0, values.indexOf(","));
     } catch (Exception e) {
-      e.printStackTrace();
+      getLog()
+          .error(
+              "Error while tring to obtain the client id from file "
+                  + clientFileCopy.getAbsolutePath(), e);
     }
     return clientId;
   }

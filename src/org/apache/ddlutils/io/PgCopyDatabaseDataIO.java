@@ -48,8 +48,8 @@ public class PgCopyDatabaseDataIO implements DataSetTableExporter {
 
   private final Log log = LogFactory.getLog(PgCopyDatabaseDataIO.class);
 
-  private static List<String> AUDIT_COLUMN_NAMES = Arrays.asList("CREATED", "UPDATED", "CREATEDBY",
-      "UPDATEDBY");
+  private final static List<String> AUDIT_COLUMN_NAMES = Arrays.asList("CREATED", "UPDATED",
+      "CREATEDBY", "UPDATEDBY");
 
   private DataSetTableQueryGenerator queryGenerator;
 
