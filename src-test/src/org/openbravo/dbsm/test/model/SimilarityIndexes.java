@@ -105,6 +105,18 @@ public class SimilarityIndexes extends IndexBaseTest {
     }
   }
 
+  @Test
+  // Tests that an index used for ILIKE comparisons can be imported properly
+  // This index is a function based index which makes use of the similarity feature
+  public void importIlikeIndex() {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/ILIKE_INDEX.xml");
+    if (Rdbms.PG.equals(getRdbms())) {
+      assertIsSimilarityIndex("BASIC_INDEX");
+    }
+  }
+
   private void assertIsSimilarityIndex(String indexName) {
     final List<String> expectedConfiguration = Arrays.asList("gin", "gin_trgm_ops");
     String accessMethod = getIndexAccessMethodFromDb(indexName);
@@ -119,6 +131,15 @@ public class SimilarityIndexes extends IndexBaseTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
     assertExport("indexes/BASIC_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that an index used for ILIKE comparisons can be exported properly
+  public void exportIlikeIndex() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/ILIKE_INDEX.xml");
+    assertExport("indexes/ILIKE_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
