@@ -431,17 +431,13 @@ public class DatabaseDataIO implements DataSetTableExporter {
   private Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
       Database model, Table table, OBDatasetTable dsTable, String moduleId) {
     Table[] atables = { table };
-    Statement statement = null;
-    ResultSet resultSet = null;
-    String sqlstatement = "";
-    try {
-      System.out.println("Exporting table " + table.getName());
-      statement = connection.createStatement();
-      DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
-      extraProperties.setModuleId(moduleId);
-      dsTable.setName(table.getName());
-      sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
-      resultSet = statement.executeQuery(sqlstatement);
+    DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
+    extraProperties.setModuleId(moduleId);
+    dsTable.setName(table.getName());
+    String sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
+    try (Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sqlstatement);) {
+      _log.info("Exporting table " + table.getName());
       return platform.createResultSetIterator(model, resultSet, atables);
     } catch (SQLException ex) {
       _log.error("SQL command to read rows from table failed: " + sqlstatement);
