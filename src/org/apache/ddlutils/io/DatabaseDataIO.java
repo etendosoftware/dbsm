@@ -413,7 +413,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
-    boolean b = false;
+    boolean anyRecordsHaveBeenExported = false;
     Table table = model.findTable(dsTable.getName());
     Connection con = platform.borrowConnection();
     Iterator<DynaBean> iterator = getDatasetTableDataIterator(con, platform, model, table, dsTable,
@@ -421,11 +421,11 @@ public class DatabaseDataIO implements DataSetTableExporter {
     while (iterator.hasNext()) {
       DynaBean row = (DynaBean) iterator.next();
       writer.write(model, dsTable, row);
-      b = true;
+      anyRecordsHaveBeenExported = true;
     }
     platform.returnConnection(con);
     writer.writeDocumentEnd();
-    return b;
+    return anyRecordsHaveBeenExported;
   }
 
   private Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
