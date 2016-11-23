@@ -61,7 +61,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
     public static ExportFormat getExportFormatByName(String formatName, String rdbms) {
       ExportFormat exportFormat = null;
-      if (formatName.equals(COPY.name) && POSTGRE_RDBMS.equals(rdbms)) {
+      if (formatName != null && formatName.equals(COPY.name) && POSTGRE_RDBMS.equals(rdbms)) {
         exportFormat = COPY;
       } else {
         exportFormat = XML;
@@ -95,6 +95,7 @@ public class ExportSampledata extends BaseDatabaseTask {
   private String client;
   private String clientId;
   private String module;
+  private String exportFormatParam;
   private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
@@ -166,7 +167,7 @@ public class ExportSampledata extends BaseDatabaseTask {
       }
 
       File path = new File(sampledataFolder, clientName);
-
+      exportFormat = ExportFormat.getExportFormatByName(exportFormatParam, rdbms);
       final DataSetTableExporter dsTableExporter = exportFormat
           .getDataSetTableExporter(getQueryGenerator());
 
@@ -234,8 +235,8 @@ public class ExportSampledata extends BaseDatabaseTask {
     return f;
   }
 
-  public void setExportFormat(String exportFormat) {
-    this.exportFormat = ExportFormat.getExportFormatByName(exportFormat, rdbms);
+  public void setExportFormat(String exportFormatParam) {
+    this.exportFormatParam = exportFormatParam;
   }
 
   public void setRdbms(String rdbms) {
