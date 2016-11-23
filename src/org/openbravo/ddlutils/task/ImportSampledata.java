@@ -32,9 +32,9 @@ import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
-import org.apache.ddlutils.io.PgCopyDatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDatasetTable;
@@ -309,7 +309,7 @@ public class ImportSampledata extends BaseDatabaseTask {
   }
 
   private void importPgCopyFile(File file) {
-    final PgCopyDatabaseDataIO dbdio = new PgCopyDatabaseDataIO();
+    final PostgreSqlDatabaseDataIO dbdio = new PostgreSqlDatabaseDataIO();
     dbdio.importCopyFile(file);
   }
 

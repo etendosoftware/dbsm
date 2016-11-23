@@ -30,11 +30,11 @@ import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DataSetTableExporter;
 import org.apache.ddlutils.io.DataSetTableQueryGenerator;
 import org.apache.ddlutils.io.DatabaseDataIO;
-import org.apache.ddlutils.io.PgCopyDatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
@@ -75,7 +75,7 @@ public class ExportSampledata extends BaseDatabaseTask {
     public DataSetTableExporter getDataSetTableExporter(DataSetTableQueryGenerator queryGenerator) {
       switch (this) {
       case COPY:
-        return new PgCopyDatabaseDataIO(queryGenerator);
+        return new PostgreSqlDatabaseDataIO(queryGenerator);
       default:
         DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
         databaseDataIO.setEnsureFKOrder(false);

@@ -10,7 +10,7 @@
  ************************************************************************************
  */
 
-package org.apache.ddlutils.io;
+package org.apache.ddlutils.platform.postgresql;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -32,6 +32,9 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
+import org.apache.ddlutils.io.DataSetTableExporter;
+import org.apache.ddlutils.io.DataSetTableQueryGenerator;
+import org.apache.ddlutils.io.DataSetTableQueryGeneratorExtraProperties;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -44,20 +47,20 @@ import org.postgresql.core.BaseConnection;
  * exported file includes the names of the exported columns
  *
  */
-public class PgCopyDatabaseDataIO implements DataSetTableExporter {
+public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
 
-  private final Log log = LogFactory.getLog(PgCopyDatabaseDataIO.class);
+  private final Log log = LogFactory.getLog(PostgreSqlDatabaseDataIO.class);
 
   private final static List<String> AUDIT_COLUMN_NAMES = Arrays.asList("CREATED", "UPDATED",
       "CREATEDBY", "UPDATEDBY");
 
   private DataSetTableQueryGenerator queryGenerator;
 
-  public PgCopyDatabaseDataIO() {
+  public PostgreSqlDatabaseDataIO() {
     this.queryGenerator = new DataSetTableQueryGenerator();
   }
 
-  public PgCopyDatabaseDataIO(DataSetTableQueryGenerator queryGenerator) {
+  public PostgreSqlDatabaseDataIO(DataSetTableQueryGenerator queryGenerator) {
     this.queryGenerator = queryGenerator;
   }
 
