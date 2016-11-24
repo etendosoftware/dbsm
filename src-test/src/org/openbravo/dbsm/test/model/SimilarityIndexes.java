@@ -46,25 +46,10 @@ public class SimilarityIndexes extends IndexBaseTest {
   }
 
   @Before
-  public void initialize() {
-    if (getRdbms() == Rdbms.PG) {
-      ExcludeFilter excludeFilter = new ExcludeFilter();
-      excludeFilter.fillFromFile(new File("model/excludeFilter/excludePgTrgmFunctions.xml"));
-      setExcludeFilter(excludeFilter);
-      installPgTrgmExtension();
+  public void installPgTrgmExtension() {
+    if (getRdbms() != Rdbms.PG) {
+      return;
     }
-  }
-
-  @After
-  public void cleanUp() {
-    if (getRdbms() == Rdbms.PG) {
-      resetDB();
-      setExcludeFilter(null);
-      uninstallPgTrgmExtension();
-    }
-  }
-
-  private void installPgTrgmExtension() {
     Connection connection = null;
     try {
       connection = getDataSource().getConnection();
@@ -77,14 +62,22 @@ public class SimilarityIndexes extends IndexBaseTest {
     } finally {
       getPlatform().returnConnection(connection);
     }
+    // Configure the exclude filter
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludePgTrgmFunctions.xml"));
+    setExcludeFilter(excludeFilter);
   }
 
-  private void uninstallPgTrgmExtension() {
+  @After
+  public void uninstallPgTrgmExtension() {
+    if (getRdbms() != Rdbms.PG) {
+      return;
+    }
     Connection connection = null;
     try {
       connection = getDataSource().getConnection();
       StringBuilder query = new StringBuilder();
-      query.append("DROP EXTENSION \"pg_trgm\"");
+      query.append("DROP EXTENSION \"pg_trgm\" CASCADE");
       PreparedStatement st = connection.prepareStatement(query.toString());
       st.execute();
     } catch (SQLException e) {
@@ -108,7 +101,7 @@ public class SimilarityIndexes extends IndexBaseTest {
   @Test
   // Tests that an index used for ILIKE comparisons can be imported properly
   // This index is a function based index which makes use of the similarity feature
-  public void importIlikeIndex() {
+  public void importIlikeSimilarityIndex() {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/ILIKE_INDEX.xml");
@@ -135,7 +128,7 @@ public class SimilarityIndexes extends IndexBaseTest {
 
   @Test
   // Tests that an index used for ILIKE comparisons can be exported properly
-  public void exportIlikeIndex() throws IOException {
+  public void exportIlikeSimilarityIndex() throws IOException {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/ILIKE_INDEX.xml");
