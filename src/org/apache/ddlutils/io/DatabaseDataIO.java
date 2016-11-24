@@ -451,17 +451,17 @@ public class DatabaseDataIO implements DataSetTableExporter {
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
-    boolean b = false;
+    boolean anyRecordsHaveBeenExported = false;
     Table table = model.findTable(dsTable.getName());
     Connection con = platform.borrowConnection();
     Vector<DynaBean> rows = readRowsFromTableList(con, platform, model, table, dsTable, moduleID);
     for (DynaBean row : rows) {
       writer.write(model, dsTable, row);
-      b = true;
+      anyRecordsHaveBeenExported = true;
     }
     platform.returnConnection(con);
     writer.writeDocumentEnd();
-    return b;
+    return anyRecordsHaveBeenExported;
 
   }
 
