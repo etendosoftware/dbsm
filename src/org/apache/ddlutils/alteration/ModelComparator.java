@@ -22,6 +22,7 @@ package org.apache.ddlutils.alteration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -80,8 +81,8 @@ public class ModelComparator {
    *          The target model
    * @return The changes
    */
-  public List compare(Database sourceModel, Database targetModel) {
-    ArrayList changes = new ArrayList();
+  public List<ModelChange> compare(Database sourceModel, Database targetModel) {
+    List<ModelChange> changes = new ArrayList<>();
 
     for (int trIdx = 0; trIdx < sourceModel.getTriggerCount(); trIdx++) {
       Trigger sourceTrigger = sourceModel.getTrigger(trIdx);
@@ -222,9 +223,9 @@ public class ModelComparator {
    *          The target table
    * @return The changes
    */
-  public List compareTables(Database sourceModel, Table sourceTable, Database targetModel,
-      Table targetTable) {
-    ArrayList changes = new ArrayList();
+  public List<ModelChange> compareTables(Database sourceModel, Table sourceTable,
+      Database targetModel, Table targetTable) {
+    List<ModelChange> changes = new ArrayList<>();
 
     for (int fkIdx = 0; fkIdx < sourceTable.getForeignKeyCount(); fkIdx++) {
       ForeignKey sourceFk = sourceTable.getForeignKey(fkIdx);
@@ -308,9 +309,6 @@ public class ModelComparator {
       }
     }
 
-    // Only in some platforms do the operator classes of the index column matter
-    // Take this into account when comparing the indexes
-    boolean operatorClassMatters = _platformInfo.isOperatorClassesSupported();
     for (int indexIdx = 0; indexIdx < sourceTable.getIndexCount(); indexIdx++) {
       Index sourceIndex = sourceTable.getIndex(indexIdx);
       Index targetIndex = findCorrespondingIndex(targetTable, sourceIndex);
@@ -344,7 +342,7 @@ public class ModelComparator {
       }
     }
 
-    HashMap addColumnChanges = new HashMap();
+    Map<Column, AddColumnChange> addColumnChanges = new HashMap<>();
 
     for (int columnIdx = 0; columnIdx < targetTable.getColumnCount(); columnIdx++) {
       Column targetColumn = targetTable.getColumn(columnIdx);
@@ -424,7 +422,7 @@ public class ModelComparator {
       }
     }
 
-    HashMap columnPosChanges = new HashMap();
+    Map<Column, Integer> columnPosChanges = new HashMap<>();
     int diffPos = 0;
 
     for (int columnIdx = 0; columnIdx < sourceTable.getColumnCount(); columnIdx++) {
@@ -467,9 +465,9 @@ public class ModelComparator {
    *          The target column
    * @return The changes
    */
-  public List compareColumns(Table sourceTable, Column sourceColumn, Table targetTable,
-      Column targetColumn) {
-    ArrayList changes = new ArrayList();
+  public List<ModelChange> compareColumns(Table sourceTable, Column sourceColumn,
+      Table targetTable, Column targetColumn) {
+    List<ModelChange> changes = new ArrayList<>();
 
     // if (_platformInfo.getTargetJdbcType(targetColumn.getTypeCode()) !=
     // sourceColumn.getTypeCode())

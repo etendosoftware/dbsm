@@ -423,7 +423,7 @@ public class DbsmTest {
         ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
             platform.isDelimitedIdentifierModeOn());
         @SuppressWarnings("unchecked")
-        List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+        List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
             platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
@@ -482,8 +482,7 @@ public class DbsmTest {
 
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
-    @SuppressWarnings("unchecked")
-    List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+    List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
         platform.loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;
