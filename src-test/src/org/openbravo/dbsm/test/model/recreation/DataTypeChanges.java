@@ -66,7 +66,12 @@ public class DataTypeChanges extends TableRecreationBaseTest {
 
   @Test
   public void changeNVarcharToVarchar() {
+    worksOnlyIn(Rdbms.PG);
     assertTablesAreNotRecreated("DATA_TYPE4.xml", "DATA_TYPE_BASE.xml");
+  }
+
+  private void worksOnlyIn(Rdbms dbSpecific) {
+    assumeThat("Feature supported only for " + dbSpecific, getRdbms(), is(dbSpecific));
   }
 
   private void notWorkingYet() {
