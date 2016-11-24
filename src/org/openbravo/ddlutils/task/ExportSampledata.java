@@ -197,10 +197,10 @@ public class ExportSampledata extends BaseDatabaseTask {
           final OutputStream out = new FileOutputStream(tableFile);
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
+          getLog().info("Exporting table: " + table.getName() + "...");
           boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
               dsTableExporterExtraParams, orderByTableId());
           if (dataExported) {
-            getLog().info("Exported table: " + table.getName());
             addTableToExportedTablesMap(table.getName());
           } else {
             tableFile.delete();
