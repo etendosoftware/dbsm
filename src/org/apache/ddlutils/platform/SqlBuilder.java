@@ -2970,9 +2970,8 @@ public abstract class SqlBuilder {
    */
   protected void writeColumn(Table table, Column column, boolean deferNotNull) throws IOException {
     // see comments in columnsDiffer about null/"" defaults
-    printIdentifier(getColumnName(column));
-    print(" ");
-    print(getSqlType(column));
+
+    writeColumnType(column);
 
     String value;
     String onCreateDefault = column.getLiteralOnCreateDefault();
@@ -2998,6 +2997,12 @@ public abstract class SqlBuilder {
       print(" ");
       writeColumnNullableStmt();
     }
+  }
+
+  protected void writeColumnType(Column column) throws IOException {
+    printIdentifier(getColumnName(column));
+    print(" ");
+    print(getSqlType(column));
   }
 
   /**

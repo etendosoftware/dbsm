@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
@@ -1021,5 +1022,41 @@ public class Oracle8Builder extends SqlBuilder {
       }
     }
     return tableComment;
+  }
+
+  public boolean requiresRecreation(ColumnDataTypeChange change) {
+    if (isSupportedTypeChange(change)) {
+      return false;
+    }
+    return true;
+  }
+
+  private boolean isSupportedTypeChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+
+    // it is allowed to change from (var)char to n(var)char but not in the other way around
+    boolean charToNChar = TypeMap.CHAR.equals(oldType) && TypeMap.NCHAR.equals(newType);
+    boolean varcharToNVarchar = TypeMap.VARCHAR.equals(oldType) && TypeMap.NVARCHAR.equals(newType);
+
+    return charToNChar || varcharToNVarchar;
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
+    if (isSupportedTypeChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      printColumnTypeChange(currentModel, change);
+    }
+  }
+
+  public void printColumnTypeChange(Database database, ColumnDataTypeChange change)
+      throws IOException {
+    Table table = database.findTable(change.getChangedTable().getName());
+    Column column = table.findColumn(change.getChangedColumn().getName());
+    print("ALTER TABLE " + table.getName() + " MODIFY ");
+    writeColumnType(column);
+    printEndOfStatement();
   }
 }
