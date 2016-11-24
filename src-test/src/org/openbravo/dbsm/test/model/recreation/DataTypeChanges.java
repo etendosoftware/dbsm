@@ -11,7 +11,7 @@
  */
 package org.openbravo.dbsm.test.model.recreation;
 
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assume.assumeThat;
 
 import java.io.FileNotFoundException;
@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.codehaus.jettison.json.JSONException;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
@@ -37,11 +36,6 @@ public class DataTypeChanges extends TableRecreationBaseTest {
     super(rdbms, driver, url, sid, user, password, name, type, recMode);
   }
 
-  @Before
-  public void willCauseRecreation() {
-    assumeThat(recreationMode, is(DbsmTest.RecreationMode.forced));
-  }
-
   @Parameters(name = "DB: {6} - recreation {8}")
   public static Collection<Object[]> parameters() throws IOException, JSONException {
     return TableRecreationBaseTest.parameters();
@@ -49,16 +43,29 @@ public class DataTypeChanges extends TableRecreationBaseTest {
 
   @Test
   public void changeDecimalTypeSize() {
+    notWorkingYet();
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE1.xml");
   }
 
   @Test
   public void changeVarcharTypeSize() {
+    notWorkingYet();
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE2.xml");
   }
 
   @Test
   public void changeCharTypeSize() {
+    notWorkingYet();
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
   }
+
+  @Test
+  public void changeVarcharToNVarchar() {
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE4.xml");
+  }
+
+  private void notWorkingYet() {
+    assumeThat(recreationMode, is(DbsmTest.RecreationMode.forced));
+  }
+
 }
