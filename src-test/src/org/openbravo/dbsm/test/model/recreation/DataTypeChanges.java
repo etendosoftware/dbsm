@@ -64,6 +64,11 @@ public class DataTypeChanges extends TableRecreationBaseTest {
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE4.xml");
   }
 
+  @Test
+  public void changeNVarcharToVarchar() {
+    assertTablesAreNotRecreated("DATA_TYPE4.xml", "DATA_TYPE_BASE.xml");
+  }
+
   private void notWorkingYet() {
     assumeThat(recreationMode, is(DbsmTest.RecreationMode.forced));
   }
