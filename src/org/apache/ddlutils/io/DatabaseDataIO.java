@@ -440,7 +440,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
       _log.info("Exporting table " + table.getName());
       return platform.createResultSetIterator(model, resultSet, atables);
     } catch (SQLException ex) {
-      _log.error("SQL command to read rows from table failed: " + sqlstatement);
+      _log.error("SQL command to read rows from table failed: " + sqlstatement, ex);
       return null;
     }
   }
