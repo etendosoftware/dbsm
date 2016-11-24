@@ -671,7 +671,7 @@ public class DbsmTest {
         pkValue = RandomStringUtils.random(col.getSizeAsInt(), "0123456789ABCDEF");
         values += "'" + pkValue + "'";
       } else if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())
-          || "CHAR".equals(col.getType())) {
+          || "CHAR".equals(col.getType()) || "NCHAR".equals(col.getType())) {
         values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
       } else if ("DECIMAL".equals(col.getType())) {
         values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
