@@ -21,23 +21,20 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;
+import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.io.DataSetTableExporter;
 import org.apache.ddlutils.io.DataSetTableQueryGenerator;
 import org.apache.ddlutils.io.DataSetTableQueryGeneratorExtraProperties;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
-import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -68,8 +65,12 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
   public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
       String moduleId, Map<String, Object> customParams, boolean orderByTableId) {
     long count = 0;
-    try (BaseConnection connection = getPgBaseConnection()) {
-      CopyManager copyManager = new CopyManager(connection);
+
+    Platform platform = (Platform) customParams.get("platform");
+    Connection connection = platform.borrowConnection();
+    try {
+      BaseConnection baseConnection = connection.unwrap(BaseConnection.class);
+      CopyManager copyManager = new CopyManager(baseConnection);
       StringBuilder copyCommand = new StringBuilder();
       List<String> columns = getNotExcludedColumns(dsTable);
 
@@ -87,6 +88,8 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
       }
     } catch (Exception e) {
       log.error("Error while exporting table", e);
+    } finally {
+      platform.returnConnection(connection);
     }
     return count > 0;
   }
@@ -114,23 +117,27 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
    * 
    * @param file
    *          The file being imported
+   * @param platform
+   *          Platform instance that will be used to retrieve the database connection
    * @throws DdlUtilsException
    *           if the file cannot be imported using PostgreSQL's COPY
    */
-  public void importCopyFile(File file) throws DdlUtilsException {
+  public void importCopyFile(File file, Platform platform) throws DdlUtilsException {
     String tableName = getTableName(file);
-    try (BaseConnection connection = getPgBaseConnection();
-        InputStream inputStream = new FileInputStream(file);) {
-      CopyManager copyManager = new CopyManager(connection);
+    Connection connection = platform.borrowConnection();
+    try (InputStream inputStream = new FileInputStream(file);) {
+      BaseConnection baseConnection = connection.unwrap(BaseConnection.class);
+      CopyManager copyManager = new CopyManager(baseConnection);
       InputStream bufferedInStream = new BufferedInputStream(inputStream, 65536);
       StringBuilder copyCommand = new StringBuilder();
       copyCommand.append("COPY " + tableName + " ");
       copyCommand.append("(" + getColumnNames(file) + " ) ");
       copyCommand.append("FROM STDIN WITH (FORMAT CSV, HEADER TRUE) ");
       copyManager.copyIn(copyCommand.toString(), bufferedInStream);
-      connection.commit();
     } catch (Exception e) {
       log.error("Error while importing file " + file.getName(), e);
+    } finally {
+      platform.returnConnection(connection);
     }
   }
 
@@ -145,17 +152,6 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
       log.error("Error while reading the column names of a .copy file", e);
     }
     return columnNames;
-  }
-
-  private BaseConnection getPgBaseConnection() throws SQLException {
-    Properties obProperties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
-    String user = obProperties.getProperty("bbdd.user");
-    String password = obProperties.getProperty("bbdd.password");
-    String url = obProperties.getProperty("bbdd.url");
-    String sid = obProperties.getProperty("bbdd.sid");
-    Connection connection = DriverManager.getConnection(url + "/" + sid, user, password);
-    connection.setAutoCommit(false);
-    return (BaseConnection) connection;
   }
 
   private String getTableName(File file) {

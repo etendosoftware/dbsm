@@ -155,7 +155,7 @@ public class ImportSampledata extends BaseDatabaseTask {
               importXmlFile(f, platform, db);
             } else if (f.getName().endsWith(".copy")) {
               if (POSTGRE_RDBMS.equals(rdbms)) {
-                importPgCopyFile(f);
+                importPgCopyFile(f, platform);
               } else {
                 getLog().warn("File " + f.getName() + " cannot be imported in Oracle");
               }
@@ -308,9 +308,9 @@ public class ImportSampledata extends BaseDatabaseTask {
     dataReader.getSink().end();
   }
 
-  private void importPgCopyFile(File file) {
+  private void importPgCopyFile(File file, Platform platform) {
     final PostgreSqlDatabaseDataIO dbdio = new PostgreSqlDatabaseDataIO();
-    dbdio.importCopyFile(file);
+    dbdio.importCopyFile(file, platform);
   }
 
 }
