@@ -27,6 +27,7 @@ import java.util.Vector;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ColumnChange;
+import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
@@ -40,6 +41,7 @@ import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
+import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.translation.CommentFilter;
@@ -953,5 +955,37 @@ public class PostgreSqlBuilder extends SqlBuilder {
       print(" DROP NOT NULL");
     }
     printEndOfStatement();
+  }
+
+  public boolean requiresRecreation(ColumnDataTypeChange change) {
+    if (isCommentChange(change)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /** PG doesn't support NChar nor NVarchar types, so only change is to add a comment */
+  private boolean isCommentChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+
+    boolean varcharToNVarchar = (TypeMap.NVARCHAR.equals(oldType) || TypeMap.VARCHAR
+        .equals(oldType)) && (TypeMap.NVARCHAR.equals(newType) || TypeMap.VARCHAR.equals(newType));
+    boolean charToNchar = (TypeMap.NCHAR.equals(oldType) || TypeMap.CHAR.equals(oldType))
+        && (TypeMap.NCHAR.equals(newType) || TypeMap.CHAR.equals(newType));
+
+    return varcharToNVarchar || charToNchar;
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
+    if (isCommentChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      Column modifiedColumn = currentModel.findTable(change.getChangedTable().getName())
+          .findColumn(change.getChangedColumn().getName());
+      writeColumnCommentStmt(desiredModel, change.getChangedTable(), modifiedColumn);
+    }
   }
 }

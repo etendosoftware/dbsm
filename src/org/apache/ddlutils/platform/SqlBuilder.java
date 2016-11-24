@@ -556,14 +556,14 @@ public abstract class SqlBuilder {
 
     ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
         .isDelimitedIdentifierModeOn());
-    List changes = comparator.compare(currentModel, desiredModel);
+    List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
 
     alterDatabase(currentModel, desiredModel, params, changes);
 
   }
 
   public void alterDatabase(Database currentModel, Database desiredModel,
-      CreationParameters params, List changes) throws IOException {
+      CreationParameters params, List<ModelChange> changes) throws IOException {
     _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
     _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
     _SQLTranslation = createSQLTranslation(desiredModel);
@@ -1032,8 +1032,9 @@ public abstract class SqlBuilder {
    *          The parameters used in the creation of new tables. Note that for existing tables, the
    *          parameters won't be applied
    */
-  protected void processChanges(Database currentModel, Database desiredModel, List changes,
-      CreationParameters params, boolean createConstraints) throws IOException {
+  protected void processChanges(Database currentModel, Database desiredModel,
+      List<ModelChange> changes, CreationParameters params, boolean createConstraints)
+      throws IOException {
     CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
         Database.class, Database.class, CreationParameters.class, null }, new Object[] {
         currentModel, desiredModel, params, null });
@@ -1752,7 +1753,7 @@ public abstract class SqlBuilder {
    *          The change objects for this table
    */
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
-      String tableName, Map parameters, List changes, Set<String> unchangedtriggers)
+      String tableName, Map parameters, List<TableChange> changes, Set<String> unchangedtriggers)
       throws IOException {
     Table sourceTable = currentModel.findTable(tableName, getPlatform()
         .isDelimitedIdentifierModeOn());
@@ -4754,14 +4755,15 @@ public abstract class SqlBuilder {
    * remaining changes will be in that list.
    */
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
-      Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
+      Table sourceTable, Table targetTable, Map parameters, List<TableChange> changes)
+      throws IOException {
 
     if (requiresRecreation(targetTable, changes, true)) {
       return;
     }
 
     // // First we drop primary keys as necessary
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+    for (Iterator<TableChange> changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
       if (change instanceof RemovePrimaryKeyChange) {
@@ -4781,6 +4783,9 @@ public abstract class SqlBuilder {
         changeIt.remove();
       } else if (change instanceof ColumnDefaultValueChange) {
         processChange(currentModel, desiredModel, (ColumnDefaultValueChange) change);
+        changeIt.remove();
+      } else if (change instanceof ColumnDataTypeChange) {
+        processChange(currentModel, desiredModel, (ColumnDataTypeChange) change);
         changeIt.remove();
       }
     }
@@ -4960,6 +4965,11 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnRequiredChange change) throws IOException {
+    // no default implementation
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
     // no default implementation
   }
 
