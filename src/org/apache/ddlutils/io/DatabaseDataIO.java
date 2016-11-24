@@ -445,7 +445,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
     }
   }
 
-  public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
+  private boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
       OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
