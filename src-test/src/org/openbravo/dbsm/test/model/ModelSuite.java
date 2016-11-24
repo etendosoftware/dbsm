@@ -43,6 +43,7 @@ CheckConstraints.class, //
     CheckIndexFunctionInPrescripts.class, //
     OperatorClassIndexes.class, //
     PartialIndexes.class, //
+    SimilarityIndexes.class, //
     CheckExcludeFilter.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
