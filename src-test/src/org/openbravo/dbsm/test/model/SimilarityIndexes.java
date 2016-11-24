@@ -181,4 +181,14 @@ public class SimilarityIndexes extends IndexBaseTest {
     }
   }
 
+  @Test
+  // Tests that it is possible to defines similarity (not function based) indexes with multiple
+  // columns
+  public void exportSimilarityIndexMultiple() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/MULTIPLE_SIMILARITY_INDEX.xml");
+    assertExport("indexes/MULTIPLE_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+  }
+
 }
