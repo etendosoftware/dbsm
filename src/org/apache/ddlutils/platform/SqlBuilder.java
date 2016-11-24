@@ -3547,6 +3547,7 @@ public abstract class SqlBuilder {
         printIdentifier(getConstraintObjectName(index));
         print(" ON ");
         printIdentifier(getStructureObjectName(table));
+        writeMethod(index);
         print(" (");
 
         List<IndexColumn> columnsWithOperatorClass = new ArrayList<IndexColumn>();
@@ -3574,7 +3575,7 @@ public abstract class SqlBuilder {
             // included in the comments of the table in Oracle
             columnsWithOperatorClass.add(idxColumn);
           }
-          writeOperatorClass(idxColumn);
+          writeOperatorClass(index, idxColumn);
         }
 
         print(")");
@@ -3586,13 +3587,26 @@ public abstract class SqlBuilder {
   }
 
   /**
+   * Writes the access method used by the index
+   * 
+   * @param index
+   *          the index
+   * @throws IOException
+   */
+  protected void writeMethod(Index index) throws IOException {
+  }
+
+  /**
    * Writes the operator class of the index column, if any.
    * 
+   * @param index
+   *          the index owner of the index column, it can be used to retrieve information about the
+   *          index itself
    * @param idxColumn
    *          the index column
    * @throws IOException
    */
-  protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
+  protected void writeOperatorClass(Index index, IndexColumn idxColumn) throws IOException {
   }
 
   /**

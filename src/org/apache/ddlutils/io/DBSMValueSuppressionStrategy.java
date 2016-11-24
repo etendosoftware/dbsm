@@ -12,8 +12,11 @@
 
 package org.apache.ddlutils.io;
 
+import java.lang.reflect.Method;
+
 import org.apache.commons.betwixt.AttributeDescriptor;
 import org.apache.commons.betwixt.ElementDescriptor;
+import org.apache.commons.betwixt.expression.MethodExpression;
 import org.apache.commons.betwixt.strategy.ValueSuppressionStrategy;
 import org.apache.ddlutils.model.Index;
 
@@ -24,6 +27,7 @@ import org.apache.ddlutils.model.Index;
 public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
 
   private static final String WHERE_CLAUSE = "whereClause";
+  private static final String SIMILARITY = "similarity";
 
   /**
    * Determines if the given attribute value be suppressed
@@ -36,7 +40,11 @@ public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
    */
   @Override
   public boolean suppressAttribute(AttributeDescriptor attributeDescriptor, String value) {
-    // For attributes, use default strategy: suppress all null values
+    if (isIndexSimilarityAttribute(attributeDescriptor)) {
+      // Do not export Index similarity attribute if it is false
+      return !Boolean.valueOf(value);
+    }
+    // For the rest of attributes, use default strategy: suppress all null values
     return ValueSuppressionStrategy.DEFAULT.suppressAttribute(attributeDescriptor, value);
   }
 
@@ -64,5 +72,21 @@ public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
       return ((Index) value).getWhereClause() == null;
     }
     return false;
+  }
+
+  private boolean isIndexSimilarityAttribute(AttributeDescriptor attributeDescriptor) {
+    if (!SIMILARITY.equals(attributeDescriptor.getLocalName())) {
+      return false;
+    }
+    return Index.class.getName().equals(getAttributeOwnerClassName(attributeDescriptor));
+  }
+
+  private String getAttributeOwnerClassName(AttributeDescriptor attributeDescriptor) {
+    MethodExpression methodExpression = (MethodExpression) attributeDescriptor.getTextExpression();
+    Method method = methodExpression.getMethod();
+    if (method == null) {
+      return null;
+    }
+    return method.getDeclaringClass().getName();
   }
 }

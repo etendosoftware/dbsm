@@ -116,8 +116,20 @@ public class PostgreSqlBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
-    if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
+  protected void writeMethod(Index index) throws IOException {
+    if (index.isSimilarity()) {
+      print(" USING gin");
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void writeOperatorClass(Index index, IndexColumn idxColumn) throws IOException {
+    if (index.isSimilarity()) {
+      print(" gin_trgm_ops");
+    } else if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
       print(" " + idxColumn.getOperatorClass());
     }
   }
