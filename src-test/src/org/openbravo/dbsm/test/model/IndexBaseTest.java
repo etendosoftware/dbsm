@@ -140,8 +140,9 @@ public class IndexBaseTest extends DbsmTest {
    */
   protected String getOperatorClassNameForIndexFromDb(String indexName) {
     String operatorClassName = null;
+    Connection cn = null;
     try {
-      Connection cn = getDataSource().getConnection();
+      cn = getDataSource().getConnection();
       StringBuilder query = new StringBuilder();
       query.append("SELECT PG_OPCLASS.opcname ");
       query.append("FROM PG_INDEX, PG_CLASS, PG_OPCLASS ");
@@ -156,6 +157,8 @@ public class IndexBaseTest extends DbsmTest {
       }
     } catch (SQLException e) {
       log.error("Error while getting the name of the operator class of the index " + indexName, e);
+    } finally {
+      getPlatform().returnConnection(cn);
     }
     return operatorClassName;
   }
@@ -185,7 +188,7 @@ public class IndexBaseTest extends DbsmTest {
         indexWhereClause = rs.getString(1);
       }
     } catch (SQLException e) {
-      log.error("Error while getting the where clause of the index " + indexName, e);
+      log.error("Error while getting the access method of the index " + indexName, e);
     } finally {
       getPlatform().returnConnection(connection);
     }
