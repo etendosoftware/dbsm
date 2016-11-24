@@ -46,7 +46,7 @@ import org.postgresql.core.BaseConnection;
  */
 public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
 
-  private final Log log = LogFactory.getLog(PostgreSqlDatabaseDataIO.class);
+  private static final Log log = LogFactory.getLog(PostgreSqlDatabaseDataIO.class);
 
   private final static List<String> AUDIT_COLUMN_NAMES = Arrays.asList("CREATED", "UPDATED",
       "CREATEDBY", "UPDATEDBY");
