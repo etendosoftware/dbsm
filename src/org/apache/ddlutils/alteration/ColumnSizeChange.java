@@ -99,9 +99,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
    * {@inheritDoc}
    */
   public void apply(Database database, boolean caseSensitive) {
-    Table table = _table;
-    if (table == null)
-      table = database.findTable(_tablename, caseSensitive);
+    Table table = database.findTable(_tablename, caseSensitive);
 
     // We will not try to apply the change if the table doesn't exist in the model
     // This could happen in update.database.mod if a configuration script has this change
@@ -109,9 +107,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
     if (table == null) {
       return;
     }
-    Column column = _column;
-    if (column == null)
-      column = table.findColumn(_columnname, caseSensitive);
+    Column column = table.findColumn(_columnname, caseSensitive);
     if (column != null)
       column.setSizeAndScale(_newSize, _newScale);
 

@@ -48,8 +48,7 @@ public class DataTypeChanges extends TableRecreationBaseTest {
   }
 
   @Test
-  public void changeVarcharTypeSize() {
-    notWorkingYet();
+  public void increaseVarcharSize() {
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE2.xml");
   }
 

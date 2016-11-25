@@ -4792,6 +4792,9 @@ public abstract class SqlBuilder {
       } else if (change instanceof ColumnDataTypeChange) {
         processChange(currentModel, desiredModel, (ColumnDataTypeChange) change);
         changeIt.remove();
+      } else if (change instanceof ColumnSizeChange) {
+        processChange(currentModel, desiredModel, (ColumnSizeChange) change);
+        changeIt.remove();
       }
     }
 
@@ -4975,6 +4978,11 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnDataTypeChange change) throws IOException {
+    // no default implementation
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
+      throws IOException {
     // no default implementation
   }
 

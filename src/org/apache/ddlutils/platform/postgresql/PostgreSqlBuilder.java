@@ -958,11 +958,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
   }
 
   public boolean requiresRecreation(ColumnDataTypeChange change) {
-    if (isCommentChange(change)) {
-      return false;
-    }
-
-    return true;
+    boolean suportedChage = isCommentChange(change);
+    return !suportedChage;
   }
 
   /** PG doesn't support NChar nor NVarchar types, so only change is to add a comment */
@@ -987,5 +984,32 @@ public class PostgreSqlBuilder extends SqlBuilder {
           .findColumn(change.getChangedColumn().getName());
       writeColumnCommentStmt(desiredModel, change.getChangedTable(), modifiedColumn);
     }
+  }
+
+  public boolean requiresRecreation(ColumnSizeChange change) {
+    boolean supportedChange = canResize(change.getChangedColumn().getTypeCode());
+    boolean madeLonger = change.getOldSize() <= change.getNewSize();
+
+    return !(supportedChange && madeLonger);
+  }
+
+  private boolean canResize(int typeCode) {
+    String type = TypeMap.getJdbcTypeName(typeCode);
+    return TypeMap.NVARCHAR.equals(type) || TypeMap.VARCHAR.equals(type);
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
+      throws IOException {
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    Table table = currentModel.findTable(change.getChangedTable().getName());
+    Column column = table.findColumn(change.getChangedColumn().getName());
+    print("ALTER TABLE " + table.getName() + " ALTER COLUMN ");
+
+    printIdentifier(getColumnName(column));
+    print(" TYPE ");
+    print(getSqlType(column));
+
+    printEndOfStatement();
   }
 }
