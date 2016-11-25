@@ -72,15 +72,18 @@ public class DataTypeChanges extends TableRecreationBaseTest {
 
   @Test
   public void changeVarcharToText() {
+    worksOnlyIn(Rdbms.PG);
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
   }
 
   private void worksOnlyIn(Rdbms dbSpecific) {
-    assumeThat("Feature supported only for " + dbSpecific, getRdbms(), is(dbSpecific));
+    if (recreationMode == RecreationMode.standard) {
+      assumeThat("Feature supported only for " + dbSpecific, getRdbms(), is(dbSpecific));
+    }
   }
 
   private void notWorkingYet() {
-    assumeThat(recreationMode, is(DbsmTest.RecreationMode.forced));
+    assumeThat("Feature not implemented yet", recreationMode, is(DbsmTest.RecreationMode.forced));
   }
 
 }
