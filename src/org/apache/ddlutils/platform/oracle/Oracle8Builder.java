@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
@@ -1051,8 +1052,34 @@ public class Oracle8Builder extends SqlBuilder {
     }
   }
 
-  public void printColumnTypeChange(Database database, ColumnDataTypeChange change)
+  public boolean requiresRecreation(ColumnSizeChange change) {
+    boolean supportedChange = canResizeType(change.getChangedColumn().getTypeCode());
+    boolean madeLonger = change.getOldSize() <= change.getNewSize();
+
+    return !(supportedChange && madeLonger);
+  }
+
+  private boolean canResizeType(int typeCode) {
+    String type = TypeMap.getJdbcTypeName(typeCode);
+    switch (type) {
+    case TypeMap.NVARCHAR:
+    case TypeMap.VARCHAR:
+    case TypeMap.NCHAR:
+    case TypeMap.CHAR:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
       throws IOException {
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    printColumnTypeChange(currentModel, change);
+  }
+
+  private void printColumnTypeChange(Database database, ColumnChange change) throws IOException {
     Table table = database.findTable(change.getChangedTable().getName());
     Column column = table.findColumn(change.getChangedColumn().getName());
     print("ALTER TABLE " + table.getName() + " MODIFY ");
