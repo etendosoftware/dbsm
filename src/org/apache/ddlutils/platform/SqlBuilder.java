@@ -2860,8 +2860,8 @@ public abstract class SqlBuilder {
    * @param parameters
    *          Additional platform-specific parameters for the table creation
    */
-  protected void writeTableCreationStmt(Database database, Table table, Map parameters)
-      throws IOException {
+  protected void writeTableCreationStmt(Database database, Table table,
+      Map<String, Object> parameters) throws IOException {
     printStartOfStatement("TABLE", getStructureObjectName(table));
     printScriptOptions("CRITICAL = TRUE");
 

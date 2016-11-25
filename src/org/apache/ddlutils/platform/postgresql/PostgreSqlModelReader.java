@@ -52,17 +52,16 @@ public class PostgreSqlModelReader extends JdbcModelReader {
     setDefaultTablePattern(null);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+  @Override
+  protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values)
+      throws SQLException {
     Table table = super.readTable(metaData, values);
 
     if (table != null) {
       // PostgreSQL also returns unique indics for non-pk auto-increment
       // columns
       // which are of the form "[table]_[column]_key"
-      HashMap uniquesByName = new HashMap();
+      Map<String, Index> uniquesByName = new HashMap<>();
 
       for (int indexIdx = 0; indexIdx < table.getIndexCount(); indexIdx++) {
         Index index = table.getIndex(indexIdx);
@@ -86,10 +85,9 @@ public class PostgreSqlModelReader extends JdbcModelReader {
     return table;
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+  @Override
+  protected Column readColumn(DatabaseMetaDataWrapper metaData, Map<String, Object> values)
+      throws SQLException {
     Column column = super.readColumn(metaData, values);
 
     if (column.getSize() != null) {
