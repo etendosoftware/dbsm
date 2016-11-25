@@ -987,15 +987,23 @@ public class PostgreSqlBuilder extends SqlBuilder {
   }
 
   public boolean requiresRecreation(ColumnSizeChange change) {
-    boolean supportedChange = canResize(change.getChangedColumn().getTypeCode());
+    boolean supportedChange = canResizeType(change.getChangedColumn().getTypeCode());
     boolean madeLonger = change.getOldSize() <= change.getNewSize();
 
     return !(supportedChange && madeLonger);
   }
 
-  private boolean canResize(int typeCode) {
+  private boolean canResizeType(int typeCode) {
     String type = TypeMap.getJdbcTypeName(typeCode);
-    return TypeMap.NVARCHAR.equals(type) || TypeMap.VARCHAR.equals(type);
+    switch (type) {
+    case TypeMap.NVARCHAR:
+    case TypeMap.VARCHAR:
+    case TypeMap.NCHAR:
+    case TypeMap.CHAR:
+      return true;
+    default:
+      return false;
+    }
   }
 
   @Override

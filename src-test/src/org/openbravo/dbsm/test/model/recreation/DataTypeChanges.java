@@ -53,6 +53,11 @@ public class DataTypeChanges extends TableRecreationBaseTest {
   }
 
   @Test
+  public void increaseCharSize() {
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
+  }
+
+  @Test
   public void changeCharTypeSize() {
     notWorkingYet();
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
