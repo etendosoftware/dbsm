@@ -958,7 +958,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
   }
 
   public boolean requiresRecreation(ColumnDataTypeChange change) {
-    boolean suportedChage = isCommentChange(change);
+    boolean suportedChage = isCommentChange(change) || isAllowedChange(change);
     return !suportedChage;
   }
 
@@ -975,6 +975,13 @@ public class PostgreSqlBuilder extends SqlBuilder {
     return varcharToNVarchar || charToNchar;
   }
 
+  private boolean isAllowedChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+    return (TypeMap.NVARCHAR.equals(oldType) || TypeMap.VARCHAR.equals(oldType))
+        && TypeMap.CLOB.equals(newType);
+  }
+
   @Override
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnDataTypeChange change) throws IOException {
@@ -983,6 +990,17 @@ public class PostgreSqlBuilder extends SqlBuilder {
       Column modifiedColumn = currentModel.findTable(change.getChangedTable().getName())
           .findColumn(change.getChangedColumn().getName());
       writeColumnCommentStmt(desiredModel, change.getChangedTable(), modifiedColumn);
+    } else if (isAllowedChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      Table table = currentModel.findTable(change.getChangedTable().getName());
+      Column column = table.findColumn(change.getChangedColumn().getName());
+      print("ALTER TABLE " + table.getName() + " ALTER COLUMN ");
+
+      printIdentifier(getColumnName(column));
+      print(" TYPE ");
+      print(getSqlType(column));
+
+      printEndOfStatement();
     }
   }
 

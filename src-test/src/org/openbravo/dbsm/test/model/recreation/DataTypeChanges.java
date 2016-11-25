@@ -70,6 +70,11 @@ public class DataTypeChanges extends TableRecreationBaseTest {
     assertTablesAreNotRecreated("DATA_TYPE4.xml", "DATA_TYPE_BASE.xml");
   }
 
+  @Test
+  public void changeVarcharToText() {
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
+  }
+
   private void worksOnlyIn(Rdbms dbSpecific) {
     assumeThat("Feature supported only for " + dbSpecific, getRdbms(), is(dbSpecific));
   }
