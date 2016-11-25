@@ -41,6 +41,7 @@ public class DataTypeChanges extends TableRecreationBaseTest {
     return TableRecreationBaseTest.parameters();
   }
 
+  // ========================== Size changes ========================================
   @Test
   public void changeDecimalTypeSize() {
     notWorkingYet();
@@ -54,15 +55,10 @@ public class DataTypeChanges extends TableRecreationBaseTest {
 
   @Test
   public void increaseCharSize() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
-  }
-
-  @Test
-  public void changeCharTypeSize() {
-    notWorkingYet();
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
   }
 
+  // ========================== Type changes ========================================
   @Test
   public void changeVarcharToNVarchar() {
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE4.xml");
