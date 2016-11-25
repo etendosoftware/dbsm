@@ -76,6 +76,12 @@ public class DataTypeChanges extends TableRecreationBaseTest {
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
   }
 
+  @Test
+  public void changeCharToText() {
+    worksOnlyIn(Rdbms.PG);
+    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE6.xml");
+  }
+
   private void worksOnlyIn(Rdbms dbSpecific) {
     if (recreationMode == RecreationMode.standard) {
       assumeThat("Feature supported only for " + dbSpecific, getRdbms(), is(dbSpecific));

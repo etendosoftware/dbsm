@@ -1,5 +1,11 @@
 package org.apache.ddlutils.platform.postgresql;
 
+import static org.apache.ddlutils.model.TypeMap.CHAR;
+import static org.apache.ddlutils.model.TypeMap.CLOB;
+import static org.apache.ddlutils.model.TypeMap.NCHAR;
+import static org.apache.ddlutils.model.TypeMap.NVARCHAR;
+import static org.apache.ddlutils.model.TypeMap.VARCHAR;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -967,10 +973,10 @@ public class PostgreSqlBuilder extends SqlBuilder {
     String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
     String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
 
-    boolean varcharToNVarchar = (TypeMap.NVARCHAR.equals(oldType) || TypeMap.VARCHAR
-        .equals(oldType)) && (TypeMap.NVARCHAR.equals(newType) || TypeMap.VARCHAR.equals(newType));
-    boolean charToNchar = (TypeMap.NCHAR.equals(oldType) || TypeMap.CHAR.equals(oldType))
-        && (TypeMap.NCHAR.equals(newType) || TypeMap.CHAR.equals(newType));
+    boolean varcharToNVarchar = (NVARCHAR.equals(oldType) || VARCHAR.equals(oldType))
+        && (NVARCHAR.equals(newType) || VARCHAR.equals(newType));
+    boolean charToNchar = (NCHAR.equals(oldType) || CHAR.equals(oldType))
+        && (NCHAR.equals(newType) || CHAR.equals(newType));
 
     return varcharToNVarchar || charToNchar;
   }
@@ -978,8 +984,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
   private boolean isAllowedChange(ColumnDataTypeChange change) {
     String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
     String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
-    return (TypeMap.NVARCHAR.equals(oldType) || TypeMap.VARCHAR.equals(oldType))
-        && TypeMap.CLOB.equals(newType);
+    boolean wasTxtType = (NVARCHAR.equals(oldType) || VARCHAR.equals(oldType)
+        || NCHAR.equals(oldType) || CHAR.equals(oldType));
+    return wasTxtType && CLOB.equals(newType);
   }
 
   @Override
@@ -1014,10 +1021,10 @@ public class PostgreSqlBuilder extends SqlBuilder {
   private boolean canResizeType(int typeCode) {
     String type = TypeMap.getJdbcTypeName(typeCode);
     switch (type) {
-    case TypeMap.NVARCHAR:
-    case TypeMap.VARCHAR:
-    case TypeMap.NCHAR:
-    case TypeMap.CHAR:
+    case NVARCHAR:
+    case VARCHAR:
+    case NCHAR:
+    case CHAR:
       return true;
     default:
       return false;
