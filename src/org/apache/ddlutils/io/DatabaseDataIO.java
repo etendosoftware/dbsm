@@ -57,7 +57,7 @@ import org.openbravo.ddlutils.util.OBDatasetTable;
  * 
  * @version $Revision: $
  */
-public class DatabaseDataIO {
+public class DatabaseDataIO implements DataSetTableExporter {
   /**
    * The converters to use for converting between data and its XML representation.
    */
@@ -82,7 +82,17 @@ public class DatabaseDataIO {
 
   protected boolean _writePrimaryKeyComment = true;
 
+  private DataSetTableQueryGenerator queryGenerator;
+
   private final Log _log = LogFactory.getLog(DatabaseDataIO.class);
+
+  public DatabaseDataIO() {
+    this.queryGenerator = new DataSetTableQueryGenerator();
+  }
+
+  public DatabaseDataIO(DataSetTableQueryGenerator queryGenerator) {
+    this.queryGenerator = queryGenerator;
+  }
 
   /**
    * Registers a converter.
@@ -379,24 +389,81 @@ public class DatabaseDataIO {
     databaseData.reorderAllTables();
   }
 
-  public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
+  @Override
+  public boolean exportDataSet(Database model, OBDatasetTable dsTable, OutputStream output,
+      String moduleId, Map<String, Object> customParams, boolean orderByTableId) {
+    String xmlEncoding = (String) customParams.get("xmlEncoding");
+    Platform platform = (Platform) customParams.get("platform");
+    boolean anyRecordsHaveBeenExported = false;
+    if (orderByTableId) {
+      anyRecordsHaveBeenExported = writeDataForTableToXML(platform, model, dsTable, output,
+          xmlEncoding, moduleId);
+    } else {
+      // no need to store the objects in a vector in order to sort them, we write them to the file
+      // as they are being read
+      anyRecordsHaveBeenExported = streamDataForTableToXML(platform, model, dsTable, output,
+          xmlEncoding, moduleId);
+    }
+    return anyRecordsHaveBeenExported;
+  }
+
+  private boolean streamDataForTableToXML(Platform platform, Database model,
+      OBDatasetTable dsTable, OutputStream output, String xmlEncoding, String moduleID) {
+    DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
+    writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
+    registerConverters(writer.getConverterConfiguration());
+    writer.writeDocumentStart();
+    long nExportedRows = 0;
+    Table table = model.findTable(dsTable.getName());
+    Connection con = platform.borrowConnection();
+    Iterator<DynaBean> iterator = getDatasetTableDataIterator(con, platform, model, table, dsTable,
+        moduleID);
+    while (iterator.hasNext()) {
+      DynaBean row = (DynaBean) iterator.next();
+      writer.write(model, dsTable, row);
+      nExportedRows++;
+    }
+    _log.info("  " + nExportedRows + " records have been exported");
+    platform.returnConnection(con);
+    writer.writeDocumentEnd();
+    return nExportedRows > 0;
+  }
+
+  private Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
+      Database model, Table table, OBDatasetTable dsTable, String moduleId) {
+    Table[] atables = { table };
+    DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
+    extraProperties.setModuleId(moduleId);
+    dsTable.setName(table.getName());
+    String sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
+    try (Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sqlstatement);) {
+      _log.info("Exporting table " + table.getName());
+      return platform.createResultSetIterator(model, resultSet, atables);
+    } catch (SQLException ex) {
+      _log.error("SQL command to read rows from table failed: " + sqlstatement, ex);
+      return null;
+    }
+  }
+
+  private boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
       OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
-    boolean b = false;
+    boolean anyRecordsHaveBeenExported = false;
     Table table = model.findTable(dsTable.getName());
     Connection con = platform.borrowConnection();
-    Vector<DynaBean> rows = this.readRowsFromTableList(con, platform, model, table, dsTable,
-        moduleID);
+    Vector<DynaBean> rows = readRowsFromTableList(con, platform, model, table, dsTable, moduleID);
     for (DynaBean row : rows) {
       writer.write(model, dsTable, row);
-      b = true;
+      anyRecordsHaveBeenExported = true;
     }
+    _log.info("  " + rows.size() + " records have been exported");
     platform.returnConnection(con);
     writer.writeDocumentEnd();
-    return b;
+    return anyRecordsHaveBeenExported;
 
   }
 
@@ -704,26 +771,17 @@ public class DatabaseDataIO {
 
   public Vector<DynaBean> readRowsFromTableList(Connection connection, Platform platform,
       Database model, Table table, OBDatasetTable dsTable, String moduleId) {
-    String fullwhereclause = dsTable.getWhereclause(moduleId);
-    if (dsTable.getSecondarywhereclause() != null) {
-      fullwhereclause += " AND " + dsTable.getSecondarywhereclause() + " ";
-    }
     Table[] atables = { table };
     Statement statement = null;
     ResultSet resultSet = null;
     String sqlstatement = "";
     try {
       statement = connection.createStatement();
-      sqlstatement = "SELECT * FROM " + table.getName();
-      if (fullwhereclause != null) {
-        sqlstatement += " WHERE " + fullwhereclause;
-      }
-      sqlstatement += " ORDER BY ";
-      for (int j = 0; j < table.getPrimaryKeyColumns().length; j++) {
-        if (j > 0)
-          sqlstatement += ",";
-        sqlstatement += table.getPrimaryKeyColumns()[j].getName();
-      }
+      DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
+      extraProperties.setModuleId(moduleId);
+      extraProperties.setOrderByClause(queryGenerator.buildOrderByClauseUsingKeyColumns(table));
+      dsTable.setName(table.getName());
+      sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
       resultSet = statement.executeQuery(sqlstatement);
       Iterator it = platform.createResultSetIterator(model, resultSet, atables);
       Vector<DynaBean> dbs = new Vector<DynaBean>();
