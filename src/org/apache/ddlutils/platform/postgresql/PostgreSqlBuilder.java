@@ -14,6 +14,7 @@ package org.apache.ddlutils.platform.postgresql;
 
 import static org.apache.ddlutils.model.TypeMap.CHAR;
 import static org.apache.ddlutils.model.TypeMap.CLOB;
+import static org.apache.ddlutils.model.TypeMap.DECIMAL;
 import static org.apache.ddlutils.model.TypeMap.NCHAR;
 import static org.apache.ddlutils.model.TypeMap.NVARCHAR;
 import static org.apache.ddlutils.model.TypeMap.VARCHAR;
@@ -1018,6 +1019,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     case VARCHAR:
     case NCHAR:
     case CHAR:
+    case DECIMAL:
       return true;
     default:
       return false;

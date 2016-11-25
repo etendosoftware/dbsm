@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.codehaus.jettison.json.JSONException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
@@ -43,12 +44,6 @@ public class DataTypeChanges extends TableRecreationBaseTest {
 
   // ========================== Size changes ========================================
   @Test
-  public void changeDecimalTypeSize() {
-    notWorkingYet();
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE1.xml");
-  }
-
-  @Test
   public void increaseVarcharSize() {
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE2.xml");
   }
@@ -56,6 +51,28 @@ public class DataTypeChanges extends TableRecreationBaseTest {
   @Test
   public void increaseCharSize() {
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
+  }
+
+  @Test
+  public void increaseNumberPrecisionNoScale() {
+    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS1.xml");
+  }
+
+  @Ignore("This case cannot be supported")
+  @Test
+  public void increaseScaleKeepPrecision() {
+    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS2.xml");
+  }
+
+  @Test
+  public void decreaseScaleKeepPrecision() {
+    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS2.xml", "DATA_TYPE_NUMBERS_BASE.xml");
+  }
+
+  @Test
+  public void fromAnyPrecisionToFixedPrecision() {
+    // it works as far as data doesn't overflow new restriction
+    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS3.xml");
   }
 
   // ========================== Type changes ========================================

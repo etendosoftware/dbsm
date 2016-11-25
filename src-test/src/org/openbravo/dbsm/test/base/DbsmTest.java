@@ -674,7 +674,14 @@ public class DbsmTest {
           || "CHAR".equals(col.getType()) || "NCHAR".equals(col.getType())) {
         values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
       } else if ("DECIMAL".equals(col.getType())) {
-        values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
+        int scale = col.getScaleAsInt();
+        int precision = col.getPrecisionRadix();
+        if (scale == 0 && precision == 0) {
+          values += RandomStringUtils.randomNumeric(10);
+        } else {
+          values += RandomStringUtils.randomNumeric(precision - scale)
+              + (scale == 0 ? "" : ("." + RandomStringUtils.randomNumeric(scale)));
+        }
       } else if ("TIMESTAMP".equals(col.getType())) {
 
         Date date = new Date((long) (new Random().nextDouble() * (System.currentTimeMillis())));
