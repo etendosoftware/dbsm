@@ -54,4 +54,8 @@ public class ColumnTypeChange extends DataTypeChanges {
     assertTablesAreRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE6.xml");
   }
 
+  @Test
+  public void changeTextToVarchar() {
+    assertTablesAreRecreated("DATA_TYPE5.xml", "DATA_TYPE_BASE.xml");
+  }
 }

@@ -688,6 +688,8 @@ public class DbsmTest {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
         values += "to_date('" + sdf.format(date) + "', 'DD/MM/YYYY')";
+      } else if ("CLOB".equals(col.getType())) {
+        values += "'" + RandomStringUtils.randomAlphanumeric(10) + "'";
       }
     }
     sql += ") values (" + values + ")";
