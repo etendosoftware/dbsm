@@ -15,6 +15,7 @@ package org.openbravo.dbsm.test.model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.openbravo.dbsm.test.configscript.ConfigScriptSuite;
 import org.openbravo.dbsm.test.model.data.CreateDefault;
 import org.openbravo.dbsm.test.model.data.DefaultValuesTest;
 import org.openbravo.dbsm.test.model.data.OtherDefaults;
@@ -55,7 +56,9 @@ CheckConstraints.class, //
     SQLCommands.class, //
     OtherRecreations.class, //
     PreventConstraintDeletion.class, //
-    PreventCascadeRowDeletion.class })
+    PreventCascadeRowDeletion.class,//
+
+    ConfigScriptSuite.class })
 public class ModelSuite {
 
 }
