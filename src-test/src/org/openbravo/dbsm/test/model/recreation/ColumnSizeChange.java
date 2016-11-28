@@ -37,12 +37,35 @@ public class ColumnSizeChange extends DataTypeChanges {
 
   @Test
   public void decreaseScaleKeepPrecision() {
+    // ORA-01440: column to be modified must be empty to decrease precision or scale
+    worksOnlyIn(Rdbms.PG);
+
     assertTablesAreNotRecreated("DATA_TYPE_NUMBERS2.xml", "DATA_TYPE_NUMBERS_BASE.xml");
   }
 
   @Test
+  public void decreaseScaleKeepPrecisionORA() {
+    // this case is not supported in ORA, so table should always be recreated
+    worksOnlyIn(Rdbms.ORA);
+
+    assertTablesAreRecreated("DATA_TYPE_NUMBERS2.xml", "DATA_TYPE_NUMBERS_BASE.xml");
+  }
+
+  @Test
   public void fromAnyPrecisionToFixedPrecision() {
+    // ORA-01440: column to be modified must be empty to decrease precision or scale
     // it works in PG as far as data doesn't overflow new restriction
+    worksOnlyIn(Rdbms.PG);
+
     assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS3.xml");
   }
+
+  @Test
+  public void fromAnyPrecisionToFixedPrecisionORA() {
+    // this case is not supported in ORA, so table should always be recreated
+    worksOnlyIn(Rdbms.ORA);
+
+    assertTablesAreRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS3.xml");
+  }
+
 }

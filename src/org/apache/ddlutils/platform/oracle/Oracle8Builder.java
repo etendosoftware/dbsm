@@ -1053,19 +1053,30 @@ public class Oracle8Builder extends SqlBuilder {
   }
 
   public boolean requiresRecreation(ColumnSizeChange change) {
-    boolean supportedChange = canResizeType(change.getChangedColumn().getTypeCode());
-    boolean madeLonger = change.getOldSize() <= change.getNewSize();
+    String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    boolean supportedChange = canResizeType(type);
 
+    boolean madeLonger;
+    if (TypeMap.DECIMAL.equals(type)) {
+      int oldPrecision = change.getOldSize() == 0 ? Integer.MAX_VALUE : change.getOldSize();
+      int oldScale = change.getOldScale();
+      int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
+      int newScale = change.getNewScale();
+
+      madeLonger = oldPrecision <= newPrecision && oldScale <= newScale;
+    } else {
+      madeLonger = change.getOldSize() <= change.getNewSize();
+    }
     return !(supportedChange && madeLonger);
   }
 
-  private boolean canResizeType(int typeCode) {
-    String type = TypeMap.getJdbcTypeName(typeCode);
+  private boolean canResizeType(String type) {
     switch (type) {
     case TypeMap.NVARCHAR:
     case TypeMap.VARCHAR:
     case TypeMap.NCHAR:
     case TypeMap.CHAR:
+    case TypeMap.DECIMAL:
       return true;
     default:
       return false;
