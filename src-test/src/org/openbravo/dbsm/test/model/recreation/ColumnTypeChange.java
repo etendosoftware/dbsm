@@ -25,9 +25,21 @@ public class ColumnTypeChange extends DataTypeChanges {
   }
 
   @Test
+  public void changeNVarcharToVarcharORA() {
+    worksOnlyIn(Rdbms.ORA);
+    assertTablesAreRecreated("DATA_TYPE4.xml", "DATA_TYPE_BASE.xml");
+  }
+
+  @Test
   public void changeVarcharToText() {
     worksOnlyIn(Rdbms.PG);
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
+  }
+
+  @Test
+  public void changeVarcharToORA() {
+    worksOnlyIn(Rdbms.ORA);
+    assertTablesAreRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
   }
 
   @Test
@@ -35,4 +47,11 @@ public class ColumnTypeChange extends DataTypeChanges {
     worksOnlyIn(Rdbms.PG);
     assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE6.xml");
   }
+
+  @Test
+  public void changeCharToTextORA() {
+    worksOnlyIn(Rdbms.ORA);
+    assertTablesAreRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE6.xml");
+  }
+
 }
