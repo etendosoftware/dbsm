@@ -27,11 +27,14 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.io.DataSetTableExporter;
+import org.apache.ddlutils.io.DataSetTableQueryGenerator;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
+import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
@@ -44,6 +47,45 @@ import org.openbravo.ddlutils.util.OBDatasetTable;
  */
 public class ExportSampledata extends BaseDatabaseTask {
 
+  public enum ExportFormat {
+    COPY("copy"), XML("xml");
+    private String name;
+
+    private ExportFormat(String name) {
+      this.name = name;
+    }
+
+    public String getFileExtension() {
+      return "." + name;
+    }
+
+    public static ExportFormat getExportFormatByName(String formatName, String rdbms) {
+      ExportFormat exportFormat = null;
+      if (formatName != null && formatName.equals(COPY.name) && POSTGRE_RDBMS.equals(rdbms)) {
+        exportFormat = COPY;
+      } else {
+        exportFormat = XML;
+      }
+      return exportFormat;
+    }
+
+    /**
+     * Returns the DataSetTableExporter that will be used to export the dataset tables to XML
+     */
+    public DataSetTableExporter getDataSetTableExporter(DataSetTableQueryGenerator queryGenerator) {
+      switch (this) {
+      case COPY:
+        return new PostgreSqlDatabaseDataIO(queryGenerator);
+      default:
+        DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
+        databaseDataIO.setEnsureFKOrder(false);
+        // for sampledata do not write a primary key comment onto each line to save space
+        databaseDataIO.setWritePrimaryKeyComment(false);
+        return databaseDataIO;
+      }
+    }
+  };
+
   private String basedir;
 
   protected final String encoding = "UTF-8";
@@ -51,11 +93,20 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExcludeFilter excludeFilter;
 
   private String client;
+  private String clientId;
   private String module;
+  private String exportFormatParam;
+  private ExportFormat exportFormat;
+  private String rdbms;
+  private static final String POSTGRE_RDBMS = "POSTGRE";
 
   private Map<String, Integer> exportedTablesCount = null;
 
   public ExportSampledata() {
+  }
+
+  public String getClientId() {
+    return clientId;
   }
 
   @Override
@@ -98,7 +149,7 @@ public class ExportSampledata extends BaseDatabaseTask {
       // unique constraint on client ensures 1 row here
       DynaBean clientToExport = rowsNewData.get(0);
 
-      String clientid = (String) clientToExport.get("AD_CLIENT_ID");
+      clientId = (String) clientToExport.get("AD_CLIENT_ID");
       String clientName = getExportFileName(client);
 
       ModuleRow moduleToExport = getModuleToExport(util);
@@ -109,16 +160,16 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       log.info("Creating folder " + clientName + " in: " + sampledataFolder);
 
-      for (OBDatasetTable dsTable : tableList) {
-        setDataSetWhereClause(dsTable, clientid);
+      if (overwriteDataSetTableWhereClauseWithClientFilter()) {
+        for (OBDatasetTable dsTable : tableList) {
+          dsTable.setWhereclause("ad_client_id = '" + clientId + "'");
+        }
       }
 
       File path = new File(sampledataFolder, clientName);
-
-      final DatabaseDataIO dbdio = getDatabaseDataIO();
-      dbdio.setEnsureFKOrder(false);
-      // for sampledata do not write a primary key comment onto each line to save space
-      dbdio.setWritePrimaryKeyComment(false);
+      exportFormat = ExportFormat.getExportFormatByName(exportFormatParam, rdbms);
+      final DataSetTableExporter dsTableExporter = exportFormat
+          .getDataSetTableExporter(getQueryGenerator());
 
       path.mkdirs();
       final File[] filestodelete = path.listFiles();
@@ -135,16 +186,21 @@ public class ExportSampledata extends BaseDatabaseTask {
         }
       });
       exportedTablesCount = new HashMap<String, Integer>();
+
+      Map<String, Object> dsTableExporterExtraParams = new HashMap<String, Object>();
+      dsTableExporterExtraParams.put("platform", platform);
+      dsTableExporterExtraParams.put("xmlEncoding", encoding);
+
       for (final OBDatasetTable table : tableList) {
         try {
           final File tableFile = getFile(path, table);
           final OutputStream out = new FileOutputStream(tableFile);
           BufferedOutputStream bufOut = new BufferedOutputStream(out);
           // reads table data directly from db
-          boolean dataExported = dbdio.writeDataForTableToXML(platform, db, table, bufOut,
-              encoding, moduleId);
+          getLog().info("Exporting table: " + table.getName() + "...");
+          boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
+              dsTableExporterExtraParams, orderByTableId());
           if (dataExported) {
-            getLog().info("Exported table: " + table.getName());
             addTableToExportedTablesMap(table.getName());
           } else {
             tableFile.delete();
@@ -170,41 +226,45 @@ public class ExportSampledata extends BaseDatabaseTask {
   }
 
   private File getFile(File path, OBDatasetTable table) {
-    File f = new File(path, table.getName().toUpperCase() + ".xml");
+    String fileExtension = getFileExtension();
+    File f = new File(path, table.getName().toUpperCase() + fileExtension);
     if (f.exists()) {
       Integer count = exportedTablesCount.get(table.getName());
-      f = new File(path, table.getName().toUpperCase() + "_" + count + ".xml");
+      f = new File(path, table.getName().toUpperCase() + "_" + count + fileExtension);
     }
     return f;
   }
 
-  /**
-   * Returns the instance of DatabaseDataIO that will be used to export the dataset tables to XML
-   */
-  protected DatabaseDataIO getDatabaseDataIO() {
-    return new DatabaseDataIO();
+  public void setExportFormat(String exportFormatParam) {
+    this.exportFormatParam = exportFormatParam;
+  }
+
+  public void setRdbms(String rdbms) {
+    this.rdbms = rdbms;
+  }
+
+  protected String getFileExtension() {
+    return exportFormat.getFileExtension();
+  }
+
+  protected DataSetTableQueryGenerator getQueryGenerator() {
+    return new DataSetTableQueryGenerator();
   }
 
   /**
-   * Manages the dataset where clause
-   * 
-   * @param dsTable
-   *          the dataset table
-   * @param clientid
-   *          the id of the client being exported
+   * @return true if the where clause of the exported dataset tables should be replaced with a
+   *         simple client filter
    */
-  protected void setDataSetWhereClause(OBDatasetTable dsTable, String clientid) {
-    // To export the sample data, the where clause defined in the dataset is overwritten with a
-    // client filter
-    String whereClause = "ad_client_id = '" + clientid + "'";
-    dsTable.setWhereclause(whereClause);
+  protected boolean overwriteDataSetTableWhereClauseWithClientFilter() {
+    return true;
   }
 
   private Vector<DynaBean> findClient(final Platform platform, Database db) {
     Connection connection = platform.borrowConnection();
     Table table = db.findTable("AD_CLIENT");
-    DatabaseDataIO dbIO = new DatabaseDataIO();
+    DatabaseDataIO dbIO = new DatabaseDataIO(getQueryGenerator());
     OBDatasetTable dsTable = new OBDatasetTable();
+    dsTable.setName(table.getName());
     dsTable.setWhereclause("1=1");
     dsTable.setSecondarywhereclause("name" + "=" + "'" + client + "'");
     Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db, table,
@@ -300,6 +360,10 @@ public class ExportSampledata extends BaseDatabaseTask {
       System.exit(1);
     }
     return moduleToExport;
+  }
+
+  protected boolean orderByTableId() {
+    return true;
   }
 
 }
