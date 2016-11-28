@@ -100,6 +100,7 @@ public class DbsmTest {
   protected Logger log;
   protected String modelPath;
   private static BasicDataSource ds;
+  private static String previousDB;
   private Rdbms rdbms;
   private Platform platform;
   private SQLBatchEvaluator evaluator;
@@ -137,6 +138,20 @@ public class DbsmTest {
     this.user = user;
     this.driver = driver;
     this.url = ownerUrl;
+
+    if (previousDB == null || !previousDB.equals(ownerUrl)) {
+      if (ds != null) {
+        try {
+          log.info("Closing datasource to switch DB from " + previousDB + " to " + ownerUrl);
+          ds.close();
+        } catch (SQLException e) {
+          log.error("Error closing ds", e);
+        }
+      }
+
+      ds = null;
+      previousDB = ownerUrl;
+    }
 
     if (ds == null) {
       ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
