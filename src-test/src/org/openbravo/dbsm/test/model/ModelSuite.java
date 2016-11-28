@@ -12,7 +12,6 @@
 
 package org.openbravo.dbsm.test.model;
 
-import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -21,10 +20,9 @@ import org.openbravo.dbsm.test.model.data.DefaultValuesTest;
 import org.openbravo.dbsm.test.model.data.OtherDefaults;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 import org.openbravo.dbsm.test.model.recreation.AddDropConstraints;
-import org.openbravo.dbsm.test.model.recreation.ColumnTypeChange;
-import org.openbravo.dbsm.test.model.recreation.DataTypeChanges;
 import org.openbravo.dbsm.test.model.recreation.OtherRecreations;
 import org.openbravo.dbsm.test.model.recreation.SQLCommands;
+import org.openbravo.dbsm.test.model.recreation.TypeChangeSuite;
 
 /**
  * Test suite grouping all cases for database model
@@ -52,9 +50,7 @@ CheckConstraints.class, //
     Functions.class,//
 
     AddDropConstraints.class,//
-    DataTypeChanges.class, //
-    ColumnTypeChange.class, //
-    ColumnSizeChange.class, //
+    TypeChangeSuite.class, //
     OtherDefaults.class, //
     SQLCommands.class, //
     OtherRecreations.class, //
