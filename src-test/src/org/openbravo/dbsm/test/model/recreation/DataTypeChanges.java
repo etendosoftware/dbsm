@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.codehaus.jettison.json.JSONException;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
@@ -42,71 +40,13 @@ public class DataTypeChanges extends TableRecreationBaseTest {
     return TableRecreationBaseTest.parameters();
   }
 
-  // ========================== Size changes ========================================
-  @Test
-  public void increaseVarcharSize() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE2.xml");
+  protected void notWorkingYet() {
+    assumeThat("Feature not implemented yet", recreationMode, is(DbsmTest.RecreationMode.forced));
   }
 
-  @Test
-  public void increaseCharSize() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE3.xml");
-  }
-
-  @Test
-  public void increaseNumberPrecisionNoScale() {
-    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS1.xml");
-  }
-
-  @Ignore("This case cannot be supported")
-  @Test
-  public void increaseScaleKeepPrecision() {
-    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS2.xml");
-  }
-
-  @Test
-  public void decreaseScaleKeepPrecision() {
-    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS2.xml", "DATA_TYPE_NUMBERS_BASE.xml");
-  }
-
-  @Test
-  public void fromAnyPrecisionToFixedPrecision() {
-    // it works as far as data doesn't overflow new restriction
-    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS3.xml");
-  }
-
-  // ========================== Type changes ========================================
-  @Test
-  public void changeVarcharToNVarchar() {
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE4.xml");
-  }
-
-  @Test
-  public void changeNVarcharToVarchar() {
-    worksOnlyIn(Rdbms.PG);
-    assertTablesAreNotRecreated("DATA_TYPE4.xml", "DATA_TYPE_BASE.xml");
-  }
-
-  @Test
-  public void changeVarcharToText() {
-    worksOnlyIn(Rdbms.PG);
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE5.xml");
-  }
-
-  @Test
-  public void changeCharToText() {
-    worksOnlyIn(Rdbms.PG);
-    assertTablesAreNotRecreated("DATA_TYPE_BASE.xml", "DATA_TYPE6.xml");
-  }
-
-  private void worksOnlyIn(Rdbms dbSpecific) {
+  protected void worksOnlyIn(Rdbms dbSpecific) {
     if (recreationMode == RecreationMode.standard) {
       assumeThat("Feature supported only for " + dbSpecific, getRdbms(), is(dbSpecific));
     }
   }
-
-  private void notWorkingYet() {
-    assumeThat("Feature not implemented yet", recreationMode, is(DbsmTest.RecreationMode.forced));
-  }
-
 }
