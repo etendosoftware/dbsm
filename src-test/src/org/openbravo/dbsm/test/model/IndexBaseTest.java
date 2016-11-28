@@ -116,7 +116,7 @@ public class IndexBaseTest extends DbsmTest {
       PreparedStatement st = null;
       con = getPlatform().getDataSource().getConnection();
       st = con
-          .prepareStatement("SELECT comments FROM all_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
+          .prepareStatement("SELECT comments FROM user_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();

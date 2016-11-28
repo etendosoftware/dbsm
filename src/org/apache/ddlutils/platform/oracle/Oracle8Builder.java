@@ -953,7 +953,7 @@ public class Oracle8Builder extends SqlBuilder {
   }
 
   /**
-   * Given a table, returns its comment, stored in the all_tab_comments table
+   * Given a table, returns its comment, stored in the user_tab_comments table
    * 
    * @param tableName
    *          the name of the table whose comments will be returned
@@ -967,7 +967,7 @@ public class Oracle8Builder extends SqlBuilder {
       con = getPlatform().getDataSource().getConnection();
 
       st = con
-          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
+          .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?");
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
@@ -1003,7 +1003,7 @@ public class Oracle8Builder extends SqlBuilder {
       con = getPlatform().getDataSource().getConnection();
 
       st = con
-          .prepareStatement("SELECT comments FROM all_col_comments WHERE table_name = ? AND column_name = ?");
+          .prepareStatement("SELECT comments FROM user_col_comments WHERE table_name = ? AND column_name = ?");
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();
