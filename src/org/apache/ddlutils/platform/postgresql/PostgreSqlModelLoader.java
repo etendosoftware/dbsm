@@ -1039,7 +1039,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         trgmOperators++;
       }
     }
-    inx.setSimilarity(trgmOperators == inx.getColumns().length);
+    inx.setContainsSearch(trgmOperators == inx.getColumns().length);
     return inx;
   }
 

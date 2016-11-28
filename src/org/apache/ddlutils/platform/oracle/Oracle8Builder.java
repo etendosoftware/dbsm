@@ -58,6 +58,7 @@ import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternCompiler;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.openbravo.ddlutils.util.DBSMContants;
 
 /**
  * The SQL Builder for Oracle.
@@ -631,7 +632,7 @@ public class Oracle8Builder extends SqlBuilder {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       List<Index> partialIndexes = new ArrayList<Index>();
       for (Index index : newIndexesMap.get(table)) {
-        if (indexHasColumnWithOperatorClass(index) || index.isSimilarity()) {
+        if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
           indexesWithOperatorClass.add(index);
         }
         if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
@@ -689,8 +690,8 @@ public class Oracle8Builder extends SqlBuilder {
           if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
             tableComment.append(index.getName() + "." + indexColumn.getName() + ".operatorClass="
                 + indexColumn.getOperatorClass() + "$");
-          } else if (index.isSimilarity()) {
-            tableComment.append(index.getName() + ".similarity$");
+          } else if (index.isContainsSearch()) {
+            tableComment.append(index.getName() + "." + DBSMContants.CONTAINS_SEARCH + "$");
           }
         }
       }
@@ -771,7 +772,7 @@ public class Oracle8Builder extends SqlBuilder {
     for (String tableName : removedIndexesMap.keySet()) {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       for (Index index : removedIndexesMap.get(tableName)) {
-        if (indexHasColumnWithOperatorClass(index) || index.isSimilarity()) {
+        if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
           indexesWithOperatorClass.add(index);
         }
       }
@@ -879,8 +880,8 @@ public class Oracle8Builder extends SqlBuilder {
   }
 
   @Override
-  protected void updateSimilarityIndexAction(Table table, Index index, boolean newSimilarityValue)
-      throws IOException {
+  protected void updateContainsSearchIndexAction(Table table, Index index,
+      boolean newContainsSearchValue) throws IOException {
 
     String tableName = table.getName();
     String currentComments;
@@ -900,23 +901,25 @@ public class Oracle8Builder extends SqlBuilder {
       currentComments = "";
     }
 
-    if (newSimilarityValue) {
-      updatedComments = currentComments + index.getName() + ".similarity$";
+    if (newContainsSearchValue) {
+      updatedComments = currentComments + index.getName() + "." + DBSMContants.CONTAINS_SEARCH
+          + "$";
     } else {
-      updatedComments = currentComments.replace(index.getName() + ".similarity$", "");
+      updatedComments = currentComments.replace(index.getName() + "."
+          + DBSMContants.CONTAINS_SEARCH + "$", "");
     }
     _tablesWithUpdatedComments.put(tableName, updatedComments);
   }
 
   /**
-   * Action to be executed when a change on the similarity property of an index is detected. Here
-   * this method is used to update at once all the table comments affected by changes on similarity
-   * indexes.
+   * Action to be executed when a change on the containsSearch property of an index is detected.
+   * Here this method is used to update at once all the table comments affected by changes on
+   * contains search indexes.
    * 
    * @throws IOException
    */
   @Override
-  protected void updateSimilarityIndexesPostAction() throws IOException {
+  protected void updateContainsSearchIndexesPostAction() throws IOException {
     if (_tablesWithUpdatedComments == null) {
       return;
     }
@@ -948,7 +951,7 @@ public class Oracle8Builder extends SqlBuilder {
           // starts with "indexName.columnName."
           for (String commentLine : commentLines) {
             if (commentLine.startsWith(index.getName() + "." + indexColumn.getName() + ".")
-                || commentLine.startsWith(index.getName() + ".similarity")) {
+                || commentLine.startsWith(index.getName() + ".containsSearch")) {
               commentLines.remove(commentLine);
               break;
             }

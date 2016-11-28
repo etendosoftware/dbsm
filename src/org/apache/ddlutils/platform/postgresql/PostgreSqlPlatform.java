@@ -115,7 +115,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     info.setNcharsupported(true);
     info.setOperatorClassesSupported(true);
     info.setPartialIndexesSupported(true);
-    info.setSimilarityIndexesSupported(true);
+    info.setContainsSearchIndexesSupported(true);
 
     info.setColumnOrderManaged(false);
 

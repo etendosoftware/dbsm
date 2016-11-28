@@ -73,6 +73,7 @@ import org.apache.ddlutils.alteration.ColumnOnCreateDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnOrderChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.ContainsSearchIndexInformationChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.alteration.PartialIndexInformationChange;
@@ -90,7 +91,6 @@ import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.alteration.RemoveUniqueChange;
 import org.apache.ddlutils.alteration.RemoveViewChange;
 import org.apache.ddlutils.alteration.SequenceDefinitionChange;
-import org.apache.ddlutils.alteration.SimilarityIndexInformationChange;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
@@ -1113,10 +1113,10 @@ public abstract class SqlBuilder {
       updatePartialIndexesPostAction();
     }
 
-    if (!getPlatformInfo().isSimilarityIndexesSupported()) {
-      applyForSelectedChanges(changes, new Class[] { SimilarityIndexInformationChange.class },
+    if (!getPlatformInfo().isContainsSearchIndexesSupported()) {
+      applyForSelectedChanges(changes, new Class[] { ContainsSearchIndexInformationChange.class },
           callbackClosure);
-      updateSimilarityIndexesPostAction();
+      updateContainsSearchIndexesPostAction();
     }
   }
 
@@ -1173,27 +1173,28 @@ public abstract class SqlBuilder {
   }
 
   /**
-   * Action to be executed when a change on the similarity property of an index is detected. It must
-   * be implemented for those platforms where similarity indexes are not supported.
+   * Action to be executed when a change on the containsSearch property of an index is detected. It
+   * must be implemented for those platforms where contains search indexes are not supported.
    * 
    * @param table
    *          the table where the changed index belongs
    * @param index
    *          the modified index
-   * @param newSimilarityValue
-   *          the new value of the similarity property
+   * @param newContainsSearchValue
+   *          the new value of the containsSearch property
    * @throws IOException
    */
-  protected void updateSimilarityIndexAction(Table table, Index index, boolean newSimilarityValue)
-      throws IOException {
+  protected void updateContainsSearchIndexAction(Table table, Index index,
+      boolean newContainsSearchValue) throws IOException {
   }
 
   /**
-   * Action to be executed once all changes in similarity indexes have been applied in the model
+   * Action to be executed once all changes in contains search indexes have been applied in the
+   * model
    * 
    * @throws IOException
    */
-  protected void updateSimilarityIndexesPostAction() throws IOException {
+  protected void updateContainsSearchIndexesPostAction() throws IOException {
   }
 
   /**
@@ -1270,10 +1271,10 @@ public abstract class SqlBuilder {
       CreationParameters params, RemoveIndexChange change) throws IOException {
     Index removedIndex = change.getIndex();
     writeExternalIndexDropStmt(change.getChangedTable(), removedIndex);
-    if (indexHasColumnWithOperatorClass(removedIndex) || removedIndex.isSimilarity()) {
+    if (indexHasColumnWithOperatorClass(removedIndex) || removedIndex.isContainsSearch()) {
       // keep track of the removed indexes that use operator classes (including indexes flagged as
-      // similarity), as in some platforms is it required to update the comments of the tables that
-      // own them
+      // contains search), as in some platforms is it required to update the comments of the tables
+      // that own them
       putRemovedIndex(_removedIndexesWithOperatorClassMap, change);
     }
     if (removedIndex.getWhereClause() != null && !removedIndex.getWhereClause().isEmpty()) {
@@ -1318,10 +1319,10 @@ public abstract class SqlBuilder {
   }
 
   /**
-   * Processes the change representing modifications in the information of similarity indexes which
-   * is stored to maintain consistency between the XML model and the database. This changes only
-   * apply for those platforms where similarity indexes are not supported as they are used just to
-   * keep updated that information.
+   * Processes the change representing modifications in the information of contains search indexes
+   * which is stored to maintain consistency between the XML model and the database. This changes
+   * only apply for those platforms where contains search indexes are not supported as they are used
+   * just to keep updated that information.
    * 
    * @param currentModel
    *          The current database schema
@@ -1334,9 +1335,9 @@ public abstract class SqlBuilder {
    *          The change object
    */
   protected void processChange(Database currentModel, Database desiredModel,
-      CreationParameters params, SimilarityIndexInformationChange change) throws IOException {
-    updateSimilarityIndexAction(change.getChangedTable(), change.getIndex(),
-        change.getNewSimilarity());
+      CreationParameters params, ContainsSearchIndexInformationChange change) throws IOException {
+    updateContainsSearchIndexAction(change.getChangedTable(), change.getIndex(),
+        change.getNewContainsSearch());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 

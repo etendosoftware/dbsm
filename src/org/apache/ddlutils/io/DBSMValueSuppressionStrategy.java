@@ -19,15 +19,13 @@ import org.apache.commons.betwixt.ElementDescriptor;
 import org.apache.commons.betwixt.expression.MethodExpression;
 import org.apache.commons.betwixt.strategy.ValueSuppressionStrategy;
 import org.apache.ddlutils.model.Index;
+import org.openbravo.ddlutils.util.DBSMContants;
 
 /**
  * This class defines the strategy used by DBSourceManager to decide which attributes or elements
  * should be suppressed when exporting the XML model.
  */
 public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
-
-  private static final String WHERE_CLAUSE = "whereClause";
-  private static final String SIMILARITY = "similarity";
 
   /**
    * Determines if the given attribute value be suppressed
@@ -40,8 +38,8 @@ public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
    */
   @Override
   public boolean suppressAttribute(AttributeDescriptor attributeDescriptor, String value) {
-    if (isIndexSimilarityAttribute(attributeDescriptor)) {
-      // Do not export Index similarity attribute if it is false
+    if (isIndexContainsSearchAttribute(attributeDescriptor)) {
+      // Do not export Index containsSearch attribute if it is false
       return !Boolean.valueOf(value);
     }
     // For the rest of attributes, use default strategy: suppress all null values
@@ -68,14 +66,14 @@ public class DBSMValueSuppressionStrategy extends ValueSuppressionStrategy {
   public boolean suppressElement(ElementDescriptor element, String namespaceUri, String localName,
       String qualifiedName, Object value) {
     // Do not export Index empty whereClause element
-    if (WHERE_CLAUSE.equals(localName) && value != null && value instanceof Index) {
+    if (DBSMContants.WHERE_CLAUSE.equals(localName) && value != null && value instanceof Index) {
       return ((Index) value).getWhereClause() == null;
     }
     return false;
   }
 
-  private boolean isIndexSimilarityAttribute(AttributeDescriptor attributeDescriptor) {
-    if (!SIMILARITY.equals(attributeDescriptor.getLocalName())) {
+  private boolean isIndexContainsSearchAttribute(AttributeDescriptor attributeDescriptor) {
+    if (!DBSMContants.CONTAINS_SEARCH.equals(attributeDescriptor.getLocalName())) {
       return false;
     }
     return Index.class.getName().equals(getAttributeOwnerClassName(attributeDescriptor));

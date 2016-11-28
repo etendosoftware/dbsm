@@ -31,6 +31,7 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowFiller;
 import org.apache.ddlutils.util.ExtTypes;
+import org.openbravo.ddlutils.util.DBSMContants;
 
 /**
  * 
@@ -346,8 +347,8 @@ public class OracleModelLoader extends ModelLoaderBase {
         }
         String operatorClass = getIndexOperatorClass(indexName, inxcol.getName());
         if (operatorClass != null && !operatorClass.isEmpty()) {
-          if (operatorClass.equals("similarity")) {
-            inx.setSimilarity(true);
+          if (DBSMContants.CONTAINS_SEARCH.equals(operatorClass)) {
+            inx.setContainsSearch(true);
           } else {
             inxcol.setOperatorClass(operatorClass);
           }
@@ -421,8 +422,8 @@ public class OracleModelLoader extends ModelLoaderBase {
         for (String commentLine : commentLines) {
           if (commentLine.startsWith(indexName + "." + indexColumnName)) {
             operatorClass = commentLine.substring(commentLine.indexOf("=") + 1);
-          } else if (commentLine.startsWith(indexName + ".similarity")) {
-            operatorClass = "similarity";
+          } else if (commentLine.startsWith(indexName + "." + DBSMContants.CONTAINS_SEARCH)) {
+            operatorClass = DBSMContants.CONTAINS_SEARCH;
           }
         }
       }

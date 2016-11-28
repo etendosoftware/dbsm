@@ -13,9 +13,9 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="PARTIAL_INDEX" unique="false" similarity="true">
+      <index name="BASIC_INDEX" unique="false" containsSearch="true">
         <index-column name="COL1"/>
-        <whereClause><![CDATA[COL1 IS NOT NULL]]></whereClause>
+        <index-column name="COL2"/>
       </index>
     </table>
   </database>

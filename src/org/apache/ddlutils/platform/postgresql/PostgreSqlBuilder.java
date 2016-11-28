@@ -117,7 +117,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
    */
   @Override
   protected void writeMethod(Index index) throws IOException {
-    if (index.isSimilarity()) {
+    if (index.isContainsSearch()) {
       print(" USING gin");
     }
   }
@@ -127,7 +127,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
    */
   @Override
   protected void writeOperatorClass(Index index, IndexColumn idxColumn) throws IOException {
-    if (index.isSimilarity()) {
+    if (index.isContainsSearch()) {
       print(" gin_trgm_ops");
     } else if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
       print(" " + idxColumn.getOperatorClass());

@@ -13,9 +13,8 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <index name="BASIC_INDEX" unique="false" similarity="true">
+      <index name="BASIC_INDEX" unique="false" containsSearch="true">
         <index-column name="COL1"/>
-        <index-column name="COL2"/>
       </index>
     </table>
   </database>

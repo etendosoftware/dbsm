@@ -37,14 +37,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Test cases to test the support of indexes intended for fast searching of similar strings.
+ * Test cases to test the support of indexes intended to speed up searching using 'contains'
+ * operators.
  * 
  * @author caristu
  *
  */
-public class SimilarityIndexes extends IndexBaseTest {
+public class ContainsSearchIndexes extends IndexBaseTest {
 
-  public SimilarityIndexes(String rdbms, String driver, String url, String sid, String user,
+  public ContainsSearchIndexes(String rdbms, String driver, String url, String sid, String user,
       String password, String name, TestType testType) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name, testType);
   }
@@ -92,35 +93,37 @@ public class SimilarityIndexes extends IndexBaseTest {
   }
 
   @Test
-  // Tests that similarity indexes are properly imported
-  public void importBasicSimilarityIndex() {
+  // Tests that indexes for contains search are properly imported
+  public void importContainsSearchIndex() {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
+    updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
-      assertIsSimilarityIndex("BASIC_INDEX");
+      assertIsContainsSearchIndex("BASIC_INDEX");
     } else if (Rdbms.ORA.equals(getRdbms())) {
-      // In Oracle, the similarity index definition should be stored in the comment of the table
-      assertThat(getCommentOfTableInOracle("TEST"), equalTo("BASIC_INDEX.similarity$"));
+      // In Oracle, the contains search index definition should be stored in the comment of the
+      // table
+      assertThat(getCommentOfTableInOracle("TEST"), equalTo("BASIC_INDEX.containsSearch$"));
     }
   }
 
   @Test
-  // Tests that an index used for ILIKE comparisons can be imported properly
-  // This index is a function based index which makes use of the similarity feature
-  public void importIlikeSimilarityIndex() {
+  // Tests that indexes for icontains search are properly imported
+  // This index is a function based index which makes use of the icontains search feature
+  public void importIcontainsSearchIndex() {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/ILIKE_INDEX.xml");
+    updateDatabase("indexes/ICONTAINS_SEARCH_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
-      assertIsSimilarityIndex("BASIC_INDEX");
+      assertIsContainsSearchIndex("BASIC_INDEX");
     } else if (Rdbms.ORA.equals(getRdbms())) {
-      // In Oracle, the similarity index definition should be stored in the comment of the table
-      assertThat(getCommentOfTableInOracle("TEST"), equalTo("BASIC_INDEX.similarity$"));
+      // In Oracle, the contains search index definition should be stored in the comment of the
+      // table
+      assertThat(getCommentOfTableInOracle("TEST"), equalTo("BASIC_INDEX.containsSearch$"));
     }
   }
 
-  private void assertIsSimilarityIndex(String indexName) {
+  private void assertIsContainsSearchIndex(String indexName) {
     final List<String> expectedConfiguration = Arrays.asList("gin", "gin_trgm_ops");
     String accessMethod = getIndexAccessMethodFromDb(indexName);
     String operatorClassName = getOperatorClassNameForIndexFromDb(indexName);
@@ -128,68 +131,68 @@ public class SimilarityIndexes extends IndexBaseTest {
   }
 
   @Test
-  // Tests that similarity indexes are properly exported
-  public void exportBasicSimilarityIndex() throws IOException {
+  // Tests that indexes for contains search are properly exported
+  public void exportContainsSearchIndex() throws IOException {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
-    assertExport("indexes/BASIC_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+    updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
+    assertExport("indexes/CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
-  // Tests that an index used for ILIKE comparisons can be exported properly
-  public void exportIlikeSimilarityIndex() throws IOException {
+  // Tests that indexes for icontains search are properly exported
+  public void exportIcontainsSearchIndex() throws IOException {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/ILIKE_INDEX.xml");
-    assertExport("indexes/ILIKE_INDEX.xml", "tables/TEST.xml");
+    updateDatabase("indexes/ICONTAINS_SEARCH_INDEX.xml");
+    assertExport("indexes/ICONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
-  // Tests that an existing basic index can be changed as a similarity one
-  public void changeIndexFromBasicToSimilarity() throws IOException {
+  // Tests that an existing basic index can be changed as a contains search index
+  public void changeIndexFromBasicToContainsSearch() throws IOException {
     assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
     updateDatabase("indexes/BASIC_INDEX.xml");
-    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
-    assertExport("indexes/BASIC_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+    updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
+    assertExport("indexes/CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
-  // Tests that an existing similarity index can be changed as basic
-  public void changeIndexFromSimilarityToBasic() throws IOException {
+  // Tests that an existing contains search index can be changed as basic
+  public void changeIndexFromContainsSearchToBasic() throws IOException {
     assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
-    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
+    updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
     updateDatabase("indexes/BASIC_INDEX.xml");
     assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
-  // Tests that if an index is changed as a similarity one, that index is recreated in postgres but
-  // not in oracle
-  public void recreationToChangeIndexAsSimilarity() {
+  // Tests that if an index is changed as a contains search one, that index is recreated in postgres
+  // but not in oracle
+  public void recreationToChangeIndexAsContainsSearch() {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_INDEX.xml");
-    List<String> commands = sqlStatmentsForUpdate("indexes/BASIC_SIMILARITY_INDEX.xml");
+    List<String> commands = sqlStatmentsForUpdate("indexes/CONTAINS_SEARCH_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
       assertThat("Index is dropped", commands, hasItem(containsString("DROP INDEX BASIC_INDEX")));
       assertThat("Index is created", commands, hasItem(containsString("CREATE INDEX BASIC_INDEX")));
     } else if (Rdbms.ORA.equals(getRdbms())) {
       List<String> commentUpdateCommand = Arrays
-          .asList("COMMENT ON TABLE TEST IS 'BASIC_INDEX.similarity$'\n");
+          .asList("COMMENT ON TABLE TEST IS 'BASIC_INDEX.containsSearch$'\n");
       assertEquals("Not recreating index", commentUpdateCommand, commands);
     }
   }
 
   @Test
-  // Tests that if a similarity index is changed to be basic, that index is recreated in postgres
-  // but not in oracle
+  // Tests that if a contains search index is changed to be basic, that index is recreated in
+  // postgres but not in oracle
   public void recreationToChangeIndexAsBasic() {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
+    updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
     List<String> commands = sqlStatmentsForUpdate("indexes/BASIC_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
       assertThat("Index is dropped", commands, hasItem(containsString("DROP INDEX BASIC_INDEX")));
@@ -201,34 +204,34 @@ public class SimilarityIndexes extends IndexBaseTest {
   }
 
   @Test
-  // Tests that if a similarity index is removed in Oracle, the comment associated with
+  // Tests that if a contains search index is removed in Oracle, the comment associated with
   // it is removed from its table
   public void removeIndexShouldRemoveComment() {
     assumeThat("not executing in Postgres", getRdbms(), is(Rdbms.ORA));
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
+    updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
     updateDatabase("indexes/BASE_MODEL.xml");
     String tableComment = getCommentOfTableInOracle("TEST");
     assertThat(tableComment, anyOf(isEmptyString(), nullValue()));
   }
 
   @Test
-  // Tests that it is possible to define similarity (not function based) indexes with multiple
+  // Tests that it is possible to define contains search indexes with multiple
   // columns
-  public void exportSimilarityIndexMultiple() throws IOException {
+  public void exportMultipleContainsSearchIndex() throws IOException {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/MULTIPLE_SIMILARITY_INDEX.xml");
-    assertExport("indexes/MULTIPLE_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+    updateDatabase("indexes/MULTIPLE_CONTAINS_SEARCH_INDEX.xml");
+    assertExport("indexes/MULTIPLE_CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
   }
 
   @Test
-  // Tests that it is possible to define an index as similarity and partial at the same time
-  public void exportPartialSimilarityIndex() throws IOException {
+  // Tests that it is possible to define a partial index to be used for contains search
+  public void exportPartialContainsSearchIndex() throws IOException {
     resetDB();
     createDatabaseIfNeeded();
-    updateDatabase("indexes/PARTIAL_SIMILARITY_INDEX.xml");
-    assertExport("indexes/PARTIAL_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+    updateDatabase("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml");
+    assertExport("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
   }
 }
