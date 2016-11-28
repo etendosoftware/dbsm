@@ -86,6 +86,9 @@ public class PlatformInfo {
   /** Whether partial indexes are supported. */
   private boolean _partialIndexesSupported = false;
 
+  /** Whether similarity indexes are supported. */
+  private boolean _similarityIndexesSupported = false;
+
   /** Whether triggers are supported. */
   private boolean _triggersSupported = true;
 
@@ -562,6 +565,25 @@ public class PlatformInfo {
    */
   public void setPartialIndexesSupported(boolean partialIndexesSupported) {
     _partialIndexesSupported = partialIndexesSupported;
+  }
+
+  /**
+   * Determines whether similarity indexes are supported.
+   * 
+   * @return <code>true</code> if partial indexes are supported
+   */
+  public boolean isSimilarityIndexesSupported() {
+    return _similarityIndexesSupported;
+  }
+
+  /**
+   * Specifies whether similarity indexes are supported.
+   * 
+   * @param similarityIndexesSupported
+   *          <code>true</code> if similarity indexes are supported
+   */
+  public void setSimilarityIndexesSupported(boolean similarityIndexesSupported) {
+    _similarityIndexesSupported = similarityIndexesSupported;
   }
 
   /**

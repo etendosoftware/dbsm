@@ -90,6 +90,7 @@ import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.alteration.RemoveUniqueChange;
 import org.apache.ddlutils.alteration.RemoveViewChange;
 import org.apache.ddlutils.alteration.SequenceDefinitionChange;
+import org.apache.ddlutils.alteration.SimilarityIndexInformationChange;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
@@ -1111,6 +1112,12 @@ public abstract class SqlBuilder {
           callbackClosure);
       updatePartialIndexesPostAction();
     }
+
+    if (!getPlatformInfo().isSimilarityIndexesSupported()) {
+      applyForSelectedChanges(changes, new Class[] { SimilarityIndexInformationChange.class },
+          callbackClosure);
+      updateSimilarityIndexesPostAction();
+    }
   }
 
   /**
@@ -1163,6 +1170,30 @@ public abstract class SqlBuilder {
    * @throws IOException
    */
   protected void updatePartialIndexesPostAction() throws IOException {
+  }
+
+  /**
+   * Action to be executed when a change on the similarity property of an index is detected. It must
+   * be implemented for those platforms where similarity indexes are not supported.
+   * 
+   * @param table
+   *          the table where the changed index belongs
+   * @param index
+   *          the modified index
+   * @param newSimilarityValue
+   *          the new value of the similarity property
+   * @throws IOException
+   */
+  protected void updateSimilarityIndexAction(Table table, Index index, boolean newSimilarityValue)
+      throws IOException {
+  }
+
+  /**
+   * Action to be executed once all changes in similarity indexes have been applied in the model
+   * 
+   * @throws IOException
+   */
+  protected void updateSimilarityIndexesPostAction() throws IOException {
   }
 
   /**
@@ -1239,9 +1270,10 @@ public abstract class SqlBuilder {
       CreationParameters params, RemoveIndexChange change) throws IOException {
     Index removedIndex = change.getIndex();
     writeExternalIndexDropStmt(change.getChangedTable(), removedIndex);
-    if (indexHasColumnWithOperatorClass(removedIndex)) {
-      // keep track of the removed indexes that use operator classes, as in some platforms is it
-      // required to update the comments of the tables that own them
+    if (indexHasColumnWithOperatorClass(removedIndex) || removedIndex.isSimilarity()) {
+      // keep track of the removed indexes that use operator classes (including indexes flagged as
+      // similarity), as in some platforms is it required to update the comments of the tables that
+      // own them
       putRemovedIndex(_removedIndexesWithOperatorClassMap, change);
     }
     if (removedIndex.getWhereClause() != null && !removedIndex.getWhereClause().isEmpty()) {
@@ -1282,6 +1314,29 @@ public abstract class SqlBuilder {
       CreationParameters params, PartialIndexInformationChange change) throws IOException {
     updatePartialIndexAction(change.getChangedTable(), change.getIndex(),
         change.getOldWhereClause(), change.getNewWhereClause());
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+  }
+
+  /**
+   * Processes the change representing modifications in the information of similarity indexes which
+   * is stored to maintain consistency between the XML model and the database. This changes only
+   * apply for those platforms where similarity indexes are not supported as they are used just to
+   * keep updated that information.
+   * 
+   * @param currentModel
+   *          The current database schema
+   * @param desiredModel
+   *          The desired database schema
+   * @param params
+   *          The parameters used in the creation of new tables. Note that for existing tables, the
+   *          parameters won't be applied
+   * @param change
+   *          The change object
+   */
+  protected void processChange(Database currentModel, Database desiredModel,
+      CreationParameters params, SimilarityIndexInformationChange change) throws IOException {
+    updateSimilarityIndexAction(change.getChangedTable(), change.getIndex(),
+        change.getNewSimilarity());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -3687,14 +3742,12 @@ public abstract class SqlBuilder {
    * @return true if any columns if the provided index defines an operator class, false otherwise
    */
   protected boolean indexHasColumnWithOperatorClass(Index index) {
-    boolean hasColumnWithOperatorClass = false;
     for (IndexColumn indexColumn : index.getColumns()) {
       if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
-        hasColumnWithOperatorClass = true;
-        break;
+        return true;
       }
     }
-    return hasColumnWithOperatorClass;
+    return false;
   }
 
   /**

@@ -76,6 +76,7 @@ public class Oracle8Builder extends SqlBuilder {
 
   private Map<String, String> _onCreateDefaultColumns;
   private Map<String, String> _columnsWithUpdatedComments;
+  private Map<String, String> _tablesWithUpdatedComments;
 
   /**
    * Creates a new builder instance.
@@ -630,7 +631,7 @@ public class Oracle8Builder extends SqlBuilder {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       List<Index> partialIndexes = new ArrayList<Index>();
       for (Index index : newIndexesMap.get(table)) {
-        if (indexHasColumnWithOperatorClass(index)) {
+        if (indexHasColumnWithOperatorClass(index) || index.isSimilarity()) {
           indexesWithOperatorClass.add(index);
         }
         if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
@@ -688,6 +689,8 @@ public class Oracle8Builder extends SqlBuilder {
           if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
             tableComment.append(index.getName() + "." + indexColumn.getName() + ".operatorClass="
                 + indexColumn.getOperatorClass() + "$");
+          } else if (index.isSimilarity()) {
+            tableComment.append(index.getName() + ".similarity$");
           }
         }
       }
@@ -768,7 +771,7 @@ public class Oracle8Builder extends SqlBuilder {
     for (String tableName : removedIndexesMap.keySet()) {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       for (Index index : removedIndexesMap.get(tableName)) {
-        if (indexHasColumnWithOperatorClass(index)) {
+        if (indexHasColumnWithOperatorClass(index) || index.isSimilarity()) {
           indexesWithOperatorClass.add(index);
         }
       }
@@ -875,6 +878,55 @@ public class Oracle8Builder extends SqlBuilder {
     _columnsWithUpdatedComments.clear();
   }
 
+  @Override
+  protected void updateSimilarityIndexAction(Table table, Index index, boolean newSimilarityValue)
+      throws IOException {
+
+    String tableName = table.getName();
+    String currentComments;
+    String updatedComments;
+
+    if (_tablesWithUpdatedComments == null) {
+      _tablesWithUpdatedComments = new HashMap<String, String>();
+    }
+
+    if (_tablesWithUpdatedComments.containsKey(tableName)) {
+      currentComments = _tablesWithUpdatedComments.get(tableName);
+    } else {
+      currentComments = transformInOracleComment(getCommentOfTable(tableName));
+    }
+
+    if (currentComments == null) {
+      currentComments = "";
+    }
+
+    if (newSimilarityValue) {
+      updatedComments = currentComments + index.getName() + ".similarity$";
+    } else {
+      updatedComments = currentComments.replace(index.getName() + ".similarity$", "");
+    }
+    _tablesWithUpdatedComments.put(tableName, updatedComments);
+  }
+
+  /**
+   * Action to be executed when a change on the similarity property of an index is detected. Here
+   * this method is used to update at once all the table comments affected by changes on similarity
+   * indexes.
+   * 
+   * @throws IOException
+   */
+  @Override
+  protected void updateSimilarityIndexesPostAction() throws IOException {
+    if (_tablesWithUpdatedComments == null) {
+      return;
+    }
+    for (String table : _tablesWithUpdatedComments.keySet()) {
+      print("COMMENT ON TABLE " + table + " IS '" + _tablesWithUpdatedComments.get(table) + "'");
+      printEndOfStatement();
+    }
+    _tablesWithUpdatedComments.clear();
+  }
+
   /**
    * Given a table and a list of removed indexes that define operator classes, updates the comments
    * of the table to delete the info associated with the deleted indexes
@@ -895,7 +947,8 @@ public class Oracle8Builder extends SqlBuilder {
           // Find the line that corresponds with the deleted indexColumn, that is, the line that
           // starts with "indexName.columnName."
           for (String commentLine : commentLines) {
-            if (commentLine.startsWith(index.getName() + "." + indexColumn.getName() + ".")) {
+            if (commentLine.startsWith(index.getName() + "." + indexColumn.getName() + ".")
+                || commentLine.startsWith(index.getName() + ".similarity")) {
               commentLines.remove(commentLine);
               break;
             }

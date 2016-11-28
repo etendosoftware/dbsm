@@ -24,10 +24,6 @@ import static org.junit.Assume.assumeThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.junit.Test;
@@ -149,34 +145,6 @@ public class OperatorClassIndexes extends IndexBaseTest {
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
     updateDatabase("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
     assertExport("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
-  }
-
-  /**
-   * Given a table, return its comment
-   * 
-   * @param tableName
-   *          the name of table
-   * @return the comment of the given table
-   */
-  private String getCommentOfTableInOracle(String tableName) {
-    String tableComment = null;
-    Connection con = null;
-    try {
-      PreparedStatement st = null;
-      con = getPlatform().getDataSource().getConnection();
-      st = con
-          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
-      st.setString(1, tableName.toUpperCase());
-      ResultSet rs = st.executeQuery();
-      if (rs.next()) {
-        tableComment = rs.getString(1);
-      }
-    } catch (SQLException e) {
-      log.error("Error while getting the comment of the table " + tableName, e);
-    } finally {
-      getPlatform().returnConnection(con);
-    }
-    return tableComment;
   }
 
 }

@@ -346,7 +346,11 @@ public class OracleModelLoader extends ModelLoaderBase {
         }
         String operatorClass = getIndexOperatorClass(indexName, inxcol.getName());
         if (operatorClass != null && !operatorClass.isEmpty()) {
-          inxcol.setOperatorClass(operatorClass);
+          if (operatorClass.equals("similarity")) {
+            inx.setSimilarity(true);
+          } else {
+            inxcol.setOperatorClass(operatorClass);
+          }
         }
         inx.addColumn(inxcol);
       }
@@ -417,6 +421,8 @@ public class OracleModelLoader extends ModelLoaderBase {
         for (String commentLine : commentLines) {
           if (commentLine.startsWith(indexName + "." + indexColumnName)) {
             operatorClass = commentLine.substring(commentLine.indexOf("=") + 1);
+          } else if (commentLine.startsWith(indexName + ".similarity")) {
+            operatorClass = "similarity";
           }
         }
       }

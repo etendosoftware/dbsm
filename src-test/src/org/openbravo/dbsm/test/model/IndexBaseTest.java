@@ -101,6 +101,34 @@ public class IndexBaseTest extends DbsmTest {
   }
 
   /**
+   * Given a table, return its comment
+   * 
+   * @param tableName
+   *          the name of table
+   * @return the comment of the given table
+   */
+  protected String getCommentOfTableInOracle(String tableName) {
+    String tableComment = null;
+    Connection con = null;
+    try {
+      PreparedStatement st = null;
+      con = getPlatform().getDataSource().getConnection();
+      st = con
+          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
+      st.setString(1, tableName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        tableComment = rs.getString(1);
+      }
+    } catch (SQLException e) {
+      log.error("Error while getting the comment of the table " + tableName, e);
+    } finally {
+      getPlatform().returnConnection(con);
+    }
+    return tableComment;
+  }
+
+  /**
    * Given the name of a column and its table name, returns the comment of the column
    * 
    * @param tableName

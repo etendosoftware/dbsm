@@ -183,8 +183,11 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     if (platformInfo == null) {
       return equals(other);
     } else {
-      EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name)
-          .append(_unique, other._unique).append(_similarity, other._similarity);
+      EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name).append(_unique,
+          other._unique);
+      if (platformInfo.isSimilarityIndexesSupported()) {
+        equalsBuilder.append(_similarity, other._similarity);
+      }
       if (platformInfo.isPartialIndexesSupported()) {
         equalsBuilder.append(_whereClause, other._whereClause);
       }
@@ -242,10 +245,12 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         if (_unique != other._unique) {
           return false;
         }
-        if (_similarity != other._similarity) {
+        if (platformInfo != null && platformInfo.isSimilarityIndexesSupported()
+            && _similarity != other._similarity) {
           return false;
         }
-        if (platformInfo.isPartialIndexesSupported() && !isSameWhereClause(other)) {
+        if (platformInfo != null && platformInfo.isPartialIndexesSupported()
+            && !isSameWhereClause(other)) {
           return false;
         }
         for (int idx = 0; idx < getColumnCount(); idx++) {

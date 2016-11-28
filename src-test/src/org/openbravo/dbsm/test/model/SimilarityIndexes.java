@@ -12,8 +12,12 @@
 package org.openbravo.dbsm.test.model;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
@@ -95,6 +99,9 @@ public class SimilarityIndexes extends IndexBaseTest {
     updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
       assertIsSimilarityIndex("BASIC_INDEX");
+    } else if (Rdbms.ORA.equals(getRdbms())) {
+      // In Oracle, the similarity index definition should be stored in the comment of the table
+      assertThat(getCommentOfTableInOracle("TEST"), equalTo("BASIC_INDEX.similarity$"));
     }
   }
 
@@ -107,6 +114,9 @@ public class SimilarityIndexes extends IndexBaseTest {
     updateDatabase("indexes/ILIKE_INDEX.xml");
     if (Rdbms.PG.equals(getRdbms())) {
       assertIsSimilarityIndex("BASIC_INDEX");
+    } else if (Rdbms.ORA.equals(getRdbms())) {
+      // In Oracle, the similarity index definition should be stored in the comment of the table
+      assertThat(getCommentOfTableInOracle("TEST"), equalTo("BASIC_INDEX.similarity$"));
     }
   }
 
@@ -156,7 +166,8 @@ public class SimilarityIndexes extends IndexBaseTest {
   }
 
   @Test
-  // Tests that if an index is changed as a similarity one, that index is recreated in postgres
+  // Tests that if an index is changed as a similarity one, that index is recreated in postgres but
+  // not in oracle
   public void recreationToChangeIndexAsSimilarity() {
     resetDB();
     createDatabaseIfNeeded();
@@ -165,11 +176,16 @@ public class SimilarityIndexes extends IndexBaseTest {
     if (Rdbms.PG.equals(getRdbms())) {
       assertThat("Index is dropped", commands, hasItem(containsString("DROP INDEX BASIC_INDEX")));
       assertThat("Index is created", commands, hasItem(containsString("CREATE INDEX BASIC_INDEX")));
+    } else if (Rdbms.ORA.equals(getRdbms())) {
+      List<String> commentUpdateCommand = Arrays
+          .asList("COMMENT ON TABLE TEST IS 'BASIC_INDEX.similarity$'\n");
+      assertEquals("Not recreating index", commentUpdateCommand, commands);
     }
   }
 
   @Test
   // Tests that if a similarity index is changed to be basic, that index is recreated in postgres
+  // but not in oracle
   public void recreationToChangeIndexAsBasic() {
     resetDB();
     createDatabaseIfNeeded();
@@ -178,7 +194,23 @@ public class SimilarityIndexes extends IndexBaseTest {
     if (Rdbms.PG.equals(getRdbms())) {
       assertThat("Index is dropped", commands, hasItem(containsString("DROP INDEX BASIC_INDEX")));
       assertThat("Index is created", commands, hasItem(containsString("CREATE INDEX BASIC_INDEX")));
+    } else if (Rdbms.ORA.equals(getRdbms())) {
+      List<String> commentUpdateCommand = Arrays.asList("COMMENT ON TABLE TEST IS ''\n");
+      assertEquals("Not recreating index", commentUpdateCommand, commands);
     }
+  }
+
+  @Test
+  // Tests that if a similarity index is removed in Oracle, the comment associated with
+  // it is removed from its table
+  public void removeIndexShouldRemoveComment() {
+    assumeThat("not executing in Postgres", getRdbms(), is(Rdbms.ORA));
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/BASIC_SIMILARITY_INDEX.xml");
+    updateDatabase("indexes/BASE_MODEL.xml");
+    String tableComment = getCommentOfTableInOracle("TEST");
+    assertThat(tableComment, anyOf(isEmptyString(), nullValue()));
   }
 
   @Test
@@ -191,4 +223,12 @@ public class SimilarityIndexes extends IndexBaseTest {
     assertExport("indexes/MULTIPLE_SIMILARITY_INDEX.xml", "tables/TEST.xml");
   }
 
+  @Test
+  // Tests that it is possible to define an index as similarity and partial at the same time
+  public void exportPartialSimilarityIndex() throws IOException {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/PARTIAL_SIMILARITY_INDEX.xml");
+    assertExport("indexes/PARTIAL_SIMILARITY_INDEX.xml", "tables/TEST.xml");
+  }
 }
