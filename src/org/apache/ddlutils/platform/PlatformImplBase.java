@@ -60,11 +60,13 @@ import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.AddIndexChange;
 import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
@@ -72,6 +74,7 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
@@ -675,26 +678,60 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public boolean alterTablesPostScript(Connection connection, Database currentModel,
-      Database desiredModel, boolean continueOnError, List changes, Database fullModel, OBDataset ad)
-      throws DatabaseOperationException {
+      Database desiredModel, boolean continueOnError, List<ModelChange> changes,
+      Database fullModel, OBDataset ad) throws DatabaseOperationException {
     String sql = null;
 
+    List<AddIndexChange> newIndexes = null;
+    SqlBuilder sqlBuilder = getSqlBuilder();
     try {
       StringWriter buffer = new StringWriter();
 
-      getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null, changes, fullModel,
-          ad);
+      sqlBuilder.setWriter(buffer);
+      newIndexes = sqlBuilder.alterDatabasePostScript(currentModel, desiredModel, null, changes,
+          fullModel, ad);
       sql = buffer.toString();
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
     _ignoreWarns = false;
     int numErrors = evaluateBatch(connection, sql, continueOnError);
+
+    if (newIndexes != null && !newIndexes.isEmpty()) {
+      _log.info(newIndexes.size() + " indexes to create");
+      StringWriter buffer = new StringWriter();
+      sqlBuilder.setWriter(buffer);
+
+      try {
+        createIndexes(currentModel, desiredModel, newIndexes);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      sql = buffer.toString();
+      numErrors += evaluateBatch(connection, sql, continueOnError);
+    }
+
     if (numErrors > 0) {
       return false;
     }
     return true;
+  }
+
+  private void createIndexes(Database currentModel, Database desiredModel,
+      List<AddIndexChange> indexes) throws IOException {
+    Map<Table, List<Index>> newIndexesMap = new HashMap<>();
+
+    for (AddIndexChange indexChg : indexes) {
+      getSqlBuilder().processChange(currentModel, desiredModel, null, indexChg);
+
+      List<Index> indexesForTable = newIndexesMap.get(indexChg.getChangedTable());
+      if (indexesForTable == null) {
+        indexesForTable = new ArrayList<Index>();
+      }
+      indexesForTable.add(indexChg.getNewIndex());
+      newIndexesMap.put(indexChg.getChangedTable(), indexesForTable);
+    }
+    getSqlBuilder().newIndexesPostAction(newIndexesMap);
   }
 
   public List alterTablesRecreatePKs(Connection connection, Database currentModel,

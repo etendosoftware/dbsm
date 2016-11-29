@@ -730,18 +730,15 @@ public abstract class SqlBuilder {
     return changes;
   }
 
-  public void alterDatabasePostScript(Database currentModel, Database desiredModel,
-      CreationParameters params, List changes, Database fullModel, OBDataset ad) throws IOException {
-    Iterator it = changes.iterator();
-
+  /** Returns a list of new indexes to be processed afterwards */
+  public List<AddIndexChange> alterDatabasePostScript(Database currentModel, Database desiredModel,
+      CreationParameters params, List<ModelChange> changes, Database fullModel, OBDataset ad)
+      throws IOException {
     Vector<AddColumnChange> newColumns = new Vector<AddColumnChange>();
-    while (it.hasNext()) {
-      Object change = it.next();
-
+    for (ModelChange change : changes) {
       if (change instanceof AddColumnChange) {
         newColumns.add((AddColumnChange) change);
       }
-
     }
 
     // We will now create the primary keys from recreated tables
@@ -752,6 +749,7 @@ public abstract class SqlBuilder {
         ColumnDefaultValueChange.class, ColumnOnCreateDefaultValueChange.class,
         ColumnRequiredChange.class, ColumnDataTypeChange.class, ColumnSizeChange.class });
 
+    List<AddIndexChange> newIndexes = new ArrayList<>();
     Collection tableChanges = CollectionUtils.select(changes, predicate);
     ArrayList<String> recreatedTables = new ArrayList<String>();
     for (int i = 0; i < desiredModel.getTableCount(); i++) {
@@ -812,26 +810,11 @@ public abstract class SqlBuilder {
           }
         }
       } else {
-        Iterator it2 = changes.iterator();
-        Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
-        while (it2.hasNext()) {
-          Object change = it2.next();
+        for (ModelChange change : changes) {
           if (change instanceof AddIndexChange) {
-            AddIndexChange ichange = ((AddIndexChange) change);
-
-            List<Index> indexesForTable = newIndexesMap.get(ichange.getChangedTable());
-            if (indexesForTable == null) {
-              indexesForTable = new ArrayList<Index>();
-            }
-            indexesForTable.add(ichange.getNewIndex());
-            newIndexesMap.put(ichange.getChangedTable(), indexesForTable);
-
-            if (ichange.getChangedTable().getName()
-                .equalsIgnoreCase(desiredModel.getTable(i).getName()))
-              processChange(currentModel, desiredModel, params, ichange);
+            newIndexes.add((AddIndexChange) change);
           }
         }
-        newIndexesPostAction(newIndexesMap);
       }
     }
 
@@ -883,10 +866,7 @@ public abstract class SqlBuilder {
       }
     }
 
-    it = changes.iterator();
-    while (it.hasNext()) {
-      Object change = it.next();
-
+    for (ModelChange change : changes) {
       if (change instanceof AddForeignKeyChange) {
         ForeignKey fk = ((AddForeignKeyChange) change).getNewForeignKey();
         if (!recreatedFKs.contains(fk.getName())) {
@@ -902,6 +882,7 @@ public abstract class SqlBuilder {
       }
     }
 
+    return newIndexes;
   }
 
   /**
