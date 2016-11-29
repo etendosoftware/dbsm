@@ -3519,6 +3519,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public void setMaxThreads(int threads) {
     this.maxThreads = threads;
+    getModelLoader().setMaxThreads(threads);
   }
 
   @Override

@@ -40,4 +40,6 @@ public interface ModelLoader {
 
   public void addAdditionalTableIfExists(Connection connection, Database model, String tablename);
 
+  public void setMaxThreads(int threads);
+
 }
