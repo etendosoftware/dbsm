@@ -811,7 +811,12 @@ public abstract class SqlBuilder {
         }
       } else {
         for (ModelChange change : changes) {
-          if (change instanceof AddIndexChange) {
+          if (!(change instanceof AddIndexChange)) {
+            continue;
+          }
+          AddIndexChange ichange = (AddIndexChange) change;
+          if (ichange.getChangedTable().getName()
+              .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
             newIndexes.add((AddIndexChange) change);
           }
         }
