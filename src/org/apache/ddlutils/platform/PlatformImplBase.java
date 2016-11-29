@@ -704,8 +704,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
       try {
         createIndexes(currentModel, desiredModel, newIndexes);
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (IOException ignore) {
       }
       sql = buffer.toString();
       numErrors += evaluateBatch(connection, sql, continueOnError);
