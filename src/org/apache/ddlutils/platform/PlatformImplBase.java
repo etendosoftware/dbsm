@@ -52,6 +52,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -380,8 +381,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       _log.error("Error executing concurrent batch " + sql, e1);
     } finally {
       executor.shutdown();
-      while (!executor.isTerminated()) {
-        // waiting executor to terminate
+      try {
+        // wait till finished, it should be fast as awaited for actual execution in invokeAll
+        executor.awaitTermination(30L, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        _log.error("Error shutting down thread pool", e);
       }
     }
 
