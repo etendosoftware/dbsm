@@ -61,10 +61,14 @@ public class ConcurrentSqlEvaluator implements Callable<Integer> {
    */
   @Override
   public Integer call() {
-    Connection con = dbConPool.borrowConnection();
+    Connection con = null;
     try {
+      con = dbConPool.borrowConnection();
       log.debug("[" + Thread.currentThread().getName() + "] - executing " + sql);
       return evaluator.evaluateBatch(con, Arrays.asList(sql), continueOnError, 0);
+    } catch (Exception e) {
+      log.error("Error while executing " + sql, e);
+      return 1;
     } finally {
       dbConPool.returnConnection(con);
     }
