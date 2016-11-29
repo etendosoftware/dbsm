@@ -22,7 +22,7 @@ import org.apache.ddlutils.translation.LiteralFilter;
 /**
  * Allows to concurrently standardize PL triggers.
  * 
- * @see PostgreSqlModelLoader
+ * @see PostgreSqlModelLoader#standardizePlSql
  * 
  * @author alostale
  */
