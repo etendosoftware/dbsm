@@ -69,6 +69,9 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -115,6 +118,15 @@ public class DbsmTest {
   public enum RecreationMode {
     standard, forced
   }
+
+  @Rule
+  public TestWatcher watcher = new TestWatcher() {
+    @Override
+    protected void starting(Description description) {
+      log.info("*** Starting test case: " + description.getClassName() + "."
+          + description.getMethodName());
+    }
+  };
 
   public DbsmTest(String rdbms, String driver, String url, String sid, String user,
       String password, String name) throws FileNotFoundException, IOException {
