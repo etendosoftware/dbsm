@@ -77,6 +77,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   private boolean executeModuleScripts = true;
 
+  private int threads = 1;
+
   public AlterDatabaseDataAll() {
     super();
   }
@@ -108,6 +110,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    platform.setMaxThreads(threads);
 
     if (!StringUtils.isEmpty(forcedRecreation)) {
       getLog().info("Forced recreation: " + forcedRecreation);
@@ -509,5 +512,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   public void setExecuteModuleScripts(boolean executeModuleScripts) {
     this.executeModuleScripts = executeModuleScripts;
+  }
+
+  public void setThreads(int threads) {
+    this.threads = threads;
   }
 }

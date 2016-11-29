@@ -130,6 +130,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   private SQLBatchEvaluator batchEvaluator = new StandardBatchEvaluator(this);
 
+  private int maxThreads = 1;
+
   /**
    * {@inheritDoc}
    */
@@ -3510,8 +3512,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return batchEvaluator;
   }
 
-  private int getMaxThreads() {
-    // TODO Implement me
-    return 2;
+  @Override
+  public void setMaxThreads(int threads) {
+    this.maxThreads = threads;
+  }
+
+  @Override
+  public int getMaxThreads() {
+    return maxThreads;
   }
 }

@@ -1503,4 +1503,10 @@ public interface Platform {
 
   public SQLBatchEvaluator getBatchEvaluator();
 
+  /** Sets the maximum number of threads parallelizable tasks can use */
+  public void setMaxThreads(int threads);
+
+  /** Returns the maximum number of threads parallelizable tasks can use */
+  public int getMaxThreads();
+
 }
