@@ -64,6 +64,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   private boolean rd;
   private ExcludeFilter excludeFilter;
+  private int threads = 1;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
@@ -82,6 +83,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    platform.setMaxThreads(threads);
     // platform.setDelimitedIdentifierModeOn(true);
     // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
@@ -410,5 +412,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   public void setCheckTranslationConsistency(boolean checkTranslationConsistency) {
     this.checkTranslationConsistency = checkTranslationConsistency;
+  }
+
+  public void setThreads(int threads) {
+    this.threads = threads;
   }
 }
