@@ -48,6 +48,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -317,12 +321,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public int evaluateBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
-    List<String> commands = new ArrayList<String>();
-    SqlTokenizer tokenizer = new SqlTokenizer(sql);
-
-    while (tokenizer.hasMoreStatements()) {
-      commands.add(tokenizer.getNextStatement());
-    }
+    List<String> commands = getCommands(sql);
     return evaluateBatch(connection, commands, continueOnError);
   }
 
@@ -337,18 +336,67 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public int evaluateBatchRealBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
-    ArrayList<String> commands = new ArrayList<String>();
-    SqlTokenizer tokenizer = new SqlTokenizer(sql);
-
-    while (tokenizer.hasMoreStatements()) {
-      commands.add(tokenizer.getNextStatement());
-    }
+    List<String> commands = getCommands(sql);
     return evaluateBatchRealBatch(connection, commands, continueOnError);
   }
 
   public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
       throws DatabaseOperationException {
     return batchEvaluator.evaluateBatchRealBatch(connection, sql, continueOnError);
+  }
+
+  private int evaluateConcurrentBatch(String sql, boolean continueOnError)
+      throws DatabaseOperationException {
+    List<String> commands = getCommands(sql);
+    int numOfThreads = Math.min(getMaxThreads(), commands.size());
+    if (numOfThreads <= 1) {
+      // use standard batch evaluator
+      Connection con = borrowConnection();
+      try {
+        return evaluateBatch(con, commands, continueOnError);
+      } finally {
+        returnConnection(con);
+      }
+    }
+
+    boolean wasLoggingSuccessCommands = batchEvaluator.isLogInfoSucessCommands();
+    batchEvaluator.setLogInfoSucessCommands(false);
+
+    ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+    List<ConcurrentSqlEvaluator> tasks = new ArrayList<>();
+    for (String command : commands) {
+      tasks.add(new ConcurrentSqlEvaluator(batchEvaluator, command, this, continueOnError));
+    }
+
+    int errors = 0;
+    try {
+      for (Future<Integer> executionErrors : executor.invokeAll(tasks)) {
+        errors += executionErrors.get();
+      }
+    } catch (InterruptedException | ExecutionException e1) {
+      errors += 1;
+      _log.error("Error executing concurrent batch " + sql, e1);
+    } finally {
+      executor.shutdown();
+      while (!executor.isTerminated()) {
+        // waiting executor to terminate
+      }
+    }
+
+    batchEvaluator.setLogInfoSucessCommands(wasLoggingSuccessCommands);
+    _log.info("Executed " + commands.size() + " SQL commnand(s) in " + numOfThreads + " threads "
+        + (errors == 0 ? "successfully" : ("with " + errors + " errors")));
+    return errors;
+  }
+
+  private List<String> getCommands(String sql) {
+    List<String> commands = new ArrayList<>();
+    SqlTokenizer tokenizer = new SqlTokenizer(sql);
+
+    while (tokenizer.hasMoreStatements()) {
+      commands.add(tokenizer.getNextStatement());
+    }
+    return commands;
   }
 
   /**
@@ -707,7 +755,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       } catch (IOException ignore) {
       }
       sql = buffer.toString();
-      numErrors += evaluateBatch(connection, sql, continueOnError);
+      numErrors += evaluateConcurrentBatch(sql, continueOnError);
     }
 
     if (numErrors > 0) {
@@ -3460,5 +3508,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public SQLBatchEvaluator getBatchEvaluator() {
     return batchEvaluator;
+  }
+
+  private int getMaxThreads() {
+    // TODO Implement me
+    return 2;
   }
 }
