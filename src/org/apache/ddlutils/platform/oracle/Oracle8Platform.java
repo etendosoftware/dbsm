@@ -34,6 +34,7 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
@@ -409,8 +410,9 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
-  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
-    ArrayList inconsistentObjects = new ArrayList();
+  @Override
+  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+    List<StructureObject> inconsistentObjects = new ArrayList<>();
     PostgrePLSQLStandarization.generateOutPatterns(database);
     for (int i = 0; i < database.getFunctionCount(); i++) {
       PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);

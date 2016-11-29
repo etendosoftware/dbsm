@@ -22,7 +22,6 @@ package org.apache.ddlutils;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +34,7 @@ import javax.sql.DataSource;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.CreationParameters;
@@ -1461,7 +1461,7 @@ public interface Platform {
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database, OBDataset ad);
 
-  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase);
+  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase);
 
   public String disableNOTNULLColumnsSql(Database database, OBDataset dataset);
 

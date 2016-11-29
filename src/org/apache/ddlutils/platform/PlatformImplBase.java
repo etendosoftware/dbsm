@@ -40,6 +40,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -80,6 +81,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
@@ -104,7 +106,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   protected static final String MODEL_DEFAULT_NAME = "default";
 
   /** The log for this platform. */
-  private final Log _log = LogFactory.getLog(getClass());
+  private static final Log _log = LogFactory.getLog(PlatformImplBase.class);
 
   /** The platform info. */
   private PlatformInfo _info = new PlatformInfo();
@@ -3457,15 +3459,15 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return true;
   }
 
-  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
-    return new ArrayList();
+  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+    return Collections.emptyList();
   }
 
-  protected void printDiff(String s1, String s2) {
-    getLog().warn("********************************************************");
+  public static void printDiff(String str1, String str2) {
+    _log.warn("********************************************************");
     diff_match_patch diffClass = new diff_match_patch();
-    s1 = s1.replaceAll("\r\n", "\n");
-    s2 = s2.replaceAll("\r\n", "\n");
+    String s1 = str1.replaceAll("\r\n", "\n");
+    String s2 = str2.replaceAll("\r\n", "\n");
     LinkedList<Diff> diffs = diffClass.diff_main(s1, s2);
     boolean initial = true;
     String fullDiff = "";
@@ -3497,8 +3499,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         fullDiff += "[" + diff.text + "]";
       }
     }
-    getLog().warn(fullDiff);
-    getLog().warn("********************************************************");
+    _log.warn(fullDiff);
+    _log.warn("********************************************************");
   }
 
   @Override
