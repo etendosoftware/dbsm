@@ -419,8 +419,10 @@ public class Oracle8Platform extends PlatformImplBase {
       int indF = -1;
       Function f = database.getFunction(i);
       for (int j = 0; indF == -1 && j < fullDatabase.getFunctionCount(); j++) {
-        if (fullDatabase.getFunction(j).equals(f))
+        if (fullDatabase.getFunction(j).equals(f)) {
           indF = j;
+          break;
+        }
       }
       PostgrePLSQLFunctionStandarization funcStand = new PostgrePLSQLFunctionStandarization(
           fullDatabase, indF);
@@ -454,8 +456,10 @@ public class Oracle8Platform extends PlatformImplBase {
       int indF = -1;
       Trigger trg = database.getTrigger(i);
       for (int j = 0; indF == -1 && j < fullDatabase.getTriggerCount(); j++) {
-        if (fullDatabase.getTrigger(j).equals(trg))
+        if (fullDatabase.getTrigger(j).equals(trg)) {
           indF = j;
+          break;
+        }
       }
       PostgrePLSQLTriggerStandarization triggerStand = new PostgrePLSQLTriggerStandarization(
           fullDatabase, indF);
