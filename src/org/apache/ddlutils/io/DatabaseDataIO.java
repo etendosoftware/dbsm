@@ -416,34 +416,30 @@ public class DatabaseDataIO implements DataSetTableExporter {
     long nExportedRows = 0;
     Table table = model.findTable(dsTable.getName());
     Connection con = platform.borrowConnection();
-    Iterator<DynaBean> iterator = getDatasetTableDataIterator(con, platform, model, table, dsTable,
-        moduleID);
-    while (iterator.hasNext()) {
-      DynaBean row = (DynaBean) iterator.next();
-      writer.write(model, dsTable, row);
-      nExportedRows++;
-    }
-    _log.info("  " + nExportedRows + " records have been exported");
-    platform.returnConnection(con);
-    writer.writeDocumentEnd();
-    return nExportedRows > 0;
-  }
 
-  private Iterator<DynaBean> getDatasetTableDataIterator(Connection connection, Platform platform,
-      Database model, Table table, OBDatasetTable dsTable, String moduleId) {
     Table[] atables = { table };
     DataSetTableQueryGeneratorExtraProperties extraProperties = new DataSetTableQueryGeneratorExtraProperties();
-    extraProperties.setModuleId(moduleId);
+    extraProperties.setModuleId(moduleID);
     dsTable.setName(table.getName());
     String sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
-    try (Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(sqlstatement);) {
+    try (Statement statement = con.createStatement()) {
+      ResultSet resultSet = statement.executeQuery(sqlstatement);
       _log.info("Exporting table " + table.getName());
-      return platform.createResultSetIterator(model, resultSet, atables);
+      Iterator<DynaBean> iterator = platform.createResultSetIterator(model, resultSet, atables);
+      while (iterator.hasNext()) {
+        DynaBean row = (DynaBean) iterator.next();
+        writer.write(model, dsTable, row);
+        nExportedRows++;
+      }
+      _log.info("  " + nExportedRows + " records have been exported");
     } catch (SQLException ex) {
       _log.error("SQL command to read rows from table failed: " + sqlstatement, ex);
-      return null;
+    } finally {
+      platform.returnConnection(con);
+      writer.writeDocumentEnd();
     }
+
+    return nExportedRows > 0;
   }
 
   public boolean writeDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
