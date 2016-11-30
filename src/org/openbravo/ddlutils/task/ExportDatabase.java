@@ -65,7 +65,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   private boolean rd;
   private ExcludeFilter excludeFilter;
-  private int threads = 1;
+  private int threads = 0;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {

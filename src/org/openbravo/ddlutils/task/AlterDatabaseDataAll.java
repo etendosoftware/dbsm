@@ -77,7 +77,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   private boolean executeModuleScripts = true;
 
-  private int threads = 1;
+  private int threads = 0;
 
   public AlterDatabaseDataAll() {
     super();
@@ -111,7 +111,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
-    getLog().info("Max threads " + threads);
+    getLog().info("Max threads " + platform.getMaxThreads());
 
     if (!StringUtils.isEmpty(forcedRecreation)) {
       getLog().info("Forced recreation: " + forcedRecreation);
