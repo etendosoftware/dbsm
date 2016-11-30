@@ -4,6 +4,7 @@ import java.util.Vector;
 
 public class OBDatasetTable {
 
+  String dataSetTableId;
   String name;
   boolean excludeAuditInfo;
   String whereclause;
@@ -33,6 +34,14 @@ public class OBDatasetTable {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getDataSetTableId() {
+    return dataSetTableId;
+  }
+
+  public void setDataSetTableId(String dataSetTableId) {
+    this.dataSetTableId = dataSetTableId;
   }
 
   public boolean isExcludeAuditInfo() {

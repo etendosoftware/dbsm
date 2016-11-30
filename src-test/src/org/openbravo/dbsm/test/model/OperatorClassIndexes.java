@@ -165,7 +165,7 @@ public class OperatorClassIndexes extends IndexBaseTest {
       PreparedStatement st = null;
       con = getPlatform().getDataSource().getConnection();
       st = con
-          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
+          .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?");
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {

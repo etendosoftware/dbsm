@@ -405,7 +405,7 @@ public class OracleModelLoader extends ModelLoaderBase {
       String tableName = getTableNameFromIndexName(indexName);
       PreparedStatement st = null;
       st = _connection
-          .prepareStatement("SELECT comments FROM all_tab_comments WHERE UPPER(table_name) = ?");
+          .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?");
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       String commentText = null;
@@ -439,7 +439,7 @@ public class OracleModelLoader extends ModelLoaderBase {
       String columnName = getFirstColumnNameFromTableIndex(tableName, indexName);
       PreparedStatement st = null;
       st = _connection
-          .prepareStatement("SELECT comments FROM all_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
+          .prepareStatement("SELECT comments FROM user_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();
