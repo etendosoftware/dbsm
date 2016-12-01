@@ -22,16 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.ddlutils.platform.ExcludeFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,45 +46,15 @@ public class ContainsSearchIndexes extends IndexBaseTest {
   }
 
   @Before
+  @Override
   public void installPgTrgmExtension() {
-    if (getRdbms() != Rdbms.PG) {
-      return;
-    }
-    Connection connection = null;
-    try {
-      connection = getDataSource().getConnection();
-      StringBuilder query = new StringBuilder();
-      query.append("CREATE EXTENSION IF NOT EXISTS \"pg_trgm\"");
-      PreparedStatement st = connection.prepareStatement(query.toString());
-      st.execute();
-    } catch (SQLException e) {
-      log.error("Error while creating pg_trgm extension");
-    } finally {
-      getPlatform().returnConnection(connection);
-    }
-    // Configure the exclude filter
-    ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File("model/excludeFilter/excludePgTrgmFunctions.xml"));
-    setExcludeFilter(excludeFilter);
+    super.installPgTrgmExtension();
   }
 
   @After
+  @Override
   public void uninstallPgTrgmExtension() {
-    if (getRdbms() != Rdbms.PG) {
-      return;
-    }
-    Connection connection = null;
-    try {
-      connection = getDataSource().getConnection();
-      StringBuilder query = new StringBuilder();
-      query.append("DROP EXTENSION \"pg_trgm\" CASCADE");
-      PreparedStatement st = connection.prepareStatement(query.toString());
-      st.execute();
-    } catch (SQLException e) {
-      log.error("Error while deleting pg_trgm extension");
-    } finally {
-      getPlatform().returnConnection(connection);
-    }
+    super.uninstallPgTrgmExtension();
   }
 
   @Test
