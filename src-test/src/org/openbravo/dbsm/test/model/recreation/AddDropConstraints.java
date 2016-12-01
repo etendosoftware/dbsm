@@ -66,6 +66,21 @@ public class AddDropConstraints extends TableRecreationBaseTest {
   }
 
   @Test
+  public void partialIndexFromScratch() {
+    assertTablesAreNotRecreated("../indexes/BASE_MODEL.xml", "../indexes/BASIC_PARTIAL_INDEX.xml");
+  }
+
+  @Test
+  public void standardIndexToPartial() {
+    assertTablesAreNotRecreated("../indexes/BASIC_INDEX.xml", "../indexes/BASIC_PARTIAL_INDEX.xml");
+  }
+
+  @Test
+  public void partialIndexToStandard() {
+    assertTablesAreNotRecreated("../indexes/BASIC_PARTIAL_INDEX.xml", "../indexes/BASIC_INDEX.xml");
+  }
+
+  @Test
   public void searchIndexFromScratch() {
     installPgTrgmExtension();
     try {
