@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -149,6 +150,29 @@ public class OperatorClassIndexes extends IndexBaseTest {
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
     updateDatabase("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
     assertExport("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that the newIndexesPostAction method which updates the comments of the tables that have
+  // new indexes with operator class is executed just once per table in the model
+  public void commentUpdateIsExecutedOnce() {
+    assumeThat("not executing in Postgres", getRdbms(), is(Rdbms.ORA));
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    updateDatabase("indexes/MODEL_WITH_TWO_TABLES.xml");
+    List<String> commands = sqlStatmentsForUpdate("indexes/MODEL_WITH_TWO_TABLES_AND_INDEX.xml");
+    assertEquals("Comment on table command should not be duplicated", 1,
+        getNumberOfTableCommentCommands(commands));
+  }
+
+  private int getNumberOfTableCommentCommands(List<String> commands) {
+    int commentCommands = 0;
+    for (String command : commands) {
+      if (command.contains("COMMENT ON TABLE")) {
+        commentCommands++;
+      }
+    }
+    return commentCommands;
   }
 
   /**
