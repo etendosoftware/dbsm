@@ -1308,6 +1308,9 @@ public interface Platform {
   public void disableAllFkForTable(Connection connection, Table table, boolean continueOnError)
       throws DatabaseOperationException;
 
+  /** Updates DB statistics to be able to take advantage of optimized query plans */
+  public void updateDBStatistics();
+
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException;
