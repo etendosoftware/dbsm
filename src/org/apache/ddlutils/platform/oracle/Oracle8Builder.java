@@ -625,26 +625,24 @@ public class Oracle8Builder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
-    // Updates the comments of the tables that have new indexes, to prevent losing the info about
+  protected void newIndexesPostAction(Table table, List<Index> newIndexesList) throws IOException {
+    // Updates the comments of a table that have new indexes, to prevent losing the info about
     // the operator class or partial indexing of the indexed columns
-    for (Table table : newIndexesMap.keySet()) {
-      List<Index> indexesWithOperatorClass = new ArrayList<Index>();
-      List<Index> partialIndexes = new ArrayList<Index>();
-      for (Index index : newIndexesMap.get(table)) {
-        if (indexHasColumnWithOperatorClass(index)) {
-          indexesWithOperatorClass.add(index);
-        }
-        if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
-          partialIndexes.add(index);
-        }
+    List<Index> indexesWithOperatorClass = new ArrayList<Index>();
+    List<Index> partialIndexes = new ArrayList<Index>();
+    for (Index index : newIndexesList) {
+      if (indexHasColumnWithOperatorClass(index)) {
+        indexesWithOperatorClass.add(index);
       }
-      if (!indexesWithOperatorClass.isEmpty()) {
-        includeOperatorClassInTableComment(table, indexesWithOperatorClass);
+      if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
+        partialIndexes.add(index);
       }
-      if (!partialIndexes.isEmpty()) {
-        includeWhereClauseInColumnComment(table, partialIndexes);
-      }
+    }
+    if (!indexesWithOperatorClass.isEmpty()) {
+      includeOperatorClassInTableComment(table, indexesWithOperatorClass);
+    }
+    if (!partialIndexes.isEmpty()) {
+      includeWhereClauseInColumnComment(table, partialIndexes);
     }
 
     if (_onCreateDefaultColumns != null) {

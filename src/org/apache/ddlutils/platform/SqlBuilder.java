@@ -755,14 +755,14 @@ public abstract class SqlBuilder {
     for (int i = 0; i < desiredModel.getTableCount(); i++) {
       boolean recreated = false;
       boolean newColumn = false;
+      Table currentTable = desiredModel.getTable(i);
       Iterator itChanges = tableChanges.iterator();
       Vector<AddColumnChange> newColumnsThisTable = new Vector<AddColumnChange>();
       Vector<TableChange> changesOfTable = new Vector<TableChange>();
       while (itChanges.hasNext()) {
         TableChange currentChange = (TableChange) itChanges.next();
 
-        if (currentChange.getChangedTable().getName()
-            .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
+        if (currentChange.getChangedTable().getName().equalsIgnoreCase(currentTable.getName())) {
           if (currentChange instanceof AddColumnChange) {
             newColumnsThisTable.add((AddColumnChange) currentChange);
             newColumn = true;
@@ -771,12 +771,12 @@ public abstract class SqlBuilder {
         }
 
       }
-      recreated = willBeRecreated(desiredModel.getTable(i), changesOfTable);
+      recreated = willBeRecreated(currentTable, changesOfTable);
 
       for (int j = 0; j < newColumns.size(); j++) {
         AddColumnChange change = newColumns.get(j);
         Table table = change.getChangedTable();
-        if (table.getName().equalsIgnoreCase(desiredModel.getTable(i).getName())) {
+        if (table.getName().equalsIgnoreCase(currentTable.getName())) {
           Table tempTable = getTemporaryTableFor(desiredModel, change.getChangedTable());
           Column changedNewColumn = change.getNewColumn();
 
@@ -791,7 +791,7 @@ public abstract class SqlBuilder {
         }
       }
       if (recreated) {
-        recreatedTables.add(desiredModel.getTable(i).getName());
+        recreatedTables.add(currentTable.getName());
         if (newColumn) {
 
           if (fullModel != null) {
@@ -800,7 +800,7 @@ public abstract class SqlBuilder {
             for (int idxTable = 0; idxTable < fullModel.getTableCount(); idxTable++) {
               for (int idxFk = 0; idxFk < fullModel.getTable(idxTable).getForeignKeyCount(); idxFk++) {
                 ForeignKey fk = fullModel.getTable(idxTable).getForeignKey(idxFk);
-                if (recreatedTable.getName().equalsIgnoreCase(fk.getForeignTableName())
+                if (currentTable.getName().equalsIgnoreCase(fk.getForeignTableName())
                     && !recreatedFKs.contains(fk.getName())) {
                   recreatedFKs.add(fk.getName());
                   writeExternalForeignKeyCreateStmt(fullModel, fullModel.getTable(idxTable), fk);

@@ -49,6 +49,7 @@ CheckConstraints.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
     Functions.class,//
+    Views.class,//
 
     AddDropConstraints.class,//
     TypeChangeSuite.class, //

@@ -3523,6 +3523,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   @Override
+  public void updateDBStatistics() {
+    // do not update statistics in default implementation
+  }
+
+  @Override
   public void setMaxThreads(int threads) {
     maxThreads = threads;
     getModelLoader().setMaxThreads(getMaxThreads());
@@ -3535,5 +3540,4 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       maxThreads = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
     }
     return maxThreads;
-  }
 }

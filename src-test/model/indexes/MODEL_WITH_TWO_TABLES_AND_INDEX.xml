@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+  <database name="TWO TABLE TEST">
+    <table name="TEST1" primaryKey="TEST1_ID">
+      <column name="TEST1_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <index name="OP_CLASS_INDEX" unique="false">
+        <index-column name="functionBasedColumn" functionExpression="LOWER(COL1)" operatorClass="varchar_pattern_ops"/>
+      </index>
+    </table>
+    <table name="TEST2" primaryKey="TEST2_ID">
+      <column name="TEST2_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>
