@@ -3540,4 +3540,5 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       maxThreads = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
     }
     return maxThreads;
+  }
 }
