@@ -1025,6 +1025,7 @@ public class Oracle8Builder extends SqlBuilder {
     return tableComment;
   }
 
+  /** Returns {@code true} if table requires to be recreated */
   public boolean requiresRecreation(ColumnDataTypeChange change) {
     if (isSupportedTypeChange(change)) {
       return false;
@@ -1052,6 +1053,7 @@ public class Oracle8Builder extends SqlBuilder {
     }
   }
 
+  /** Returns {@code true} if table requires to be recreated */
   public boolean requiresRecreation(ColumnSizeChange change) {
     String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
     boolean supportedChange = canResizeType(type);

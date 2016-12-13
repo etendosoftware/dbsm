@@ -33,7 +33,9 @@ public interface SQLBatchEvaluator {
   public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
       throws DatabaseOperationException;
 
+  /** Should successful commands be logged */
   public void setLogInfoSucessCommands(boolean logInfoSucessCommands);
 
+  /** Should successful commands be logged */
   public boolean isLogInfoSucessCommands();
 }

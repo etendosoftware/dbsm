@@ -957,6 +957,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement();
   }
 
+  /** Returns {@code true} if table requires to be recreated */
   public boolean requiresRecreation(ColumnDataTypeChange change) {
     boolean suportedChage = isCommentChange(change) || isAllowedChange(change);
     return !suportedChage;
@@ -1005,6 +1006,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     }
   }
 
+  /** Returns {@code true} if table requires to be recreated */
   public boolean requiresRecreation(ColumnSizeChange change) {
     boolean supportedChange = canResizeType(change.getChangedColumn().getTypeCode());
     boolean madeLonger = change.getOldSize() <= change.getNewSize();

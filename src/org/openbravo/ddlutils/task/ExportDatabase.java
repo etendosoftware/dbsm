@@ -417,6 +417,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
     this.checkTranslationConsistency = checkTranslationConsistency;
   }
 
+  /** Defines how many threads can be used to execute parallelizable tasks */
   public void setThreads(int threads) {
     this.threads = threads;
   }

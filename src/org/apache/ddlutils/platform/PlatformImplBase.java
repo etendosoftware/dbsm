@@ -3463,7 +3463,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return Collections.emptyList();
   }
 
-  public static void printDiff(String str1, String str2) {
+  /**
+   * Logs differences between two strings, used to highlight differences while standardization. It
+   * is synchronized to avoid messing two different outputs while working in parallel.
+   */
+  public static synchronized void printDiff(String str1, String str2) {
     _log.warn("********************************************************");
     diff_match_patch diffClass = new diff_match_patch();
     String s1 = str1.replaceAll("\r\n", "\n");

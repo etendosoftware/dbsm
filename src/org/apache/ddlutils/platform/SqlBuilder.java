@@ -810,6 +810,7 @@ public abstract class SqlBuilder {
           }
         }
       } else {
+        // obtain new indexes to be returned to process them afterwards
         for (ModelChange change : changes) {
           if (!(change instanceof AddIndexChange)) {
             continue;
@@ -828,7 +829,6 @@ public abstract class SqlBuilder {
     }
 
     // We will now recreate the unchanged foreign keys
-
     ListOrderedMap changesPerTable = new ListOrderedMap();
     ListOrderedMap unchangedFKs = new ListOrderedMap();
     boolean caseSensitive = getPlatform().isDelimitedIdentifierModeOn();
