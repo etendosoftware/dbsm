@@ -21,6 +21,7 @@ package org.apache.ddlutils.platform.oracle;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,6 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
@@ -491,5 +495,40 @@ public class Oracle8Platform extends PlatformImplBase {
   @Override
   public String limitOneRow() {
     return " where rownum<2";
+  }
+
+  @Override
+  public void updateDBStatistics() {
+    long t = System.currentTimeMillis();
+    DataSource ds = getDataSource();
+    String userName;
+    if (ds instanceof BasicDataSource) {
+      userName = ((BasicDataSource) ds).getUsername();
+    } else {
+      userName = getUsername();
+    }
+    getLog().info("Updating statistics for " + userName + "...");
+
+    Connection con = null;
+    CallableStatement cst = null;
+    String st = "{call dbms_stats.gather_schema_stats('" + userName + "', cascade=>TRUE)}";
+    try {
+      con = borrowConnection();
+
+      cst = con.prepareCall(st);
+      cst.execute();
+    } catch (SQLException e) {
+      getLog().error("Couldn't execute " + st, e);
+    } finally {
+      if (cst != null) {
+        try {
+          cst.close();
+        } catch (SQLException ignored) {
+        }
+      }
+      returnConnection(con);
+    }
+
+    getLog().info("...statistics updated in " + (System.currentTimeMillis() - t) + " ms");
   }
 }

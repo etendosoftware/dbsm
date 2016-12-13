@@ -164,6 +164,8 @@ public class ImportSampledata extends BaseDatabaseTask {
         }
       }
 
+      platform.updateDBStatistics();
+
       if (executeModuleScripts) {
         log.info("Running modulescripts...");
         try {

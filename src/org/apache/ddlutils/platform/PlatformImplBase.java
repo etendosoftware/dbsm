@@ -3425,4 +3425,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public SQLBatchEvaluator getBatchEvaluator() {
     return batchEvaluator;
   }
+
+  @Override
+  public void updateDBStatistics() {
+    // do not update statistics in default implementation
+  }
 }

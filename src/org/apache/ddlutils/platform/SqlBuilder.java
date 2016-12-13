@@ -758,14 +758,14 @@ public abstract class SqlBuilder {
     for (int i = 0; i < desiredModel.getTableCount(); i++) {
       boolean recreated = false;
       boolean newColumn = false;
+      Table currentTable = desiredModel.getTable(i);
       Iterator itChanges = tableChanges.iterator();
       Vector<AddColumnChange> newColumnsThisTable = new Vector<AddColumnChange>();
       Vector<TableChange> changesOfTable = new Vector<TableChange>();
       while (itChanges.hasNext()) {
         TableChange currentChange = (TableChange) itChanges.next();
 
-        if (currentChange.getChangedTable().getName()
-            .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
+        if (currentChange.getChangedTable().getName().equalsIgnoreCase(currentTable.getName())) {
           if (currentChange instanceof AddColumnChange) {
             newColumnsThisTable.add((AddColumnChange) currentChange);
             newColumn = true;
@@ -774,12 +774,12 @@ public abstract class SqlBuilder {
         }
 
       }
-      recreated = willBeRecreated(desiredModel.getTable(i), changesOfTable);
+      recreated = willBeRecreated(currentTable, changesOfTable);
 
       for (int j = 0; j < newColumns.size(); j++) {
         AddColumnChange change = newColumns.get(j);
         Table table = change.getChangedTable();
-        if (table.getName().equalsIgnoreCase(desiredModel.getTable(i).getName())) {
+        if (table.getName().equalsIgnoreCase(currentTable.getName())) {
           Table tempTable = getTemporaryTableFor(desiredModel, change.getChangedTable());
           Column changedNewColumn = change.getNewColumn();
 
@@ -794,16 +794,15 @@ public abstract class SqlBuilder {
         }
       }
       if (recreated) {
-        recreatedTables.add(desiredModel.getTable(i).getName());
+        recreatedTables.add(currentTable.getName());
         if (newColumn) {
 
           if (fullModel != null) {
             // We have the full model. We will activate foreign keys pointing to recreated tables
-            Table recreatedTable = desiredModel.getTable(i);
             for (int idxTable = 0; idxTable < fullModel.getTableCount(); idxTable++) {
               for (int idxFk = 0; idxFk < fullModel.getTable(idxTable).getForeignKeyCount(); idxFk++) {
                 ForeignKey fk = fullModel.getTable(idxTable).getForeignKey(idxFk);
-                if (recreatedTable.getName().equalsIgnoreCase(fk.getForeignTableName())
+                if (currentTable.getName().equalsIgnoreCase(fk.getForeignTableName())
                     && !recreatedFKs.contains(fk.getName())) {
                   recreatedFKs.add(fk.getName());
                   writeExternalForeignKeyCreateStmt(fullModel, fullModel.getTable(idxTable), fk);
@@ -814,25 +813,18 @@ public abstract class SqlBuilder {
         }
       } else {
         Iterator it2 = changes.iterator();
-        Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
+        List<Index> indexesForTable = new ArrayList<Index>();
         while (it2.hasNext()) {
           Object change = it2.next();
           if (change instanceof AddIndexChange) {
             AddIndexChange ichange = ((AddIndexChange) change);
-
-            List<Index> indexesForTable = newIndexesMap.get(ichange.getChangedTable());
-            if (indexesForTable == null) {
-              indexesForTable = new ArrayList<Index>();
-            }
-            indexesForTable.add(ichange.getNewIndex());
-            newIndexesMap.put(ichange.getChangedTable(), indexesForTable);
-
-            if (ichange.getChangedTable().getName()
-                .equalsIgnoreCase(desiredModel.getTable(i).getName()))
+            if (ichange.getChangedTable().getName().equalsIgnoreCase(currentTable.getName())) {
               processChange(currentModel, desiredModel, params, ichange);
+              indexesForTable.add(ichange.getNewIndex());
+            }
           }
         }
-        newIndexesPostAction(newIndexesMap);
+        newIndexesPostAction(currentTable, indexesForTable);
       }
     }
 
@@ -906,26 +898,28 @@ public abstract class SqlBuilder {
   }
 
   /**
-   * Hook that is executed after all the NewIndexChanges for a list of tables have been created
+   * Hook that is executed after all the NewIndexChanges for a table have been created
    * 
-   * @param newIndexesMap
-   *          a map of all the tables that have new indexes, along with the new indexes
+   * @param table
+   *          the table owner of the new indexes
+   * @param newIndexesList
+   *          a list with the new indexes of the table
    * @throws IOException
    */
-  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+  protected void newIndexesPostAction(Table table, List<Index> newIndexesList) throws IOException {
   }
 
   /**
    * Hook that is executed after all the NewIndexChanges for a table have been created
    * 
-   * @param newIndexesMap
-   *          a map of all the tables that have new indexes, along with the new indexes
+   * @param table
+   *          the table owner of the new indexes
+   * @param indexes
+   *          an array with the new indexes of the table
    * @throws IOException
    */
   private void newIndexesPostAction(Table table, Index[] indexes) throws IOException {
-    Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
-    newIndexesMap.put(table, Arrays.asList(indexes));
-    newIndexesPostAction(newIndexesMap);
+    newIndexesPostAction(table, Arrays.asList(indexes));
   }
 
   public boolean hasBeenRecreated(Table table) {
