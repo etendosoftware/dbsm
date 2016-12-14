@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+  <vector>
+    <excludedFunction name="GIN_EXTRACT_QUERY_TRGM"/>
+    <excludedFunction name="GIN_EXTRACT_VALUE_TRGM"/>
+    <excludedFunction name="GIN_TRGM_CONSISTENT"/>
+    <excludedFunction name="GTRGM_COMPRESS"/>
+    <excludedFunction name="GTRGM_CONSISTENT"/>
+    <excludedFunction name="GTRGM_DECOMPRESS"/>
+    <excludedFunction name="GTRGM_DISTANCE"/>
+    <excludedFunction name="GTRGM_IN"/>
+    <excludedFunction name="GTRGM_OUT"/>
+    <excludedFunction name="GTRGM_PENALTY"/>
+    <excludedFunction name="GTRGM_PICKSPLIT"/>
+    <excludedFunction name="GTRGM_SAME"/>
+    <excludedFunction name="GTRGM_UNION"/>
+    <excludedFunction name="SET_LIMIT"/>
+    <excludedFunction name="SHOW_LIMIT"/>
+    <excludedFunction name="SHOW_TRGM"/>
+    <excludedFunction name="SIMILARITY"/>
+    <excludedFunction name="SIMILARITY_DIST"/>
+    <excludedFunction name="SIMILARITY_OP"/>
+  </vector>

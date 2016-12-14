@@ -56,6 +56,9 @@ import org.apache.ddlutils.util.ExtTypes;
  */
 public class PostgreSqlBuilder extends SqlBuilder {
 
+  private static final String GIN_ACCESS_METHOD = "gin";
+  private static final String GIN_OPERATOR_CLASS = "gin_trgm_ops";
+
   private Translation plsqltranslation = null;
   private Translation sqltranslation = null;
 
@@ -118,8 +121,20 @@ public class PostgreSqlBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void writeOperatorClass(IndexColumn idxColumn) throws IOException {
-    if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
+  protected void writeMethod(Index index) throws IOException {
+    if (index.isContainsSearch()) {
+      print(" USING " + GIN_ACCESS_METHOD);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void writeOperatorClass(Index index, IndexColumn idxColumn) throws IOException {
+    if (index.isContainsSearch()) {
+      print(" " + GIN_OPERATOR_CLASS);
+    } else if (idxColumn.getOperatorClass() != null && !idxColumn.getOperatorClass().isEmpty()) {
       print(" " + idxColumn.getOperatorClass());
     }
   }

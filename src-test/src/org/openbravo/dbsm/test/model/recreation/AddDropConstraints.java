@@ -64,4 +64,52 @@ public class AddDropConstraints extends TableRecreationBaseTest {
   public void addFunctionToExistingIndex() {
     assertTablesAreNotRecreated("IDX.xml", "FUNCTION_IDX.xml");
   }
+
+  @Test
+  public void partialIndexFromScratch() {
+    assertTablesAreNotRecreated("../indexes/BASE_MODEL.xml", "../indexes/BASIC_PARTIAL_INDEX.xml");
+  }
+
+  @Test
+  public void standardIndexToPartial() {
+    assertTablesAreNotRecreated("../indexes/BASIC_INDEX.xml", "../indexes/BASIC_PARTIAL_INDEX.xml");
+  }
+
+  @Test
+  public void partialIndexToStandard() {
+    assertTablesAreNotRecreated("../indexes/BASIC_PARTIAL_INDEX.xml", "../indexes/BASIC_INDEX.xml");
+  }
+
+  @Test
+  public void searchIndexFromScratch() {
+    installPgTrgmExtension();
+    try {
+      assertTablesAreNotRecreated("../indexes/BASE_MODEL.xml",
+          "../indexes/CONTAINS_SEARCH_INDEX.xml");
+    } finally {
+      uninstallPgTrgmExtension();
+    }
+  }
+
+  @Test
+  public void standardIndexToSearch() {
+    installPgTrgmExtension();
+    try {
+      assertTablesAreNotRecreated("../indexes/BASIC_INDEX.xml",
+          "../indexes/CONTAINS_SEARCH_INDEX.xml");
+    } finally {
+      uninstallPgTrgmExtension();
+    }
+  }
+
+  @Test
+  public void searchIndexToStandard() {
+    installPgTrgmExtension();
+    try {
+      assertTablesAreNotRecreated("../indexes/CONTAINS_SEARCH_INDEX.xml",
+          "../indexes/BASIC_INDEX.xml");
+    } finally {
+      uninstallPgTrgmExtension();
+    }
+  }
 }

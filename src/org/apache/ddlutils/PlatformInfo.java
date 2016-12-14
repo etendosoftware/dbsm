@@ -86,6 +86,9 @@ public class PlatformInfo {
   /** Whether partial indexes are supported. */
   private boolean _partialIndexesSupported = false;
 
+  /** Whether contains search indexes are supported. */
+  private boolean _containsSearchIndexesSupported = false;
+
   /** Whether triggers are supported. */
   private boolean _triggersSupported = true;
 
@@ -562,6 +565,25 @@ public class PlatformInfo {
    */
   public void setPartialIndexesSupported(boolean partialIndexesSupported) {
     _partialIndexesSupported = partialIndexesSupported;
+  }
+
+  /**
+   * Determines whether contains search indexes are supported.
+   * 
+   * @return <code>true</code> if contains search indexes are supported
+   */
+  public boolean isContainsSearchIndexesSupported() {
+    return _containsSearchIndexesSupported;
+  }
+
+  /**
+   * Specifies whether contains search indexes are supported.
+   * 
+   * @param containsSearchIndexesSupported
+   *          <code>true</code> if contains search indexes are supported
+   */
+  public void setContainsSearchIndexesSupported(boolean containsSearchIndexesSupported) {
+    _containsSearchIndexesSupported = containsSearchIndexesSupported;
   }
 
   /**

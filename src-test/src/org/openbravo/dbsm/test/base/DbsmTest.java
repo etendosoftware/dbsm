@@ -797,7 +797,46 @@ public class DbsmTest {
         cn.close();
       }
     }
+  }
 
+  protected void installPgTrgmExtension() {
+    if (getRdbms() != Rdbms.PG) {
+      return;
+    }
+    Connection connection = null;
+    try {
+      connection = getDataSource().getConnection();
+      StringBuilder query = new StringBuilder();
+      query.append("CREATE EXTENSION IF NOT EXISTS \"pg_trgm\"");
+      PreparedStatement st = connection.prepareStatement(query.toString());
+      st.execute();
+    } catch (SQLException e) {
+      log.error("Error while creating pg_trgm extension");
+    } finally {
+      getPlatform().returnConnection(connection);
+    }
+    // Configure the exclude filter
+    ExcludeFilter localExcludeFilter = new ExcludeFilter();
+    localExcludeFilter.fillFromFile(new File("model/excludeFilter/excludePgTrgmFunctions.xml"));
+    setExcludeFilter(localExcludeFilter);
+  }
+
+  protected void uninstallPgTrgmExtension() {
+    if (getRdbms() != Rdbms.PG) {
+      return;
+    }
+    Connection connection = null;
+    try {
+      connection = getDataSource().getConnection();
+      StringBuilder query = new StringBuilder();
+      query.append("DROP EXTENSION \"pg_trgm\" CASCADE");
+      PreparedStatement st = connection.prepareStatement(query.toString());
+      st.execute();
+    } catch (SQLException e) {
+      log.error("Error while deleting pg_trgm extension");
+    } finally {
+      getPlatform().returnConnection(connection);
+    }
   }
 
   /** Represents a DB row with its values */
