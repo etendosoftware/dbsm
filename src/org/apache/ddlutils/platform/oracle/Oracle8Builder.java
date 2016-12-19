@@ -1120,8 +1120,12 @@ public class Oracle8Builder extends SqlBuilder {
       int oldScale = change.getOldScale();
       int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
       int newScale = change.getNewScale();
-
-      madeLonger = oldPrecision <= newPrecision && oldScale <= newScale;
+      if (oldPrecision == newPrecision) {
+        // can't change scale keeping same precision
+        madeLonger = oldScale == newScale;
+      } else {
+        madeLonger = oldPrecision <= newPrecision && oldScale <= newScale;
+      }
     } else {
       madeLonger = change.getOldSize() <= change.getNewSize();
     }

@@ -78,7 +78,13 @@ public class TableRecreationBaseTest extends DbsmTest {
   }
 
   protected void assertTablesAreRecreated(String fromModel, String toModel) {
-    ModelOids oids = updateModel(fromModel, toModel, true);
+    boolean generateDummyData = true;
+    assertTablesAreRecreated(fromModel, toModel, generateDummyData);
+  }
+
+  protected void assertTablesAreRecreated(String fromModel, String toModel,
+      boolean generateDummyData) {
+    ModelOids oids = updateModel(fromModel, toModel, generateDummyData);
     assertThat("Table OID changed", oids.newTableInternalId,
         not(contains(oids.oldTableInternalId.toArray())));
   }

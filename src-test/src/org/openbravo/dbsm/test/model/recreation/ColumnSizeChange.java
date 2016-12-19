@@ -3,7 +3,6 @@ package org.openbravo.dbsm.test.model.recreation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ColumnSizeChange extends DataTypeChanges {
@@ -29,10 +28,9 @@ public class ColumnSizeChange extends DataTypeChanges {
     assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS1.xml");
   }
 
-  @Ignore("This case cannot be supported")
   @Test
   public void increaseScaleKeepPrecision() {
-    assertTablesAreNotRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS2.xml");
+    assertTablesAreRecreated("DATA_TYPE_NUMBERS_BASE.xml", "DATA_TYPE_NUMBERS2.xml", false);
   }
 
   @Test

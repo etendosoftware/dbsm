@@ -1024,7 +1024,23 @@ public class PostgreSqlBuilder extends SqlBuilder {
   /** Returns {@code true} if table requires to be recreated */
   public boolean requiresRecreation(ColumnSizeChange change) {
     boolean supportedChange = canResizeType(change.getChangedColumn().getTypeCode());
-    boolean madeLonger = change.getOldSize() <= change.getNewSize();
+    boolean madeLonger;
+    String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    if (DECIMAL.equals(type)) {
+      int oldPrecision = change.getOldSize() == 0 ? Integer.MAX_VALUE : change.getOldSize();
+      int oldScale = change.getOldScale();
+      int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
+      int newScale = change.getNewScale();
+
+      if (oldPrecision == newPrecision) {
+        // can't change scale keeping same precision
+        madeLonger = oldScale == newScale;
+      } else {
+        madeLonger = change.getOldSize() <= change.getNewSize();
+      }
+    } else {
+      madeLonger = change.getOldSize() <= change.getNewSize();
+    }
 
     return !(supportedChange && madeLonger);
   }
