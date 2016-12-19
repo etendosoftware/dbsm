@@ -974,8 +974,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   /** Returns {@code true} if table requires to be recreated */
   public boolean requiresRecreation(ColumnDataTypeChange change) {
-    boolean suportedChage = isCommentChange(change) || isAllowedChange(change);
-    return !suportedChage;
+    boolean supportedChage = isCommentChange(change) || isAllowedChange(change);
+    return !supportedChage;
   }
 
   /** PG doesn't support NChar nor NVarchar types, so only change is to add a comment */
