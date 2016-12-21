@@ -1028,13 +1028,13 @@ public class PostgreSqlBuilder extends SqlBuilder {
     String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
     if (DECIMAL.equals(type)) {
       int oldPrecision = change.getOldSize() == 0 ? Integer.MAX_VALUE : change.getOldSize();
-      int oldScale = change.getOldScale();
       int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
-      int newScale = change.getNewScale();
 
       if (oldPrecision == newPrecision) {
+        int oldScale = change.getOldScale() == null ? Integer.MAX_VALUE : change.getOldScale();
+        int newScale = change.getNewScale() == null ? Integer.MAX_VALUE : change.getNewScale();
         // can't change scale keeping same precision
-        madeLonger = oldScale == newScale;
+        madeLonger = oldScale >= newScale;
       } else {
         madeLonger = change.getOldSize() <= change.getNewSize();
       }
