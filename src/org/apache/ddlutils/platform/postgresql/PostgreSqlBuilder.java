@@ -1033,7 +1033,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
       if (oldPrecision == newPrecision) {
         int oldScale = change.getOldScale() == null ? Integer.MAX_VALUE : change.getOldScale();
         int newScale = change.getNewScale() == null ? Integer.MAX_VALUE : change.getNewScale();
-        // can't change scale keeping same precision
+        // keeping same precision: to avoid recreation, scale can not be increased
         madeLonger = oldScale >= newScale;
       } else {
         madeLonger = change.getOldSize() <= change.getNewSize();
