@@ -1,23 +1,23 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2001-2016 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
+
 package org.apache.ddlutils.platform.postgresql;
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+import static org.apache.ddlutils.model.TypeMap.CHAR;
+import static org.apache.ddlutils.model.TypeMap.CLOB;
+import static org.apache.ddlutils.model.TypeMap.DECIMAL;
+import static org.apache.ddlutils.model.TypeMap.NCHAR;
+import static org.apache.ddlutils.model.TypeMap.NVARCHAR;
+import static org.apache.ddlutils.model.TypeMap.VARCHAR;
 
 import java.io.IOException;
 import java.sql.Types;
@@ -27,6 +27,7 @@ import java.util.Vector;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ColumnChange;
+import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
@@ -40,6 +41,7 @@ import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
+import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.translation.CommentFilter;
@@ -967,6 +969,108 @@ public class PostgreSqlBuilder extends SqlBuilder {
     } else {
       print(" DROP NOT NULL");
     }
+    printEndOfStatement();
+  }
+
+  /** Returns {@code true} if table requires to be recreated */
+  public boolean requiresRecreation(ColumnDataTypeChange change) {
+    boolean supportedChange = isCommentChange(change) || isAllowedChange(change);
+    return !supportedChange;
+  }
+
+  /** PG doesn't support NChar nor NVarchar types, so only change is to add a comment */
+  private boolean isCommentChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+
+    boolean varcharToNVarchar = (NVARCHAR.equals(oldType) || VARCHAR.equals(oldType))
+        && (NVARCHAR.equals(newType) || VARCHAR.equals(newType));
+    boolean charToNchar = (NCHAR.equals(oldType) || CHAR.equals(oldType))
+        && (NCHAR.equals(newType) || CHAR.equals(newType));
+
+    return varcharToNVarchar || charToNchar;
+  }
+
+  private boolean isAllowedChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+    boolean wasTxtType = (NVARCHAR.equals(oldType) || VARCHAR.equals(oldType)
+        || NCHAR.equals(oldType) || CHAR.equals(oldType));
+    return wasTxtType && CLOB.equals(newType);
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
+    if (isCommentChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      Column modifiedColumn = currentModel.findTable(change.getChangedTable().getName())
+          .findColumn(change.getChangedColumn().getName());
+      writeColumnCommentStmt(desiredModel, change.getChangedTable(), modifiedColumn);
+    } else if (isAllowedChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      Table table = currentModel.findTable(change.getChangedTable().getName());
+      Column column = table.findColumn(change.getChangedColumn().getName());
+      print("ALTER TABLE " + table.getName() + " ALTER COLUMN ");
+
+      printIdentifier(getColumnName(column));
+      print(" TYPE ");
+      print(getSqlType(column));
+
+      printEndOfStatement();
+    }
+  }
+
+  /** Returns {@code true} if table requires to be recreated */
+  public boolean requiresRecreation(ColumnSizeChange change) {
+    boolean supportedChange = canResizeType(change.getChangedColumn().getTypeCode());
+    boolean madeLonger;
+    String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    if (DECIMAL.equals(type)) {
+      int oldPrecision = change.getOldSize() == 0 ? Integer.MAX_VALUE : change.getOldSize();
+      int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
+
+      if (oldPrecision == newPrecision) {
+        int oldScale = change.getOldScale() == null ? Integer.MAX_VALUE : change.getOldScale();
+        int newScale = change.getNewScale() == null ? Integer.MAX_VALUE : change.getNewScale();
+        // keeping same precision: to avoid recreation, scale can not be increased
+        madeLonger = oldScale >= newScale;
+      } else {
+        madeLonger = change.getOldSize() <= change.getNewSize();
+      }
+    } else {
+      madeLonger = change.getOldSize() <= change.getNewSize();
+    }
+
+    return !(supportedChange && madeLonger);
+  }
+
+  private boolean canResizeType(int typeCode) {
+    String type = TypeMap.getJdbcTypeName(typeCode);
+    switch (type) {
+    case NVARCHAR:
+    case VARCHAR:
+    case NCHAR:
+    case CHAR:
+    case DECIMAL:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
+      throws IOException {
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    Table table = currentModel.findTable(change.getChangedTable().getName());
+    Column column = table.findColumn(change.getChangedColumn().getName());
+    print("ALTER TABLE " + table.getName() + " ALTER COLUMN ");
+
+    printIdentifier(getColumnName(column));
+    print(" TYPE ");
+    print(getSqlType(column));
+
     printEndOfStatement();
   }
 }

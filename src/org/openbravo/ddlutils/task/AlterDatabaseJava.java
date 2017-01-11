@@ -45,7 +45,15 @@ public class AlterDatabaseJava {
           || "on".equals(args[18]));
     }
 
+    if (args.length > 19) {
+      int maxThreads;
+      try {
+        maxThreads = Integer.parseInt(args[19]);
+      } catch (NumberFormatException e) {
+        maxThreads = -1;
+      }
+      ada.setThreads(maxThreads);
+    }
     ada.execute();
-
   }
 }

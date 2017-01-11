@@ -13,7 +13,7 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="CH" primaryKey="false" required="true" type="CHAR" size="2" autoIncrement="false">
+      <column name="CH" primaryKey="false" required="true" type="CLOB" size="4000" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>

@@ -38,6 +38,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
   private static final int MAX_LOOPS_OF_FORCED = 5;
   protected final Log _log = LogFactory.getLog(getClass());
   private Platform platform;
+  private boolean logInfoSucessCommands = true;
 
   public StandardBatchEvaluator(Platform platform) {
     this.platform = platform;
@@ -148,13 +149,8 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
           }
         }
       } while (changedSomething);
-      String errorNumber = "";
-      if (errors > 0)
-        errorNumber = " with " + errors + " error(s)";
-      else
-        errorNumber = " successfully";
-      if (commandCount > 0)
-        _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
+
+      logCommands(errors, commandCount);
 
       // execute the forced commands
       int loops = 0;
@@ -229,6 +225,21 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
     }
 
     return errors;
+  }
+
+  private void logCommands(int errors, int commandCount) {
+    String errorNumber = "";
+    if (errors > 0)
+      errorNumber = " with " + errors + " error(s)";
+    else
+      errorNumber = " successfully";
+    if (commandCount > 0) {
+      if (errors == 0 && !logInfoSucessCommands) {
+        _log.debug("Executed " + commandCount + " SQL command(s)" + errorNumber);
+      } else {
+        _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
+      }
+    }
   }
 
   @Override
@@ -314,13 +325,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
       }
     }
 
-    String errorNumber = "";
-    if (errors > 0)
-      errorNumber = " with " + errors + " error(s)";
-    else
-      errorNumber = " successfully";
-    if (commandCount > 0)
-      _log.info("Executed " + commandCount + " SQL command(s)" + errorNumber);
+    logCommands(errors, commandCount);
 
     return errors;
   }
@@ -328,5 +333,15 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
   protected int handleFailedBatchExecution(Connection connection, List<String> sql,
       boolean continueOnError, long indexFailedStatement) {
     return evaluateBatch(connection, sql, continueOnError, 0);
+  }
+
+  @Override
+  public void setLogInfoSucessCommands(boolean logInfoSucessCommands) {
+    this.logInfoSucessCommands = logInfoSucessCommands;
+  }
+
+  @Override
+  public boolean isLogInfoSucessCommands() {
+    return logInfoSucessCommands;
   }
 }

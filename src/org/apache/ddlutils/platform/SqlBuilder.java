@@ -557,14 +557,14 @@ public abstract class SqlBuilder {
 
     ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
         .isDelimitedIdentifierModeOn());
-    List changes = comparator.compare(currentModel, desiredModel);
+    List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
 
     alterDatabase(currentModel, desiredModel, params, changes);
 
   }
 
   public void alterDatabase(Database currentModel, Database desiredModel,
-      CreationParameters params, List changes) throws IOException {
+      CreationParameters params, List<ModelChange> changes) throws IOException {
     _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
     _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
     _SQLTranslation = createSQLTranslation(desiredModel);
@@ -731,18 +731,15 @@ public abstract class SqlBuilder {
     return changes;
   }
 
-  public void alterDatabasePostScript(Database currentModel, Database desiredModel,
-      CreationParameters params, List changes, Database fullModel, OBDataset ad) throws IOException {
-    Iterator it = changes.iterator();
-
+  /** Returns a list of new indexes to be processed afterwards */
+  public List<AddIndexChange> alterDatabasePostScript(Database currentModel, Database desiredModel,
+      CreationParameters params, List<ModelChange> changes, Database fullModel, OBDataset ad)
+      throws IOException {
     Vector<AddColumnChange> newColumns = new Vector<AddColumnChange>();
-    while (it.hasNext()) {
-      Object change = it.next();
-
+    for (ModelChange change : changes) {
       if (change instanceof AddColumnChange) {
         newColumns.add((AddColumnChange) change);
       }
-
     }
 
     // We will now create the primary keys from recreated tables
@@ -753,6 +750,7 @@ public abstract class SqlBuilder {
         ColumnDefaultValueChange.class, ColumnOnCreateDefaultValueChange.class,
         ColumnRequiredChange.class, ColumnDataTypeChange.class, ColumnSizeChange.class });
 
+    List<AddIndexChange> newIndexes = new ArrayList<>();
     Collection tableChanges = CollectionUtils.select(changes, predicate);
     ArrayList<String> recreatedTables = new ArrayList<String>();
     for (int i = 0; i < desiredModel.getTableCount(); i++) {
@@ -799,6 +797,7 @@ public abstract class SqlBuilder {
 
           if (fullModel != null) {
             // We have the full model. We will activate foreign keys pointing to recreated tables
+            Table recreatedTable = desiredModel.getTable(i);
             for (int idxTable = 0; idxTable < fullModel.getTableCount(); idxTable++) {
               for (int idxFk = 0; idxFk < fullModel.getTable(idxTable).getForeignKeyCount(); idxFk++) {
                 ForeignKey fk = fullModel.getTable(idxTable).getForeignKey(idxFk);
@@ -812,19 +811,17 @@ public abstract class SqlBuilder {
           }
         }
       } else {
-        Iterator it2 = changes.iterator();
-        List<Index> indexesForTable = new ArrayList<Index>();
-        while (it2.hasNext()) {
-          Object change = it2.next();
-          if (change instanceof AddIndexChange) {
-            AddIndexChange ichange = ((AddIndexChange) change);
-            if (ichange.getChangedTable().getName().equalsIgnoreCase(currentTable.getName())) {
-              processChange(currentModel, desiredModel, params, ichange);
-              indexesForTable.add(ichange.getNewIndex());
-            }
+        // obtain new indexes to be returned to process them afterwards
+        for (ModelChange change : changes) {
+          if (!(change instanceof AddIndexChange)) {
+            continue;
+          }
+          AddIndexChange ichange = (AddIndexChange) change;
+          if (ichange.getChangedTable().getName()
+              .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
+            newIndexes.add((AddIndexChange) change);
           }
         }
-        newIndexesPostAction(currentTable, indexesForTable);
       }
     }
 
@@ -833,7 +830,6 @@ public abstract class SqlBuilder {
     }
 
     // We will now recreate the unchanged foreign keys
-
     ListOrderedMap changesPerTable = new ListOrderedMap();
     ListOrderedMap unchangedFKs = new ListOrderedMap();
     boolean caseSensitive = getPlatform().isDelimitedIdentifierModeOn();
@@ -876,10 +872,7 @@ public abstract class SqlBuilder {
       }
     }
 
-    it = changes.iterator();
-    while (it.hasNext()) {
-      Object change = it.next();
-
+    for (ModelChange change : changes) {
       if (change instanceof AddForeignKeyChange) {
         ForeignKey fk = ((AddForeignKeyChange) change).getNewForeignKey();
         if (!recreatedFKs.contains(fk.getName())) {
@@ -895,31 +888,30 @@ public abstract class SqlBuilder {
       }
     }
 
+    return newIndexes;
   }
 
   /**
-   * Hook that is executed after all the NewIndexChanges for a table have been created
+   * Hook that is executed after all the NewIndexChanges for a list of tables have been created
    * 
-   * @param table
-   *          the table owner of the new indexes
-   * @param newIndexesList
-   *          a list with the new indexes of the table
+   * @param newIndexesMap
+   *          a map of all the tables that have new indexes, along with the new indexes
    * @throws IOException
    */
-  protected void newIndexesPostAction(Table table, List<Index> newIndexesList) throws IOException {
+  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
   }
 
   /**
    * Hook that is executed after all the NewIndexChanges for a table have been created
    * 
-   * @param table
-   *          the table owner of the new indexes
-   * @param indexes
-   *          an array with the new indexes of the table
+   * @param newIndexesMap
+   *          a map of all the tables that have new indexes, along with the new indexes
    * @throws IOException
    */
   private void newIndexesPostAction(Table table, Index[] indexes) throws IOException {
-    newIndexesPostAction(table, Arrays.asList(indexes));
+    Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
+    newIndexesMap.put(table, Arrays.asList(indexes));
+    newIndexesPostAction(newIndexesMap);
   }
 
   public boolean hasBeenRecreated(Table table) {
@@ -1027,8 +1019,9 @@ public abstract class SqlBuilder {
    *          The parameters used in the creation of new tables. Note that for existing tables, the
    *          parameters won't be applied
    */
-  protected void processChanges(Database currentModel, Database desiredModel, List changes,
-      CreationParameters params, boolean createConstraints) throws IOException {
+  protected void processChanges(Database currentModel, Database desiredModel,
+      List<ModelChange> changes, CreationParameters params, boolean createConstraints)
+      throws IOException {
     CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
         Database.class, Database.class, CreationParameters.class, null }, new Object[] {
         currentModel, desiredModel, params, null });
@@ -1802,7 +1795,7 @@ public abstract class SqlBuilder {
    *          The change objects for this table
    */
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
-      String tableName, Map parameters, List changes, Set<String> unchangedtriggers)
+      String tableName, Map parameters, List<TableChange> changes, Set<String> unchangedtriggers)
       throws IOException {
     Table sourceTable = currentModel.findTable(tableName, getPlatform()
         .isDelimitedIdentifierModeOn());
@@ -2909,8 +2902,8 @@ public abstract class SqlBuilder {
    * @param parameters
    *          Additional platform-specific parameters for the table creation
    */
-  protected void writeTableCreationStmt(Database database, Table table, Map parameters)
-      throws IOException {
+  protected void writeTableCreationStmt(Database database, Table table,
+      Map<String, Object> parameters) throws IOException {
     printStartOfStatement("TABLE", getStructureObjectName(table));
     printScriptOptions("CRITICAL = TRUE");
 
@@ -3019,9 +3012,8 @@ public abstract class SqlBuilder {
    */
   protected void writeColumn(Table table, Column column, boolean deferNotNull) throws IOException {
     // see comments in columnsDiffer about null/"" defaults
-    printIdentifier(getColumnName(column));
-    print(" ");
-    print(getSqlType(column));
+
+    writeColumnType(column);
 
     String value;
     String onCreateDefault = column.getLiteralOnCreateDefault();
@@ -3047,6 +3039,12 @@ public abstract class SqlBuilder {
       print(" ");
       writeColumnNullableStmt();
     }
+  }
+
+  protected void writeColumnType(Column column) throws IOException {
+    printIdentifier(getColumnName(column));
+    print(" ");
+    print(getSqlType(column));
   }
 
   /**
@@ -4815,14 +4813,15 @@ public abstract class SqlBuilder {
    * remaining changes will be in that list.
    */
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
-      Table sourceTable, Table targetTable, Map parameters, List changes) throws IOException {
+      Table sourceTable, Table targetTable, Map parameters, List<TableChange> changes)
+      throws IOException {
 
     if (requiresRecreation(targetTable, changes, true)) {
       return;
     }
 
     // // First we drop primary keys as necessary
-    for (Iterator changeIt = changes.iterator(); changeIt.hasNext();) {
+    for (Iterator<TableChange> changeIt = changes.iterator(); changeIt.hasNext();) {
       TableChange change = (TableChange) changeIt.next();
 
       if (change instanceof RemovePrimaryKeyChange) {
@@ -4842,6 +4841,12 @@ public abstract class SqlBuilder {
         changeIt.remove();
       } else if (change instanceof ColumnDefaultValueChange) {
         processChange(currentModel, desiredModel, (ColumnDefaultValueChange) change);
+        changeIt.remove();
+      } else if (change instanceof ColumnDataTypeChange) {
+        processChange(currentModel, desiredModel, (ColumnDataTypeChange) change);
+        changeIt.remove();
+      } else if (change instanceof ColumnSizeChange) {
+        processChange(currentModel, desiredModel, (ColumnSizeChange) change);
         changeIt.remove();
       }
     }
@@ -5021,6 +5026,16 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnRequiredChange change) throws IOException {
+    // no default implementation
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
+    // no default implementation
+  }
+
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
+      throws IOException {
     // no default implementation
   }
 

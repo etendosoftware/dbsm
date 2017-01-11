@@ -32,19 +32,21 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
-import org.apache.ddlutils.translation.CommentFilter;
-import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.util.ExtTypes;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -501,53 +503,36 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
   }
 
-  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
-    ArrayList inconsistentObjects = new ArrayList();
-
+  @Override
+  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+    List<PostgrePLSQLConsistencyChecker> tasks = new ArrayList<>();
     for (int i = 0; i < database.getFunctionCount(); i++) {
-      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
-      Function f = database.getFunction(i);
-      if (f.getOriginalBody() != null) {
-        LiteralFilter litFilter1 = new LiteralFilter();
-        CommentFilter comFilter1 = new CommentFilter();
-        String s1 = litFilter1.removeLiterals(f.getBody());
-        s1 = comFilter1.removeComments(s1);
-        s1 = funcTrans.exec(s1);
-        s1 = comFilter1.restoreComments(s1);
-        s1 = litFilter1.restoreLiterals(s1);
-        String s1r = s1.replaceAll("\\s", "");
-        String s2 = f.getOriginalBody();
-        String s2r = s2.replaceAll("\\s", "");
-        if (!s1r.equals(s2r)) {
-          getLog().warn("Found differences in " + f.getName());
-          printDiff(s1, s2);
-          inconsistentObjects.add(f);
-        }
-      }
+      tasks.add(new PostgrePLSQLConsistencyChecker(fullDatabase, database.getFunction(i)));
     }
 
     for (int i = 0; i < database.getTriggerCount(); i++) {
-      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(fullDatabase);
-      Trigger trg = database.getTrigger(i);
-      if (trg.getOriginalBody() != null) {
-        LiteralFilter litFilter1 = new LiteralFilter();
-        CommentFilter comFilter1 = new CommentFilter();
-        String s1 = litFilter1.removeLiterals(trg.getBody());
-        s1 = comFilter1.removeComments(s1);
-        s1 = triggerTrans.exec(s1);
-        s1 = comFilter1.restoreComments(s1);
-        s1 = litFilter1.restoreLiterals(s1);
-        String s1r = s1.replaceAll("\\s", "");
-        String s2 = trg.getOriginalBody();
-        String s2r = s2.replaceAll("\\s", "");
-        if (!s1r.equals(s2r)) {
-          getLog().warn("Found differences in " + trg.getName());
-          printDiff(s1, s2);
-          inconsistentObjects.add(trg);
-        }
-      }
+      tasks.add(new PostgrePLSQLConsistencyChecker(fullDatabase, database.getTrigger(i)));
     }
 
+    List<StructureObject> inconsistentObjects = new ArrayList<>();
+    ExecutorService executor = Executors.newFixedThreadPool(getMaxThreads());
+    try {
+      for (Future<StructureObject> result : executor.invokeAll(tasks)) {
+        StructureObject inconsistentObject = result.get();
+        if (inconsistentObject != null) {
+          inconsistentObjects.add(inconsistentObject);
+        }
+      }
+    } catch (InterruptedException | ExecutionException e) {
+      getLog().error("Error checking translation consistency", e);
+    } finally {
+      executor.shutdown();
+      try {
+        executor.awaitTermination(5L, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        getLog().error("Error shutting down thread pool", e);
+      }
+    }
     return inconsistentObjects;
   }
 

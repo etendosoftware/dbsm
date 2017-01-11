@@ -69,6 +69,9 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -100,6 +103,7 @@ public class DbsmTest {
   protected Logger log;
   protected String modelPath;
   private static BasicDataSource ds;
+  private static String previousDB;
   private Rdbms rdbms;
   private Platform platform;
   private SQLBatchEvaluator evaluator;
@@ -114,6 +118,15 @@ public class DbsmTest {
   public enum RecreationMode {
     standard, forced
   }
+
+  @Rule
+  public TestWatcher watcher = new TestWatcher() {
+    @Override
+    protected void starting(Description description) {
+      log.info("*** Starting test case: " + description.getClassName() + "."
+          + description.getMethodName());
+    }
+  };
 
   public DbsmTest(String rdbms, String driver, String url, String sid, String user,
       String password, String name) throws FileNotFoundException, IOException {
@@ -137,6 +150,20 @@ public class DbsmTest {
     this.user = user;
     this.driver = driver;
     this.url = ownerUrl;
+
+    if (previousDB == null || !previousDB.equals(ownerUrl)) {
+      if (ds != null) {
+        try {
+          log.info("Closing datasource to switch DB from " + previousDB + " to " + ownerUrl);
+          ds.close();
+        } catch (SQLException e) {
+          log.error("Error closing ds", e);
+        }
+      }
+
+      ds = null;
+      previousDB = ownerUrl;
+    }
 
     if (ds == null) {
       ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
@@ -423,7 +450,7 @@ public class DbsmTest {
         ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
             platform.isDelimitedIdentifierModeOn());
         @SuppressWarnings("unchecked")
-        List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+        List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
             platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
@@ -482,8 +509,7 @@ public class DbsmTest {
 
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
-    @SuppressWarnings("unchecked")
-    List<Change> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+    List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
         platform.loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;
@@ -672,16 +698,25 @@ public class DbsmTest {
         pkValue = RandomStringUtils.random(col.getSizeAsInt(), "0123456789ABCDEF");
         values += "'" + pkValue + "'";
       } else if ("VARCHAR".equals(col.getType()) || "NVARCHAR".equals(col.getType())
-          || "CHAR".equals(col.getType())) {
+          || "CHAR".equals(col.getType()) || "NCHAR".equals(col.getType())) {
         values += "'" + RandomStringUtils.randomAlphanumeric(col.getSizeAsInt()) + "'";
       } else if ("DECIMAL".equals(col.getType())) {
-        values += RandomStringUtils.randomNumeric(col.getSizeAsInt());
+        int scale = col.getScaleAsInt();
+        int precision = col.getPrecisionRadix();
+        if (scale == 0 && precision == 0) {
+          values += RandomStringUtils.randomNumeric(10);
+        } else {
+          values += RandomStringUtils.randomNumeric(precision - scale)
+              + (scale == 0 ? "" : ("." + RandomStringUtils.randomNumeric(scale)));
+        }
       } else if ("TIMESTAMP".equals(col.getType())) {
 
         Date date = new Date((long) (new Random().nextDouble() * (System.currentTimeMillis())));
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
         values += "to_date('" + sdf.format(date) + "', 'DD/MM/YYYY')";
+      } else if ("CLOB".equals(col.getType())) {
+        values += "'" + RandomStringUtils.randomAlphanumeric(10) + "'";
       }
     }
     sql += ") values (" + values + ")";

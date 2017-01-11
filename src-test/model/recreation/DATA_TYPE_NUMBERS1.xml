@@ -5,15 +5,15 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="COL1" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+      <column name="N1" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="VC" primaryKey="false" required="true" type="VARCHAR" size="20" autoIncrement="false">
+      <column name="N2" primaryKey="false" required="true" type="DECIMAL" size="20,0" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="CH" primaryKey="false" required="true" type="CHAR" size="2" autoIncrement="false">
+      <column name="N3" primaryKey="false" required="true" type="DECIMAL" size="10,5" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>

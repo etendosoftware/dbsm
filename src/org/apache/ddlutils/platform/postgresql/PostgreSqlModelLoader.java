@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,13 +39,10 @@ import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
-import org.apache.ddlutils.translation.CommentFilter;
-import org.apache.ddlutils.translation.LiteralFilter;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -95,66 +95,38 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   }
 
   private void standardizePlSql(Database db) {
-    _log.info("Starting function and trigger standardization.");
+    long t = System.currentTimeMillis();
+    _log.info("Starting function trigger and view standardization in " + getMaxThreads()
+        + " threads");
     PostgrePLSQLStandarization.generateOutPatterns(db);
-    for (int i = 0; i < db.getFunctionCount(); i++) {
-      Function f = db.getFunction(i);
-      _log.debug("Translating function: " + f.getName());
-      f.setOriginalBody(f.getBody());
-      PostgrePLSQLFunctionStandarization functionStandarization = new PostgrePLSQLFunctionStandarization(
-          db, i);
-      String body = f.getBody();
 
-      LiteralFilter litFilter = new LiteralFilter();
-      CommentFilter comFilter = new CommentFilter();
+    ExecutorService executor = Executors.newFixedThreadPool(getMaxThreads());
 
-      body = litFilter.removeLiterals(body);
-      body = comFilter.removeComments(body);
-      String standardizedBody = functionStandarization.exec(body).trim();
-
-      standardizedBody = comFilter.restoreComments(standardizedBody);
-      standardizedBody = litFilter.restoreLiterals(standardizedBody);
-
-      while (standardizedBody.charAt(standardizedBody.length() - 1) == '\n'
-          || standardizedBody.charAt(standardizedBody.length() - 1) == ' ')
-        standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
-      f.setBody(standardizedBody + "\n");// initialBlanks+initialComments+
+    int functionCnt = db.getFunctionCount();
+    for (int i = 0; i < functionCnt; i++) {
+      executor.execute(new PostgrePLSQLFunctionConcurrentStandardization(db, i));
     }
-    for (int i = 0; i < db.getTriggerCount(); i++) {
-      Trigger trg = db.getTrigger(i);
-      _log.debug("Translating trigger: " + trg.getName());
-      trg.setOriginalBody(trg.getBody());
-      PostgrePLSQLTriggerStandarization triggerStandarization = new PostgrePLSQLTriggerStandarization(
-          db, i);
-      String body = trg.getBody();
 
-      LiteralFilter litFilter = new LiteralFilter();
-      CommentFilter comFilter = new CommentFilter();
-
-      body = litFilter.removeLiterals(body);
-      body = comFilter.removeComments(body);
-
-      String standardizedBody = triggerStandarization.exec(body);
-
-      standardizedBody = comFilter.restoreComments(standardizedBody);
-      standardizedBody = litFilter.restoreLiterals(standardizedBody);
-
-      // System.out.println(db.getTrigger(i).getName()+"trad:::::::::::"+standardizedBody);
-      while (standardizedBody.charAt(standardizedBody.length() - 1) == '\n'
-          || standardizedBody.charAt(standardizedBody.length() - 1) == ' ')
-        standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
-      trg.setBody(standardizedBody + '\n');// initialBlanks+initialComments+
+    int trgCnt = db.getTriggerCount();
+    for (int i = 0; i < trgCnt; i++) {
+      executor.execute(new PostgrePLSQLTriggerConcurrentStandardization(db, i));
     }
-    for (int i = 0; i < db.getViewCount(); i++) {
-      PostgreSQLStandarization viewStandarization = new PostgreSQLStandarization();
-      String body = db.getView(i).getStatement();
 
-      String standardizedBody = viewStandarization.exec(body);
-      if (standardizedBody.endsWith("\n"))
-        standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
-      standardizedBody = standardizedBody.trim();
-      db.getView(i).setStatement(standardizedBody);
+    int viewCnt = db.getViewCount();
+    for (int i = 0; i < viewCnt; i++) {
+      executor.execute(new PostgrePLSQLViewConcurrentStandardization(db, i));
     }
+
+    executor.shutdown();
+    try {
+      // await till actual standardization occurs, this should take few seconds at most
+      executor.awaitTermination(20L, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
+      _log.error("Error completing pl standardization", e);
+    }
+
+    _log.info("Standardidized " + functionCnt + " functions, " + trgCnt + " triggers and "
+        + viewCnt + " views in " + (System.currentTimeMillis() - t) + " ms");
   }
 
   @Override

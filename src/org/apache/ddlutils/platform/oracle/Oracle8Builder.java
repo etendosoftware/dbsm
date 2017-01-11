@@ -37,6 +37,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnChange;
+import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
@@ -625,24 +627,26 @@ public class Oracle8Builder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void newIndexesPostAction(Table table, List<Index> newIndexesList) throws IOException {
-    // Updates the comments of a table that have new indexes, to prevent losing the info about
+  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+    // Updates the comments of the tables that have new indexes, to prevent losing the info about
     // the operator class or partial indexing of the indexed columns
-    List<Index> indexesWithOperatorClass = new ArrayList<Index>();
-    List<Index> partialIndexes = new ArrayList<Index>();
-    for (Index index : newIndexesList) {
-      if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
-        indexesWithOperatorClass.add(index);
+    for (Table table : newIndexesMap.keySet()) {
+      List<Index> indexesWithOperatorClass = new ArrayList<Index>();
+      List<Index> partialIndexes = new ArrayList<Index>();
+      for (Index index : newIndexesMap.get(table)) {
+        if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
+          indexesWithOperatorClass.add(index);
+        }
+        if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
+          partialIndexes.add(index);
+        }
       }
-      if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
-        partialIndexes.add(index);
+      if (!indexesWithOperatorClass.isEmpty()) {
+        includeOperatorClassInTableComment(table, indexesWithOperatorClass);
       }
-    }
-    if (!indexesWithOperatorClass.isEmpty()) {
-      includeOperatorClassInTableComment(table, indexesWithOperatorClass);
-    }
-    if (!partialIndexes.isEmpty()) {
-      includeWhereClauseInColumnComment(table, partialIndexes);
+      if (!partialIndexes.isEmpty()) {
+        includeWhereClauseInColumnComment(table, partialIndexes);
+      }
     }
 
     if (_onCreateDefaultColumns != null) {
@@ -1075,5 +1079,84 @@ public class Oracle8Builder extends SqlBuilder {
       }
     }
     return tableComment;
+  }
+
+  /** Returns {@code true} if table requires to be recreated */
+  public boolean requiresRecreation(ColumnDataTypeChange change) {
+    if (isSupportedTypeChange(change)) {
+      return false;
+    }
+    return true;
+  }
+
+  private boolean isSupportedTypeChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+
+    // it is allowed to change from (var)char to n(var)char but not in the other way around
+    boolean charToNChar = TypeMap.CHAR.equals(oldType) && TypeMap.NCHAR.equals(newType);
+    boolean varcharToNVarchar = TypeMap.VARCHAR.equals(oldType) && TypeMap.NVARCHAR.equals(newType);
+
+    return charToNChar || varcharToNVarchar;
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
+    if (isSupportedTypeChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      printColumnTypeChange(currentModel, change);
+    }
+  }
+
+  /** Returns {@code true} if table requires to be recreated */
+  public boolean requiresRecreation(ColumnSizeChange change) {
+    String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    boolean supportedChange = canResizeType(type);
+
+    boolean madeLonger;
+    if (TypeMap.DECIMAL.equals(type)) {
+      int oldPrecision = change.getOldSize() == 0 ? Integer.MAX_VALUE : change.getOldSize();
+      int oldScale = change.getOldScale();
+      int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
+      int newScale = change.getNewScale();
+      if (oldPrecision == newPrecision) {
+        // can't change scale keeping same precision
+        madeLonger = oldScale == newScale;
+      } else {
+        madeLonger = oldPrecision <= newPrecision && oldScale <= newScale;
+      }
+    } else {
+      madeLonger = change.getOldSize() <= change.getNewSize();
+    }
+    return !(supportedChange && madeLonger);
+  }
+
+  private boolean canResizeType(String type) {
+    switch (type) {
+    case TypeMap.NVARCHAR:
+    case TypeMap.VARCHAR:
+    case TypeMap.NCHAR:
+    case TypeMap.CHAR:
+    case TypeMap.DECIMAL:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
+      throws IOException {
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    printColumnTypeChange(currentModel, change);
+  }
+
+  private void printColumnTypeChange(Database database, ColumnChange change) throws IOException {
+    Table table = database.findTable(change.getChangedTable().getName());
+    Column column = table.findColumn(change.getChangedColumn().getName());
+    print("ALTER TABLE " + table.getName() + " MODIFY ");
+    writeColumnType(column);
+    printEndOfStatement();
   }
 }

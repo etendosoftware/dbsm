@@ -38,6 +38,7 @@ import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
@@ -413,16 +414,19 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
-  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
-    ArrayList inconsistentObjects = new ArrayList();
+  @Override
+  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+    List<StructureObject> inconsistentObjects = new ArrayList<>();
     PostgrePLSQLStandarization.generateOutPatterns(database);
     for (int i = 0; i < database.getFunctionCount(); i++) {
       PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
       int indF = -1;
       Function f = database.getFunction(i);
       for (int j = 0; indF == -1 && j < fullDatabase.getFunctionCount(); j++) {
-        if (fullDatabase.getFunction(j).equals(f))
+        if (fullDatabase.getFunction(j).equals(f)) {
           indF = j;
+          break;
+        }
       }
       PostgrePLSQLFunctionStandarization funcStand = new PostgrePLSQLFunctionStandarization(
           fullDatabase, indF);
@@ -456,8 +460,10 @@ public class Oracle8Platform extends PlatformImplBase {
       int indF = -1;
       Trigger trg = database.getTrigger(i);
       for (int j = 0; indF == -1 && j < fullDatabase.getTriggerCount(); j++) {
-        if (fullDatabase.getTrigger(j).equals(trg))
+        if (fullDatabase.getTrigger(j).equals(trg)) {
           indF = j;
+          break;
+        }
       }
       PostgrePLSQLTriggerStandarization triggerStand = new PostgrePLSQLTriggerStandarization(
           fullDatabase, indF);

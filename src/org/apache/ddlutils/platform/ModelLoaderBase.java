@@ -106,6 +106,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
   protected String _moduleId;
 
   private boolean onlyLoadTableColumns = false;
+  private int maxThreads = 1;
 
   /** Creates a new instance of BasicModelLoader */
   public ModelLoaderBase() {
@@ -913,5 +914,14 @@ public abstract class ModelLoaderBase implements ModelLoader {
     } catch (Exception e) {
       getLog().error(e);
     }
+  }
+
+  @Override
+  public void setMaxThreads(int maxThreads) {
+    this.maxThreads = maxThreads;
+  }
+
+  protected int getMaxThreads() {
+    return maxThreads;
   }
 }
