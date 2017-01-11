@@ -25,10 +25,6 @@ import static org.junit.Assume.assumeThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.junit.Test;
@@ -173,63 +169,6 @@ public class OperatorClassIndexes extends IndexBaseTest {
       }
     }
     return commentCommands;
-  }
-
-  /**
-   * Given a table, return its comment
-   * 
-   * @param tableName
-   *          the name of table
-   * @return the comment of the given table
-   */
-  private String getCommentOfTableInOracle(String tableName) {
-    String tableComment = null;
-    Connection con = null;
-    try {
-      PreparedStatement st = null;
-      con = getPlatform().getDataSource().getConnection();
-      st = con
-          .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?");
-      st.setString(1, tableName.toUpperCase());
-      ResultSet rs = st.executeQuery();
-      if (rs.next()) {
-        tableComment = rs.getString(1);
-      }
-    } catch (SQLException e) {
-      log.error("Error while getting the comment of the table " + tableName, e);
-    } finally {
-      getPlatform().returnConnection(con);
-    }
-    return tableComment;
-  }
-
-  /**
-   * Given the name of an index, returns the operator class of its first column
-   * 
-   * @param indexName
-   *          the name of the index
-   * @return the operator class of the first column of the given index
-   */
-  private String getOperatorClassNameForIndexFromDb(String indexName) {
-    String operatorClassName = null;
-    try {
-      Connection cn = getDataSource().getConnection();
-      StringBuilder query = new StringBuilder();
-      query.append("SELECT PG_OPCLASS.opcname ");
-      query.append("FROM PG_INDEX, PG_CLASS, PG_OPCLASS ");
-      query.append("WHERE PG_INDEX.indexrelid = PG_CLASS.OID ");
-      query.append("AND PG_OPCLASS.OID = PG_INDEX.indclass[0] ");
-      query.append("AND UPPER(PG_CLASS.relname) = ?");
-      PreparedStatement st = cn.prepareStatement(query.toString());
-      st.setString(1, indexName.toUpperCase());
-      ResultSet rs = st.executeQuery();
-      if (rs.next()) {
-        operatorClassName = rs.getString(1);
-      }
-    } catch (SQLException e) {
-      log.error("Error while getting the name of the operator class of the index " + indexName, e);
-    }
-    return operatorClassName;
   }
 
 }

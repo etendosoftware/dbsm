@@ -327,6 +327,12 @@ public class ModelComparator {
         // index information stored for platforms which does not support partial indexing.
         changes.add(new PartialIndexInformationChange(sourceTable, sourceIndex, sourceIndex
             .getWhereClause(), targetIndex.getWhereClause()));
+      } else if (!_platformInfo.isContainsSearchIndexesSupported()
+          && targetIndex.isContainsSearch() != sourceIndex.isContainsSearch()) {
+        // keep track of changes in the containsSearch property in order to update the information
+        // stored for platforms which does not support contains search indexes.
+        changes.add(new ContainsSearchIndexInformationChange(sourceTable, sourceIndex, targetIndex
+            .isContainsSearch()));
       }
     }
     for (int indexIdx = 0; indexIdx < targetTable.getIndexCount(); indexIdx++) {

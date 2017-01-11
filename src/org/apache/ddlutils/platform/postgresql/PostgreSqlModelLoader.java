@@ -1029,12 +1029,17 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     // Obtain the operatorClassOids of each index column
     String[] operatorClassOids = rs.getString(4).split(" ");
     int i = 0;
+    int trgmOperators = 0;
     for (IndexColumn indexColumn : inx.getColumns()) {
       String operatorClassName = getOperatorClassName(operatorClassOids[i++]);
-      if (operatorClassName.toUpperCase().contains("PATTERN")) {
+      String operatorClassNameUpperCased = operatorClassName.toUpperCase();
+      if (operatorClassNameUpperCased.contains("PATTERN")) {
         indexColumn.setOperatorClass(operatorClassName);
+      } else if (operatorClassNameUpperCased.equals("GIN_TRGM_OPS")) {
+        trgmOperators++;
       }
     }
+    inx.setContainsSearch(trgmOperators == inx.getColumns().length);
     return inx;
   }
 
