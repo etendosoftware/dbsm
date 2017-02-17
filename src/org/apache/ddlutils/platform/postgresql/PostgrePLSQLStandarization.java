@@ -20,6 +20,7 @@ import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.translation.ByLineTranslation;
 import org.apache.ddlutils.translation.CombinedTranslation;
+import org.apache.ddlutils.translation.ReplaceOutFunctionParams;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
 import org.apache.ddlutils.translation.ReplaceStrTranslation;
 
@@ -213,8 +214,8 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
           String patternOut = "$" + (numParamsOut + 1) + "(" + paramPos + ")";
           if (!outFunctions.contains(f.getName()))
             outFunctions.add(f.getName());
-          patternsOutFunctions.add(new ByLineTranslation(new ReplacePatTranslation(patternIn,
-              patternOut)));
+          patternsOutFunctions.add(new ByLineTranslation(new ReplaceOutFunctionParams(patternIn,
+              patternOut, f.getName())));
 
         }
       } while (defAct > 0 && f.getParameter(defAct).isDefaultFunction());
