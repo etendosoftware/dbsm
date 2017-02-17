@@ -218,7 +218,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
               patternOut, f.getName())));
 
         }
-      } while (defAct > 0 && f.getParameter(defAct).isDefaultFunction());
+      } while (defAct > 0 && f.getParameter(defAct).getDefaultValue() != null);
     }
   }
 
