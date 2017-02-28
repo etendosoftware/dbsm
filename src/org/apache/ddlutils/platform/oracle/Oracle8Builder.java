@@ -143,13 +143,13 @@ public class Oracle8Builder extends SqlBuilder {
     // Create comments for onCreateDefault
     for (int idx = 0; idx < table.getColumnCount(); idx++) {
       Column column = table.getColumn(idx);
-      writeColumnCommentStmt(database, table, column);
+      writeColumnCommentStmt(database, table, column, false);
     }
   }
 
   @Override
-  public void writeColumnCommentStmt(Database database, Table table, Column column)
-      throws IOException {
+  public void writeColumnCommentStmt(Database database, Table table, Column column,
+      boolean keepComments) throws IOException {
     String comment = "";
     if (column.getOnCreateDefault() != null && !column.getOnCreateDefault().equals("")) {
       String oncreatedefaultp = column.getOnCreateDefault();
@@ -172,6 +172,13 @@ public class Oracle8Builder extends SqlBuilder {
       _onCreateDefaultColumns = new HashMap<String, String>();
     }
     _onCreateDefaultColumns.put(table.getName() + "." + column.getName(), comment);
+    if (keepComments) {
+      // Retrieve existing column comments from database
+      String commentFromDatabase = getCommentOfColumn(table.getName(), column.getName());
+      if (commentFromDatabase != null) {
+        comment += transformInOracleComment(commentFromDatabase);
+      }
+    }
     println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
         + "'");
     printEndOfStatement();

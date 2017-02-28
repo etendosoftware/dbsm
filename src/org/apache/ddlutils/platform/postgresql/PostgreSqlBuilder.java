@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2016 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -173,13 +173,13 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
     for (int idx = 0; idx < table.getColumnCount(); idx++) {
       Column column = table.getColumn(idx);
-      writeColumnCommentStmt(database, table, column);
+      writeColumnCommentStmt(database, table, column, false);
     }
   }
 
   @Override
-  public void writeColumnCommentStmt(Database database, Table table, Column column)
-      throws IOException {
+  public void writeColumnCommentStmt(Database database, Table table, Column column,
+      boolean keepComments) throws IOException {
     String comment = "";
 
     if (column.getTypeCode() == ExtTypes.NVARCHAR) {
@@ -1006,7 +1006,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
       change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
       Column modifiedColumn = currentModel.findTable(change.getChangedTable().getName())
           .findColumn(change.getChangedColumn().getName());
-      writeColumnCommentStmt(desiredModel, change.getChangedTable(), modifiedColumn);
+      writeColumnCommentStmt(desiredModel, change.getChangedTable(), modifiedColumn, false);
     } else if (isAllowedChange(change)) {
       change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
       Table table = currentModel.findTable(change.getChangedTable().getName());

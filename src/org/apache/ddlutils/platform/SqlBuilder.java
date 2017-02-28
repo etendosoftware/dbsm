@@ -788,7 +788,8 @@ public abstract class SqlBuilder {
               && (!changedNewColumn.isRequired() || !changedNewColumn.isSameDefaultAndOCD())) {
             executeOnCreateDefault(table, tempTable, change.getNewColumn(), recreated, true);
           }
-          writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn());
+          writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getNewColumn(),
+              true);
         }
       }
       if (recreated) {
@@ -2280,7 +2281,7 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnOnCreateDefaultValueChange change) throws IOException {
-    writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn());
+    writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn(), false);
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -2398,8 +2399,8 @@ public abstract class SqlBuilder {
 
   }
 
-  public void writeColumnCommentStmt(Database database, Table table, Column column)
-      throws IOException {
+  public void writeColumnCommentStmt(Database database, Table table, Column column,
+      boolean keepComments) throws IOException {
 
   }
 
