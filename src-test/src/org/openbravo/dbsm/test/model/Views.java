@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -64,6 +64,20 @@ public class Views extends DbsmTest {
     assertViewExport("views/DOUBLE_PRECISION_CAST_TEST_MODEL.xml", "views/TEST_VIEW.xml");
   }
 
+  @Test
+  public void multipleInClauses() throws IOException {
+    resetDB();
+    updateDatabase("views/IN_VIEW.xml", false);
+    assertViewExport("views/IN_VIEW.xml", "views/TEST_VIEW.xml");
+  }
+
+  @Test
+  public void multipleNotInClauses() throws IOException {
+    resetDB();
+    updateDatabase("views/NOT_IN_VIEW.xml", false);
+    assertViewExport("views/NOT_IN_VIEW.xml", "views/TEST_VIEW.xml");
+  }
+
   private void assertViewExport(String modelFileToCompare, String exportedViewPath)
       throws IOException {
     File exportTo = new File(EXPORT_DIR);
@@ -80,8 +94,8 @@ public class Views extends DbsmTest {
     log.debug("exported Contents " + exportedContents);
     String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
     log.debug("original Contents " + originalContents);
-    assertEquals("exported contents", getViewsXMLDefinition(exportedContents),
-        getViewsXMLDefinition(originalContents));
+    assertEquals("exported contents", getViewsXMLDefinition(originalContents),
+        getViewsXMLDefinition(exportedContents));
   }
 
   private ArrayList<String> getViewsXMLDefinition(String xmlContent) {
