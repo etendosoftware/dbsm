@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -75,9 +75,10 @@ public class PostgreSQLStandarization extends CombinedTranslation {
 
     // sql "in" sentence and "not in"
     append(new ReplacePatTranslation(
-        "=\\s*[Aa][Nn][Yy]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)", "IN ($1)"));
+        "=\\s*[Aa][Nn][Yy]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[([^\\)]*)\\]\\s*\\)", "IN ($1)"));
     append(new ReplacePatTranslation(
-        "<>\\s*[Aa][Ll][Ll]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[(.*)\\]\\s*\\)", "NOT IN ($1)"));
+        "<>\\s*[Aa][Ll][Ll]\\s*\\(\\s*[Aa][Rr][Rr][Aa][Yy]\\s*\\[([^\\)]*)\\]\\s*\\)",
+        "NOT IN ($1)"));
 
     // date truncs date_trunk('month', now()) --> trunc(now(),'MM')
     // suports 3 levels of recursivily in parenthesis -->
