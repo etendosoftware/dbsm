@@ -52,4 +52,14 @@ public class TestBatchEvaluator implements SQLBatchEvaluator {
   public List<String> getSQLStatements() {
     return statements;
   }
+
+  @Override
+  public void setLogInfoSucessCommands(boolean logInfoSucessCommands) {
+
+  }
+
+  @Override
+  public boolean isLogInfoSucessCommands() {
+    return false;
+  }
 }

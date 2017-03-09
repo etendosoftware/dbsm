@@ -11,6 +11,7 @@
  */
 package org.openbravo.dbsm.test.model.recreation;
 
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -76,8 +77,28 @@ public class TableRecreationBaseTest extends DbsmTest {
     assertTablesAreNotRecreated(fromModel, toModel, true);
   }
 
+  protected void assertTablesAreRecreated(String fromModel, String toModel) {
+    boolean generateDummyData = true;
+    assertTablesAreRecreated(fromModel, toModel, generateDummyData);
+  }
+
+  protected void assertTablesAreRecreated(String fromModel, String toModel,
+      boolean generateDummyData) {
+    ModelOids oids = updateModel(fromModel, toModel, generateDummyData);
+    assertThat("Table OID changed", oids.newTableInternalId,
+        not(contains(oids.oldTableInternalId.toArray())));
+  }
+
   protected void assertTablesAreNotRecreated(String fromModel, String toModel,
       boolean generateDummyData) {
+    ModelOids oids = updateModel(fromModel, toModel, generateDummyData);
+    if (recreationMode == RecreationMode.standard) {
+      assertThat("Table OID changed", oids.newTableInternalId,
+          contains(oids.oldTableInternalId.toArray()));
+    }
+  }
+
+  private ModelOids updateModel(String fromModel, String toModel, boolean generateDummyData) {
     resetDB();
     try {
       String initialModel = MODEL_DIRECTORY
@@ -96,13 +117,12 @@ public class TableRecreationBaseTest extends DbsmTest {
       Database newModel = updateDatabase(targetModel);
 
       log.info("Updating to " + newModel);
-      if (recreationMode == RecreationMode.standard) {
-        List<String> newTableInternalId = getOIds(newModel);
-        assertThat("Table OID changed", newTableInternalId, contains(oldTableInternalId.toArray()));
-      }
+
+      return new ModelOids(oldTableInternalId, getOIds(newModel));
     } catch (Exception e) {
       e.printStackTrace();
       fail("Exception " + e.getMessage());
+      return null;
     }
   }
 
@@ -135,6 +155,16 @@ public class TableRecreationBaseTest extends DbsmTest {
       if (cn != null) {
         cn.close();
       }
+    }
+  }
+
+  private static class ModelOids {
+    List<String> oldTableInternalId;
+    List<String> newTableInternalId;
+
+    public ModelOids(List<String> oldTableInternalId, List<String> newTableInternalId) {
+      this.oldTableInternalId = oldTableInternalId;
+      this.newTableInternalId = newTableInternalId;
     }
   }
 

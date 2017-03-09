@@ -15,7 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
@@ -30,6 +30,7 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
@@ -64,6 +65,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   private boolean rd;
   private ExcludeFilter excludeFilter;
+  private int threads = 0;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
@@ -82,6 +84,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    platform.setMaxThreads(threads);
     // platform.setDelimitedIdentifierModeOn(true);
     // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
@@ -128,14 +131,16 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (checkTranslationConsistency) {
 
           log.info("Checking translation consistency");
-          ArrayList inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
+          long t = System.currentTimeMillis();
+          List<StructureObject> inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
           if (inconsistentObjects.size() > 0) {
             log.warn("Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
             for (int numObj = 0; numObj < inconsistentObjects.size(); numObj++) {
               log.warn(inconsistentObjects.get(numObj).toString());
             }
           } else {
-            log.info("Translation consistency check finished succesfully");
+            log.info("Translation consistency check finished succesfully in "
+                + (System.currentTimeMillis() - t) + " ms");
           }
         }
         getLog().info(db.toString());
@@ -410,5 +415,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   public void setCheckTranslationConsistency(boolean checkTranslationConsistency) {
     this.checkTranslationConsistency = checkTranslationConsistency;
+  }
+
+  /** Defines how many threads can be used to execute parallelizable tasks */
+  public void setThreads(int threads) {
+    this.threads = threads;
   }
 }

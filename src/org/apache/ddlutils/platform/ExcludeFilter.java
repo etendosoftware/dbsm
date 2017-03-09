@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -387,7 +387,7 @@ public class ExcludeFilter implements Cloneable {
   private List<String> getNonWildcardExcludedObjects(String[] excludedObjects) {
     List<String> nonWildcardExcludedObjects = new ArrayList<String>();
     for (String excludedObject : excludedObjects) {
-      if (!excludedObject.contains("%")) {
+      if (excludedObject != null && !excludedObject.contains("%")) {
         nonWildcardExcludedObjects.add(excludedObject);
       }
     }
@@ -397,7 +397,7 @@ public class ExcludeFilter implements Cloneable {
   private List<String> getWildcardExcludedObjects(String[] excludedObjects) {
     List<String> wildcardExcludedObjects = new ArrayList<String>();
     for (String excludedObject : excludedObjects) {
-      if (excludedObject.contains("%")) {
+      if (excludedObject != null && excludedObject.contains("%")) {
         wildcardExcludedObjects.add(excludedObject);
       }
     }

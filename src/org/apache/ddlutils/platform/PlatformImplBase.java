@@ -40,6 +40,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,6 +49,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -60,11 +66,13 @@ import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.AddIndexChange;
 import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
@@ -72,6 +80,8 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Index;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
@@ -96,7 +106,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   protected static final String MODEL_DEFAULT_NAME = "default";
 
   /** The log for this platform. */
-  private final Log _log = LogFactory.getLog(getClass());
+  private static final Log _log = LogFactory.getLog(PlatformImplBase.class);
 
   /** The platform info. */
   private PlatformInfo _info = new PlatformInfo();
@@ -122,6 +132,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   private boolean _overrideDefaultValueOnMissingData = true;
 
   private SQLBatchEvaluator batchEvaluator = new StandardBatchEvaluator(this);
+
+  private int maxThreads = 0;
 
   /**
    * {@inheritDoc}
@@ -314,12 +326,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public int evaluateBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
-    List<String> commands = new ArrayList<String>();
-    SqlTokenizer tokenizer = new SqlTokenizer(sql);
-
-    while (tokenizer.hasMoreStatements()) {
-      commands.add(tokenizer.getNextStatement());
-    }
+    List<String> commands = getCommands(sql);
     return evaluateBatch(connection, commands, continueOnError);
   }
 
@@ -334,18 +341,70 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public int evaluateBatchRealBatch(Connection connection, String sql, boolean continueOnError)
       throws DatabaseOperationException {
-    ArrayList<String> commands = new ArrayList<String>();
-    SqlTokenizer tokenizer = new SqlTokenizer(sql);
-
-    while (tokenizer.hasMoreStatements()) {
-      commands.add(tokenizer.getNextStatement());
-    }
+    List<String> commands = getCommands(sql);
     return evaluateBatchRealBatch(connection, commands, continueOnError);
   }
 
   public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
       throws DatabaseOperationException {
     return batchEvaluator.evaluateBatchRealBatch(connection, sql, continueOnError);
+  }
+
+  private int evaluateConcurrentBatch(String sql, boolean continueOnError)
+      throws DatabaseOperationException {
+    List<String> commands = getCommands(sql);
+    int numOfThreads = Math.min(getMaxThreads(), commands.size());
+    if (numOfThreads <= 1) {
+      // use standard batch evaluator
+      Connection con = borrowConnection();
+      try {
+        return evaluateBatch(con, commands, continueOnError);
+      } finally {
+        returnConnection(con);
+      }
+    }
+
+    boolean wasLoggingSuccessCommands = batchEvaluator.isLogInfoSucessCommands();
+    batchEvaluator.setLogInfoSucessCommands(false);
+
+    ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+    List<ConcurrentSqlEvaluator> tasks = new ArrayList<>();
+    for (String command : commands) {
+      tasks.add(new ConcurrentSqlEvaluator(batchEvaluator, command, this, continueOnError));
+    }
+
+    int errors = 0;
+    try {
+      for (Future<Integer> executionErrors : executor.invokeAll(tasks)) {
+        errors += executionErrors.get();
+      }
+    } catch (InterruptedException | ExecutionException e1) {
+      errors += 1;
+      _log.error("Error executing concurrent batch " + sql, e1);
+    } finally {
+      executor.shutdown();
+      try {
+        // wait till finished, it should be fast as awaited for actual execution in invokeAll
+        executor.awaitTermination(30L, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        _log.error("Error shutting down thread pool", e);
+      }
+    }
+
+    batchEvaluator.setLogInfoSucessCommands(wasLoggingSuccessCommands);
+    _log.info("Executed " + commands.size() + " SQL commnand(s) in " + numOfThreads + " threads "
+        + (errors == 0 ? "successfully" : ("with " + errors + " errors")));
+    return errors;
+  }
+
+  private List<String> getCommands(String sql) {
+    List<String> commands = new ArrayList<>();
+    SqlTokenizer tokenizer = new SqlTokenizer(sql);
+
+    while (tokenizer.hasMoreStatements()) {
+      commands.add(tokenizer.getNextStatement());
+    }
+    return commands;
   }
 
   /**
@@ -675,26 +734,59 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public boolean alterTablesPostScript(Connection connection, Database currentModel,
-      Database desiredModel, boolean continueOnError, List changes, Database fullModel, OBDataset ad)
-      throws DatabaseOperationException {
+      Database desiredModel, boolean continueOnError, List<ModelChange> changes,
+      Database fullModel, OBDataset ad) throws DatabaseOperationException {
     String sql = null;
 
+    List<AddIndexChange> newIndexes = null;
+    SqlBuilder sqlBuilder = getSqlBuilder();
     try {
       StringWriter buffer = new StringWriter();
 
-      getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabasePostScript(currentModel, desiredModel, null, changes, fullModel,
-          ad);
+      sqlBuilder.setWriter(buffer);
+      newIndexes = sqlBuilder.alterDatabasePostScript(currentModel, desiredModel, null, changes,
+          fullModel, ad);
       sql = buffer.toString();
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
     _ignoreWarns = false;
     int numErrors = evaluateBatch(connection, sql, continueOnError);
+
+    if (newIndexes != null && !newIndexes.isEmpty()) {
+      _log.info(newIndexes.size() + " indexes to create");
+      StringWriter buffer = new StringWriter();
+      sqlBuilder.setWriter(buffer);
+
+      try {
+        createIndexes(currentModel, desiredModel, newIndexes);
+      } catch (IOException ignore) {
+      }
+      sql = buffer.toString();
+      numErrors += evaluateConcurrentBatch(sql, continueOnError);
+    }
+
     if (numErrors > 0) {
       return false;
     }
     return true;
+  }
+
+  private void createIndexes(Database currentModel, Database desiredModel,
+      List<AddIndexChange> indexes) throws IOException {
+    Map<Table, List<Index>> newIndexesMap = new HashMap<>();
+
+    for (AddIndexChange indexChg : indexes) {
+      getSqlBuilder().processChange(currentModel, desiredModel, null, indexChg);
+
+      List<Index> indexesForTable = newIndexesMap.get(indexChg.getChangedTable());
+      if (indexesForTable == null) {
+        indexesForTable = new ArrayList<Index>();
+      }
+      indexesForTable.add(indexChg.getNewIndex());
+      newIndexesMap.put(indexChg.getChangedTable(), indexesForTable);
+    }
+    getSqlBuilder().newIndexesPostAction(newIndexesMap);
   }
 
   public List alterTablesRecreatePKs(Connection connection, Database currentModel,
@@ -3367,15 +3459,19 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     return true;
   }
 
-  public ArrayList checkTranslationConsistency(Database database, Database fullDatabase) {
-    return new ArrayList();
+  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+    return Collections.emptyList();
   }
 
-  protected void printDiff(String s1, String s2) {
-    getLog().warn("********************************************************");
+  /**
+   * Logs differences between two strings, used to highlight differences while standardization. It
+   * is synchronized to avoid messing two different outputs while working in parallel.
+   */
+  public static synchronized void printDiff(String str1, String str2) {
+    _log.warn("********************************************************");
     diff_match_patch diffClass = new diff_match_patch();
-    s1 = s1.replaceAll("\r\n", "\n");
-    s2 = s2.replaceAll("\r\n", "\n");
+    String s1 = str1.replaceAll("\r\n", "\n");
+    String s2 = str2.replaceAll("\r\n", "\n");
     LinkedList<Diff> diffs = diffClass.diff_main(s1, s2);
     boolean initial = true;
     String fullDiff = "";
@@ -3407,8 +3503,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         fullDiff += "[" + diff.text + "]";
       }
     }
-    getLog().warn(fullDiff);
-    getLog().warn("********************************************************");
+    _log.warn(fullDiff);
+    _log.warn("********************************************************");
   }
 
   @Override
@@ -3429,5 +3525,20 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   @Override
   public void updateDBStatistics() {
     // do not update statistics in default implementation
+  }
+
+  @Override
+  public void setMaxThreads(int threads) {
+    maxThreads = threads;
+    getModelLoader().setMaxThreads(getMaxThreads());
+  }
+
+  @Override
+  public int getMaxThreads() {
+    // rule of thumb: if max threads is not set, use one half of available processors
+    if (maxThreads < 1) {
+      maxThreads = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
+    }
+    return maxThreads;
   }
 }

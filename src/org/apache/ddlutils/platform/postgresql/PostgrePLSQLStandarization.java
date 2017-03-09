@@ -1,3 +1,15 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2008-2017 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
+
 package org.apache.ddlutils.platform.postgresql;
 
 import java.sql.Types;
@@ -8,6 +20,7 @@ import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.translation.ByLineTranslation;
 import org.apache.ddlutils.translation.CombinedTranslation;
+import org.apache.ddlutils.translation.ReplaceOutFunctionParams;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
 import org.apache.ddlutils.translation.ReplaceStrTranslation;
 
@@ -89,8 +102,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
       if (database.getFunction(i).getTypeCode() == Types.NULL) {
         append(new ReplacePatTranslation("[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
             + generateStringPat(database.getFunction(i).getName()) + "[\\s]*\\(", database
-            .getFunction(i).getName()
-            + "("));
+            .getFunction(i).getName() + "("));
       }
 
     }
@@ -202,11 +214,11 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
           String patternOut = "$" + (numParamsOut + 1) + "(" + paramPos + ")";
           if (!outFunctions.contains(f.getName()))
             outFunctions.add(f.getName());
-          patternsOutFunctions.add(new ByLineTranslation(new ReplacePatTranslation(patternIn,
-              patternOut)));
+          patternsOutFunctions.add(new ByLineTranslation(new ReplaceOutFunctionParams(patternIn,
+              patternOut, f.getName())));
 
         }
-      } while (defAct > 0 && f.getParameter(defAct).isDefaultFunction());
+      } while (defAct > 0 && f.getParameter(defAct).getDefaultValue() != null);
     }
   }
 

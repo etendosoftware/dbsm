@@ -15,14 +15,15 @@ package org.openbravo.dbsm.test.model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.openbravo.dbsm.test.configscript.ConfigScriptSuite;
 import org.openbravo.dbsm.test.model.data.CreateDefault;
 import org.openbravo.dbsm.test.model.data.DefaultValuesTest;
 import org.openbravo.dbsm.test.model.data.OtherDefaults;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 import org.openbravo.dbsm.test.model.recreation.AddDropConstraints;
-import org.openbravo.dbsm.test.model.recreation.DataTypeChanges;
 import org.openbravo.dbsm.test.model.recreation.OtherRecreations;
 import org.openbravo.dbsm.test.model.recreation.SQLCommands;
+import org.openbravo.dbsm.test.model.recreation.TypeChangeSuite;
 
 /**
  * Test suite grouping all cases for database model
@@ -43,6 +44,7 @@ CheckConstraints.class, //
     CheckIndexFunctionInPrescripts.class, //
     OperatorClassIndexes.class, //
     PartialIndexes.class, //
+    ContainsSearchIndexes.class, //
     CheckExcludeFilter.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
@@ -51,12 +53,14 @@ CheckConstraints.class, //
     Views.class,//
 
     AddDropConstraints.class,//
-    DataTypeChanges.class, //
+    TypeChangeSuite.class, //
     OtherDefaults.class, //
     SQLCommands.class, //
     OtherRecreations.class, //
     PreventConstraintDeletion.class, //
-    PreventCascadeRowDeletion.class })
+    PreventCascadeRowDeletion.class,//
+
+    ConfigScriptSuite.class })
 public class ModelSuite {
 
 }

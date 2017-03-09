@@ -37,6 +37,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.ColumnChange;
+import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
@@ -58,6 +60,7 @@ import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternCompiler;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.openbravo.ddlutils.util.DBSMContants;
 
 /**
  * The SQL Builder for Oracle.
@@ -76,6 +79,7 @@ public class Oracle8Builder extends SqlBuilder {
 
   private Map<String, String> _onCreateDefaultColumns;
   private Map<String, String> _columnsWithUpdatedComments;
+  private Map<String, String> _tablesWithUpdatedComments;
 
   /**
    * Creates a new builder instance.
@@ -139,13 +143,13 @@ public class Oracle8Builder extends SqlBuilder {
     // Create comments for onCreateDefault
     for (int idx = 0; idx < table.getColumnCount(); idx++) {
       Column column = table.getColumn(idx);
-      writeColumnCommentStmt(database, table, column);
+      writeColumnCommentStmt(database, table, column, false);
     }
   }
 
   @Override
-  public void writeColumnCommentStmt(Database database, Table table, Column column)
-      throws IOException {
+  public void writeColumnCommentStmt(Database database, Table table, Column column,
+      boolean keepComments) throws IOException {
     String comment = "";
     if (column.getOnCreateDefault() != null && !column.getOnCreateDefault().equals("")) {
       String oncreatedefaultp = column.getOnCreateDefault();
@@ -168,6 +172,13 @@ public class Oracle8Builder extends SqlBuilder {
       _onCreateDefaultColumns = new HashMap<String, String>();
     }
     _onCreateDefaultColumns.put(table.getName() + "." + column.getName(), comment);
+    if (keepComments) {
+      // Retrieve existing column comments from database
+      String commentFromDatabase = getCommentOfColumn(table.getName(), column.getName());
+      if (commentFromDatabase != null) {
+        comment += transformInOracleComment(commentFromDatabase);
+      }
+    }
     println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
         + "'");
     printEndOfStatement();
@@ -623,24 +634,26 @@ public class Oracle8Builder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void newIndexesPostAction(Table table, List<Index> newIndexesList) throws IOException {
-    // Updates the comments of a table that have new indexes, to prevent losing the info about
+  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+    // Updates the comments of the tables that have new indexes, to prevent losing the info about
     // the operator class or partial indexing of the indexed columns
-    List<Index> indexesWithOperatorClass = new ArrayList<Index>();
-    List<Index> partialIndexes = new ArrayList<Index>();
-    for (Index index : newIndexesList) {
-      if (indexHasColumnWithOperatorClass(index)) {
-        indexesWithOperatorClass.add(index);
+    for (Table table : newIndexesMap.keySet()) {
+      List<Index> indexesWithOperatorClass = new ArrayList<Index>();
+      List<Index> partialIndexes = new ArrayList<Index>();
+      for (Index index : newIndexesMap.get(table)) {
+        if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
+          indexesWithOperatorClass.add(index);
+        }
+        if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
+          partialIndexes.add(index);
+        }
       }
-      if (index.getWhereClause() != null && !index.getWhereClause().isEmpty()) {
-        partialIndexes.add(index);
+      if (!indexesWithOperatorClass.isEmpty()) {
+        includeOperatorClassInTableComment(table, indexesWithOperatorClass);
       }
-    }
-    if (!indexesWithOperatorClass.isEmpty()) {
-      includeOperatorClassInTableComment(table, indexesWithOperatorClass);
-    }
-    if (!partialIndexes.isEmpty()) {
-      includeWhereClauseInColumnComment(table, partialIndexes);
+      if (!partialIndexes.isEmpty()) {
+        includeWhereClauseInColumnComment(table, partialIndexes);
+      }
     }
 
     if (_onCreateDefaultColumns != null) {
@@ -686,6 +699,8 @@ public class Oracle8Builder extends SqlBuilder {
           if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
             tableComment.append(index.getName() + "." + indexColumn.getName() + ".operatorClass="
                 + indexColumn.getOperatorClass() + "$");
+          } else if (index.isContainsSearch()) {
+            tableComment.append(index.getName() + "." + DBSMContants.CONTAINS_SEARCH + "$");
           }
         }
       }
@@ -766,7 +781,7 @@ public class Oracle8Builder extends SqlBuilder {
     for (String tableName : removedIndexesMap.keySet()) {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       for (Index index : removedIndexesMap.get(tableName)) {
-        if (indexHasColumnWithOperatorClass(index)) {
+        if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
           indexesWithOperatorClass.add(index);
         }
       }
@@ -873,6 +888,57 @@ public class Oracle8Builder extends SqlBuilder {
     _columnsWithUpdatedComments.clear();
   }
 
+  @Override
+  protected void updateContainsSearchIndexAction(Table table, Index index,
+      boolean newContainsSearchValue) throws IOException {
+
+    String tableName = table.getName();
+    String currentComments;
+    String updatedComments;
+
+    if (_tablesWithUpdatedComments == null) {
+      _tablesWithUpdatedComments = new HashMap<String, String>();
+    }
+
+    if (_tablesWithUpdatedComments.containsKey(tableName)) {
+      currentComments = _tablesWithUpdatedComments.get(tableName);
+    } else {
+      currentComments = transformInOracleComment(getCommentOfTable(tableName));
+    }
+
+    if (currentComments == null) {
+      currentComments = "";
+    }
+
+    if (newContainsSearchValue) {
+      updatedComments = currentComments + index.getName() + "." + DBSMContants.CONTAINS_SEARCH
+          + "$";
+    } else {
+      updatedComments = currentComments.replace(index.getName() + "."
+          + DBSMContants.CONTAINS_SEARCH + "$", "");
+    }
+    _tablesWithUpdatedComments.put(tableName, updatedComments);
+  }
+
+  /**
+   * Action to be executed when a change on the containsSearch property of an index is detected.
+   * Here this method is used to update at once all the table comments affected by changes on
+   * contains search indexes.
+   * 
+   * @throws IOException
+   */
+  @Override
+  protected void updateContainsSearchIndexesPostAction() throws IOException {
+    if (_tablesWithUpdatedComments == null) {
+      return;
+    }
+    for (String table : _tablesWithUpdatedComments.keySet()) {
+      print("COMMENT ON TABLE " + table + " IS '" + _tablesWithUpdatedComments.get(table) + "'");
+      printEndOfStatement();
+    }
+    _tablesWithUpdatedComments.clear();
+  }
+
   /**
    * Given a table and a list of removed indexes that define operator classes, updates the comments
    * of the table to delete the info associated with the deleted indexes
@@ -893,7 +959,8 @@ public class Oracle8Builder extends SqlBuilder {
           // Find the line that corresponds with the deleted indexColumn, that is, the line that
           // starts with "indexName.columnName."
           for (String commentLine : commentLines) {
-            if (commentLine.startsWith(index.getName() + "." + indexColumn.getName() + ".")) {
+            if (commentLine.startsWith(index.getName() + "." + indexColumn.getName() + ".")
+                || commentLine.startsWith(index.getName() + ".containsSearch")) {
               commentLines.remove(commentLine);
               break;
             }
@@ -1019,5 +1086,84 @@ public class Oracle8Builder extends SqlBuilder {
       }
     }
     return tableComment;
+  }
+
+  /** Returns {@code true} if table requires to be recreated */
+  public boolean requiresRecreation(ColumnDataTypeChange change) {
+    if (isSupportedTypeChange(change)) {
+      return false;
+    }
+    return true;
+  }
+
+  private boolean isSupportedTypeChange(ColumnDataTypeChange change) {
+    String oldType = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    String newType = TypeMap.getJdbcTypeName(change.getNewTypeCode());
+
+    // it is allowed to change from (var)char to n(var)char but not in the other way around
+    boolean charToNChar = TypeMap.CHAR.equals(oldType) && TypeMap.NCHAR.equals(newType);
+    boolean varcharToNVarchar = TypeMap.VARCHAR.equals(oldType) && TypeMap.NVARCHAR.equals(newType);
+
+    return charToNChar || varcharToNVarchar;
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnDataTypeChange change) throws IOException {
+    if (isSupportedTypeChange(change)) {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+      printColumnTypeChange(currentModel, change);
+    }
+  }
+
+  /** Returns {@code true} if table requires to be recreated */
+  public boolean requiresRecreation(ColumnSizeChange change) {
+    String type = TypeMap.getJdbcTypeName(change.getChangedColumn().getTypeCode());
+    boolean supportedChange = canResizeType(type);
+
+    boolean madeLonger;
+    if (TypeMap.DECIMAL.equals(type)) {
+      int oldPrecision = change.getOldSize() == 0 ? Integer.MAX_VALUE : change.getOldSize();
+      int oldScale = change.getOldScale();
+      int newPrecision = change.getNewSize() == 0 ? Integer.MAX_VALUE : change.getNewSize();
+      int newScale = change.getNewScale();
+      if (oldPrecision == newPrecision) {
+        // can't change scale keeping same precision
+        madeLonger = oldScale == newScale;
+      } else {
+        madeLonger = oldPrecision <= newPrecision && oldScale <= newScale;
+      }
+    } else {
+      madeLonger = change.getOldSize() <= change.getNewSize();
+    }
+    return !(supportedChange && madeLonger);
+  }
+
+  private boolean canResizeType(String type) {
+    switch (type) {
+    case TypeMap.NVARCHAR:
+    case TypeMap.VARCHAR:
+    case TypeMap.NCHAR:
+    case TypeMap.CHAR:
+    case TypeMap.DECIMAL:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
+      throws IOException {
+    change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    printColumnTypeChange(currentModel, change);
+  }
+
+  private void printColumnTypeChange(Database database, ColumnChange change) throws IOException {
+    Table table = database.findTable(change.getChangedTable().getName());
+    Column column = table.findColumn(change.getChangedColumn().getName());
+    print("ALTER TABLE " + table.getName() + " MODIFY ");
+    writeColumnType(column);
+    printEndOfStatement();
   }
 }

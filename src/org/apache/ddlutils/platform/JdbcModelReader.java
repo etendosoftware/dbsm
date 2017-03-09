@@ -540,7 +540,8 @@ public class JdbcModelReader {
    *          The table metadata values as defined by {@link #getColumnsForTable()}
    * @return The table or <code>null</code> if the result set row did not contain a valid table
    */
-  protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+  protected Table readTable(DatabaseMetaDataWrapper metaData, Map<String, Object> values)
+      throws SQLException {
     String tableName = (String) values.get("TABLE_NAME");
     Table table = null;
 
@@ -755,7 +756,8 @@ public class JdbcModelReader {
    *          The column meta data values as defined by {@link #getColumnsForColumn()}
    * @return The column
    */
-  protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
+  protected Column readColumn(DatabaseMetaDataWrapper metaData, Map<String, Object> values)
+      throws SQLException {
     Column column = new Column();
 
     column.setName((String) values.get("COLUMN_NAME"));

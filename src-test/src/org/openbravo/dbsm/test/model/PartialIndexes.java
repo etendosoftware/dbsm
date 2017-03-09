@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -393,5 +393,16 @@ public class PartialIndexes extends IndexBaseTest {
     updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
     updateDatabase("indexes/BASE_MODEL_WITH_INDEXES.xml");
     assertExport("indexes/BASE_MODEL_WITH_INDEXES.xml", "tables/TEST.xml");
+  }
+
+  @Test
+  // Tests that it is possible to create a new partial index on a newly added column having another
+  // column with changes that force table recreation
+  public void addNewPartialIndexHavingTableRecreation() throws IOException {
+    assumeThat(getTestType(), is(TestType.onCreate));
+    resetDB();
+    createDatabase("indexes/BASE_MODEL.xml");
+    updateDatabase("indexes/BASIC_PARTIAL_INDEX4.xml");
+    assertExport("indexes/BASIC_PARTIAL_INDEX4.xml", "tables/TEST.xml");
   }
 }

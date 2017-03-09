@@ -36,6 +36,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   protected String _name;
   /** Whether the index is unique */
   protected boolean _unique = false;
+  /** Whether the index is used to speed up searching using 'contains' operators */
+  protected boolean _containsSearch = false;
   /** The where clause expression used for partial indexing **/
   protected String _whereClause;
   /** The columns making up the index. */
@@ -129,6 +131,14 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     _unique = unique;
   }
 
+  public boolean isContainsSearch() {
+    return _containsSearch;
+  }
+
+  public void setContainsSearch(boolean containsSearch) {
+    _containsSearch = containsSearch;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -151,7 +161,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
       Index other = (Index) obj;
 
       return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
-          .append(_whereClause, other._whereClause).append(_columns, other._columns).isEquals();
+          .append(_containsSearch, other._containsSearch).append(_whereClause, other._whereClause)
+          .append(_columns, other._columns).isEquals();
     } else {
       return false;
     }
@@ -174,6 +185,9 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     } else {
       EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name).append(_unique,
           other._unique);
+      if (platformInfo.isContainsSearchIndexesSupported()) {
+        equalsBuilder.append(_containsSearch, other._containsSearch);
+      }
       if (platformInfo.isPartialIndexesSupported()) {
         equalsBuilder.append(_whereClause, other._whereClause);
       }
@@ -231,7 +245,12 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
         if (_unique != other._unique) {
           return false;
         }
-        if (platformInfo.isPartialIndexesSupported() && !isSameWhereClause(other)) {
+        if (platformInfo != null && platformInfo.isContainsSearchIndexesSupported()
+            && _containsSearch != other._containsSearch) {
+          return false;
+        }
+        if (platformInfo != null && platformInfo.isPartialIndexesSupported()
+            && !isSameWhereClause(other)) {
           return false;
         }
         for (int idx = 0; idx < getColumnCount(); idx++) {
@@ -256,8 +275,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    * {@inheritDoc}
    */
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_whereClause)
-        .append(_columns).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_containsSearch)
+        .append(_whereClause).append(_columns).toHashCode();
   }
 
   /**
@@ -270,6 +289,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     result.append(getName());
     result.append("; unique =");
     result.append(isUnique());
+    result.append("; containsSearch =");
+    result.append(isContainsSearch());
     result.append("; where clause =");
     result.append(getWhereClause());
     result.append("; ");
@@ -289,6 +310,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     result.append(getName());
     result.append("; unique =");
     result.append(isUnique());
+    result.append("; containsSearch =");
+    result.append(isContainsSearch());
     result.append("; where clause =");
     result.append(getWhereClause());
     result.append("] columns:");
@@ -308,6 +331,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
 
     result._name = _name;
     result._unique = _unique;
+    result._containsSearch = _containsSearch;
     result._whereClause = _whereClause;
     result._columns = (ArrayList) _columns.clone();
 

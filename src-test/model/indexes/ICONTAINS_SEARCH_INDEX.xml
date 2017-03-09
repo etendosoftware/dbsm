@@ -5,18 +5,16 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="COL1" primaryKey="false" required="true" type="DECIMAL" size="11,0" autoIncrement="false">
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="VC" primaryKey="true" required="true" type="VARCHAR" size="20" autoIncrement="false">
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="CH" primaryKey="true" required="true" type="CHAR" size="1" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
+      <index name="BASIC_INDEX" unique="false" containsSearch="true">
+        <index-column name="functionBasedColumn" functionExpression="LOWER(COL1)"/>
+      </index>
     </table>
   </database>
-  

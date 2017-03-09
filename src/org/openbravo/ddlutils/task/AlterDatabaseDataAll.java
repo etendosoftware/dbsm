@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2016 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -77,6 +77,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   private boolean executeModuleScripts = true;
 
+  private int threads = 0;
+
   public AlterDatabaseDataAll() {
     super();
   }
@@ -108,6 +110,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    platform.setMaxThreads(threads);
+    getLog().info("Max threads " + platform.getMaxThreads());
 
     if (!StringUtils.isEmpty(forcedRecreation)) {
       getLog().info("Forced recreation: " + forcedRecreation);
@@ -124,7 +128,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       Database originaldb;
       if (getOriginalmodel() == null) {
-        originaldb = platform.loadModelFromDatabase(excludeFilter);
+        originaldb = platform.loadModelFromDatabase(excludeFilter, false);
         getLog().info("Checking datatypes from the model loaded from the database");
         if (originaldb == null) {
           originaldb = new Database();
@@ -509,5 +513,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   public void setExecuteModuleScripts(boolean executeModuleScripts) {
     this.executeModuleScripts = executeModuleScripts;
+  }
+
+  /** Defines how many threads can be used to execute parallelizable tasks */
+  public void setThreads(int threads) {
+    this.threads = threads;
   }
 }
