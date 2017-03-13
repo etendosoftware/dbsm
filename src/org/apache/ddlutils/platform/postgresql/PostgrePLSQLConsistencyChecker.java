@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -48,15 +48,17 @@ class PostgrePLSQLConsistencyChecker implements Callable<StructureObject> {
   /** Checks PL consistency returning {@code null} if it is consistent or the object if it is not */
   @Override
   public StructureObject call() throws Exception {
-    PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
+    PostgrePLSQLTranslation translator;
     String originalBody;
     String body;
     if (plObject instanceof Function) {
       originalBody = ((Function) plObject).getOriginalBody();
       body = ((Function) plObject).getBody();
+      translator = new PostgrePLSQLFunctionTranslation(fullDatabase);
     } else if (plObject instanceof Trigger) {
       originalBody = ((Trigger) plObject).getOriginalBody();
-      body = ((Function) plObject).getBody();
+      body = ((Trigger) plObject).getBody();
+      translator = new PostgrePLSQLTriggerTranslation(fullDatabase);
     } else {
       throw new IllegalArgumentException("Expected a Function or a Trigger got a "
           + plObject.getClass().getName());
@@ -69,7 +71,7 @@ class PostgrePLSQLConsistencyChecker implements Callable<StructureObject> {
     CommentFilter comFilter1 = new CommentFilter();
     String s1 = litFilter1.removeLiterals(body);
     s1 = comFilter1.removeComments(s1);
-    s1 = funcTrans.exec(s1);
+    s1 = translator.exec(s1);
     s1 = comFilter1.restoreComments(s1);
     s1 = litFilter1.restoreLiterals(s1);
     String s1r = s1.replaceAll("\\s", "");
