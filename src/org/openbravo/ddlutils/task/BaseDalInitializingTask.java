@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009 Openbravo SLU 
+ * All portions are Copyright (C) 2009-2017 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -51,17 +51,14 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
   /**
    * Initializes the logging.
    */
-  @SuppressWarnings("deprecation")
   protected void initLogging() {
     final Properties props = new Properties();
     final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
         .toUpperCase();
     props.setProperty("log4j.rootCategory", level + ",A");
-    props.setProperty("log4j.appender.A", "org.openbravo.utils.OBLogAppender");
-    org.openbravo.utils.OBLogAppender.setProject(getProject());
-    // "org.apache.log4j.ConsoleAppender");
+    props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
     props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
+    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-5r %-4p - %m%n");
     // we don't want debug logging from Digester/Betwixt
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
     props.setProperty("log4j.logger.org.hibernate", "WARN");
