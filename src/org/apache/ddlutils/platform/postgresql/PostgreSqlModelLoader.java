@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2016 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -67,7 +67,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
   protected Map<Integer, Integer> _paramtypes = new HashMap<Integer, Integer>();
 
-  private static final String FUNCTION_BASED_COLUMN_INDEX_POSITION = "0";
+  private static final int FUNCTION_BASED_COLUMN_INDEX_POSITION = 0;
 
   /** Creates a new instance of PostgreSqlModelLoader */
   public PostgreSqlModelLoader() {
@@ -251,7 +251,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and pc.conname = ? and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
             + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
 
-    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, PG_GET_EXPR(PG_INDEX.indexprs,PG_INDEX.indrelid, true), PG_INDEX.indclass, PG_GET_EXPR(PG_INDEX.indpred,PG_INDEX.indrelid,true)"
+    sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, "
+        + " PG_INDEX.indclass, PG_GET_EXPR(PG_INDEX.indpred,PG_INDEX.indrelid,true)"
         + " FROM PG_INDEX, PG_CLASS, PG_CLASS PG_CLASS1, PG_NAMESPACE"
         + " WHERE PG_INDEX.indexrelid = PG_CLASS.OID"
         + " AND PG_INDEX.indrelid = PG_CLASS1.OID"
@@ -263,6 +264,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + " AND PG_CLASS.RELNAME NOT IN (SELECT pg_constraint.conname::text "
         + "    FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
         + "    WHERE pg_constraint.contype = 'u')";
+
     _stmt_listindexes = _connection.prepareStatement(sql + " ORDER BY UPPER(PG_CLASS.RELNAME)");
     _stmt_listindexes_noprefix = _connection.prepareStatement(sql
         + " AND upper(PG_CLASS.RELNAME) NOT LIKE 'EM\\\\_%'" + " ORDER BY UPPER(PG_CLASS.RELNAME)");
@@ -273,15 +275,13 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
             + "\\\\_%' OR (UPPER(PG_CLASS.RELNAME::TEXT)||UPPER(PG_CLASS1.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))" + " ORDER BY UPPER(PG_CLASS.RELNAME)");
 
+    // 1. index def: can be column name for standard indexes, or expression if function based
+    // 2. key: 0-> identifies function based index, any other value -> standard column index
     _stmt_indexcolumns = _connection
-        .prepareStatement("SELECT upper(pg_attribute.attname::text), pg_attribute.attnum, array_to_string(pg_index.indkey,',') "
-            + "FROM pg_index, pg_class, pg_namespace, pg_attribute"
-            + " WHERE pg_index.indexrelid = pg_class.oid"
-            + " AND pg_attribute.attrelid = pg_index.indrelid"
-            + " AND pg_attribute.attnum = ANY (indkey)"
-            + " AND pg_class.relnamespace = pg_namespace.oid"
-            + " AND pg_namespace.nspname = current_schema() AND pg_class.relname = ?"
-            + " ORDER BY pg_attribute.attnum");
+        .prepareStatement("select pg_get_indexdef(c.oid, an, true), indkey[an-1]\n"
+            + "from pg_index i,pg_class c, generate_series(1, i.indnatts) an\n"
+            + "where c.oid = i.indexrelid and c.relname = ?\n" //
+            + "order by an");
 
     sql = "SELECT pg_constraint.conname"
         + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid"
@@ -929,7 +929,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected Index readIndex(ResultSet rs) throws SQLException {
     String indexRealName = rs.getString(1);
     String indexName = indexRealName.toUpperCase();
-    String indexWhereClause = rs.getString(5);
+    String indexWhereClause = rs.getString(4);
 
     final Index inx = new Index();
 
@@ -939,67 +939,21 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       inx.setWhereClause(transformIndexExpression(indexWhereClause));
     }
 
-    /*
-     * Note: only element 0 of this list will ever be used.
-     * 
-     * Contains a ','-separated strings of the indices of the index-column into the positions of the
-     * corresponding columns in the table. Example if an index has the fourth,second,third column of
-     * a table this contains the string "4,2,3"
-     */
-    final ArrayList<String> apositions = new ArrayList<String>();
-
-    /*
-     * This maps the columnIndex of an index-column (in the list of columns of the table) to its
-     * IndexColumn object. Example: If an IndexColumn is defined on the second column in the table
-     * this map is <2,IndexColumn>
-     */
-    final HashMap<String, IndexColumn> colMap = new HashMap<String, IndexColumn>();
-
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
-        apositions.add(r.getString(3));
-        IndexColumn inxcol = new IndexColumn();
-        inxcol.setName(r.getString(1));
-        colMap.put(r.getString(2), inxcol);
+        IndexColumn indexColumn;
+        if (r.getInt(2) == FUNCTION_BASED_COLUMN_INDEX_POSITION) {
+          indexColumn = getIndexColumnFromExpression(r.getString(1));
+        } else {
+          indexColumn = new IndexColumn(r.getString(1).toUpperCase());
+        }
+        inx.addColumn(indexColumn);
       }
     });
 
-    String indexExpression = rs.getString(3);
-    if (indexExpression != null && !indexExpression.isEmpty()) {
-      IndexColumn indexColumn = getIndexColumnFromExpression(indexExpression);
-      // colMap contains the index column where functions are not applied
-      // functionBasedIndexColumnList contains the index column where functions are applied
-      if (colMap.isEmpty()) {
-        // there are only function based index columns, no need to merge them with non-function
-        // based columns
-        inx.addColumn(indexColumn);
-      } else {
-        // if colMap is not empty we can be sure that apositions is not empty either
-        // all the values of apositions contains the same values, so we just take the first one
-        for (String pos : (apositions.get(0).split(","))) {
-          // if the position is FUNCTION_BASED_COLUMN_INDEX_POSITION, that means that the next
-          // column should be a function based one, use the next one
-          if (FUNCTION_BASED_COLUMN_INDEX_POSITION.equals(pos)) {
-            inx.addColumn(indexColumn);
-          } else {
-            inx.addColumn(colMap.get(pos));
-          }
-        }
-      }
-    } else {
-      /*
-       * Re-order the IndexColumn into the correct order (based on index-definition) as they are
-       * read without ordering them from the metadata
-       */
-      if (apositions.size() > 0) {
-        for (String pos : (apositions.get(0).split(","))) {
-          inx.addColumn(colMap.get(pos));
-        }
-      }
-    }
     // Obtain the operatorClassOids of each index column
-    String[] operatorClassOids = rs.getString(4).split(" ");
+    String[] operatorClassOids = rs.getString(3).split(" ");
     int i = 0;
     int trgmOperators = 0;
     for (IndexColumn indexColumn : inx.getColumns()) {
@@ -1057,6 +1011,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   private String transformIndexExpression(String indexExpression) {
     String transformedIndexExpression = removeCastExpressions(indexExpression);
     transformedIndexExpression = transformUnquotedPartOfExpression(transformedIndexExpression);
+    transformedIndexExpression = removeParentheses(transformedIndexExpression);
     return transformedIndexExpression;
   }
 
@@ -1068,6 +1023,18 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     int replacementGroup = 2;
     return replaceRegularExpressionMatchings(indexExpression, castExpressionRegExp,
         replacementGroup);
+  }
+
+  /**
+   * In some occasions, PG adds extra parenthesis to beginning and end of the expression, remove
+   * them as they will be always added when the index is created. In this way, the expression gets
+   * identically exported in ORA and PG.
+   */
+  private String removeParentheses(String expr) {
+    if (expr.startsWith("(") && expr.endsWith(")")) {
+      return expr.substring(1, expr.length() - 1);
+    }
+    return expr;
   }
 
   private String replaceRegularExpressionMatchings(String string, String regExp, int groupIndex) {

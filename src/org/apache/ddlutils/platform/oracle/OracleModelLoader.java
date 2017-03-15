@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2016 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -105,16 +105,17 @@ public class OracleModelLoader extends ModelLoaderBase {
         .prepareStatement("SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONS_COLUMNS C2 WHERE C.CONSTRAINT_NAME = ? and C2.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
 
     _stmt_listindexes = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION, U.TABLE_OWNER FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
     _stmt_listindexes_prefix = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION, U.TABLE_OWNER FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(U.INDEX_NAME)||UPPER(U.TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "'))) ORDER BY U.INDEX_NAME");
     _stmt_listindexes_noprefix = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, UE.COLUMN_EXPRESSION, U.TABLE_OWNER FROM USER_INDEXES U LEFT JOIN USER_IND_EXPRESSIONS UE ON U.INDEX_NAME = UE.INDEX_NAME WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
+        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
     _stmt_indexcolumns = _connection
-        .prepareStatement("SELECT COLUMN_NAME FROM USER_IND_COLUMNS WHERE INDEX_NAME = ? ORDER BY COLUMN_POSITION");
+        .prepareStatement(" SELECT column_name, column_expression FROM USER_IND_COLUMNS i left join USER_IND_EXPRESSIONS e on e.index_name = i.index_name and i.column_position = e.column_position\n"
+            + " WHERE i.INDEX_NAME = ? ORDER BY i.COLUMN_POSITION");
 
     _stmt_listuniques = _connection
         .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? ORDER BY CONSTRAINT_NAME");
@@ -328,23 +329,24 @@ public class OracleModelLoader extends ModelLoaderBase {
     inx.setName(indexName);
     inx.setUnique(translateUniqueness(rs.getString(2)));
 
-    // The index expression will be defined only for function based indexes
-    final String indexExpression = rs.getString(3);
-    final String databaseOwner = rs.getString(4);
+    final String databaseOwner = rs.getString(3);
+
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
         String columnName = r.getString(1);
         IndexColumn inxcol = null;
-        if (indexExpression != null && !indexExpression.isEmpty()
-            && columnName.startsWith(VIRTUAL_COLUMN_PREFIX)) {
-          // The name of function based index columns needs to be translated from the name of the
+        if (columnName.startsWith(VIRTUAL_COLUMN_PREFIX)) {
+          // The name of function base index columns needs to be translated from the name of the
           // virtual column created by Oracle to the name of the column in its table
+          final String indexExpression = r.getString(2);
+
           inxcol = getFunctionBasedIndexColumn(indexExpression, databaseOwner);
         } else {
           inxcol = new IndexColumn();
           inxcol.setName(columnName);
         }
+
         String operatorClass = getIndexOperatorClass(indexName, inxcol.getName());
         if (operatorClass != null && !operatorClass.isEmpty()) {
           if (DBSMContants.CONTAINS_SEARCH.equals(operatorClass)) {

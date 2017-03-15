@@ -3606,8 +3606,9 @@ public abstract class SqlBuilder {
           }
           IndexColumn idxColumn = index.getColumn(idx);
           if ("functionBasedColumn".equals(idxColumn.getName())) {
-            // print the expression instead of just the column name
-            print(idxColumn.getFunctionExpression());
+            // print the expression instead of just the column name, surround it with extra
+            // parenthesis to support ORA-PG compatibility
+            print("(" + idxColumn.getFunctionExpression() + ")");
           } else {
             Column col = table.findColumn(idxColumn.getName());
 
