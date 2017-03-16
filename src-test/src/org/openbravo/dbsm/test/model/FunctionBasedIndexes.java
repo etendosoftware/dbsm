@@ -232,6 +232,19 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     assertExport("indexes/FUNCTION_INDEX_MULTI_COL.xml", "tables/TEST.xml");
   }
 
+  @Test
+  public void indexWithCase() throws IOException {
+    resetDB();
+    updateDatabase("indexes/FUNCTION_INDEX_CASE.xml", false);
+    assertExport("indexes/FUNCTION_INDEX_CASE.xml", "tables/TEST.xml");
+
+    // 2nd update should perform model check, but it doesn't check correctly index type...
+    updateDatabase("indexes/FUNCTION_INDEX_CASE.xml");
+
+    // ...that's why we compare models now
+    assertExport("indexes/FUNCTION_INDEX_CASE.xml", "tables/TEST.xml");
+  }
+
   // Given the name of an index, return a string representation of its column, along with the
   // function applied to them
   private String getColumnsFromIndex(String indexName) {

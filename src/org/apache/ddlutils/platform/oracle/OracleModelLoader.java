@@ -373,8 +373,10 @@ public class OracleModelLoader extends ModelLoaderBase {
   private IndexColumn getFunctionBasedIndexColumn(String indexExpression, String databaseOwner) {
     IndexColumn indexColumn = new IndexColumn();
     indexColumn.setName("functionBasedColumn");
-    indexColumn.setFunctionExpression(removeDatabaseOwnerFromIndexExpression(
-        removeDoubleQuotes(indexExpression), databaseOwner));
+    String transformedExpression = removeDoubleQuotes(indexExpression);
+    transformedExpression = removeDatabaseOwnerFromIndexExpression(transformedExpression,
+        databaseOwner);
+    indexColumn.setFunctionExpression(transformedExpression.trim());
     return indexColumn;
   }
 

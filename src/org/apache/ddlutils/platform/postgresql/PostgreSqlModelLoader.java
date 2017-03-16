@@ -1009,10 +1009,20 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
    * @return the transformed index expression
    */
   private String transformIndexExpression(String indexExpression) {
-    String transformedIndexExpression = removeCastExpressions(indexExpression);
+    String transformedIndexExpression = removeNewLines(indexExpression);
+    transformedIndexExpression = removeCastExpressions(transformedIndexExpression);
     transformedIndexExpression = transformUnquotedPartOfExpression(transformedIndexExpression);
     transformedIndexExpression = removeParentheses(transformedIndexExpression);
     return transformedIndexExpression;
+  }
+
+  private String removeNewLines(String indexExpression) {
+    String transformedExpression = "";
+    for (String line : indexExpression.split("\n")) {
+      transformedExpression += line.trim() + " ";
+    }
+
+    return transformedExpression.trim();
   }
 
   private String removeCastExpressions(String indexExpression) {
