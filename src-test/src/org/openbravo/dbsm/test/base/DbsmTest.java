@@ -80,8 +80,6 @@ import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
-import com.openbravo.db.OpenbravoExcludeFilter;
-
 /**
  * Base class to for test cases for DBSM. Classes extending this one, should be run as
  * Parameterized.
@@ -260,7 +258,12 @@ public class DbsmTest {
 
   protected ExcludeFilter getExcludeFilter() {
     if (excludeFilter == null) {
-      excludeFilter = new OpenbravoExcludeFilter();
+      excludeFilter = new ExcludeFilter() {
+        @Override
+        public String[] getExcludedViews() {
+          return new String[] { "DUAL" };
+        }
+      };
     }
     return excludeFilter;
   }
