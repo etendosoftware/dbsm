@@ -108,6 +108,7 @@ public class DbsmTest {
   private ExcludeFilter excludeFilter;
   protected RecreationMode recreationMode = RecreationMode.standard;
   private boolean logErrorsAllowed = false;
+  private int threads = 0;
 
   public enum Rdbms {
     PG, ORA
@@ -280,6 +281,14 @@ public class DbsmTest {
     return rdbms;
   }
 
+  protected void setNumberOfThreads(int threads) {
+    this.threads = threads;
+  }
+
+  protected int getNumberOfThreads() {
+    return this.threads;
+  }
+
   protected List<String> sqlStatmentsForUpdate(String dbModelPath) {
     evaluator = new TestBatchEvaluator();
     updateDatabase(dbModelPath, false);
@@ -336,6 +345,14 @@ public class DbsmTest {
     try {
       File dbModel = new File("model", dbModelPath);
       final Platform platform = getPlatform();
+      platform.setMaxThreads(threads);
+      log.info("Max threads " + platform.getMaxThreads());
+      if (platform.getMaxThreads() > 1) {
+        // set the maximum number of active connections supported by the pool with a safe value
+        // which depends on the number of threads
+        getDataSource().setMaxActive(platform.getMaxThreads() * 8);
+        log.info("Max active connections " + getDataSource().getMaxActive());
+      }
       if (recreationMode == RecreationMode.forced) {
         platform.getSqlBuilder().setForcedRecreation("all");
       }
@@ -573,6 +590,13 @@ public class DbsmTest {
     final DatabaseIO io = new DatabaseIO();
     if (platform == null) {
       platform = getPlatform();
+    }
+    platform.setMaxThreads(threads);
+    if (platform.getMaxThreads() > 1) {
+      // set the maximum number of active connections supported by the pool with a safe value which
+      // depends on the number of threads
+      ds.setMaxActive(platform.getMaxThreads() * 8);
+      log.info("Max active connections " + ds.getMaxActive());
     }
     Database originalDB = platform
         .loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
