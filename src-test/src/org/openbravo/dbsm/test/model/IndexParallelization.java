@@ -39,8 +39,8 @@ public class IndexParallelization extends IndexBaseTest {
     getDataSource().setMaxActive(MAX_ACTIVE_CONNECTIONS);
   }
 
-  // Tests that it is possible to create several indexes even if the initial maximum number
-  // of active connections configured for the pool is lower than the number of indexes about to be
+  // Tests that it is possible to create several indexes even if the initial maximum number of
+  // active connections configured for the pool is lower than the number of indexes about to be
   // created
   @Test
   public void addNewIndexesOnExistingTable() throws IOException {
