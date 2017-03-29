@@ -112,6 +112,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
     getLog().info("Max threads " + platform.getMaxThreads());
+    if (platform.getMaxThreads() > 1) {
+      // set the maximum number of active connections supported by the pool with a safe value which
+      // depends on the number of threads
+      ds.setMaxActive(platform.getMaxThreads() * 8);
+      getLog().info("Max active connections " + ds.getMaxActive());
+    }
 
     if (!StringUtils.isEmpty(forcedRecreation)) {
       getLog().info("Forced recreation: " + forcedRecreation);

@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -85,6 +85,12 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
+    if (platform.getMaxThreads() > 1) {
+      // set the maximum number of active connections supported by the pool with a safe value which
+      // depends on the number of threads
+      ds.setMaxActive(platform.getMaxThreads() * 8);
+      getLog().info("Max active connections " + ds.getMaxActive());
+    }
     // platform.setDelimitedIdentifierModeOn(true);
     // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
