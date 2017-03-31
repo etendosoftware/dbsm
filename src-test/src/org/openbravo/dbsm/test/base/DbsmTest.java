@@ -347,12 +347,11 @@ public class DbsmTest {
       final Platform platform = getPlatform();
       platform.setMaxThreads(threads);
       log.info("Max threads " + platform.getMaxThreads());
-      if (platform.getMaxThreads() > 1) {
-        // set the maximum number of active connections supported by the pool with a safe value
-        // which depends on the number of threads
-        getDataSource().setMaxActive(platform.getMaxThreads() * 8);
-        log.info("Max active connections " + getDataSource().getMaxActive());
-      }
+      // set the maximum number of active connections supported by the pool with a safe value
+      // which depends on the number of threads
+      getDataSource().setMaxActive(platform.getMaxThreads() * 8);
+      log.debug("Max active database connections " + getDataSource().getMaxActive());
+
       if (recreationMode == RecreationMode.forced) {
         platform.getSqlBuilder().setForcedRecreation("all");
       }
@@ -592,12 +591,11 @@ public class DbsmTest {
       platform = getPlatform();
     }
     platform.setMaxThreads(threads);
-    if (platform.getMaxThreads() > 1) {
-      // set the maximum number of active connections supported by the pool with a safe value which
-      // depends on the number of threads
-      ds.setMaxActive(platform.getMaxThreads() * 8);
-      log.info("Max active connections " + ds.getMaxActive());
-    }
+    // set the maximum number of active connections supported by the pool with a safe value which
+    // depends on the number of threads
+    ds.setMaxActive(platform.getMaxThreads() * 8);
+    log.debug("Max active database connections " + ds.getMaxActive());
+
     Database originalDB = platform
         .loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
     io.writeToDir(originalDB, new File(path));
