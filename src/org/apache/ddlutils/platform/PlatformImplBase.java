@@ -59,6 +59,7 @@ import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DatabaseOperationException;
@@ -3531,6 +3532,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public void setMaxThreads(int threads) {
     maxThreads = threads;
     getModelLoader().setMaxThreads(getMaxThreads());
+    // set the maximum number of active connections supported by the pool with a safe value which
+    // depends on the number of threads
+    BasicDataSource dbPool = ((BasicDataSource) getDataSource());
+    dbPool.setMaxActive(getMaxThreads() * 8);
+    getLog().debug("Max active database connections " + dbPool.getMaxActive());
   }
 
   @Override

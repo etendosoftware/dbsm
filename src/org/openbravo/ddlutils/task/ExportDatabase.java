@@ -85,10 +85,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
-    // set the maximum number of active connections supported by the pool with a safe value which
-    // depends on the number of threads
-    ds.setMaxActive(platform.getMaxThreads() * 8);
-    getLog().debug("Max active database connections " + ds.getMaxActive());
 
     // platform.setDelimitedIdentifierModeOn(true);
     // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
