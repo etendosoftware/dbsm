@@ -25,6 +25,7 @@ import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -371,21 +372,24 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   @Override
   public void disableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
-
+    StringBuilder buffer = new StringBuilder();
+    String current = null;
     try {
-      StringWriter buffer = new StringWriter();
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < model.getTriggerCount(); i++) {
-        getSqlBuilder().disableTrigger(model, model.getTrigger(i));
+      current = "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'DISABLE TRIGGER USER' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
+      PreparedStatement pstmt = connection.prepareStatement(current);
+      ResultSet rs = pstmt.executeQuery();
+
+      while (rs.next()) {
+        current = rs.getString("SQL_STR");
+        PreparedStatement pstmtd = connection.prepareStatement(current);
+        pstmtd.executeUpdate();
+        pstmtd.close();
       }
-      evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
-      /*
-       * PreparedStatementpstmt=connection.prepareStatement(
-       * "update pg_class set reltriggers=0 WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())"
-       * ); pstmt.executeUpdate(); pstmt.close();
-       */
-    } catch (Exception e) {
-      e.printStackTrace();
+      rs.close();
+      pstmt.close();
+    } catch (SQLException e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
       throw new DatabaseOperationException("Error while disabling triggers ", e);
     }
   }
@@ -396,28 +400,26 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   @Override
   public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
-
+    String current = null;
     try {
-      ((PostgreSqlBuilder) getSqlBuilder()).initializeTranslators(model);
-      StringWriter buffer = new StringWriter();
-      getSqlBuilder().setWriter(buffer);
-      for (int i = 0; i < model.getTriggerCount(); i++) {
-        ((PostgreSqlBuilder) getSqlBuilder()).enableTrigger(model, model.getTrigger(i));
+      current = "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'ENABLE TRIGGER USER' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
+      PreparedStatement pstmt = connection.prepareStatement(current);
+      ResultSet rs = pstmt.executeQuery();
+
+      while (rs.next()) {
+        current = rs.getString("SQL_STR");
+        PreparedStatement pstmtd = connection.prepareStatement(current);
+        pstmtd.executeUpdate();
+        pstmtd.close();
       }
-      int numErrors = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
-      if (numErrors > 0) {
-        return false;
-      }
-      return true;
-      /*
-       * PreparedStatementpstmt=connection.prepareStatement(
-       * "update pg_class set reltriggers = (SELECT count(*) from pg_trigger where pg_class.oid=tgrelid) WHERE PG_CLASS.RELNAMESPACE IN (SELECT PG_NAMESPACE.OID FROM PG_NAMESPACE WHERE PG_NAMESPACE.NSPNAME = CURRENT_SCHEMA())"
-       * ); pstmt.executeUpdate(); pstmt.close();
-       */
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new DatabaseOperationException("Error while enabling triggers ", e);
+      rs.close();
+      pstmt.close();
+    } catch (SQLException e) {
+      System.out.println("SQL command failed with " + e.getMessage());
+      System.out.println(current);
+      throw new DatabaseOperationException("Error while disabling triggers ", e);
     }
+    return true;
   }
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
