@@ -22,6 +22,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -35,6 +38,7 @@ import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
+import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
@@ -99,8 +103,9 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
+  private Map<String, Integer> exportedTablesCount = new HashMap<String, Integer>();
 
-  private Map<String, Integer> exportedTablesCount = null;
+  private int nThreads = 0;
 
   public ExportSampledata() {
   }
@@ -119,6 +124,7 @@ public class ExportSampledata extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    platform.setMaxThreads(nThreads);
     // platform.setDelimitedIdentifierModeOn(true);
     try {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
@@ -185,39 +191,52 @@ public class ExportSampledata extends BaseDatabaseTask {
           return arg0.getName().compareTo(arg1.getName());
         }
       });
-      exportedTablesCount = new HashMap<String, Integer>();
 
       Map<String, Object> dsTableExporterExtraParams = new HashMap<String, Object>();
       dsTableExporterExtraParams.put("platform", platform);
       dsTableExporterExtraParams.put("xmlEncoding", encoding);
 
+      ExecutorService es = createExecutorService("Sampledata export", platform);
       for (final OBDatasetTable table : tableList) {
         try {
-          final File tableFile = getFile(path, table);
-          final OutputStream out = new FileOutputStream(tableFile);
-          BufferedOutputStream bufOut = new BufferedOutputStream(out);
-          // reads table data directly from db
-          getLog().info("Exporting table: " + table.getName() + "...");
-          boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
-              dsTableExporterExtraParams, orderByTableId());
-          if (dataExported) {
-            addTableToExportedTablesMap(table.getName());
-          } else {
-            tableFile.delete();
-          }
-          bufOut.flush();
-          out.flush();
-          bufOut.close();
-          out.close();
+          Runnable exportRunner = new ExportDataSetRunner(dsTableExporter, getFile(path, table),
+              table, moduleId, db, this, dsTableExporterExtraParams, log, orderByTableId());
+          addTableToExportedTablesMap(table.getName());
+          es.execute(exportRunner);
         } catch (Exception e) {
           getLog().error(
               "Error while exporting table" + table.getName() + " to module " + moduleName, e);
         }
       }
+      es.shutdown();
+      boolean ok;
+      try {
+        // Wait until all the tables have been imported, or until 24 hours have passed
+        ok = es.awaitTermination(24, TimeUnit.HOURS);
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Exception while waiting for the files to be imported", e);
+      }
+      if (!ok) {
+        throw new RuntimeException("Importing the sample data didn't finish within the timeout");
+      }
 
     } catch (Exception e) {
       throw new BuildException(e);
     }
+  }
+
+  private ExecutorService createExecutorService(String name, Platform platform) {
+    int threads = platform.getMaxThreads();
+    log.info("Using " + threads + " threads");
+    ExecutorService es;
+    if (threads == 1) {
+      log.debug("Starting single-threaded ExecutorService for " + name);
+      es = Executors.newSingleThreadExecutor();
+    } else {
+      log.debug("Starting ExecutorService with " + threads + " threads for " + name);
+      es = Executors.newFixedThreadPool(threads);
+    }
+    return es;
   }
 
   private void addTableToExportedTablesMap(String name) {
@@ -227,12 +246,14 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   private File getFile(File path, OBDatasetTable table) {
     String fileExtension = getFileExtension();
-    File f = new File(path, table.getName().toUpperCase() + fileExtension);
-    if (f.exists()) {
+    String fileName = null;
+    if (exportedTablesCount.containsKey(table.getName())) {
       Integer count = exportedTablesCount.get(table.getName());
-      f = new File(path, table.getName().toUpperCase() + "_" + count + fileExtension);
+      fileName = table.getName().toUpperCase() + "_" + count + fileExtension;
+    } else {
+      fileName = table.getName().toUpperCase() + fileExtension;
     }
-    return f;
+    return new File(path, fileName);
   }
 
   public void setExportFormat(String exportFormatParam) {
@@ -241,6 +262,10 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   public void setRdbms(String rdbms) {
     this.rdbms = rdbms;
+  }
+
+  public void setThreads(int nThreads) {
+    this.nThreads = nThreads;
   }
 
   protected String getFileExtension() {
@@ -364,6 +389,52 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   protected boolean orderByTableId() {
     return true;
+  }
+
+  private static class ExportDataSetRunner implements Runnable {
+
+    private DataSetTableExporter dsTableExporter;
+    private File file;
+    private OBDatasetTable table;
+    private String moduleId;
+    private Database db;
+    private Map<String, Object> dsTableExporterExtraParams;
+    private Logger log;
+    private boolean orderByTableId;
+
+    public ExportDataSetRunner(DataSetTableExporter dsTableExporter, File file,
+        OBDatasetTable table, String moduleId, Database db, ExportSampledata sampleDataExporter,
+        Map<String, Object> dsTableExporterExtraParams, Logger log, boolean orderByTableId) {
+      super();
+      this.dsTableExporter = dsTableExporter;
+      this.file = file;
+      this.table = table;
+      this.moduleId = moduleId;
+      this.db = db;
+      this.dsTableExporterExtraParams = dsTableExporterExtraParams;
+      this.log = log;
+      this.orderByTableId = orderByTableId;
+    }
+
+    @Override
+    public void run() {
+      try {
+        final OutputStream out = new FileOutputStream(file);
+        BufferedOutputStream bufOut = new BufferedOutputStream(out);
+        // reads table data directly from db
+        boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
+            dsTableExporterExtraParams, orderByTableId);
+        if (!dataExported) {
+          file.delete();
+        }
+        bufOut.flush();
+        out.flush();
+        bufOut.close();
+        out.close();
+      } catch (Exception e) {
+        log.error("Error while exporting table" + table.getName() + " to module " + moduleId, e);
+      }
+    }
   }
 
 }

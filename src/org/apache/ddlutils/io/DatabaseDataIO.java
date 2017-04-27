@@ -424,14 +424,13 @@ public class DatabaseDataIO implements DataSetTableExporter {
     String sqlstatement = queryGenerator.generateQuery(dsTable, extraProperties);
     try (Statement statement = con.createStatement()) {
       ResultSet resultSet = statement.executeQuery(sqlstatement);
-      _log.info("Exporting table " + table.getName());
       Iterator<DynaBean> iterator = platform.createResultSetIterator(model, resultSet, atables);
       while (iterator.hasNext()) {
         DynaBean row = (DynaBean) iterator.next();
         writer.write(model, dsTable, row);
         nExportedRows++;
       }
-      _log.info("  " + nExportedRows + " records have been exported");
+      _log.info("  " + nExportedRows + " records have been exported from table " + table.getName());
     } catch (SQLException ex) {
       _log.error("SQL command to read rows from table failed: " + sqlstatement, ex);
     } finally {
@@ -456,7 +455,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
       writer.write(model, dsTable, row);
       anyRecordsHaveBeenExported = true;
     }
-    _log.info("  " + rows.size() + " records have been exported");
+    _log.info("  " + rows.size() + " records have been exported from table " + table.getName());
     platform.returnConnection(con);
     writer.writeDocumentEnd();
     return anyRecordsHaveBeenExported;
