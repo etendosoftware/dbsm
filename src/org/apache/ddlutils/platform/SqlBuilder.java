@@ -4571,7 +4571,7 @@ public abstract class SqlBuilder {
    * Prints the end of statement text, which is typically a semi colon followed by a carriage
    * return.
    */
-  protected void printEndOfStatement() throws IOException {
+  public void printEndOfStatement() throws IOException {
     printEndOfStatement("");
   }
 

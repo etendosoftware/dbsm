@@ -25,7 +25,6 @@ import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -366,60 +365,14 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void disableAllTriggers(Connection connection, Database model, boolean continueOnError)
-      throws DatabaseOperationException {
-    StringBuilder buffer = new StringBuilder();
-    String current = null;
-    try {
-      current = "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'DISABLE TRIGGER USER' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
-      PreparedStatement pstmt = connection.prepareStatement(current);
-      ResultSet rs = pstmt.executeQuery();
-
-      while (rs.next()) {
-        current = rs.getString("SQL_STR");
-        PreparedStatement pstmtd = connection.prepareStatement(current);
-        pstmtd.executeUpdate();
-        pstmtd.close();
-      }
-      rs.close();
-      pstmt.close();
-    } catch (SQLException e) {
-      System.out.println("SQL command failed with " + e.getMessage());
-      System.out.println(current);
-      throw new DatabaseOperationException("Error while disabling triggers ", e);
-    }
+  protected String getQueryToBuildTriggerDisablementQuery() {
+    return "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'DISABLE TRIGGER USER;' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
-      throws DatabaseOperationException {
-    String current = null;
-    try {
-      current = "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'ENABLE TRIGGER USER' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
-      PreparedStatement pstmt = connection.prepareStatement(current);
-      ResultSet rs = pstmt.executeQuery();
-
-      while (rs.next()) {
-        current = rs.getString("SQL_STR");
-        PreparedStatement pstmtd = connection.prepareStatement(current);
-        pstmtd.executeUpdate();
-        pstmtd.close();
-      }
-      rs.close();
-      pstmt.close();
-    } catch (SQLException e) {
-      System.out.println("SQL command failed with " + e.getMessage());
-      System.out.println(current);
-      throw new DatabaseOperationException("Error while disabling triggers ", e);
-    }
-    return true;
+  protected String getQueryToBuildTriggerEnablementQuery() {
+    return "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'ENABLE TRIGGER USER;' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
   }
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
