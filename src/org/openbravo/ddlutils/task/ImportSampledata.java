@@ -153,7 +153,7 @@ public class ImportSampledata extends BaseDatabaseTask {
           getLog().debug("Number of files read: " + files.size());
 
           getLog().info("Inserting data into the database...");
-          ExecutorService es = createExecutorService("Sampledata import", platform);
+          ExecutorService es = Executors.newFixedThreadPool(platform.getMaxThreads());
           for (int i = 0; i < files.size(); i++) {
             File f = files.get(i);
             getLog().debug("Queueing data import from file: " + files.get(i).getName());
@@ -311,28 +311,6 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   public void setThreads(int threads) {
     this.threads = threads;
-  }
-
-  /**
-   * Creates an executor service that will allow using several threads (up to half the number of
-   * available processor) to execute tasks in parallel
-   * 
-   * @param name
-   *          The name of the executor. It will only be used with logging purposes
-   * @return the executor service
-   */
-  private ExecutorService createExecutorService(String name, Platform platform) {
-    int numThreads = platform.getMaxThreads();
-    getLog().info("Using " + numThreads + " threads for: " + name);
-    ExecutorService es = null;
-    if (numThreads == 1) {
-      getLog().debug("Starting single-threaded ExecutorService for " + name);
-      es = Executors.newSingleThreadExecutor();
-    } else {
-      getLog().debug("Starting ExecutorService with " + numThreads + " threads for " + name);
-      es = Executors.newFixedThreadPool(numThreads);
-    }
-    return es;
   }
 
   /**

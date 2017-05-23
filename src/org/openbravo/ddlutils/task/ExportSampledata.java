@@ -196,7 +196,8 @@ public class ExportSampledata extends BaseDatabaseTask {
       dsTableExporterExtraParams.put("platform", platform);
       dsTableExporterExtraParams.put("xmlEncoding", encoding);
 
-      ExecutorService es = createExecutorService("Sampledata export", platform);
+      ExecutorService es = Executors.newFixedThreadPool(platform.getMaxThreads());
+
       for (final OBDatasetTable table : tableList) {
         try {
           Runnable exportRunner = new ExportDataSetRunner(dsTableExporter, getFile(path, table),
@@ -223,20 +224,6 @@ public class ExportSampledata extends BaseDatabaseTask {
     } catch (Exception e) {
       throw new BuildException(e);
     }
-  }
-
-  private ExecutorService createExecutorService(String name, Platform platform) {
-    int threads = platform.getMaxThreads();
-    log.info("Using " + threads + " threads");
-    ExecutorService es;
-    if (threads == 1) {
-      log.debug("Starting single-threaded ExecutorService for " + name);
-      es = Executors.newSingleThreadExecutor();
-    } else {
-      log.debug("Starting ExecutorService with " + threads + " threads for " + name);
-      es = Executors.newFixedThreadPool(threads);
-    }
-    return es;
   }
 
   private void addTableToExportedTablesMap(String name) {
