@@ -44,29 +44,24 @@ public class CheckTriggerDisablement extends DbsmTest {
   }
 
   @Test
-  public void allUserTriggersAreDisabled() throws IOException {
-    try {
-      resetDB();
-      // Create a table with a trigger that modifies the TRIGGER_WAS_INVOKED and sets it to 0
-      Database model = updateDatabase("excludeFilter/BASE_MODEL_WITH_COUNT_AND_TRIGGER.xml");
-      // Remove the trigger for the model, it should be disabled when invoking the
-      // disableAllTriggers anyway
-      // This is equivalent to updating the database with a model without the trigger, creating the
-      // trigger manually and using an exclude filter to exclude it.
-      model.removeTrigger(0);
+  public void allUserTriggersAreDisabled() throws Exception {
+    resetDB();
+    // Create a table with a trigger that modifies the TRIGGER_WAS_INVOKED and sets it to 0
+    Database model = updateDatabase("excludeFilter/BASE_MODEL_WITH_COUNT_AND_TRIGGER.xml");
+    // Remove the trigger for the model, it should be disabled when invoking the
+    // disableAllTriggers anyway
+    // This is equivalent to updating the database with a model without the trigger, creating the
+    // trigger manually and using an exclude filter to exclude it.
+    model.removeTrigger(0);
 
-      Connection con = getPlatform().borrowConnection();
-      getPlatform().disableAllTriggers(con, model, false);
+    Connection con = getPlatform().borrowConnection();
+    getPlatform().disableAllTriggers(con, model, false);
 
-      assertTriggerIsEnabled(false);
+    assertTriggerIsEnabled(false);
 
-      getPlatform().enableAllTriggers(con, model, false);
+    getPlatform().enableAllTriggers(con, model, false);
 
-      assertTriggerIsEnabled(true);
-
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
+    assertTriggerIsEnabled(true);
   }
 
   /**
@@ -86,32 +81,16 @@ public class CheckTriggerDisablement extends DbsmTest {
     String columnName = getRdbms() == Rdbms.ORA ? "trigger_was_invoked".toUpperCase()
         : "trigger_was_invoked";
     boolean triggerWasEnabled = (1 == Integer.parseInt(newRow.getValue(columnName)));
-    assertThat(triggerWasEnabled, equalTo(expectedValue));
+    assertThat("The trigger enablement state (" + triggerWasEnabled + ") is not the expected ("
+        + expectedValue + ")", triggerWasEnabled, equalTo(expectedValue));
   }
 
   private void insertRowManually(String id) throws SQLException {
-    Connection cn = null;
-    PreparedStatement st = null;
-    try {
-      cn = getDataSource().getConnection();
-      st = cn.prepareStatement("INSERT INTO test(test_id, trigger_was_invoked) values ('" + id
-          + "', 0)");
+    try (Connection cn = getDataSource().getConnection();
+        PreparedStatement st = cn
+            .prepareStatement("INSERT INTO test(test_id, trigger_was_invoked) values ('" + id
+                + "', 0)");) {
       st.execute();
-    } finally {
-      if (st != null) {
-        try {
-          st.close();
-        } catch (SQLException e) {
-          log.error("Error closing statement", e);
-        }
-      }
-      if (cn != null) {
-        try {
-          cn.close();
-        } catch (SQLException e) {
-          log.error("Error closing connection", e);
-        }
-      }
     }
   }
 }
