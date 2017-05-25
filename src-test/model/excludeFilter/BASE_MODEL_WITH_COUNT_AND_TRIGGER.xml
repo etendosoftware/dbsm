@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_WAS_INVOKED" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+    <trigger name="EXCLUDED_TRIGGER" table="TEST" fires="before" insert="true" update="true" delete="false" foreach="row">
+      <body><![CDATA[
+BEGIN
+:new.TRIGGER_WAS_INVOKED:=1;
+END EXCLUDED_TRIGGER
+]]></body>
+    </trigger>    
+  </database>
