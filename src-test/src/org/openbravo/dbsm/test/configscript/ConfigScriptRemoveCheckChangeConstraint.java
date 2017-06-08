@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016-2017 Openbravo S.L.U.
+ * Copyright (C) 2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -23,30 +23,41 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+/**
+ * Test cases to test it is possible to remove a check constraint during the install source using a
+ * removeCheckChange in a configScript.
+ * 
+ * See issue https://issues.openbravo.com/view.php?id=36137
+ * 
+ * @author inigo.sanchez
+ *
+ */
 @RunWith(Parameterized.class)
-public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
+public class ConfigScriptRemoveCheckChangeConstraint extends ConfigScriptBaseTest {
 
-  private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String BASE_MODEL = "removeCheckChange/BASE_MODEL_CHECK_CONSTRAINT.xml";
+  private static final String CONFIG_SCRIPT = "model/removeCheckChange/configScript.xml";
   private static final String TEST_TABLE = "TEST";
   private static final String CHECK_TEST = "TEST_CONSTRAINT";
 
-  public ConfigScriptRemoveCheckChange(String rdbms, String driver, String url, String sid,
-      String user, String password, String name) throws FileNotFoundException, IOException {
+  public ConfigScriptRemoveCheckChangeConstraint(String rdbms, String driver, String url,
+      String sid, String user, String password, String name) throws FileNotFoundException,
+      IOException {
     super(rdbms, driver, url, sid, user, password, name);
+  }
+
+  @Test
+  public void isConfigurationScriptAppliedOnInstallSource() {
+    // Install source and applyConfigurationScript
+    Database originalDB = applyConfigurationScript(BASE_MODEL, CONFIG_SCRIPT);
+    // Check if constraint is removed
+    Table table = originalDB.findTable(TEST_TABLE);
+    Check check = table.findCheck(CHECK_TEST);
+    assertNull("Check " + CHECK_TEST + " removed by the configuration script", check);
   }
 
   @Override
   protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Check check = table.findCheck(CHECK_TEST);
-    table.removeCheck(check);
-  }
-
-  @Test
-  public void isCheckConstraintRemoved() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
-    Table table = database.findTable(TEST_TABLE);
-    Check check = table.findCheck(CHECK_TEST);
-    assertNull("Check " + CHECK_TEST + " removed by the configuration script", check);
+    // Not needed as this test case does not perform model but data changes
   }
 }
