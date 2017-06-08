@@ -74,6 +74,7 @@ import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.ModelChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
@@ -3098,7 +3099,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     getSqlBuilder().setWriter(buffer);
     try {
       for (Change change : changes) {
-        if (change instanceof ColumnSizeChange) {
+        if (change instanceof RemoveCheckChange) {
+          ((RemoveCheckChange) change).apply(database, isDelimitedIdentifierModeOn());
+        } else if (change instanceof ColumnSizeChange) {
           getSqlBuilder().printColumnSizeChange(database, (ColumnSizeChange) change);
         }
       }
