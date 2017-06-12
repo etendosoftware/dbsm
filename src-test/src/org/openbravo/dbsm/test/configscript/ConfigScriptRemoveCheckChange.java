@@ -27,6 +27,9 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String BASE_MODEL_INSTALL = "removeCheckChange/BASE_MODEL_CHECK_CONSTRAINT.xml";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/removeCheckChange/configScript.xml";
+
   private static final String TEST_TABLE = "TEST";
   private static final String CHECK_TEST = "TEST_CONSTRAINT";
 
@@ -46,6 +49,24 @@ public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
   public void isCheckConstraintRemoved() {
     Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
     Table table = database.findTable(TEST_TABLE);
+    Check check = table.findCheck(CHECK_TEST);
+    assertNull("Check " + CHECK_TEST + " removed by the configuration script", check);
+  }
+
+  /**
+   * Test cases to test it is possible to remove a check constraint during the install source using
+   * a removeCheckChange in a configScript.
+   * 
+   * See issue https://issues.openbravo.com/view.php?id=36137
+   *
+   */
+  @Test
+  public void isConfigurationScriptAppliedOnInstallSource() {
+    // Install source and applyConfigurationScript
+    Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL_INSTALL,
+        CONFIG_SCRIPT_INSTALL);
+    // Check if constraint is removed
+    Table table = originalDB.findTable(TEST_TABLE);
     Check check = table.findCheck(CHECK_TEST);
     assertNull("Check " + CHECK_TEST + " removed by the configuration script", check);
   }

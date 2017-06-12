@@ -62,10 +62,7 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     updateDatabase(model, DATA_DIRECTORY, adTableNames, assertDBisCorrect, configScripts);
   }
 
-  /**
-   * This method apply configScript using current flow of install.source task.
-   */
-  protected Database applyConfigurationScript(String model, String configScript) {
+  protected Database createDatabaseAndApplyConfigurationScript(String model, String configScript) {
     resetDB();
     Database originalDB = createDatabase(model);
     Vector<Change> changes = readConfigScript(configScript);
