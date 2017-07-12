@@ -87,20 +87,18 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   protected void doExecute() {
     excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
-    if (!onlyIfModified) {
-      System.out
-          .println("Executing database update process without checking changes in local files.");
-    } else {
+    if (onlyIfModified) {
+      getLog().info("Checking if database files where modified after last build");
       CheckSum cs = new CheckSum(basedir + "/../");
       String oldStructCS = cs.getCheckSumDBSTructure();
       String newStructCS = cs.calculateCheckSumDBStructure();
       String oldDataCS = cs.getCheckSumDBSourceData();
       String newDataCS = cs.calculateCheckSumDBSourceData();
       if (oldStructCS.equals(newStructCS) && oldDataCS.equals(newDataCS)) {
-        System.out.println("Database files didn't change. No update process required.");
+        getLog().info("Database files didn't change. No update process required.");
         return;
       } else {
-        System.out.println("Database files were changed. Initiating database update process.");
+        getLog().info("Database files were changed. Initiating database update process.");
       }
     }
 

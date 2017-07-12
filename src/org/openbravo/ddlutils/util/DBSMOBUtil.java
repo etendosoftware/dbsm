@@ -571,7 +571,7 @@ public class DBSMOBUtil {
       rsDate.next();
       Timestamp date = rsDate.getTimestamp(1);
 
-      System.out.println("Checking if database structure was modified locally.");
+      getLog().info("Checking if database structure was modified locally.");
       String sql;
       if (updateCRC)
         sql = "SELECT ad_db_modified('Y') FROM DUAL";
@@ -586,7 +586,7 @@ public class DBSMOBUtil {
       if (answer.equalsIgnoreCase("Y"))
         return true;
 
-      System.out.println("Checking if data has changed in the application dictionary.");
+      getLog().info("Checking if data has changed in the application dictionary.");
       boolean datachange = dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
       if (datachange)
         return true;
