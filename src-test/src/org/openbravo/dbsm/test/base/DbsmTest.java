@@ -352,7 +352,7 @@ public class DbsmTest {
         platform.getSqlBuilder().setForcedRecreation("all");
       }
 
-      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), false);
+      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
       Database newDB = DatabaseUtils.readDatabase(dbModel);
 
       final DatabaseData databaseOrgData = new DatabaseData(newDB);

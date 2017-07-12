@@ -22,6 +22,7 @@ import org.openbravo.dbsm.test.model.data.OtherDefaults;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 import org.openbravo.dbsm.test.model.recreation.AddDropConstraints;
 import org.openbravo.dbsm.test.model.recreation.OtherRecreations;
+import org.openbravo.dbsm.test.model.recreation.PLCode;
 import org.openbravo.dbsm.test.model.recreation.SQLCommands;
 import org.openbravo.dbsm.test.model.recreation.TypeChangeSuite;
 
@@ -60,6 +61,7 @@ CheckConstraints.class, //
     OtherRecreations.class, //
     PreventConstraintDeletion.class, //
     PreventCascadeRowDeletion.class,//
+    PLCode.class,
 
     ConfigScriptSuite.class })
 public class ModelSuite {

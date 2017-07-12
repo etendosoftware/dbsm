@@ -128,7 +128,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       Database originaldb;
       if (getOriginalmodel() == null) {
-        originaldb = platform.loadModelFromDatabase(excludeFilter, false);
+        originaldb = platform.loadModelFromDatabase(excludeFilter, true);
         getLog().info("Checking datatypes from the model loaded from the database");
         if (originaldb == null) {
           originaldb = new Database();
