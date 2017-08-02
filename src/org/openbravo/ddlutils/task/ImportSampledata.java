@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2013-2016 Openbravo S.L.U.
+ * Copyright (C) 2013-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -350,9 +350,8 @@ public class ImportSampledata extends BaseDatabaseTask {
     private void importXmlFile() {
       final DatabaseDataIO dbdio = new DatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
-      DataReader dataReader = null;
       dbdio.setUseBatchMode(true);
-      dataReader = dbdio.getConfiguredDataReader(platform, db);
+      DataReader dataReader = dbdio.getConfiguredDataReader(platform, db);
       dataReader.getSink().start();
       dbdio.writeDataToDatabase(dataReader, file);
       dataReader.getSink().end();
