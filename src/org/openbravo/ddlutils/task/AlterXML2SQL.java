@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -66,8 +66,10 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       Writer w = new FileWriter(output);
       platform.getSqlBuilder().setScript(true);
 
+      // TODO: readDatabaseModel + Test
       Database db = null;
-      db = readDatabaseModel();
+      // DatabaseData dbData = new DatabaseData(db);
+      // db = readDatabaseModel(platform,dbData, db, "", "", output,true,true);
 
       Database originaldb;
       if (getOriginalmodel() == null) {

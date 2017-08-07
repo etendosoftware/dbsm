@@ -898,6 +898,7 @@ public class DBSMOBUtil {
         strict, true);
   }
 
+  // TODO: loadDataStructures is public. Not comment applyConfigScripts? Used in test too.
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
@@ -926,7 +927,7 @@ public class DBSMOBUtil {
       }
     }
     readDataIntoDatabaseData(platform, db, databaseOrgData, files);
-    applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
+    // applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
   }
 
   public void readDataIntoDatabaseData(Platform platform, Database db,

@@ -159,6 +159,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
         if (testAPI) {
           getLog().info("Reading XML model for API checking" + path);
+
+          // Database dbXML = DatabaseUtils.readDatabase2(path, platform, databaseOrgData,
+          // moduledir.getAbsolutePath(), false, true);
+
           Database dbXML = DatabaseUtils.readDatabase(path);
           validateAPIForModel(platform, dbI, dbXML, ad);
         }

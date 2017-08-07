@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -56,7 +56,6 @@ public class CreateXML2SQL extends BaseDatabaseTask {
       ds.setPassword(getPassword());
 
       pl = PlatformFactory.createNewPlatformInstance(ds);
-      // platform.setDelimitedIdentifierModeOn(true);
       getLog().info("Using database platform.");
     } else {
       pl = PlatformFactory.createNewPlatformInstance(platform);
@@ -64,8 +63,8 @@ public class CreateXML2SQL extends BaseDatabaseTask {
     }
 
     try {
-
-      Database db = DatabaseUtils.readDatabase(model);
+      String basedir = System.getProperty("user.dir") + "/modules";
+      Database db = DatabaseUtils.readDatabase3(model, pl, basedir, false, true);
 
       // Write creation script
       getLog().info("Writing creation script");
@@ -86,7 +85,6 @@ public class CreateXML2SQL extends BaseDatabaseTask {
       getLog().info("Database script created in : " + output.getPath());
 
     } catch (final Exception e) {
-      // log(e.getLocalizedMessage());
       throw new BuildException(e);
     }
   }

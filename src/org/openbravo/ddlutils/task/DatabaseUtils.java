@@ -26,14 +26,17 @@ import java.util.Comparator;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.DynamicDatabaseFilter;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.util.DBSMOBUtil;
 
 public class DatabaseUtils {
   private static final Logger log = Logger.getLogger(DatabaseUtils.class);
@@ -42,9 +45,42 @@ public class DatabaseUtils {
   private DatabaseUtils() {
   }
 
-  public static Database readDatabase(File f) {
-
+  // TODO: Remove databaseOrgData?
+  public static Database readDatabase2(File f, Platform platform, DatabaseData databaseOrgData,
+      String basedir, boolean strict, boolean applyConfigScriptData) {
     Database d = readDatabase_noChecks(f);
+    try {
+      d.initialize();
+    } catch (Exception e) {
+      System.out.println("Warning: " + e.getMessage());
+    }
+    // Del createDatabase y del AlterDatabase
+    DatabaseData databaseOrgData2 = new DatabaseData(d);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData2, d, basedir, strict,
+        applyConfigScriptData);
+    return d;
+  }
+
+  public static Database readDatabase3(File f, Platform platform, String basedir, boolean strict,
+      boolean applyConfigScriptData) {
+    Database d = readDatabase_noChecks(f);
+    try {
+      d.initialize();
+    } catch (Exception e) {
+      System.out.println("Warning: " + e.getMessage());
+    }
+
+    // Del createDatabase y del AlterDatabase
+    final DatabaseData databaseOrgData = new DatabaseData(d);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, d, basedir, strict,
+        applyConfigScriptData);
+    return d;
+  }
+
+  // TODO: Review task that invokes this method.
+  public static Database readDatabase(File f) {
+    Database d = readDatabase_noChecks(f);
+
     try {
       d.initialize();
     } catch (Exception e) {
@@ -69,6 +105,40 @@ public class DatabaseUtils {
     return d;
   }
 
+  // TODO: Remove databaseOrgData?
+  public static Database readDatabase2(File[] f, Platform platform, DatabaseData databaseOrgData,
+      String basedir, boolean strict, boolean applyConfigScriptData) {
+
+    Database d = readDatabase_noChecks(f[0]);
+    for (int i = 1; i < f.length; i++) {
+      d.mergeWith(readDatabase_noChecks(f[i]));
+    }
+
+    d.initialize();
+    // Del ImportSampledata y del AlterDatabase
+    DatabaseData databaseOrgData2 = new DatabaseData(d);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData2, d, basedir, strict,
+        applyConfigScriptData);
+    return d;
+  }
+
+  public static Database readDatabase3(File[] f, Platform platform, String basedir, boolean strict,
+      boolean applyConfigScriptData) {
+
+    Database d = readDatabase_noChecks(f[0]);
+    for (int i = 1; i < f.length; i++) {
+      d.mergeWith(readDatabase_noChecks(f[i]));
+    }
+
+    d.initialize();
+    // Del ImportSampledata y del AlterDatabase
+    final DatabaseData databaseOrgData = new DatabaseData(d);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, d, basedir, strict,
+        applyConfigScriptData);
+    return d;
+  }
+
+  // TODO: Review task that invokes this method.
   public static Database readDatabase(File[] f) {
 
     Database d = readDatabase_noChecks(f[0]);

@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -20,16 +20,13 @@ import java.util.Vector;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
-import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
-import org.openbravo.ddlutils.util.ModuleRow;
 
 /**
  * 
@@ -60,6 +57,9 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
+    getLog().info("+++++++  model  " + model.getAbsolutePath() + "/../../../");
+    getLog().info("+++++++  basedir  " + basedir);
+
     excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
@@ -84,10 +84,20 @@ public class CreateDatabase extends BaseDatabaseTask {
       }
 
       Database db = null;
+      // final DatabaseData databaseOrgData = new DatabaseData(db);
       if (modulesDir == null) {
         getLog().info(
             "modulesDir for additional files not specified. Creating database with just Core.");
-        db = DatabaseUtils.readDatabase(getModel());
+        // TODO:REview strict parameter boolean and other boolean
+        // db = DatabaseUtils.readDatabase2(getModel(), platform, databaseOrgData, basedir, false,
+        // true);
+        db = DatabaseUtils.readDatabase3(getModel(), platform, basedir, false, true);
+
+        // File[] model = null;
+        // model[0] = getModel();
+        // db = DatabaseUtils.readDatabaseWithConfigScriptsAppliedInstall(model, platform, basedir,
+        // object,
+        // true);
       } else {
         // We read model files using the filter, obtaining a file array.
         // The models will be merged
@@ -108,7 +118,13 @@ public class CreateDatabase extends BaseDatabaseTask {
         for (int i = 0; i < dirs.size(); i++) {
           fileArray[i] = dirs.get(i);
         }
-        db = DatabaseUtils.readDatabase(fileArray);
+        // db = DatabaseUtils
+        // .readDatabase2(fileArray, platform, databaseOrgData, basedir, false, true);
+        db = DatabaseUtils.readDatabase3(fileArray, platform, basedir, false, true);
+
+        // db = DatabaseUtils.readDatabaseWithConfigScriptsAppliedInstall(fileArray, platform,
+        // basedir,
+        // object, true);
       }
 
       // Create database
@@ -194,25 +210,31 @@ public class CreateDatabase extends BaseDatabaseTask {
        */
       dataReader.getSink().end();
 
-      final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      util.getModules(platform, excludeFilter);
-      util.generateIndustryTemplateTree();
-      for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
-        final ModuleRow temp = util.getIndustryTemplateId(i);
-        final File f = new File(basedir, "modules/" + temp.dir
-            + "/src-db/database/configScript.xml");
-        getLog().info(
-            "Loading config script for module " + temp.name + ". Path: " + f.getAbsolutePath());
-        if (f.exists()) {
-          final DatabaseIO dbIO = new DatabaseIO();
-          final Vector<Change> changesConfigScript = dbIO.readChanges(f);
-          platform.applyConfigScript(db, changesConfigScript);
-        } else {
-          getLog().error(
-              "Error. We couldn't find configuration script for template " + temp.name + ". Path: "
-                  + f.getAbsolutePath());
-        }
-      }
+      // db.getTable()
+      //
+      // // MOVED TO DatabaseUtils.readDatabaseWithConfigScriptsAppliedInstall METHOD
+      // final DBSMOBUtil util = DBSMOBUtil.getInstance();
+      // util.getModules(platform, excludeFilter);
+      // util.generateIndustryTemplateTree();
+      // for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
+      // final ModuleRow temp = util.getIndustryTemplateId(i);
+      // final File f = new File(basedir, "modules/" + temp.dir
+      // + "/src-db/database/configScript.xml");
+      // getLog().info(
+      // "Loading config script for module " + temp.name + ". Path: " + f.getAbsolutePath());
+      // if (f.exists()) {
+      // final DatabaseIO dbIO = new DatabaseIO();
+      // final Vector<Change> changesConfigScript = dbIO.readChanges(f);
+      // // Use the same applyConfigScript of the update taks
+      // final DatabaseData databaseOrgData = new DatabaseData(db);
+      // util.applyConfigScripts(platform, databaseOrgData, db, basedir, false, false);
+      // } else {
+      // getLog().error(
+      // "Error. We couldn't find configuration script for template " + temp.name + ". Path: "
+      // + f.getAbsolutePath());
+      // }
+      // }
+
       getLog().info("Executing onCreateDefault statements");
       platform.executeOnCreateDefaultForMandatoryColumns(db, null);
       getLog().info("Enabling notnull constraints");

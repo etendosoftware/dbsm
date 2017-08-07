@@ -36,6 +36,7 @@ import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.log4j.Logger;
@@ -90,7 +91,21 @@ public class ImportSampledata extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray2[i] = dirs.get(i);
       }
-      Database db = DatabaseUtils.readDatabase(fileArray2);
+
+      Database db = null;
+      final DatabaseData databaseOrgData = new DatabaseData(db);
+      db = DatabaseUtils.readDatabase3(fileArray2, platform, basedir + "/modules", false, true);
+      Table[] t = db.getTables();
+      for (int i = 0; i < t.length; i++) {
+        if (i % 10 == 0) {
+          log.info("Table number " + i + " with name " + t[i].getName());
+        }
+        if (t[i].getName().equals("A_AMORTIZATION")) {
+          System.out.println("Numero de CHECK antes es de " + t[i].getCheckCount());
+          System.out.println("***********" + t[i].getChecks()[0].getName());
+          System.out.println("** BASE DIR ES **" + basedir);
+        }
+      }
 
       log.info("Disabling constraints...");
       Connection con = null;
@@ -189,7 +204,13 @@ public class ImportSampledata extends BaseDatabaseTask {
       } else {
         log.info("Skipping modulescripts...");
       }
-
+      Table[] t1 = db.getTables();
+      for (int i = 0; i < t1.length; i++) {
+        if (t1[i].getName().equals("A_AMORTIZATION")) {
+          System.out.println("Numero de CHECK despues es de " + t1[i].getCheckCount());
+          System.out.println("***********" + t1[i].getChecks()[0].getName());
+        }
+      }
       log.info("Enabling constraints...");
       try {
         con = platform.borrowConnection();

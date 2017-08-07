@@ -139,14 +139,20 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         originaldb = DatabaseUtils.readDatabase(getModel());
         getLog().info("Original model loaded from file.");
       }
+      // ADDED CONFIG SCRIPT INSIDE READ DATABASE MODEL
       Database db = null;
-      db = readDatabaseModel();
-      getLog().info("Checking datatypes from the model loaded from XML files");
-      db.checkDataTypes();
       final DatabaseData databaseOrgData = new DatabaseData(db);
       databaseOrgData.setStrictMode(strict);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-          basedir, datafilter, input, strict, false);
+      db = readDatabaseModel(platform, databaseOrgData, originaldb, basedir, datafilter, input,
+          strict, false);
+      getLog().info("Checking datatypes from the model loaded from XML files");
+      db.checkDataTypes();
+
+      // final DatabaseData databaseOrgData = new DatabaseData(db);
+      // databaseOrgData.setStrictMode(strict);
+      // DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
+      // basedir, datafilter, input, strict, false);
+
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
       if (hasBeenModified) {
@@ -186,8 +192,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       final Connection connection = platform.borrowConnection();
       // Now we apply the configuration scripts
-      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-          true);
+      // DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
+      // true);
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -333,12 +339,16 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
-  protected Database readDatabaseModel() {
+  // Review databaseOrgData porque ahora en readDatabase2,se crea una nuevo.
+  protected Database readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
+      Database originaldb, String basedir, String datafilter, File input, boolean strict,
+      boolean applyConfigScriptData) {
     Database db = null;
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      db = DatabaseUtils.readDatabase(getModel());
+      db = DatabaseUtils.readDatabase2(getModel(), platform, databaseOrgData, basedir, strict,
+          applyConfigScriptData);
     } else {
       // We read model files using the filter, obtaining a file array.
       // The models will be merged
@@ -360,8 +370,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         fileArray[i] = dirs.get(i);
       }
       getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabase(fileArray);
+      db = DatabaseUtils.readDatabase2(fileArray, platform, databaseOrgData, basedir, strict,
+          applyConfigScriptData);
     }
+    DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db, basedir,
+        datafilter, input, strict, false);
     return db;
   }
 

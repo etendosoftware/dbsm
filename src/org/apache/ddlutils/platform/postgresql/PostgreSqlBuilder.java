@@ -31,6 +31,9 @@ import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -786,6 +789,31 @@ public class PostgreSqlBuilder extends SqlBuilder {
     column.setSize(Integer.toString(change.getNewSize()));
     print("ALTER TABLE " + table.getName() + " ALTER COLUMN " + column.getName() + " TYPE ");
     print(getSqlType(column));
+    printEndOfStatement();
+  }
+
+  public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
+      throws IOException {
+    Trigger trigger = database.findTrigger(change.getTriggerName());
+    database.removeTrigger(trigger);
+    print("DROP FUNCTION " + trigger.getName() + "() CASCADE");
+    printEndOfStatement();
+  }
+
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change) {
+    _log.error("Remove Index change not supported.");
+  }
+
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change) {
+    _log.error("Column Require change not supported.");
+  }
+
+  public void printRemoveCheckChange(Database database, RemoveCheckChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Check check = table.findCheck(change.getCheckName());
+    table.removeCheck(check);
+    print("ALTER TABLE " + table.getName() + " DROP CONSTRAINT " + check.getName());
     printEndOfStatement();
   }
 

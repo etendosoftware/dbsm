@@ -42,13 +42,17 @@ import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.ValueObject;
@@ -543,6 +547,25 @@ public class Oracle8Builder extends SqlBuilder {
     print("ALTER TABLE " + table.getName() + " MODIFY ");
     writeColumn(table, column);
     printEndOfStatement();
+  }
+
+  public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
+      throws IOException {
+    Trigger trigger = database.findTrigger(change.getTriggerName());
+    // drop trigger "PIORACLE"."A_AMORTIZATION_TRG"
+    writeDropTriggerFunction(trigger);
+  }
+
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change) {
+    _log.error("Remove Index change not supported.");
+  }
+
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change) {
+    _log.error("Column Require change not supported.");
+  }
+
+  public void printRemoveCheckChange(Database database, RemoveCheckChange change) {
+    _log.error("Remove Check change not supported.");
   }
 
   @Override
