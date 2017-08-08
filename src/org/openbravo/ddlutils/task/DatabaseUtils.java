@@ -46,28 +46,12 @@ public class DatabaseUtils {
   private DatabaseUtils() {
   }
 
-  // TODO: Remove databaseOrgData?
-  public static Database readDatabase2(File f, Platform platform, DatabaseData databaseOrgData,
-      String basedir, boolean strict, boolean applyConfigScriptData) {
-    Database d = readDatabase_noChecks(f);
-    try {
-      d.initialize();
-    } catch (Exception e) {
-      System.out.println("Warning: " + e.getMessage());
-    }
-    // Del createDatabase y del AlterDatabase
-    DatabaseData databaseOrgData2 = new DatabaseData(d);
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData2, d, basedir, strict,
-        applyConfigScriptData);
-    return d;
-  }
-
   /**
    * Read the model and apply the configScripts in order to have a model with the supported
    * modifications defined in any configScript.
    */
-  public static Database readDatabase3(File file, Platform platform, String basedir,
-      boolean strict, boolean applyConfigScriptData) {
+  public static Database readDatabaseWithConfigScripts(File file, Platform platform,
+      String basedir, boolean strict, boolean applyConfigScriptData) {
 
     Database d = readDatabase_noChecks(file);
     try {
@@ -75,12 +59,15 @@ public class DatabaseUtils {
     } catch (Exception e) {
       System.out.println("Warning: " + e.getMessage());
     }
+    return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d);
+  }
 
+  private static Database applyConfigScriptsIntoModel(Platform platform, String basedir,
+      boolean strict, boolean applyConfigScriptData, Database d) {
     final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
     readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
     DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d, basedir,
         strict, applyConfigScriptData);
-
     return d;
   }
 
@@ -117,10 +104,10 @@ public class DatabaseUtils {
     DBSMOBUtil.getInstance().readDataIntoDatabaseData(platform, d, dbdata, dirs);
   }
 
-  // TODO: Review task that invokes this method.
+  // TODO: Pending to remove. Review task that invokes this method.
   public static Database readDatabase(File f) {
-    Database d = readDatabase_noChecks(f);
 
+    Database d = readDatabase_noChecks(f);
     try {
       d.initialize();
     } catch (Exception e) {
@@ -145,42 +132,19 @@ public class DatabaseUtils {
     return d;
   }
 
-  // TODO: Remove databaseOrgData?
-  public static Database readDatabase2(File[] f, Platform platform, DatabaseData databaseOrgData,
-      String basedir, boolean strict, boolean applyConfigScriptData) {
+  public static Database readDatabaseWithConfigScripts(File[] f, Platform platform, String basedir,
+      boolean strict, boolean applyConfigScriptData) {
 
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
       d.mergeWith(readDatabase_noChecks(f[i]));
     }
-
     d.initialize();
-    // Del ImportSampledata y del AlterDatabase
-    DatabaseData databaseOrgData2 = new DatabaseData(d);
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData2, d, basedir, strict,
-        applyConfigScriptData);
-    return d;
+
+    return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d);
   }
 
-  public static Database readDatabase3(File[] f, Platform platform, String basedir, boolean strict,
-      boolean applyConfigScriptData) {
-
-    Database d = readDatabase_noChecks(f[0]);
-    for (int i = 1; i < f.length; i++) {
-      d.mergeWith(readDatabase_noChecks(f[i]));
-    }
-
-    d.initialize();
-    // Del ImportSampledata y del AlterDatabase
-    final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
-    readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d, basedir,
-        strict, applyConfigScriptData);
-
-    return d;
-  }
-
-  // TODO: Review task that invokes this method.
+  // TODO: Pending to remove. Review task that invokes this method.
   public static Database readDatabase(File[] f) {
 
     Database d = readDatabase_noChecks(f[0]);
