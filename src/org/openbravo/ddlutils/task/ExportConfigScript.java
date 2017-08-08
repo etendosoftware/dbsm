@@ -101,7 +101,11 @@ public class ExportConfigScript extends BaseDatabaseTask {
         getLog().debug("Loading model for module. Path: " + dirs.get(i).getAbsolutePath());
         fileArray[i] = dirs.get(i);
       }
-      final Database xmlModel = DatabaseUtils.readDatabase(fileArray);
+      // final Database xmlModel = DatabaseUtils.readDatabase(fileArray);
+      String basedir = System.getProperty("user.dir");
+      System.out.println("EL BASEDIR GENERADO ES: " + basedir);
+      final Database xmlModel = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform,
+          basedir, true, true);
 
       getLog().info("Loading original data from XML files");
 
