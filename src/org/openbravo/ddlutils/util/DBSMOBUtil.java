@@ -970,7 +970,7 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      File configScript = new File(new File(basedir), "/" + template
+      File configScript = new File(new File(basedir), "/modules/" + template
           + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
         configScripts.add(configScript);
