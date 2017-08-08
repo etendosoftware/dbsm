@@ -103,9 +103,7 @@ public class DatabaseUtils {
       }
     }
 
-    // Check if /modules or not.
-    // File modules = new File(path, "/modules");
-    File modules = new File(path);
+    File modules = new File(path, "/modules");
     for (int j = 0; j < modules.listFiles().length; j++) {
       for (int i = 0; i < nameFiles.size(); i++) {
         final File moduleDataFile = new File(modules.listFiles()[j], "/src-db/database/sourcedata/"

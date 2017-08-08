@@ -94,7 +94,7 @@ public class ImportSampledata extends BaseDatabaseTask {
 
       Database db = null;
       final DatabaseData databaseOrgData = new DatabaseData(db);
-      db = DatabaseUtils.readDatabase3(fileArray2, platform, basedir + "/modules", false, true);
+      db = DatabaseUtils.readDatabase3(fileArray2, platform, basedir, false, true);
       Table[] t = db.getTables();
       for (int i = 0; i < t.length; i++) {
         if (i % 10 == 0) {
@@ -102,7 +102,7 @@ public class ImportSampledata extends BaseDatabaseTask {
         }
         if (t[i].getName().equals("A_AMORTIZATION")) {
           System.out.println("Numero de CHECK antes es de " + t[i].getCheckCount());
-          System.out.println("***********" + t[i].getChecks()[0].getName());
+          // System.out.println("***********" + t[i].getChecks()[0].getName());
           System.out.println("** BASE DIR ES **" + basedir);
         }
       }
@@ -208,7 +208,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       for (int i = 0; i < t1.length; i++) {
         if (t1[i].getName().equals("A_AMORTIZATION")) {
           System.out.println("Numero de CHECK despues es de " + t1[i].getCheckCount());
-          System.out.println("***********" + t1[i].getChecks()[0].getName());
+          // System.out.println("***********" + t1[i].getChecks()[0].getName());
         }
       }
       log.info("Enabling constraints...");
