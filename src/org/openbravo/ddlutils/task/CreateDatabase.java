@@ -57,9 +57,6 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    getLog().info("+++++++  model  " + model.getAbsolutePath() + "/../../../");
-    getLog().info("+++++++  basedir  " + basedir);
-
     excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
@@ -67,8 +64,6 @@ public class CreateDatabase extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-    // platform.setDelimitedIdentifierModeOn(true);
-
     try {
 
       // execute the pre-script
@@ -84,23 +79,13 @@ public class CreateDatabase extends BaseDatabaseTask {
       }
 
       Database db = null;
-      // final DatabaseData databaseOrgData = new DatabaseData(db);
       if (modulesDir == null) {
         getLog().info(
             "modulesDir for additional files not specified. Creating database with just Core.");
-        // TODO:REview strict parameter boolean and other boolean
-        // db = DatabaseUtils.readDatabase2(getModel(), platform, databaseOrgData, basedir, false,
-        // true);
-        db = DatabaseUtils.readDatabase3(getModel(), platform, basedir, false, true);
-
-        // File[] model = null;
-        // model[0] = getModel();
-        // db = DatabaseUtils.readDatabaseWithConfigScriptsAppliedInstall(model, platform, basedir,
-        // object,
-        // true);
+        db = DatabaseUtils
+            .readDatabaseWithConfigScripts(getModel(), platform, basedir, true, false);
       } else {
-        // We read model files using the filter, obtaining a file array.
-        // The models will be merged
+        // We read model files using the filter, obtaining a file array. The models will be merged
         // to create a final target model.
         final Vector<File> dirs = new Vector<File>();
         dirs.add(model);
@@ -118,13 +103,7 @@ public class CreateDatabase extends BaseDatabaseTask {
         for (int i = 0; i < dirs.size(); i++) {
           fileArray[i] = dirs.get(i);
         }
-        // db = DatabaseUtils
-        // .readDatabase2(fileArray, platform, databaseOrgData, basedir, false, true);
-        db = DatabaseUtils.readDatabase3(fileArray, platform, basedir, false, true);
-
-        // db = DatabaseUtils.readDatabaseWithConfigScriptsAppliedInstall(fileArray, platform,
-        // basedir,
-        // object, true);
+        db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, false);
       }
 
       // Create database
@@ -156,8 +135,7 @@ public class CreateDatabase extends BaseDatabaseTask {
       DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
           .getAbsolutePath());
 
-      // Now we insert sourcedata into the database
-      // first we load the data files
+      // Now we insert sourcedata into the database first we load the data files
       final String folders = getInput();
       final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
       final Vector<File> files = new Vector<File>();
@@ -209,31 +187,6 @@ public class CreateDatabase extends BaseDatabaseTask {
        * but before doing anything using those data (template, fk's, not null, ... )
        */
       dataReader.getSink().end();
-
-      // db.getTable()
-      //
-      // // MOVED TO DatabaseUtils.readDatabaseWithConfigScriptsAppliedInstall METHOD
-      // final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      // util.getModules(platform, excludeFilter);
-      // util.generateIndustryTemplateTree();
-      // for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
-      // final ModuleRow temp = util.getIndustryTemplateId(i);
-      // final File f = new File(basedir, "modules/" + temp.dir
-      // + "/src-db/database/configScript.xml");
-      // getLog().info(
-      // "Loading config script for module " + temp.name + ". Path: " + f.getAbsolutePath());
-      // if (f.exists()) {
-      // final DatabaseIO dbIO = new DatabaseIO();
-      // final Vector<Change> changesConfigScript = dbIO.readChanges(f);
-      // // Use the same applyConfigScript of the update taks
-      // final DatabaseData databaseOrgData = new DatabaseData(db);
-      // util.applyConfigScripts(platform, databaseOrgData, db, basedir, false, false);
-      // } else {
-      // getLog().error(
-      // "Error. We couldn't find configuration script for template " + temp.name + ". Path: "
-      // + f.getAbsolutePath());
-      // }
-      // }
 
       getLog().info("Executing onCreateDefault statements");
       platform.executeOnCreateDefaultForMandatoryColumns(db, null);
