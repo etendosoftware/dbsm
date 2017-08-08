@@ -340,7 +340,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      db = DatabaseUtils.readDatabase2(getModel(), platform, databaseOrgData, basedir, strict,
+      db = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir, strict,
           applyConfigScriptData);
     } else {
       // We read model files using the filter, obtaining a file array.
@@ -363,7 +363,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         fileArray[i] = dirs.get(i);
       }
       getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabase2(fileArray, platform, databaseOrgData, basedir, strict,
+      db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, strict,
           applyConfigScriptData);
     }
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db, basedir,
