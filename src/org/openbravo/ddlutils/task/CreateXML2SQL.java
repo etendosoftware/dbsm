@@ -64,7 +64,7 @@ public class CreateXML2SQL extends BaseDatabaseTask {
 
     try {
       String basedir = System.getProperty("user.dir") + "/modules";
-      Database db = DatabaseUtils.readDatabase3(model, pl, basedir, false, true);
+      Database db = DatabaseUtils.readDatabase3(model, pl, basedir, true, false);
 
       // Write creation script
       getLog().info("Writing creation script");

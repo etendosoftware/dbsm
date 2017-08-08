@@ -939,7 +939,7 @@ public class DBSMOBUtil {
     getLog().info("Loading data from XML files");
     for (int i = 0; i < files.size(); i++) {
       try {
-        getLog().debug("Parsing file " + files.get(i).getAbsolutePath());
+        getLog().info("Parsing file " + files.get(i).getAbsolutePath());
         dataReader.getSink().start();
         final String tablename = files.get(i).getName()
             .substring(0, files.get(i).getName().length() - 4);
@@ -1007,6 +1007,7 @@ public class DBSMOBUtil {
   }
 
   public static boolean isApplied(Platform platform, String template) {
+    System.out.print("/n For template : " + template);
     Connection con = null;
     try {
       con = platform.borrowConnection();
@@ -1018,11 +1019,15 @@ public class DBSMOBUtil {
       rs.next();
       String st = rs.getString(1);
       if (st.equalsIgnoreCase("N")) {
+        System.out.print(" se devuelve false desde  equalsIgnoreCase N");
         return false;
       } else {
+        System.out.print(" se devuelve true desde  equalsIgnoreCase(N");
         return true;
       }
     } catch (Exception e) {
+      System.out.print(" se devuelve true porque no existe la columna, o mejor dicho, no hay DB");
+
       // In case we cannot read the column (maybe it doesn't exist)
       // we will apply the template
       return true;

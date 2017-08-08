@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -23,6 +23,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -61,20 +62,61 @@ public class DatabaseUtils {
     return d;
   }
 
-  public static Database readDatabase3(File f, Platform platform, String basedir, boolean strict,
-      boolean applyConfigScriptData) {
-    Database d = readDatabase_noChecks(f);
+  /**
+   * Read the model and apply the configScripts in order to have a model with the supported
+   * modifications defined in any configScript.
+   */
+  public static Database readDatabase3(File file, Platform platform, String basedir,
+      boolean strict, boolean applyConfigScriptData) {
+
+    Database d = readDatabase_noChecks(file);
     try {
       d.initialize();
     } catch (Exception e) {
       System.out.println("Warning: " + e.getMessage());
     }
 
-    // Del createDatabase y del AlterDatabase
-    final DatabaseData databaseOrgData = new DatabaseData(d);
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, d, basedir, strict,
-        applyConfigScriptData);
+    final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
+    readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d, basedir,
+        strict, applyConfigScriptData);
+
     return d;
+  }
+
+  /**
+   * Read the data for AD_MODULE and AD_MODULE_DEPENDENCY from XML to be able to apply all the
+   * configScripts defined in the template modules when it isn't exists a database yet: Install
+   * source task,...
+   */
+  private static void readDataModuleInfo(Platform platform, Database d, DatabaseData dbdata,
+      String path) {
+    log.debug("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files");
+    List<String> nameFiles = new ArrayList<>(Arrays.asList("AD_MODULE.xml",
+        "AD_MODULE_DEPENDENCY.xml"));
+
+    Vector<File> dirs = new Vector<File>();
+    for (int i = 0; i < nameFiles.size(); i++) {
+      final File coreDataFile = new File(path, "/src-db/database/sourcedata/" + nameFiles.get(i));
+      if (coreDataFile.exists()) {
+        dirs.add(coreDataFile);
+      }
+    }
+
+    // Check if /modules or not.
+    // File modules = new File(path, "/modules");
+    File modules = new File(path);
+    for (int j = 0; j < modules.listFiles().length; j++) {
+      for (int i = 0; i < nameFiles.size(); i++) {
+        final File moduleDataFile = new File(modules.listFiles()[j], "/src-db/database/sourcedata/"
+            + nameFiles.get(i));
+        if (moduleDataFile.exists()) {
+          dirs.add(moduleDataFile);
+        }
+      }
+    }
+
+    DBSMOBUtil.getInstance().readDataIntoDatabaseData(platform, d, dbdata, dirs);
   }
 
   // TODO: Review task that invokes this method.
