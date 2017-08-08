@@ -174,9 +174,11 @@ public class DatabaseUtils {
 
     d.initialize();
     // Del ImportSampledata y del AlterDatabase
-    final DatabaseData databaseOrgData = new DatabaseData(d);
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, d, basedir, strict,
-        applyConfigScriptData);
+    final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
+    readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d, basedir,
+        strict, applyConfigScriptData);
+
     return d;
   }
 
