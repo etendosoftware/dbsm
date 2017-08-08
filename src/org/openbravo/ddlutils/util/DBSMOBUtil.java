@@ -1,3 +1,15 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
+
 package org.openbravo.ddlutils.util;
 
 import java.io.File;
@@ -898,7 +910,7 @@ public class DBSMOBUtil {
         strict, true);
   }
 
-  // TODO: loadDataStructures is public. Not comment applyConfigScripts? Used in test too.
+  // TODO: Review where is used this method.
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
@@ -939,7 +951,7 @@ public class DBSMOBUtil {
     getLog().info("Loading data from XML files");
     for (int i = 0; i < files.size(); i++) {
       try {
-        getLog().info("Parsing file " + files.get(i).getAbsolutePath());
+        getLog().debug("Parsing file " + files.get(i).getAbsolutePath());
         dataReader.getSink().start();
         final String tablename = files.get(i).getName()
             .substring(0, files.get(i).getName().length() - 4);
@@ -1007,7 +1019,6 @@ public class DBSMOBUtil {
   }
 
   public static boolean isApplied(Platform platform, String template) {
-    System.out.print("/n For template : " + template);
     Connection con = null;
     try {
       con = platform.borrowConnection();
@@ -1019,15 +1030,11 @@ public class DBSMOBUtil {
       rs.next();
       String st = rs.getString(1);
       if (st.equalsIgnoreCase("N")) {
-        System.out.print(" se devuelve false desde  equalsIgnoreCase N");
         return false;
       } else {
-        System.out.print(" se devuelve true desde  equalsIgnoreCase(N");
         return true;
       }
     } catch (Exception e) {
-      System.out.print(" se devuelve true porque no existe la columna, o mejor dicho, no hay DB");
-
       // In case we cannot read the column (maybe it doesn't exist)
       // we will apply the template
       return true;

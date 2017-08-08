@@ -139,7 +139,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         originaldb = DatabaseUtils.readDatabase(getModel());
         getLog().info("Original model loaded from file.");
       }
-      // ADDED CONFIG SCRIPT INSIDE READ DATABASE MODEL
       Database db = null;
       final DatabaseData databaseOrgData = new DatabaseData(db);
       databaseOrgData.setStrictMode(strict);
@@ -147,12 +146,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           strict, false);
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
-
-      // final DatabaseData databaseOrgData = new DatabaseData(db);
-      // databaseOrgData.setStrictMode(strict);
-      // DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-      // basedir, datafilter, input, strict, false);
-
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
       if (hasBeenModified) {
@@ -339,7 +332,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
-  // Review databaseOrgData porque ahora en readDatabase2,se crea una nuevo.
+  // TODO: check databaseOrgData because readDatabase3 create new one.
   protected Database readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, String basedir, String datafilter, File input, boolean strict,
       boolean applyConfigScriptData) {
