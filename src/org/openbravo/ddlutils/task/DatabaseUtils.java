@@ -345,7 +345,7 @@ public class DatabaseUtils {
    * @return Database object representing the loaded model
    */
   // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
-  static Database readDatabaseModel(File model, String basedir, String dirFilter) {
+  static Database readDatabaseModel(Platform platform, File model, String basedir, String dirFilter) {
     Database db = null;
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
@@ -370,7 +370,7 @@ public class DatabaseUtils {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      db = DatabaseUtils.readDatabase(fileArray);
+      db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, true);
     }
     return db;
   }
