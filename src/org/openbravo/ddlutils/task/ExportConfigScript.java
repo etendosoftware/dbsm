@@ -106,7 +106,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       System.out.println("EL BASEDIR GENERADO ES: " + basedir);
       // TODO: Check if applyConfigScript should be true
       final Database xmlModel = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform,
-          basedir, true, true, true, false);
+          basedir, true, true, false, false);
 
       getLog().info("Loading original data from XML files");
 
