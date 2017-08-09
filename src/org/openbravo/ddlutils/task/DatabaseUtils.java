@@ -370,7 +370,7 @@ public class DatabaseUtils {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, true);
+      db = DatabaseUtils.readDatabase(fileArray);
     }
     return db;
   }
