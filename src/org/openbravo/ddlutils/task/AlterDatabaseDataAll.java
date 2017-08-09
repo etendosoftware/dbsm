@@ -136,7 +136,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabase(getModel());
+        originaldb = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir,
+            true, false, true, false);
         getLog().info("Original model loaded from file.");
       }
       Database db = null;

@@ -125,7 +125,7 @@ public class DatabaseUtils {
     DBSMOBUtil.getInstance().readDataIntoDatabaseData(platform, d, dbdata, dirs);
   }
 
-  // TODO: Pending to remove. Review task that invokes this method.
+  // TODO: Pending to remove. Reviewed.
   public static Database readDatabase(File f) {
 
     Database d = readDatabase_noChecks(f);
@@ -178,7 +178,7 @@ public class DatabaseUtils {
     return d;
   }
 
-  // TODO: Pending to remove. Review task that invokes this method.
+  // TODO: Pending to remove. Reviewed.
   public static Database readDatabase(File[] f) {
 
     Database d = readDatabase_noChecks(f[0]);

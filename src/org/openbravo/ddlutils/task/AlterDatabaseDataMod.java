@@ -94,14 +94,14 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-    // platform.setDelimitedIdentifierModeOn(true);
 
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      dbXML = DatabaseUtils.readDatabase(getModel());
+      dbXML = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir, true,
+          false, true, false);
     } else {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -122,7 +122,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      dbXML = DatabaseUtils.readDatabase(fileArray);
+      dbXML = DatabaseUtils.readDatabaseWithConfigScripts(model, platform, basedir, true, false,
+          true, false);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);

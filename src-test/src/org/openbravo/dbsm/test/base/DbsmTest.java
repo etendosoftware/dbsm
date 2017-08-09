@@ -354,8 +354,8 @@ public class DbsmTest {
 
       // TODO: Check boolean. Before was true
       Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), false);
-      Database newDB = DatabaseUtils.readDatabase(dbModel);
-
+      Database newDB = DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath,
+          true, false, true, true);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
 
@@ -466,8 +466,9 @@ public class DbsmTest {
         ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
             platform.isDelimitedIdentifierModeOn());
         @SuppressWarnings("unchecked")
-        List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
-            platform.loadModelFromDatabase(getExcludeFilter()));
+        List<ModelChange> newChanges = comparator.compare(
+            DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath, true,
+                false, true, true), platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
 
@@ -520,15 +521,16 @@ public class DbsmTest {
     final Platform platform = getPlatform();
 
     Database newDB = DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath,
-        true, true, true, false);
+        true, true, true, true);
     platform.createTables(newDB, false, true);
 
     platform.enableNOTNULLColumns(newDB);
 
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
-    List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
-        platform.loadModelFromDatabase(getExcludeFilter()));
+    List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabaseWithConfigScripts(
+        dbModel, platform, dbModelPath, true, true, true, true), platform
+        .loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;
   }
