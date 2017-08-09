@@ -47,11 +47,17 @@ public class DatabaseUtils {
   }
 
   /**
-   * Read the model and apply the configScripts in order to have a model with the supported
-   * modifications defined in any configScript.
+   * Read the model and apply the configScripts if proceed in order to have a model with the
+   * supported modifications defined in any configScript.
+   * 
+   * @param applyConfigScript
+   *          true if configScripts should be applied into the model.
+   * @param loadModelFromXML
+   *          true if database is not mounted and information should be obtained from XML files.
    */
   public static Database readDatabaseWithConfigScripts(File file, Platform platform,
-      String basedir, boolean strict, boolean applyConfigScriptData) {
+      String basedir, boolean strict, boolean applyConfigScriptData, boolean applyConfigScript,
+      boolean loadModelFromXML) {
 
     Database d = readDatabase_noChecks(file);
     try {
@@ -59,13 +65,28 @@ public class DatabaseUtils {
     } catch (Exception e) {
       System.out.println("Warning: " + e.getMessage());
     }
-    return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d);
+    if (applyConfigScript) {
+      return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d,
+          loadModelFromXML);
+    }
+    return d;
   }
 
+  /**
+   * ConfigScripts are applied taking into account which templates are active. This information
+   * could be obtain from database or XML.
+   */
   private static Database applyConfigScriptsIntoModel(Platform platform, String basedir,
-      boolean strict, boolean applyConfigScriptData, Database d) {
+      boolean strict, boolean applyConfigScriptData, Database d, boolean readFromXML) {
     final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
-    readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
+    if (readFromXML) {
+      readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
+    } else {
+      final DBSMOBUtil util = DBSMOBUtil.getInstance();
+      ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
+      util.getModules(platform, excludeFilter);
+      util.generateIndustryTemplateTree();
+    }
     DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d, basedir,
         strict, applyConfigScriptData);
     return d;
@@ -132,16 +153,29 @@ public class DatabaseUtils {
     return d;
   }
 
+  /**
+   * Read the model and apply the configScripts if proceed in order to have a model with the
+   * supported modifications defined in any configScript.
+   * 
+   * @param applyConfigScript
+   *          true if configScripts should be applied into the model.
+   * @param loadModelFromXML
+   *          true if database is not mounted and information should be obtained from XML files.
+   */
   public static Database readDatabaseWithConfigScripts(File[] f, Platform platform, String basedir,
-      boolean strict, boolean applyConfigScriptData) {
+      boolean strict, boolean applyConfigScriptData, boolean applyConfigScript,
+      boolean loadModelFromXML) {
 
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
       d.mergeWith(readDatabase_noChecks(f[i]));
     }
     d.initialize();
-
-    return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d);
+    if (applyConfigScript) {
+      return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d,
+          loadModelFromXML);
+    }
+    return d;
   }
 
   // TODO: Pending to remove. Review task that invokes this method.
@@ -346,33 +380,32 @@ public class DatabaseUtils {
    */
   // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
   static Database readDatabaseModel(Platform platform, File model, String basedir, String dirFilter) {
-    Database db = null;
+
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
-      db = DatabaseUtils.readDatabase(model);
-    } else {
-      // We read model files using the filter, obtaining a file array.
-      // The models will be merged
-      // to create a final target model.
-      final Vector<File> dirs = new Vector<File>();
-      dirs.add(model);
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(basedir));
-      final String[] dirFilterA = { dirFilter };
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirF = new File(basedir, incDirs[j]);
-        dirs.add(dirF);
-      }
-      final File[] fileArray = new File[dirs.size()];
-      for (int i = 0; i < dirs.size(); i++) {
-        fileArray[i] = dirs.get(i);
-      }
-      db = DatabaseUtils.readDatabase(fileArray);
+      return DatabaseUtils.readDatabaseWithConfigScripts(model, platform, basedir, true, true,
+          false, false);
     }
-    return db;
-  }
 
+    // We read model files using the filter, obtaining a file array. The models will be merged to
+    // create a final target model.
+    final Vector<File> dirs = new Vector<File>();
+    dirs.add(model);
+    final DirectoryScanner dirScanner = new DirectoryScanner();
+    dirScanner.setBasedir(new File(basedir));
+    final String[] dirFilterA = { dirFilter };
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    final String[] incDirs = dirScanner.getIncludedDirectories();
+    for (int j = 0; j < incDirs.length; j++) {
+      final File dirF = new File(basedir, incDirs[j]);
+      dirs.add(dirF);
+    }
+    final File[] fileArray = new File[dirs.size()];
+    for (int i = 0; i < dirs.size(); i++) {
+      fileArray[i] = dirs.get(i);
+    }
+    return DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, true,
+        false, false);
+  }
 }

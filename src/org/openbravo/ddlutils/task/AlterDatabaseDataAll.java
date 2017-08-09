@@ -341,7 +341,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
       db = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir, strict,
-          applyConfigScriptData);
+          applyConfigScriptData, true, false);
     } else {
       // We read model files using the filter, obtaining a file array.
       // The models will be merged
@@ -364,7 +364,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       }
       getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, strict,
-          applyConfigScriptData);
+          applyConfigScriptData, true, false);
     }
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db, basedir,
         datafilter, input, strict, false);

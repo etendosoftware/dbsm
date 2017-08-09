@@ -82,8 +82,8 @@ public class CreateDatabase extends BaseDatabaseTask {
       if (modulesDir == null) {
         getLog().info(
             "modulesDir for additional files not specified. Creating database with just Core.");
-        db = DatabaseUtils
-            .readDatabaseWithConfigScripts(getModel(), platform, basedir, true, false);
+        db = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir, true,
+            false, true, true);
       } else {
         // We read model files using the filter, obtaining a file array. The models will be merged
         // to create a final target model.
@@ -103,7 +103,8 @@ public class CreateDatabase extends BaseDatabaseTask {
         for (int i = 0; i < dirs.size(); i++) {
           fileArray[i] = dirs.get(i);
         }
-        db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, false);
+        db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, false,
+            true, true);
       }
 
       // Create database

@@ -519,7 +519,8 @@ public class DbsmTest {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
 
-    Database newDB = DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath, true, true);
+    Database newDB = DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath,
+        true, true, true, false);
     platform.createTables(newDB, false, true);
 
     platform.enableNOTNULLColumns(newDB);

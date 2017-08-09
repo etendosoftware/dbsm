@@ -90,7 +90,8 @@ public class ImportSampledata extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray2[i] = dirs.get(i);
       }
-      Database db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray2, platform, basedir, false, true);
+      Database db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray2, platform, basedir,
+          false, true, true, true);
 
       log.info("Disabling constraints...");
       Connection con = null;
