@@ -352,10 +352,9 @@ public class DbsmTest {
         platform.getSqlBuilder().setForcedRecreation("all");
       }
 
-      // TODO: Check boolean. Before was true
-      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), false);
+      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
       Database newDB = DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath,
-          true, false, true, true);
+          true, false, false, true);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
 
@@ -468,7 +467,7 @@ public class DbsmTest {
         @SuppressWarnings("unchecked")
         List<ModelChange> newChanges = comparator.compare(
             DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath, true,
-                false, true, true), platform.loadModelFromDatabase(getExcludeFilter()));
+                false, false, true), platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
 
@@ -517,11 +516,15 @@ public class DbsmTest {
   }
 
   protected Database createDatabase(String dbModelPath) {
+    return createDatabase(dbModelPath, false);
+  }
+
+  protected Database createDatabase(String dbModelPath, boolean applyConfigScripts) {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
 
     Database newDB = DatabaseUtils.readDatabaseWithConfigScripts(dbModel, platform, dbModelPath,
-        true, true, true, true);
+        true, true, applyConfigScripts, true);
     platform.createTables(newDB, false, true);
 
     platform.enableNOTNULLColumns(newDB);
@@ -529,7 +532,7 @@ public class DbsmTest {
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
     List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabaseWithConfigScripts(
-        dbModel, platform, dbModelPath, true, true, true, true), platform
+        dbModel, platform, dbModelPath, true, true, applyConfigScripts, true), platform
         .loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;
