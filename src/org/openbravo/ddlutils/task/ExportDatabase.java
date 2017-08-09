@@ -118,7 +118,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
           moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, moduledir.getAbsolutePath());
+      DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, databaseOrgData,
+          moduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         getLog().info("Exporting module: " + util.getActiveModule(i).name);
         Database dbI = null;

@@ -1094,7 +1094,9 @@ public class DBSMOBUtil {
     }
   }
 
-  public void removeSortedTemplates(Platform platform, Database database, String basedir) {
+  public void removeSortedTemplates(Platform platform, Database database,
+      DatabaseData databaseOrgData, String basedir) {
+    sortedTemplates = getSortedTemplates(databaseOrgData);
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
       boolean isindevelopment = false;
       for (int j = 0; j < activeModules.size(); j++) {
