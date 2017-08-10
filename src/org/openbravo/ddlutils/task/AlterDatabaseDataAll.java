@@ -365,7 +365,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       db = DatabaseUtils.readDatabase(fileArray, platform, basedir, strict, applyConfigScriptData,
           true, false);
     }
-    DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db, basedir,
+    DatabaseData dbData = new DatabaseData(db);
+    DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, originaldb, db, basedir,
         datafilter, input, strict, false);
     return db;
   }
