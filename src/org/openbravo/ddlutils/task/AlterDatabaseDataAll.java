@@ -17,8 +17,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -143,14 +145,13 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       Database db = null;
       // final DatabaseData databaseOrgData = new DatabaseData(db);
       // databaseOrgData.setStrictMode(strict);
-      db = readDatabaseModel(platform, null, originaldb, basedir, datafilter, input, strict, true);
+      Map<String, Object> dbInfo = readDatabaseModel(platform, null, originaldb, basedir,
+          datafilter, input, strict, true);
+      db = (Database) dbInfo.get("Database");
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
-
-      final DatabaseData databaseOrgData = new DatabaseData(db);
+      final DatabaseData databaseOrgData = (DatabaseData) dbInfo.get("DatabaseData");
       databaseOrgData.setStrictMode(strict);
-      getLog().info("*****AQUIIIIII." + db.toString());
-      getLog().info("*****AQUIIIIII." + databaseOrgData.toString());
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
       if (hasBeenModified) {
@@ -337,9 +338,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
-  protected Database readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
+  protected Map<String, Object> readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, String basedir, String datafilter, File input, boolean strict,
       boolean applyConfigScriptData) {
+    Map<String, Object> resultDBInfo = new HashMap<String, Object>();
     Database db = null;
     if (basedir == null) {
       getLog()
@@ -372,7 +374,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     DatabaseData dbData = new DatabaseData(db);
     DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, originaldb, db, basedir,
         datafilter, input, strict, false);
-    return db;
+    resultDBInfo.put("Database", db);
+    resultDBInfo.put("DatabaseData", dbData);
+    return resultDBInfo;
   }
 
   public String getExcludeobjects() {

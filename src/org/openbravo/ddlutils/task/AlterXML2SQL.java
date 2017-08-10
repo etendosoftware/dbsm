@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
@@ -66,9 +67,10 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.getSqlBuilder().setScript(true);
 
       Database db = null;
-      DatabaseData dbData = new DatabaseData(db);
-      db = readDatabaseModel(platform, dbData, db, basedir, datafilter, output, strict, true);
-
+      Map<String, Object> dbInfo = readDatabaseModel(platform, null, db, basedir, datafilter,
+          output, strict, true);
+      db = (Database) dbInfo.get("Database");
+      DatabaseData dbData = (DatabaseData) dbInfo.get("DatabaseData");
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(excludeFilter);
@@ -85,17 +87,16 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
         getLog().info("Original model loaded from file.");
       }
 
-      final DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-          basedir, datafilter, input);
+      DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, originaldb, db, basedir,
+          datafilter, input);
 
       getLog().info("Comparing databases to find differences");
 
-      OBDataset ad = new OBDataset(databaseOrgData, "AD");
+      OBDataset ad = new OBDataset(dbData, "AD");
 
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
+      dataComparator.compareToUpdate(db, platform, dbData, ad, null);
 
       getLog().info("Data changes we will perform: ");
       for (final Change change : dataComparator.getChanges())
