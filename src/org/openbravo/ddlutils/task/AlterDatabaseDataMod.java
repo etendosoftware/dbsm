@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -100,8 +100,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      dbXML = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir, true,
-          false, true, false);
+      dbXML = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true, false);
     } else {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -122,8 +121,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      dbXML = DatabaseUtils.readDatabaseWithConfigScripts(model, platform, basedir, true, false,
-          true, false);
+      dbXML = DatabaseUtils.readDatabase(model, platform, basedir, true, false, true, false);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);

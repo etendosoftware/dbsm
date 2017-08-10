@@ -61,15 +61,13 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       ds.setTestOnBorrow(true);
 
       final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-      // platform.setDelimitedIdentifierModeOn(true);
 
       Writer w = new FileWriter(output);
       platform.getSqlBuilder().setScript(true);
 
-      // TODO: readDatabaseModel + Test
       Database db = null;
-      // DatabaseData dbData = new DatabaseData(db);
-      // db = readDatabaseModel(platform,dbData, db, "", "", output,true,true);
+      DatabaseData dbData = new DatabaseData(db);
+      db = readDatabaseModel(platform, dbData, db, basedir, datafilter, output, true, false);
 
       Database originaldb;
       if (getOriginalmodel() == null) {
@@ -82,8 +80,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir,
-            true, false, true, false);
+        originaldb = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true,
+            false);
         getLog().info("Original model loaded from file.");
       }
 
@@ -150,7 +148,6 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       w.close();
 
     } catch (final Exception e) {
-      // log(e.getLocalizedMessage());
       e.printStackTrace();
       throw new BuildException(e);
     }

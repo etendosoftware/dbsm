@@ -55,9 +55,8 @@ public class DatabaseUtils {
    * @param loadModelFromXML
    *          true if database is not mounted and information should be obtained from XML files.
    */
-  public static Database readDatabaseWithConfigScripts(File file, Platform platform,
-      String basedir, boolean strict, boolean applyConfigScriptData, boolean applyConfigScript,
-      boolean loadModelFromXML) {
+  public static Database readDatabase(File file, Platform platform, String basedir, boolean strict,
+      boolean applyConfigScriptData, boolean applyConfigScript, boolean loadModelFromXML) {
 
     Database d = readDatabase_noChecks(file);
     try {
@@ -83,6 +82,12 @@ public class DatabaseUtils {
       readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
+      if (basedir.endsWith("modules")) {
+        basedir.concat("/../");
+        log.info("*** Concat /../ : " + basedir);
+      } else {
+        log.info("*** NO Concat /../ : " + basedir);
+      }
       ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
       util.getModules(platform, excludeFilter);
       util.generateIndustryTemplateTree();
@@ -125,18 +130,6 @@ public class DatabaseUtils {
     DBSMOBUtil.getInstance().readDataIntoDatabaseData(platform, d, dbdata, dirs);
   }
 
-  // TODO: Pending to remove. Reviewed.
-  public static Database readDatabase(File f) {
-
-    Database d = readDatabase_noChecks(f);
-    try {
-      d.initialize();
-    } catch (Exception e) {
-      System.out.println("Warning: " + e.getMessage());
-    }
-    return d;
-  }
-
   public static Database readDatabaseNoInit(File f) {
 
     Database d = readDatabase_noChecks(f);
@@ -162,9 +155,8 @@ public class DatabaseUtils {
    * @param loadModelFromXML
    *          true if database is not mounted and information should be obtained from XML files.
    */
-  public static Database readDatabaseWithConfigScripts(File[] f, Platform platform, String basedir,
-      boolean strict, boolean applyConfigScriptData, boolean applyConfigScript,
-      boolean loadModelFromXML) {
+  public static Database readDatabase(File[] f, Platform platform, String basedir, boolean strict,
+      boolean applyConfigScriptData, boolean applyConfigScript, boolean loadModelFromXML) {
 
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
@@ -175,17 +167,6 @@ public class DatabaseUtils {
       return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d,
           loadModelFromXML);
     }
-    return d;
-  }
-
-  // TODO: Pending to remove. Reviewed.
-  public static Database readDatabase(File[] f) {
-
-    Database d = readDatabase_noChecks(f[0]);
-    for (int i = 1; i < f.length; i++) {
-      d.mergeWith(readDatabase_noChecks(f[i]));
-    }
-    d.initialize();
     return d;
   }
 
@@ -383,8 +364,7 @@ public class DatabaseUtils {
 
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
-      return DatabaseUtils.readDatabaseWithConfigScripts(model, platform, basedir, true, true,
-          false, false);
+      return DatabaseUtils.readDatabase(model, platform, basedir, true, true, false, false);
     }
 
     // We read model files using the filter, obtaining a file array. The models will be merged to
@@ -405,7 +385,6 @@ public class DatabaseUtils {
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
     }
-    return DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, true, true,
-        false, false);
+    return DatabaseUtils.readDatabase(fileArray, platform, basedir, true, true, false, false);
   }
 }

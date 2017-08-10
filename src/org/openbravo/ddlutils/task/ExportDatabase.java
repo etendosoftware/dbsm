@@ -86,8 +86,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
 
-    // platform.setDelimitedIdentifierModeOn(true);
-    // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
         .getAbsolutePath())) {
       if (force) {
@@ -160,8 +158,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
         if (testAPI) {
           getLog().info("Reading XML model for API checking" + path);
-          Database dbXML = DatabaseUtils.readDatabaseWithConfigScripts(path, platform,
-              model.getAbsolutePath() + "/../../../", true, true, true, false);
+          Database dbXML = DatabaseUtils.readDatabase(path, platform, model.getAbsolutePath()
+              + "/../../../", true, true, true, false);
           validateAPIForModel(platform, dbI, dbXML, ad);
         }
 

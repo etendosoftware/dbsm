@@ -939,7 +939,6 @@ public class DBSMOBUtil {
       }
     }
     readDataIntoDatabaseData(platform, db, databaseOrgData, files);
-    // applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
   }
 
   public void readDataIntoDatabaseData(Platform platform, Database db,

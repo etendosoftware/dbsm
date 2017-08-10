@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2010 Openbravo SLU 
+ * All portions are Copyright (C) 2009-2017 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -76,13 +76,13 @@ public class CheckAPI extends BaseDatabaseTask {
     File testData = new File(testDBdir, "/sourcedata");
 
     getLog().info("Reading XML model for API checking " + stableModel.getAbsolutePath());
-    Database dbModelStable = DatabaseUtils.readDatabaseWithConfigScripts(stableModel, platform,
-        stableDBdir + "/../../", true, false, true, false);
+    Database dbModelStable = DatabaseUtils.readDatabase(stableModel, platform, stableDBdir
+        + "/../../", true, false, true, false);
     DatabaseData dbDataStable = readDatabaseData(dbModelStable, stableData);
 
     getLog().info("Reading XML model for API checking " + testModel.getAbsolutePath());
-    Database dbModelTest = DatabaseUtils.readDatabaseWithConfigScripts(testModel, platform,
-        testDBdir + "/../../", true, false, true, false);
+    Database dbModelTest = DatabaseUtils.readDatabase(testModel, platform, testDBdir + "/../../",
+        true, false, true, false);
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);
 
     getLog().info("Comparing data models");

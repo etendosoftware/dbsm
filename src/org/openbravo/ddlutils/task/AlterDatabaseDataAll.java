@@ -136,8 +136,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir,
-            true, false, true, false);
+        originaldb = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true,
+            false);
         getLog().info("Original model loaded from file.");
       }
       Database db = null;
@@ -333,7 +333,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
-  // TODO: check databaseOrgData because readDatabase3 create new one.
   protected Database readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, String basedir, String datafilter, File input, boolean strict,
       boolean applyConfigScriptData) {
@@ -341,12 +340,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      db = DatabaseUtils.readDatabaseWithConfigScripts(getModel(), platform, basedir, strict,
-          applyConfigScriptData, true, false);
+      db = DatabaseUtils.readDatabase(getModel(), platform, basedir, strict, applyConfigScriptData,
+          true, false);
     } else {
-      // We read model files using the filter, obtaining a file array.
-      // The models will be merged
-      // to create a final target model.
+      // We read model files using the filter, obtaining a file array.The models will be merged to
+      // create a final target model.
       final Vector<File> dirs = new Vector<File>();
       dirs.add(getModel());
       final DirectoryScanner dirScanner = new DirectoryScanner();
@@ -364,8 +362,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         fileArray[i] = dirs.get(i);
       }
       getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabaseWithConfigScripts(fileArray, platform, basedir, strict,
-          applyConfigScriptData, true, false);
+      db = DatabaseUtils.readDatabase(fileArray, platform, basedir, strict, applyConfigScriptData,
+          true, false);
     }
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db, basedir,
         datafilter, input, strict, false);
