@@ -95,13 +95,8 @@ public class DatabaseUtils {
       readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      if (basedir.endsWith("modules/")) {
-        basedir.concat("../");
-        log.info("*** Concat /../ : " + basedir);
-      } else {
-        log.info("*** NO Concat /../ : " + basedir);
-      }
-      ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
+      ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
+          new File(basedir, "/../"));
       util.getModules(platform, excludeFilter);
       util.generateIndustryTemplateTree();
     }
