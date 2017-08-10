@@ -1099,7 +1099,7 @@ public class DBSMOBUtil {
 
   public void removeSortedTemplates(Platform platform, Database database,
       DatabaseData databaseOrgData, String basedir) {
-    if (sortedTemplates.isEmpty()) {
+    if (sortedTemplates == null) {
       sortedTemplates = getSortedTemplates(databaseOrgData);
     }
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
