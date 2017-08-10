@@ -144,7 +144,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       final DatabaseData databaseOrgData = new DatabaseData(db);
       databaseOrgData.setStrictMode(strict);
       db = readDatabaseModel(platform, databaseOrgData, originaldb, basedir, datafilter, input,
-          strict, false);
+          strict, true);
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
       OBDataset ad = new OBDataset(databaseOrgData, "AD");

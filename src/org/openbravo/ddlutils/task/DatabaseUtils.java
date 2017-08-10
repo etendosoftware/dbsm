@@ -24,10 +24,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
+import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DatabaseFilter;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.DynamicDatabaseFilter;
@@ -37,6 +40,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 
 public class DatabaseUtils {
@@ -44,6 +48,15 @@ public class DatabaseUtils {
 
   /** Creates a new instance of DatabaseUtils */
   private DatabaseUtils() {
+  }
+
+  /**
+   * Read the model from the XML.This method is required to maintain backwards compatibility and to
+   * ensures that the API is not broken.
+   */
+  public static Database readDatabase(File f) {
+    Platform platform = createPlatform();
+    return readDatabase(f, platform, System.getProperty("user.dir"), true, false, true, false);
   }
 
   /**
@@ -82,8 +95,8 @@ public class DatabaseUtils {
       readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      if (basedir.endsWith("modules")) {
-        basedir.concat("/../");
+      if (basedir.endsWith("modules/")) {
+        basedir.concat("../");
         log.info("*** Concat /../ : " + basedir);
       } else {
         log.info("*** NO Concat /../ : " + basedir);
@@ -144,6 +157,28 @@ public class DatabaseUtils {
     }
 
     return d;
+  }
+
+  /**
+   * Read the model from the XML.This method is required to maintain backwards compatibility and to
+   * ensures that the API is not broken.
+   */
+  public static Database readDatabase(File[] f) {
+    Platform platform = createPlatform();
+    return readDatabase(f, platform, System.getProperty("user.dir"), true, false, true, false);
+  }
+
+  private static Platform createPlatform() {
+    Properties obProp = OBPropertiesProvider.getInstance().getOpenbravoProperties();
+    String driver = obProp.getProperty("bbdd.driver");
+    String url = obProp.getProperty("bbdd.rdbms").equals("POSTGRE") ? obProp
+        .getProperty("bbdd.url") + "/" + obProp.getProperty("bbdd.sid") : obProp
+        .getProperty("bbdd.url");
+    String user = obProp.getProperty("bbdd.user");
+    String password = obProp.getProperty("bbdd.password");
+    BasicDataSource datasource = DBSMOBUtil.getDataSource(driver, url, user, password);
+    Platform platform = PlatformFactory.createNewPlatformInstance(datasource);
+    return platform;
   }
 
   /**

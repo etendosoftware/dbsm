@@ -910,7 +910,6 @@ public class DBSMOBUtil {
         strict, true);
   }
 
-  // TODO: Review where is used this method.
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String basedir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
@@ -1093,9 +1092,16 @@ public class DBSMOBUtil {
     }
   }
 
+  public void removeSortedTemplates(Platform platform, Database database, String basedir) {
+    DatabaseData dbData = new DatabaseData(database);
+    removeSortedTemplates(platform, database, dbData, basedir);
+  }
+
   public void removeSortedTemplates(Platform platform, Database database,
       DatabaseData databaseOrgData, String basedir) {
-    sortedTemplates = getSortedTemplates(databaseOrgData);
+    if (sortedTemplates.isEmpty()) {
+      sortedTemplates = getSortedTemplates(databaseOrgData);
+    }
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
       boolean isindevelopment = false;
       for (int j = 0; j < activeModules.size(); j++) {

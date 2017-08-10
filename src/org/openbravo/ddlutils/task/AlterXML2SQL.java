@@ -67,7 +67,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
 
       Database db = null;
       DatabaseData dbData = new DatabaseData(db);
-      db = readDatabaseModel(platform, dbData, db, basedir, datafilter, output, true, false);
+      db = readDatabaseModel(platform, dbData, db, basedir, datafilter, output, strict, true);
 
       Database originaldb;
       if (getOriginalmodel() == null) {
