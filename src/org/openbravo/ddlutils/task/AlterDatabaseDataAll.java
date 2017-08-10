@@ -141,15 +141,17 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         getLog().info("Original model loaded from file.");
       }
       Database db = null;
-      final DatabaseData databaseOrgData = new DatabaseData(db);
-      databaseOrgData.setStrictMode(strict);
-      db = readDatabaseModel(platform, databaseOrgData, originaldb, basedir, datafilter, input,
-          strict, true);
+      // final DatabaseData databaseOrgData = new DatabaseData(db);
+      // databaseOrgData.setStrictMode(strict);
+      db = readDatabaseModel(platform, null, originaldb, basedir, datafilter, input, strict, true);
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
-      final DatabaseData databaseOrgData2 = new DatabaseData(db);
-      databaseOrgData2.setStrictMode(strict);
-      OBDataset ad = new OBDataset(databaseOrgData2, "AD");
+
+      final DatabaseData databaseOrgData = new DatabaseData(db);
+      databaseOrgData.setStrictMode(strict);
+      getLog().info("*****AQUIIIIII." + db.toString());
+      getLog().info("*****AQUIIIIII." + databaseOrgData.toString());
+      OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
       if (hasBeenModified) {
         if (force)
@@ -195,7 +197,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
       Set<String> adTablesWithRemovedRecords = new HashSet<String>();
-      dataComparator.compareToUpdate(db, platform, databaseOrgData2, ad, null);
+      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
       for (Change dataChange : dataComparator.getChanges()) {
         if (dataChange instanceof RemoveRowChange) {
           Table table = ((RemoveRowChange) dataChange).getTable();
@@ -281,7 +283,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator2.compare(db, db, platform, databaseOrgData2, ad, null);
+      dataComparator2.compare(db, db, platform, databaseOrgData, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();
       dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
