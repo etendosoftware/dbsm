@@ -17,10 +17,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -118,7 +116,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     }
 
     platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
-    // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
         .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
 
@@ -142,15 +139,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
             false);
         getLog().info("Original model loaded from file.");
       }
-      Database db = null;
-      // final DatabaseData databaseOrgData = new DatabaseData(db);
-      // databaseOrgData.setStrictMode(strict);
-      Map<String, Object> dbInfo = readDatabaseModel(platform, null, originaldb, basedir,
+      DatabaseInfo databaseInfo = readDatabaseModel(platform, null, originaldb, basedir,
           datafilter, input, strict, true);
-      db = (Database) dbInfo.get("Database");
+      Database db = databaseInfo.getDatabase();
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
-      final DatabaseData databaseOrgData = (DatabaseData) dbInfo.get("DatabaseData");
+      final DatabaseData databaseOrgData = databaseInfo.getDatabaseData();
       databaseOrgData.setStrictMode(strict);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
@@ -190,9 +184,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       final Connection connection = platform.borrowConnection();
-      // Now we apply the configuration scripts
-      // DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-      // true);
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -338,10 +329,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
-  protected Map<String, Object> readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
+  protected DatabaseInfo readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, String basedir, String datafilter, File input, boolean strict,
       boolean applyConfigScriptData) {
-    Map<String, Object> resultDBInfo = new HashMap<String, Object>();
     Database db = null;
     if (basedir == null) {
       getLog()
@@ -374,9 +364,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     DatabaseData dbData = new DatabaseData(db);
     DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, originaldb, db, basedir,
         datafilter, input, strict, false);
-    resultDBInfo.put("Database", db);
-    resultDBInfo.put("DatabaseData", dbData);
-    return resultDBInfo;
+
+    return new DatabaseInfo(db, dbData);
   }
 
   public String getExcludeobjects() {
@@ -531,4 +520,36 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   public void setThreads(int threads) {
     this.threads = threads;
   }
+
+  /**
+   * Helper class that contains the database and the databaseData information.
+   */
+  protected static class DatabaseInfo {
+
+    private Database database;
+    private DatabaseData databaseData;
+
+    private DatabaseInfo(Database database, DatabaseData databaseData) {
+      this.database = database;
+      this.databaseData = databaseData;
+    }
+
+    protected Database getDatabase() {
+      return database;
+    }
+
+    protected void setDatabase(Database database) {
+      this.database = database;
+    }
+
+    protected DatabaseData getDatabaseData() {
+      return databaseData;
+    }
+
+    protected void setDatabaseData(DatabaseData databaseData) {
+      this.databaseData = databaseData;
+    }
+
+  }
+
 }

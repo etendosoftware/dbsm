@@ -17,7 +17,6 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.sql.Connection;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
@@ -67,10 +66,10 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.getSqlBuilder().setScript(true);
 
       Database db = null;
-      Map<String, Object> dbInfo = readDatabaseModel(platform, null, db, basedir, datafilter,
-          output, strict, true);
-      db = (Database) dbInfo.get("Database");
-      DatabaseData dbData = (DatabaseData) dbInfo.get("DatabaseData");
+      DatabaseInfo dbInfo = readDatabaseModel(platform, null, db, basedir, datafilter, input,
+          strict, true);
+      db = dbInfo.getDatabase();
+      DatabaseData dbData = dbInfo.getDatabaseData();
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(excludeFilter);
