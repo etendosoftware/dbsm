@@ -96,13 +96,24 @@ public class DatabaseUtils {
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-          new File(basedir, "/../"));
+          new File(getValidBasedir(basedir)));
       util.getModules(platform, excludeFilter);
       util.generateIndustryTemplateTree();
     }
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d, basedir,
-        strict, applyConfigScriptData);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d,
+        getValidBasedir(basedir), strict, applyConfigScriptData);
     return d;
+  }
+
+  /**
+   * This method ensures that path should be sources basedir instead of modules basedir.
+   */
+  private static String getValidBasedir(String path) {
+    if (path.endsWith("modules/")) {
+      log.info("Basedir " + path + "is updated properly to " + path.concat("../"));
+      return path.concat("../");
+    }
+    return path;
   }
 
   /**
