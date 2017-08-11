@@ -171,7 +171,9 @@ public class DatabaseUtils {
    */
   public static Database readDatabase(File[] f) {
     Platform platform = createPlatform();
-    return readDatabase(f, platform, System.getProperty("user.dir"), true, false, true, false);
+    String sourcePath = OBPropertiesProvider.getInstance().getOpenbravoProperties()
+        .getProperty("source.path");
+    return readDatabase(f, platform, sourcePath, true, false, true, false);
   }
 
   private static Platform createPlatform() {
