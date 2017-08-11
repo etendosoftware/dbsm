@@ -792,6 +792,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement();
   }
 
+  @Override
   public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
       throws IOException {
     Trigger trigger = database.findTrigger(change.getTriggerName());
@@ -800,14 +801,17 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement();
   }
 
+  @Override
   public void printRemoveIndexChange(Database database, RemoveIndexChange change) {
     _log.error("Remove Index change not supported.");
   }
 
+  @Override
   public void printColumnRequiredChange(Database database, ColumnRequiredChange change) {
     _log.error("Column Require change not supported.");
   }
 
+  @Override
   public void printRemoveCheckChange(Database database, RemoveCheckChange change)
       throws IOException {
     Table table = database.findTable(change.getTableName());

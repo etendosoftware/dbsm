@@ -549,6 +549,7 @@ public class Oracle8Builder extends SqlBuilder {
     printEndOfStatement();
   }
 
+  @Override
   public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
       throws IOException {
     Trigger trigger = database.findTrigger(change.getTriggerName());
@@ -556,14 +557,17 @@ public class Oracle8Builder extends SqlBuilder {
     writeDropTriggerFunction(trigger);
   }
 
+  @Override
   public void printRemoveIndexChange(Database database, RemoveIndexChange change) {
     _log.error("Remove Index change not supported.");
   }
 
+  @Override
   public void printColumnRequiredChange(Database database, ColumnRequiredChange change) {
     _log.error("Column Require change not supported.");
   }
 
+  @Override
   public void printRemoveCheckChange(Database database, RemoveCheckChange change) {
     _log.error("Remove Check change not supported.");
   }
