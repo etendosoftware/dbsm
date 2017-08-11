@@ -23,7 +23,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -44,7 +43,12 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 
 public class DatabaseUtils {
+
   private static final Logger log = Logger.getLogger(DatabaseUtils.class);
+
+  private static final String SOURCEDATA_PATH = "/src-db/database/sourcedata/";
+  private static final String AD_MODULE_NAME_FILE = "AD_MODULE.xml";
+  private static final String AD_MODULE_DEP_NAME_FILE = "AD_MODULE_DEPENDENCY.xml";
 
   /** Creates a new instance of DatabaseUtils */
   private DatabaseUtils() {
@@ -133,29 +137,38 @@ public class DatabaseUtils {
    */
   private static void readDataModuleInfo(Database d, DatabaseData dbdata, String path) {
     log.debug("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files");
-    List<String> nameFiles = new ArrayList<>(Arrays.asList("AD_MODULE.xml",
-        "AD_MODULE_DEPENDENCY.xml"));
-
     Vector<File> dirs = new Vector<File>();
-    for (int i = 0; i < nameFiles.size(); i++) {
-      final File coreDataFile = new File(path, "/src-db/database/sourcedata/" + nameFiles.get(i));
-      if (coreDataFile.exists()) {
-        dirs.add(coreDataFile);
-      }
-    }
+    addModuleFilesIfExists(dirs, path);
 
     File modules = new File(path, "/modules");
-    for (int j = 0; j < modules.listFiles().length; j++) {
-      for (int i = 0; i < nameFiles.size(); i++) {
-        final File moduleDataFile = new File(modules.listFiles()[j], "/src-db/database/sourcedata/"
-            + nameFiles.get(i));
-        if (moduleDataFile.exists()) {
-          dirs.add(moduleDataFile);
-        }
-      }
+    for (File moduleDir : modules.listFiles()) {
+      addModuleFilesIfExists(dirs, moduleDir.getAbsolutePath());
     }
 
     DBSMOBUtil.getInstance().readDataIntoDatabaseData(d, dbdata, dirs);
+  }
+
+  private static void addModuleFilesIfExists(Vector<File> dirs, String path) {
+    addFileIfExists(dirs, path, AD_MODULE_NAME_FILE);
+    addFileIfExists(dirs, path, AD_MODULE_DEP_NAME_FILE);
+  }
+
+  /**
+   * This method adds a valid file to the vector dirs. All the files added will be used to read data
+   * from the files.
+   * 
+   * @param dirs
+   *          is used to storage all valid files.
+   * @param path
+   *          in where file is located.
+   * @param nameFile
+   *          name of the target file.
+   */
+  private static void addFileIfExists(Vector<File> dirs, String path, String nameFile) {
+    final File file = new File(path, SOURCEDATA_PATH + nameFile);
+    if (file.exists()) {
+      dirs.add(file);
+    }
   }
 
   public static Database readDatabaseNoInit(File f) {
