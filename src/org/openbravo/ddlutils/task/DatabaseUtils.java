@@ -63,6 +63,16 @@ public class DatabaseUtils {
    * Read the model and apply the configScripts if proceed in order to have a model with the
    * supported modifications defined in any configScript.
    * 
+   * @param file
+   *          The file to be loaded as a database model.
+   * @param platform
+   *          it is used to performing queries and manipulations into the database-related.
+   * @param basedir
+   *          it is a complete path to the base directory.
+   * @param strict
+   *          if it is true and a DataChange is not applied properly, an exception is raised .
+   * @param applyConfigScriptData
+   *          true if data part (DataChange) of the configScripts should be applied.
    * @param applyConfigScript
    *          true if configScripts should be applied into the model.
    * @param loadModelFromXML
@@ -92,7 +102,7 @@ public class DatabaseUtils {
       boolean strict, boolean applyConfigScriptData, Database d, boolean readFromXML) {
     final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
     if (readFromXML) {
-      readDataModuleInfo(platform, d, databaseOrgDataPartialModel, basedir);
+      readDataModuleInfo(d, databaseOrgDataPartialModel, basedir);
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
@@ -121,8 +131,7 @@ public class DatabaseUtils {
    * configScripts defined in the template modules when it isn't exists a database yet: Install
    * source task,...
    */
-  private static void readDataModuleInfo(Platform platform, Database d, DatabaseData dbdata,
-      String path) {
+  private static void readDataModuleInfo(Database d, DatabaseData dbdata, String path) {
     log.debug("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files");
     List<String> nameFiles = new ArrayList<>(Arrays.asList("AD_MODULE.xml",
         "AD_MODULE_DEPENDENCY.xml"));
@@ -146,7 +155,7 @@ public class DatabaseUtils {
       }
     }
 
-    DBSMOBUtil.getInstance().readDataIntoDatabaseData(platform, d, dbdata, dirs);
+    DBSMOBUtil.getInstance().readDataIntoDatabaseData(d, dbdata, dirs);
   }
 
   public static Database readDatabaseNoInit(File f) {
@@ -193,6 +202,16 @@ public class DatabaseUtils {
    * Read the model and apply the configScripts if proceed in order to have a model with the
    * supported modifications defined in any configScript.
    * 
+   * @param file
+   *          The files to be loaded as a database model.
+   * @param platform
+   *          it is used to performing queries and manipulations into the database-related.
+   * @param basedir
+   *          it is a complete path to the base directory.
+   * @param strict
+   *          if it is true and a DataChange is not applied properly, an exception is raised .
+   * @param applyConfigScriptData
+   *          true if data part (DataChange) of the configScripts should be applied.
    * @param applyConfigScript
    *          true if configScripts should be applied into the model.
    * @param loadModelFromXML

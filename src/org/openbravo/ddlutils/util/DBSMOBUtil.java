@@ -937,11 +937,11 @@ public class DBSMOBUtil {
         }
       }
     }
-    readDataIntoDatabaseData(platform, db, databaseOrgData, files);
+    readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
-  public void readDataIntoDatabaseData(Platform platform, Database db,
-      DatabaseData databaseOrgData, List<File> files) {
+  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData,
+      List<File> files) {
 
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
