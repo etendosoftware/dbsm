@@ -57,8 +57,10 @@ public class DatabaseUtils {
    * ensures that the API is not broken.
    */
   public static Database readDatabase(File f) {
-    return readDatabase(f, SystemService.getInstance().getPlatform(),
-        System.getProperty("user.dir"), true, false, true, false);
+    String sourcePath = OBPropertiesProvider.getInstance().getOpenbravoProperties()
+        .getProperty("source.path");
+    return readDatabase(f, SystemService.getInstance().getPlatform(), sourcePath, true, false,
+        true, false);
   }
 
   /**
