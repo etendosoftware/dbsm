@@ -797,18 +797,34 @@ public class PostgreSqlBuilder extends SqlBuilder {
       throws IOException {
     Trigger trigger = database.findTrigger(change.getTriggerName());
     database.removeTrigger(trigger);
-    print("DROP FUNCTION " + trigger.getName() + "() CASCADE");
+    print("DROP TRIGGER " + trigger.getName() + " ON " + trigger.getTable());
     printEndOfStatement();
   }
 
   @Override
-  public void printRemoveIndexChange(Database database, RemoveIndexChange change) {
-    _log.error("Remove Index change not supported.");
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Index idx = table.findIndex(change.getIndexName());
+    table.removeIndex(idx);
+    print("DROP INDEX " + idx.getName());
+    printEndOfStatement();
   }
 
   @Override
-  public void printColumnRequiredChange(Database database, ColumnRequiredChange change) {
-    _log.error("Column Require change not supported.");
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Column column = table.findColumn(change.getColumnName());
+    column.setRequired(change.getRequired());
+    String sqlColumnRequired = "ALTER TABLE " + table.getName() + " ALTER COLUMN "
+        + column.getName();
+    if (change.getRequired()) {
+      print(sqlColumnRequired + " SET NOT NULL");
+    } else {
+      print(sqlColumnRequired + " DROP NOT NULL");
+    }
+    printEndOfStatement();
   }
 
   @Override

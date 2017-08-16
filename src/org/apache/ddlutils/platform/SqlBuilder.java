@@ -4704,11 +4704,13 @@ public abstract class SqlBuilder {
     _log.error("Remove Trigger change not supported.");
   }
 
-  public void printRemoveIndexChange(Database database, RemoveIndexChange change) {
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change)
+      throws IOException {
     _log.error("Remove Index change not supported.");
   }
 
-  public void printColumnRequiredChange(Database database, ColumnRequiredChange change) {
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
+      throws IOException {
     _log.error("Column Require change not supported.");
   }
 
