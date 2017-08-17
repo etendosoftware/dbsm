@@ -333,7 +333,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected Database readDatabaseModel() {
     DatabaseInfo dbInfo = readDatabaseModel(SystemService.getInstance().getPlatform(), null, null,
-        null, "", input, false, false);
+        null, datafilter, input, strict, false);
     return dbInfo.getDatabase();
   }
 
