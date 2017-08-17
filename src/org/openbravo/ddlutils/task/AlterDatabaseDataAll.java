@@ -43,6 +43,7 @@ import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.modulescript.ModuleScriptHandler;
+import org.openbravo.service.system.SystemService;
 import org.openbravo.utils.CheckSum;
 
 /**
@@ -331,7 +332,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   }
 
   protected Database readDatabaseModel() {
-    return new Database();
+    DatabaseInfo dbInfo = readDatabaseModel(SystemService.getInstance().getPlatform(), null, null,
+        null, "", input, false, false);
+    return dbInfo.getDatabase();
   }
 
   protected DatabaseInfo readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
