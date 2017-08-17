@@ -57,9 +57,7 @@ public class DatabaseUtils {
    * ensures that the API is not broken.
    */
   public static Database readDatabase(File f) {
-    String sourcePath = OBPropertiesProvider.getInstance().getOpenbravoProperties()
-        .getProperty("source.path");
-    return readDatabase(f, SystemService.getInstance().getPlatform(), sourcePath, true, false,
+    return readDatabase(f, SystemService.getInstance().getPlatform(), getSourcePath(), true, false,
         true, false);
   }
 
@@ -192,10 +190,15 @@ public class DatabaseUtils {
    * ensures that the API is not broken.
    */
   public static Database readDatabase(File[] f) {
-    String sourcePath = OBPropertiesProvider.getInstance().getOpenbravoProperties()
-        .getProperty("source.path");
-    return readDatabase(f, SystemService.getInstance().getPlatform(), sourcePath, true, false,
+    return readDatabase(f, SystemService.getInstance().getPlatform(), getSourcePath(), true, false,
         true, false);
+  }
+
+  /**
+   * Retrieves the source path from Openbravo properties file
+   */
+  private static String getSourcePath() {
+    return OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("source.path");
   }
 
   /**
