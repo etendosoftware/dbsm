@@ -3089,7 +3089,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     for (Change change : changes) {
       if (change instanceof ColumnDataChange) {
         columnDataChanges.add(change);
-      } else {
+      } else if (change instanceof ModelChange) {
         modelChanges.add(change);
       }
     }
