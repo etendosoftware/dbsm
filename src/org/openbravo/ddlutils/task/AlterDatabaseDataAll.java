@@ -330,6 +330,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
+  protected Database readDatabaseModel() {
+    return new Database();
+  }
+
   protected DatabaseInfo readDatabaseModel(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, String basedir, String datafilter, File input, boolean strict,
       boolean applyConfigScriptData) {
