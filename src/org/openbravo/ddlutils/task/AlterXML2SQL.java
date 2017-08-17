@@ -26,6 +26,7 @@ import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -81,8 +82,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true,
-            false);
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, false);
+        originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
 

@@ -32,6 +32,7 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.openbravo.base.exception.OBException;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.ValidateAPIData;
@@ -76,13 +77,15 @@ public class CheckAPI extends BaseDatabaseTask {
     File testData = new File(testDBdir, "/sourcedata");
 
     getLog().info("Reading XML model for API checking " + stableModel.getAbsolutePath());
-    Database dbModelStable = DatabaseUtils.readDatabase(stableModel, platform, stableDBdir
-        + "/../../", true, false, true, false);
+    ConfigScriptConfig configStable = new ConfigScriptConfig(platform, stableDBdir + "/../../",
+        true, false, false);
+    Database dbModelStable = DatabaseUtils.readDatabase(stableModel, configStable);
     DatabaseData dbDataStable = readDatabaseData(dbModelStable, stableData);
 
     getLog().info("Reading XML model for API checking " + testModel.getAbsolutePath());
-    Database dbModelTest = DatabaseUtils.readDatabase(testModel, platform, testDBdir + "/../../",
-        true, false, true, false);
+    ConfigScriptConfig configTest = new ConfigScriptConfig(platform, testDBdir + "/../../", true,
+        false, false);
+    Database dbModelTest = DatabaseUtils.readDatabase(testModel, configTest);
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);
 
     getLog().info("Comparing data models");

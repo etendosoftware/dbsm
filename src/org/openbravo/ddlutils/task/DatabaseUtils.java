@@ -57,41 +57,45 @@ public class DatabaseUtils {
    * ensures that the API is not broken.
    */
   public static Database readDatabase(File f) {
-    return readDatabase(f, SystemService.getInstance().getPlatform(), getSourcePath(), true, false,
-        true, false);
+    ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
+        getSourcePath(), true, false, false);
+    return readDatabase(f, config);
   }
 
   /**
-   * Read the model and apply the configScripts if proceed in order to have a model with the
-   * supported modifications defined in any configScript.
+   * Read the model and apply the configScripts in order to have the model with the supported
+   * modifications defined in any configScript.
    * 
    * @param file
    *          The file to be loaded as a database model.
-   * @param platform
-   *          it is used to performing queries and manipulations into the database-related.
-   * @param basedir
-   *          it is a complete path to the base directory.
-   * @param strict
-   *          if it is true and a DataChange is not applied properly, an exception is raised .
-   * @param applyConfigScriptData
-   *          true if data part (DataChange) of the configScripts should be applied.
-   * @param applyConfigScript
-   *          true if configScripts should be applied into the model.
-   * @param loadModelFromXML
-   *          true if database is not mounted and information should be obtained from XML files.
+   * @param config
+   *          it is used to store all needed configurations related with configScript.
    */
-  public static Database readDatabase(File file, Platform platform, String basedir, boolean strict,
-      boolean applyConfigScriptData, boolean applyConfigScript, boolean loadModelFromXML) {
-
+  public static Database readDatabase(File file, ConfigScriptConfig config) {
     Database d = readDatabase_noChecks(file);
     try {
       d.initialize();
     } catch (Exception e) {
       System.out.println("Warning: " + e.getMessage());
     }
-    if (applyConfigScript) {
-      return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d,
-          loadModelFromXML);
+    return applyConfigScriptsIntoModel(d, config);
+  }
+
+  /**
+   * Read the model without apply the configScripts in order to have a partial model. This partial
+   * model is used in ExportConfigScript task to export changes to a configScript file.
+   * 
+   * @param file
+   *          The file to be loaded as a database model.
+   * @param config
+   *          it is used to store all needed configurations related with configScript.
+   */
+  public static Database readDatabaseWithoutConfigScript(File file, ConfigScriptConfig conf) {
+    Database d = readDatabase_noChecks(file);
+    try {
+      d.initialize();
+    } catch (Exception e) {
+      System.out.println("Warning: " + e.getMessage());
     }
     return d;
   }
@@ -100,20 +104,20 @@ public class DatabaseUtils {
    * ConfigScripts are applied taking into account which templates are active. This information
    * could be obtain from database or XML.
    */
-  private static Database applyConfigScriptsIntoModel(Platform platform, String basedir,
-      boolean strict, boolean applyConfigScriptData, Database d, boolean readFromXML) {
+  private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
-    if (readFromXML) {
-      readDataModuleInfo(d, databaseOrgDataPartialModel, basedir);
+    if (config.isLoadModelFromXML()) {
+      readDataModuleInfo(d, databaseOrgDataPartialModel, config.getBasedir());
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-          new File(getValidBasedir(basedir)));
-      util.getModules(platform, excludeFilter);
+          new File(getValidBasedir(config.getBasedir())));
+      util.getModules(config.getPlatform(), excludeFilter);
       util.generateIndustryTemplateTree();
     }
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgDataPartialModel, d,
-        getValidBasedir(basedir), strict, applyConfigScriptData);
+    DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), databaseOrgDataPartialModel,
+        d, getValidBasedir(config.getBasedir()), config.isStrict(),
+        config.isApplyConfigScriptData());
     return d;
   }
 
@@ -190,8 +194,9 @@ public class DatabaseUtils {
    * ensures that the API is not broken.
    */
   public static Database readDatabase(File[] f) {
-    return readDatabase(f, SystemService.getInstance().getPlatform(), getSourcePath(), true, false,
-        true, false);
+    ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
+        getSourcePath(), true, false, false);
+    return readDatabase(f, config);
   }
 
   /**
@@ -202,36 +207,42 @@ public class DatabaseUtils {
   }
 
   /**
-   * Read the model and apply the configScripts if proceed in order to have a model with the
-   * supported modifications defined in any configScript.
+   * Read the model and apply the configScripts in order to have a model with the supported
+   * modifications defined in any configScript.
    * 
    * @param file
    *          The files to be loaded as a database model.
-   * @param platform
-   *          it is used to performing queries and manipulations into the database-related.
-   * @param basedir
-   *          it is a complete path to the base directory.
-   * @param strict
-   *          if it is true and a DataChange is not applied properly, an exception is raised .
-   * @param applyConfigScriptData
-   *          true if data part (DataChange) of the configScripts should be applied.
-   * @param applyConfigScript
-   *          true if configScripts should be applied into the model.
-   * @param loadModelFromXML
-   *          true if database is not mounted and information should be obtained from XML files.
+   * @param config
+   *          it is used to store all needed configurations related with configScript.
    */
-  public static Database readDatabase(File[] f, Platform platform, String basedir, boolean strict,
-      boolean applyConfigScriptData, boolean applyConfigScript, boolean loadModelFromXML) {
+  public static Database readDatabase(File[] f, ConfigScriptConfig config) {
 
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
       d.mergeWith(readDatabase_noChecks(f[i]));
     }
     d.initialize();
-    if (applyConfigScript) {
-      return applyConfigScriptsIntoModel(platform, basedir, strict, applyConfigScriptData, d,
-          loadModelFromXML);
+
+    return applyConfigScriptsIntoModel(d, config);
+  }
+
+  /**
+   * Read the model without apply the configScripts in order to have a partial model. This partial
+   * model is used in ExportConfigScript task to export changes to a configScript file.
+   * 
+   * @param file
+   *          The file to be loaded as a database model.
+   * @param config
+   *          it is used to store all needed configurations related with configScript.
+   */
+  public static Database readDatabaseWithoutConfigScript(File[] f, ConfigScriptConfig config) {
+
+    Database d = readDatabase_noChecks(f[0]);
+    for (int i = 1; i < f.length; i++) {
+      d.mergeWith(readDatabase_noChecks(f[i]));
     }
+    d.initialize();
+
     return d;
   }
 
@@ -429,7 +440,8 @@ public class DatabaseUtils {
 
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
-      return DatabaseUtils.readDatabase(model, platform, basedir, true, true, false, false);
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, true, false);
+      return DatabaseUtils.readDatabaseWithoutConfigScript(model, config);
     }
 
     // We read model files using the filter, obtaining a file array. The models will be merged to
@@ -450,6 +462,78 @@ public class DatabaseUtils {
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
     }
-    return DatabaseUtils.readDatabase(fileArray, platform, basedir, true, true, false, false);
+    ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, true, false);
+    return DatabaseUtils.readDatabaseWithoutConfigScript(fileArray, config);
+  }
+
+  /**
+   * Helper class that contains the configScript configuration.
+   */
+  protected static class ConfigScriptConfig {
+
+    private Platform platform;
+    private String basedir;
+
+    private boolean strict;
+    private boolean applyConfigScriptData;
+    private boolean loadModelFromXML;
+
+    ConfigScriptConfig(Platform platform, String basedir, boolean strict,
+        boolean applyConfigScriptData, boolean loadModelFromXML) {
+      this.setPlatform(platform);
+      this.setBasedir(basedir);
+      this.setStrict(strict);
+      this.setApplyConfigScriptData(applyConfigScriptData);
+      this.setLoadModelFromXML(loadModelFromXML);
+    }
+
+    public Platform getPlatform() {
+      return platform;
+    }
+
+    public void setPlatform(Platform platform) {
+      this.platform = platform;
+    }
+
+    public String getBasedir() {
+      return basedir;
+    }
+
+    public void setBasedir(String basedir) {
+      this.basedir = basedir;
+    }
+
+    /**
+     * If it is true and a DataChange is not applied properly, an exception is raised.
+     */
+    public boolean isStrict() {
+      return strict;
+    }
+
+    public void setStrict(boolean strict) {
+      this.strict = strict;
+    }
+
+    /**
+     * If it is true the data part (DataChange) of the configScripts should be applied.
+     */
+    public boolean isApplyConfigScriptData() {
+      return applyConfigScriptData;
+    }
+
+    public void setApplyConfigScriptData(boolean applyConfigScriptData) {
+      this.applyConfigScriptData = applyConfigScriptData;
+    }
+
+    /**
+     * If it is true the database is not mounted and information should be obtained from XML files.
+     */
+    public boolean isLoadModelFromXML() {
+      return loadModelFromXML;
+    }
+
+    public void setLoadModelFromXML(boolean loadModelFromXML) {
+      this.loadModelFromXML = loadModelFromXML;
+    }
   }
 }

@@ -35,6 +35,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -99,10 +100,9 @@ public class ExportConfigScript extends BaseDatabaseTask {
         getLog().debug("Loading model for module. Path: " + dirs.get(i).getAbsolutePath());
         fileArray[i] = dirs.get(i);
       }
-      String basedir = System.getProperty("user.dir");
       // ConfigScripts should not be applied in order to export changes into a configScript
-      final Database xmlModel = DatabaseUtils.readDatabase(fileArray, platform, basedir, true,
-          true, false, false);
+      ConfigScriptConfig config = null;
+      final Database xmlModel = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray, config);
 
       getLog().info("Loading original data from XML files");
       final DatabaseDataIO dbdio = new DatabaseDataIO();

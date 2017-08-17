@@ -39,6 +39,7 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 import org.openbravo.ddlutils.util.OBDataset;
@@ -100,7 +101,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      dbXML = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true, false);
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, false);
+      dbXML = DatabaseUtils.readDatabase(getModel(), config);
     } else {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -121,7 +123,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      dbXML = DatabaseUtils.readDatabase(model, platform, basedir, true, false, true, false);
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, false);
+      dbXML = DatabaseUtils.readDatabase(model, config);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);

@@ -39,6 +39,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.modulescript.ModuleScriptHandler;
@@ -135,8 +136,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true,
-            false);
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, false);
+        originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
       DatabaseInfo databaseInfo = readDatabaseModel(platform, null, originaldb, basedir,
@@ -336,8 +337,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      db = DatabaseUtils.readDatabase(getModel(), platform, basedir, strict, applyConfigScriptData,
-          true, false);
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strict,
+          applyConfigScriptData, false);
+      db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
       // We read model files using the filter, obtaining a file array.The models will be merged to
       // create a final target model.
@@ -358,8 +360,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         fileArray[i] = dirs.get(i);
       }
       getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabase(fileArray, platform, basedir, strict, applyConfigScriptData,
-          true, false);
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strict,
+          applyConfigScriptData, false);
+      db = DatabaseUtils.readDatabase(fileArray, config);
     }
     DatabaseData dbData = new DatabaseData(db);
     DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, originaldb, db, basedir,

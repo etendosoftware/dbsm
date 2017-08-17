@@ -21,6 +21,8 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 
 /**
  * 
@@ -63,8 +65,10 @@ public class CreateXML2SQL extends BaseDatabaseTask {
     }
 
     try {
-      String basedir = System.getProperty("user.dir");
-      Database db = DatabaseUtils.readDatabase(model, pl, basedir, true, false, true, true);
+      String basedir = OBPropertiesProvider.getInstance().getOpenbravoProperties()
+          .getProperty("source.path");
+      ConfigScriptConfig config = new ConfigScriptConfig(pl, basedir, true, false, true);
+      Database db = DatabaseUtils.readDatabase(model, config);
 
       // Write creation script
       getLog().info("Writing creation script");

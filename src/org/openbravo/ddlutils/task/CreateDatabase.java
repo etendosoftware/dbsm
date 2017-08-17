@@ -26,6 +26,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 
 /**
@@ -82,7 +83,8 @@ public class CreateDatabase extends BaseDatabaseTask {
       if (modulesDir == null) {
         getLog().info(
             "modulesDir for additional files not specified. Creating database with just Core.");
-        db = DatabaseUtils.readDatabase(getModel(), platform, basedir, true, false, true, true);
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, true);
+        db = DatabaseUtils.readDatabase(getModel(), config);
       } else {
         // We read model files using the filter, obtaining a file array. The models will be merged
         // to create a final target model.
@@ -102,7 +104,8 @@ public class CreateDatabase extends BaseDatabaseTask {
         for (int i = 0; i < dirs.size(); i++) {
           fileArray[i] = dirs.get(i);
         }
-        db = DatabaseUtils.readDatabase(fileArray, platform, basedir, true, false, true, true);
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, true);
+        db = DatabaseUtils.readDatabase(fileArray, config);
       }
 
       // Create database

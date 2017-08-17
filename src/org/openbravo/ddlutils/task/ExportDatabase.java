@@ -35,6 +35,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
@@ -158,8 +159,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
         if (testAPI) {
           getLog().info("Reading XML model for API checking" + path);
-          Database dbXML = DatabaseUtils.readDatabase(path, platform, model.getAbsolutePath()
-              + "/../../../", true, true, true, false);
+          ConfigScriptConfig config = new ConfigScriptConfig(platform, model.getAbsolutePath()
+              + "/../../../", true, true, false);
+          Database dbXML = DatabaseUtils.readDatabase(path, config);
           validateAPIForModel(platform, dbI, dbXML, ad);
         }
 
