@@ -353,8 +353,8 @@ public class DbsmTest {
       }
 
       Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
-      Database newDB = DatabaseUtils.readDatabase(dbModel, platform, dbModelPath, true, false,
-          false, true);
+
+      Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
 
@@ -466,7 +466,7 @@ public class DbsmTest {
             platform.isDelimitedIdentifierModeOn());
         @SuppressWarnings("unchecked")
         List<ModelChange> newChanges = comparator.compare(
-            DatabaseUtils.readDatabase(dbModel, platform, dbModelPath, true, false, false, true),
+            DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null),
             platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
@@ -523,17 +523,16 @@ public class DbsmTest {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
 
-    Database newDB = DatabaseUtils.readDatabase(dbModel, platform, dbModelPath, true, true,
-        applyConfigScripts, true);
+    Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null);
     platform.createTables(newDB, false, true);
 
     platform.enableNOTNULLColumns(newDB);
 
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
-    List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel, platform,
-        dbModelPath, true, true, applyConfigScripts, true), platform
-        .loadModelFromDatabase(getExcludeFilter()));
+    List<ModelChange> newChanges = comparator.compare(
+        DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null),
+        platform.loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;
   }
