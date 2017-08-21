@@ -82,7 +82,11 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
         }
       } else {
         // Load the model from the file
-        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, false);
+        boolean strictMode = true;
+        boolean applyOnlyModelChanges = false;
+        boolean loadModelFromDB = false;
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+            applyOnlyModelChanges, loadModelFromDB);
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }

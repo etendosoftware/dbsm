@@ -137,7 +137,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       } else {
         // Load the model from the file
-        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, true, false, false);
+        boolean strictMode = true;
+        boolean applyOnlyModelChanges = false;
+        boolean loadModelFromDB = false;
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+            applyOnlyModelChanges, loadModelFromDB);
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
@@ -341,11 +345,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       Database originaldb, String basedir, String datafilter, File input, boolean strict,
       boolean applyConfigScriptData) {
     Database db = null;
+    boolean loadModelFromDB = false;
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
       ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strict,
-          applyConfigScriptData, false);
+          applyConfigScriptData, loadModelFromDB);
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
       // We read model files using the filter, obtaining a file array.The models will be merged to
@@ -368,7 +373,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       }
       getLog().info("Reading model files...");
       ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strict,
-          applyConfigScriptData, false);
+          applyConfigScriptData, loadModelFromDB);
       db = DatabaseUtils.readDatabase(fileArray, config);
     }
     DatabaseData dbData = new DatabaseData(db);
