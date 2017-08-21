@@ -112,7 +112,7 @@ public class DatabaseUtils {
    */
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData dbDataPartialModel = new DatabaseData(d);
-    if (config.isLoadModelFromXML()) {
+    if (config.isLoadModuleInfoFromXML()) {
       readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
@@ -517,7 +517,7 @@ public class DatabaseUtils {
     /**
      * If it is true the database is not mounted and information should be obtained from XML files.
      */
-    public boolean isLoadModelFromXML() {
+    public boolean isLoadModuleInfoFromXML() {
       return loadModuleInfoFromXML;
     }
 
