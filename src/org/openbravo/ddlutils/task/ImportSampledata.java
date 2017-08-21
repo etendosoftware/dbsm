@@ -92,11 +92,11 @@ public class ImportSampledata extends BaseDatabaseTask {
         fileArray2[i] = dirs.get(i);
       }
 
-      boolean notStrictMode = false;
-      boolean applyModelAndDataChanges = true;
-      boolean loadModelFromXML = true;
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, notStrictMode,
-          applyModelAndDataChanges, loadModelFromXML);
+      boolean strictMode = false;
+      boolean applyConfigScriptData = true;
+      boolean loadModuleInfoFromXML = true;
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+          applyConfigScriptData, loadModuleInfoFromXML);
       Database db = DatabaseUtils.readDatabase(fileArray2, config);
 
       log.info("Disabling constraints...");

@@ -79,18 +79,18 @@ public class CheckAPI extends BaseDatabaseTask {
     File testData = new File(testDBdir, "/sourcedata");
 
     boolean strictMode = true;
-    boolean applyOnlyModelChanges = false;
-    boolean loadModelFromDB = false;
+    boolean applyConfigScriptData = false;
+    boolean loadModuleInfoFromXML = false;
 
     getLog().info("Reading XML model for API checking " + stableModel.getAbsolutePath());
     ConfigScriptConfig configStable = new ConfigScriptConfig(platform, stableDBdir + PATH_TO_ROOT,
-        strictMode, applyOnlyModelChanges, loadModelFromDB);
+        strictMode, applyConfigScriptData, loadModuleInfoFromXML);
     Database dbModelStable = DatabaseUtils.readDatabase(stableModel, configStable);
     DatabaseData dbDataStable = readDatabaseData(dbModelStable, stableData);
 
     getLog().info("Reading XML model for API checking " + testModel.getAbsolutePath());
     ConfigScriptConfig configTest = new ConfigScriptConfig(platform, testDBdir + PATH_TO_ROOT,
-        strictMode, applyOnlyModelChanges, loadModelFromDB);
+        strictMode, applyConfigScriptData, loadModuleInfoFromXML);
     Database dbModelTest = DatabaseUtils.readDatabase(testModel, configTest);
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);
 

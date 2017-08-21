@@ -68,9 +68,10 @@ public class CreateXML2SQL extends BaseDatabaseTask {
       String basedir = OBPropertiesProvider.getInstance().getOpenbravoProperties()
           .getProperty("source.path");
       boolean strictMode = true;
-      boolean applyOnlyModelChanges = false;
-      boolean loadModelFromXML = true;
-      ConfigScriptConfig config = new ConfigScriptConfig(pl, basedir, strictMode, applyOnlyModelChanges, loadModelFromXML);
+      boolean applyConfigScriptData = false;
+      boolean loadModuleInfoFromXML = true;
+      ConfigScriptConfig config = new ConfigScriptConfig(pl, basedir, strictMode,
+          applyConfigScriptData, loadModuleInfoFromXML);
       Database db = DatabaseUtils.readDatabase(model, config);
 
       // Write creation script

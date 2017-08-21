@@ -138,10 +138,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       } else {
         // Load the model from the file
         boolean strictMode = true;
-        boolean applyOnlyModelChanges = false;
-        boolean loadModelFromDB = false;
+        boolean applyConfigScriptData = false;
+        boolean loadModuleInfoFromXML = false;
         ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-            applyOnlyModelChanges, loadModelFromDB);
+            applyConfigScriptData, loadModuleInfoFromXML);
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
@@ -343,10 +343,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected DatabaseInfo readDatabaseModel(DatabaseModelConfig databaseConfig) {
     Database db = null;
-    boolean loadModelFromDB = false;
+    boolean loadModuleInfoFromXML = false;
     ConfigScriptConfig config = new ConfigScriptConfig(databaseConfig.getPlatform(),
         databaseConfig.getBaseDir(), databaseConfig.isStrictMode(),
-        databaseConfig.isApplyConfigScriptData(), loadModelFromDB);
+        databaseConfig.isApplyConfigScriptData(), loadModuleInfoFromXML);
     if (databaseConfig.getBaseDir() == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");

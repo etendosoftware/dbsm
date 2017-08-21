@@ -59,10 +59,10 @@ public class DatabaseUtils {
    */
   public static Database readDatabase(File f) {
     boolean strictMode = true;
-    boolean applyOnlyModelChanges = false;
-    boolean loadModelFromDB = false;
+    boolean applyConfigScriptData = false;
+    boolean loadModuleInfoFromXML = false;
     ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
-        getSourcePath(), strictMode, applyOnlyModelChanges, loadModelFromDB);
+        getSourcePath(), strictMode, applyConfigScriptData, loadModuleInfoFromXML);
     return readDatabase(f, config);
   }
 
@@ -200,10 +200,10 @@ public class DatabaseUtils {
    */
   public static Database readDatabase(File[] f) {
     boolean strictMode = true;
-    boolean applyOnlyModelChanges = false;
-    boolean loadModelFromDB = false;
+    boolean applyConfigScriptData = false;
+    boolean loadModuleInfoFromXML = false;
     ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
-        getSourcePath(), strictMode, applyOnlyModelChanges, loadModelFromDB);
+        getSourcePath(), strictMode, applyConfigScriptData, loadModuleInfoFromXML);
     return readDatabase(f, config);
   }
 
@@ -481,31 +481,23 @@ public class DatabaseUtils {
 
     private boolean strict;
     private boolean applyConfigScriptData;
-    private boolean loadModelFromXML;
+    private boolean loadModuleInfoFromXML;
 
     ConfigScriptConfig(Platform platform, String basedir, boolean strict,
-        boolean applyConfigScriptData, boolean loadModelFromXML) {
-      this.setPlatform(platform);
-      this.setBasedir(basedir);
-      this.setStrict(strict);
-      this.setApplyConfigScriptData(applyConfigScriptData);
-      this.setLoadModelFromXML(loadModelFromXML);
+        boolean applyConfigScriptData, boolean loadModuleInfoFromXML) {
+      this.platform = platform;
+      this.basedir = basedir;
+      this.strict = strict;
+      this.applyConfigScriptData = applyConfigScriptData;
+      this.loadModuleInfoFromXML = loadModuleInfoFromXML;
     }
 
     public Platform getPlatform() {
       return platform;
     }
 
-    public void setPlatform(Platform platform) {
-      this.platform = platform;
-    }
-
     public String getBasedir() {
       return basedir;
-    }
-
-    public void setBasedir(String basedir) {
-      this.basedir = basedir;
     }
 
     /**
@@ -515,10 +507,6 @@ public class DatabaseUtils {
       return strict;
     }
 
-    public void setStrict(boolean strict) {
-      this.strict = strict;
-    }
-
     /**
      * If it is true the data part (DataChange) of the configScripts should be applied.
      */
@@ -526,19 +514,12 @@ public class DatabaseUtils {
       return applyConfigScriptData;
     }
 
-    public void setApplyConfigScriptData(boolean applyConfigScriptData) {
-      this.applyConfigScriptData = applyConfigScriptData;
-    }
-
     /**
      * If it is true the database is not mounted and information should be obtained from XML files.
      */
     public boolean isLoadModelFromXML() {
-      return loadModelFromXML;
+      return loadModuleInfoFromXML;
     }
 
-    public void setLoadModelFromXML(boolean loadModelFromXML) {
-      this.loadModelFromXML = loadModelFromXML;
-    }
   }
 }
