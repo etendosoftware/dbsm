@@ -354,7 +354,7 @@ public class DbsmTest {
 
       Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
 
-      Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null);
+      Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
 
@@ -466,7 +466,7 @@ public class DbsmTest {
             platform.isDelimitedIdentifierModeOn());
         @SuppressWarnings("unchecked")
         List<ModelChange> newChanges = comparator.compare(
-            DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null),
+            DatabaseUtils.readDatabaseWithoutConfigScript(dbModel),
             platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
@@ -523,7 +523,7 @@ public class DbsmTest {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
 
-    Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null);
+    Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
     platform.createTables(newDB, false, true);
 
     platform.enableNOTNULLColumns(newDB);
@@ -531,7 +531,7 @@ public class DbsmTest {
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
     List<ModelChange> newChanges = comparator.compare(
-        DatabaseUtils.readDatabaseWithoutConfigScript(dbModel, null),
+        DatabaseUtils.readDatabaseWithoutConfigScript(dbModel),
         platform.loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;

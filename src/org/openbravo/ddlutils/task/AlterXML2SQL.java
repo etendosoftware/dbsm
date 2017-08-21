@@ -67,8 +67,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.getSqlBuilder().setScript(true);
 
       Database db = null;
-      DatabaseInfo dbInfo = readDatabaseModel(platform, null, db, basedir, datafilter, input,
-          strict, true);
+      DatabaseInfo dbInfo = readDatabaseModel(new DatabaseModelConfig(platform, null, db, basedir,
+          datafilter, input, strict, true));
       db = dbInfo.getDatabase();
       DatabaseData dbData = dbInfo.getDatabaseData();
       Database originaldb;
