@@ -47,6 +47,8 @@ public class CheckAPI extends BaseDatabaseTask {
   File stableDBdir;
   File testDBdir;
 
+  private static final String PATH_TO_ROOT = "/../../";
+
   public File getStableDBdir() {
     return stableDBdir;
   }
@@ -81,13 +83,13 @@ public class CheckAPI extends BaseDatabaseTask {
     boolean loadModelFromDB = false;
 
     getLog().info("Reading XML model for API checking " + stableModel.getAbsolutePath());
-    ConfigScriptConfig configStable = new ConfigScriptConfig(platform, stableDBdir + "/../../",
+    ConfigScriptConfig configStable = new ConfigScriptConfig(platform, stableDBdir + PATH_TO_ROOT,
         strictMode, applyOnlyModelChanges, loadModelFromDB);
     Database dbModelStable = DatabaseUtils.readDatabase(stableModel, configStable);
     DatabaseData dbDataStable = readDatabaseData(dbModelStable, stableData);
 
     getLog().info("Reading XML model for API checking " + testModel.getAbsolutePath());
-    ConfigScriptConfig configTest = new ConfigScriptConfig(platform, testDBdir + "/../../",
+    ConfigScriptConfig configTest = new ConfigScriptConfig(platform, testDBdir + PATH_TO_ROOT,
         strictMode, applyOnlyModelChanges, loadModelFromDB);
     Database dbModelTest = DatabaseUtils.readDatabase(testModel, configTest);
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);

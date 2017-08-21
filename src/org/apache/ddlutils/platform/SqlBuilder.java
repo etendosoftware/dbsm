@@ -4711,7 +4711,7 @@ public abstract class SqlBuilder {
 
   public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
       throws IOException {
-    _log.error("Column Require change not supported.");
+    _log.error("Column Required change not supported.");
   }
 
   public void printRemoveCheckChange(Database database, RemoveCheckChange change)

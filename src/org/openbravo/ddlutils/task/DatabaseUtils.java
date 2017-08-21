@@ -93,7 +93,7 @@ public class DatabaseUtils {
    * @param config
    *          it is used to store all needed configurations related with configScript.
    */
-  public static Database readDatabaseWithoutConfigScript(File file, ConfigScriptConfig conf) {
+  public static Database readDatabaseWithoutConfigScript(File file) {
     Database d = readDatabase_noChecks(file);
     try {
       d.initialize();
@@ -240,7 +240,7 @@ public class DatabaseUtils {
    * @param config
    *          it is used to store all needed configurations related with configScript.
    */
-  public static Database readDatabaseWithoutConfigScript(File[] f, ConfigScriptConfig config) {
+  public static Database readDatabaseWithoutConfigScript(File[] f) {
 
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
@@ -442,15 +442,10 @@ public class DatabaseUtils {
    */
   // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
   static Database readDatabaseModel(Platform platform, File model, String basedir, String dirFilter) {
-    boolean strictMode = true;
-    boolean applyModelAndDataChanges = true;
-    boolean loadModelFromDB = false;
 
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-          applyModelAndDataChanges, loadModelFromDB);
-      return DatabaseUtils.readDatabaseWithoutConfigScript(model, config);
+      return DatabaseUtils.readDatabaseWithoutConfigScript(model);
     }
 
     // We read model files using the filter, obtaining a file array. The models will be merged to
@@ -471,9 +466,7 @@ public class DatabaseUtils {
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
     }
-    ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-        applyModelAndDataChanges, loadModelFromDB);
-    return DatabaseUtils.readDatabaseWithoutConfigScript(fileArray, config);
+    return DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
   }
 
   /**

@@ -35,7 +35,6 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
-import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -101,8 +100,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
         fileArray[i] = dirs.get(i);
       }
       // ConfigScripts should not be applied in order to export changes into a configScript
-      ConfigScriptConfig config = null;
-      final Database xmlModel = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray, config);
+      final Database xmlModel = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
 
       getLog().info("Loading original data from XML files");
       final DatabaseDataIO dbdio = new DatabaseDataIO();
