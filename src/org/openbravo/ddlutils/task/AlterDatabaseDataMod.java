@@ -129,7 +129,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
       ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
           applyOnlyModelChanges, loadModelFromDB);
-      dbXML = DatabaseUtils.readDatabase(model, config);
+      dbXML = DatabaseUtils.readDatabase(fileArray, config);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);

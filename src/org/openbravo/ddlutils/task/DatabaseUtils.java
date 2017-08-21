@@ -32,6 +32,7 @@ import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.io.DynamicDatabaseFilter;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
@@ -75,13 +76,7 @@ public class DatabaseUtils {
    *          it is used to store all needed configurations related with configScript.
    */
   public static Database readDatabase(File file, ConfigScriptConfig config) {
-    Database d = readDatabase_noChecks(file);
-    try {
-      d.initialize();
-    } catch (Exception e) {
-      log.warn("Warning: " + e.getMessage());
-    }
-    return applyConfigScriptsIntoModel(d, config);
+    return applyConfigScriptsIntoModel(getDatabaseAndInitialize(file), config);
   }
 
   /**
@@ -90,10 +85,18 @@ public class DatabaseUtils {
    * 
    * @param file
    *          The file to be loaded as a database model.
-   * @param config
-   *          it is used to store all needed configurations related with configScript.
    */
   public static Database readDatabaseWithoutConfigScript(File file) {
+    return getDatabaseAndInitialize(file);
+  }
+
+  /**
+   * Read the database and initialize it.
+   *
+   * @param file
+   *          The file to be loaded as a database model.
+   */
+  private static Database getDatabaseAndInitialize(File file) {
     Database d = readDatabase_noChecks(file);
     try {
       d.initialize();
@@ -153,8 +156,8 @@ public class DatabaseUtils {
   }
 
   private static void addModuleFilesIfExist(Vector<File> dirs, String path) {
-    addFileIfExists(dirs, path, AD_MODULE_FILE_NAME);
-    addFileIfExists(dirs, path, AD_MODULE_DEP_FILE_NAME);
+    addFileIfExists(dirs, path, SOURCEDATA_PATH + AD_MODULE_FILE_NAME);
+    addFileIfExists(dirs, path, SOURCEDATA_PATH + AD_MODULE_DEP_FILE_NAME);
   }
 
   /**
@@ -169,7 +172,7 @@ public class DatabaseUtils {
    *          name of the target file.
    */
   private static void addFileIfExists(Vector<File> dirs, String path, String nameFile) {
-    final File file = new File(path, SOURCEDATA_PATH + nameFile);
+    final File file = new File(path, nameFile);
     if (file.exists()) {
       dirs.add(file);
     }
@@ -221,14 +224,7 @@ public class DatabaseUtils {
    *          it is used to store all needed configurations related with configScript.
    */
   public static Database readDatabase(File[] f, ConfigScriptConfig config) {
-
-    Database d = readDatabase_noChecks(f[0]);
-    for (int i = 1; i < f.length; i++) {
-      d.mergeWith(readDatabase_noChecks(f[i]));
-    }
-    d.initialize();
-
-    return applyConfigScriptsIntoModel(d, config);
+    return applyConfigScriptsIntoModel(getMergedDatabaseAndInitialize(f), config);
   }
 
   /**
@@ -237,17 +233,23 @@ public class DatabaseUtils {
    * 
    * @param file
    *          The file to be loaded as a database model.
-   * @param config
-   *          it is used to store all needed configurations related with configScript.
    */
   public static Database readDatabaseWithoutConfigScript(File[] f) {
+    return getMergedDatabaseAndInitialize(f);
+  }
 
+  /**
+   * Read the database and initialize it.
+   *
+   * @param f
+   *          The file to be loaded as a database model.
+   */
+  private static Database getMergedDatabaseAndInitialize(File[] f) throws ModelException {
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
       d.mergeWith(readDatabase_noChecks(f[i]));
     }
     d.initialize();
-
     return d;
   }
 
