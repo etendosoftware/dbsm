@@ -119,6 +119,7 @@ public class DataSetTableQueryGenerator {
    */
   public String generateQuery(List<OBDatasetTable> dataSetTables, List<String> columns,
       DataSetTableQueryGeneratorExtraProperties extraProperties) {
+    customizeExtraProperties(dataSetTables, extraProperties);
     String moduleId = extraProperties.getModuleId();
     List<WhereClauseSimpleExpression> additionalWhereClauses = extraProperties
         .getAdditionalWhereClauses();
@@ -135,6 +136,25 @@ public class DataSetTableQueryGenerator {
       }
     }
     return generateQuery(tableName, columns, whereClause, orderByClause);
+  }
+
+  /**
+   * Hook that allows the subclasses of DataSetTableQueryGenerator to add
+   * WhereClauseSimpleExpressions to DataSetTableQueryGeneratorExtraProperties, which will result in
+   * extra where clauses being added to the query.
+   * 
+   * For instance, this method is extended by the
+   * org.openbravo.retail.storeserver.synchronization.task.ExportStoreDataSetTableQueryGenerator to
+   * create a where clause that ensures that the records part of exported ADRD tables are not
+   * returned by the query
+   * 
+   * @param dataSetTables
+   *          the dataset tables being exported
+   * @param extraProperties
+   *          the original extraProperties passed to the DataSetTableQueryGenerator constructor
+   */
+  protected void customizeExtraProperties(List<OBDatasetTable> dataSetTables,
+      DataSetTableQueryGeneratorExtraProperties extraProperties) {
   }
 
   private String buildAdditionalWhereClause(List<WhereClauseSimpleExpression> additionalWhereClauses) {
