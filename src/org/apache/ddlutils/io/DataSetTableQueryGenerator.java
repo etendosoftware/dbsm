@@ -189,7 +189,7 @@ public class DataSetTableQueryGenerator {
       String orderByClause) {
     StringBuilder query = new StringBuilder();
     String columnNames = columns.isEmpty() ? "*" : stringifyColumnNames(columns);
-    String transformedWhereClause = transformWhereClause(whereClause);
+    String transformedWhereClause = transformWhereClause(tableName, whereClause);
     query.append("SELECT " + columnNames + " FROM " + tableName + " ");
     if (!StringUtils.isBlank(transformedWhereClause)) {
       query.append(" WHERE " + transformedWhereClause);
@@ -220,7 +220,7 @@ public class DataSetTableQueryGenerator {
    *          the original where clause
    * @return the where clause after applying the transformations
    */
-  protected String transformWhereClause(String whereClause) {
+  protected String transformWhereClause(String tableName, String whereClause) {
     return whereClause;
   }
 
