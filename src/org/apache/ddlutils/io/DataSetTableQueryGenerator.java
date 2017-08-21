@@ -144,6 +144,9 @@ public class DataSetTableQueryGenerator {
       WhereClauseSimpleExpression expression = iterator.next();
       additionalWhereClause.append(expression.getColumnName() + " " + expression.getOperator()
           + " " + expression.getValue());
+      if (iterator.hasNext()) {
+        additionalWhereClause.append(" AND ");
+      }
     }
     return additionalWhereClause.toString();
   }
