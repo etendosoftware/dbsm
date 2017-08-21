@@ -45,8 +45,8 @@ public class DatabaseUtils {
   private static final Logger log = Logger.getLogger(DatabaseUtils.class);
 
   private static final String SOURCEDATA_PATH = "/src-db/database/sourcedata/";
-  private static final String AD_MODULE_NAME_FILE = "AD_MODULE.xml";
-  private static final String AD_MODULE_DEP_NAME_FILE = "AD_MODULE_DEPENDENCY.xml";
+  private static final String AD_MODULE_FILE_NAME = "AD_MODULE.xml";
+  private static final String AD_MODULE_DEP_FILE_NAME = "AD_MODULE_DEPENDENCY.xml";
 
   /** Creates a new instance of DatabaseUtils */
   private DatabaseUtils() {
@@ -76,14 +76,14 @@ public class DatabaseUtils {
     try {
       d.initialize();
     } catch (Exception e) {
-      System.out.println("Warning: " + e.getMessage());
+      log.warn("Warning: " + e.getMessage());
     }
     return applyConfigScriptsIntoModel(d, config);
   }
 
   /**
-   * Read the model without apply the configScripts in order to have a partial model. This partial
-   * model is used in ExportConfigScript task to export changes to a configScript file.
+   * Read the model without applying the configScripts in order to have a partial model. This
+   * partial model is used in ExportConfigScript task to export changes to a configScript file.
    * 
    * @param file
    *          The file to be loaded as a database model.
@@ -95,7 +95,7 @@ public class DatabaseUtils {
     try {
       d.initialize();
     } catch (Exception e) {
-      System.out.println("Warning: " + e.getMessage());
+      log.warn("Warning: " + e.getMessage());
     }
     return d;
   }
@@ -105,19 +105,18 @@ public class DatabaseUtils {
    * could be obtain from database or XML.
    */
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
-    final DatabaseData databaseOrgDataPartialModel = new DatabaseData(d);
+    final DatabaseData dbDataPartialModel = new DatabaseData(d);
     if (config.isLoadModelFromXML()) {
-      readDataModuleInfo(d, databaseOrgDataPartialModel, config.getBasedir());
+      readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-          new File(getValidBasedir(config.getBasedir())));
+      ExcludeFilter excludeFilter = util.getExcludeFilter(new File(getValidBasedir(config
+          .getBasedir())));
       util.getModules(config.getPlatform(), excludeFilter);
       util.generateIndustryTemplateTree();
     }
-    DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), databaseOrgDataPartialModel,
-        d, getValidBasedir(config.getBasedir()), config.isStrict(),
-        config.isApplyConfigScriptData());
+    DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
+        getValidBasedir(config.getBasedir()), config.isStrict(), config.isApplyConfigScriptData());
     return d;
   }
 
@@ -140,19 +139,19 @@ public class DatabaseUtils {
   private static void readDataModuleInfo(Database d, DatabaseData dbdata, String path) {
     log.debug("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files");
     Vector<File> dirs = new Vector<File>();
-    addModuleFilesIfExists(dirs, path);
+    addModuleFilesIfExist(dirs, path);
 
     File modules = new File(path, "/modules");
     for (File moduleDir : modules.listFiles()) {
-      addModuleFilesIfExists(dirs, moduleDir.getAbsolutePath());
+      addModuleFilesIfExist(dirs, moduleDir.getAbsolutePath());
     }
 
     DBSMOBUtil.getInstance().readDataIntoDatabaseData(d, dbdata, dirs);
   }
 
-  private static void addModuleFilesIfExists(Vector<File> dirs, String path) {
-    addFileIfExists(dirs, path, AD_MODULE_NAME_FILE);
-    addFileIfExists(dirs, path, AD_MODULE_DEP_NAME_FILE);
+  private static void addModuleFilesIfExist(Vector<File> dirs, String path) {
+    addFileIfExists(dirs, path, AD_MODULE_FILE_NAME);
+    addFileIfExists(dirs, path, AD_MODULE_DEP_FILE_NAME);
   }
 
   /**
@@ -227,8 +226,8 @@ public class DatabaseUtils {
   }
 
   /**
-   * Read the model without apply the configScripts in order to have a partial model. This partial
-   * model is used in ExportConfigScript task to export changes to a configScript file.
+   * Read the model without applying the configScripts in order to have a partial model. This
+   * partial model is used in ExportConfigScript task to export changes to a configScript file.
    * 
    * @param file
    *          The file to be loaded as a database model.
