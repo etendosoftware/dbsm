@@ -92,9 +92,6 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
         getLog().info("Original model loaded from file.");
       }
 
-      DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, originaldb, db, basedir,
-          datafilter, input);
-
       getLog().info("Comparing databases to find differences");
 
       OBDataset ad = new OBDataset(dbData, "AD");
