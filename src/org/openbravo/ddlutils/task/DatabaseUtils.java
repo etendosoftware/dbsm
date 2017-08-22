@@ -143,7 +143,7 @@ public class DatabaseUtils {
    * source task,...
    */
   private static void readDataModuleInfo(Database d, DatabaseData dbdata, String path) {
-    log.info("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files: " + path);
+    log.debug("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files");
     Vector<File> dirs = new Vector<File>();
     addModuleFilesIfExist(dirs, path);
 
