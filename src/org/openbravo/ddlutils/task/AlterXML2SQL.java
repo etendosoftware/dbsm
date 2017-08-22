@@ -150,6 +150,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       w.flush();
       w.close();
 
+      getLog().info("The script is created in : " + output.getPath());
+
     } catch (final Exception e) {
       e.printStackTrace();
       throw new BuildException(e);
