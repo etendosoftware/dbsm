@@ -343,7 +343,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected DatabaseInfo readDatabaseModel(DatabaseModelConfig databaseConfig) {
     Database db = null;
-    boolean loadModuleInfoFromXML = false;
+    boolean loadModuleInfoFromXML = true;
     ConfigScriptConfig config = new ConfigScriptConfig(databaseConfig.getPlatform(),
         databaseConfig.getBaseDir(), databaseConfig.isStrictMode(),
         databaseConfig.isApplyConfigScriptData(), loadModuleInfoFromXML);
