@@ -940,8 +940,7 @@ public class DBSMOBUtil {
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
-  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData,
-      List<File> files) {
+  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData, List<File> files) {
 
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
@@ -971,6 +970,11 @@ public class DBSMOBUtil {
     getLog().info("Loading and applying configuration scripts");
     Vector<File> configScripts = new Vector<File>();
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
+    if (sortedTemplates == null) {
+      getLog().info("There aren't detected templates.");
+    } else if (sortedTemplates.size() == 0) {
+      getLog().info("There aren't detected templates with configScript.");
+    }
     for (String template : sortedTemplates) {
       boolean isApplied = isApplied(platform, template);
       if (isApplied) {
