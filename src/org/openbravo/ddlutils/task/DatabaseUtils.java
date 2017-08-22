@@ -113,7 +113,7 @@ public class DatabaseUtils {
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData dbDataPartialModel = new DatabaseData(d);
     if (config.isLoadModuleInfoFromXML()) {
-      readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
+      readDataModuleInfo(d, dbDataPartialModel, getValidBasedir(config.getBasedir()));
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       ExcludeFilter excludeFilter = util.getExcludeFilter(new File(getValidBasedir(config
