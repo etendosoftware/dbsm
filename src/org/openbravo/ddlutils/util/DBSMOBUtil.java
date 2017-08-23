@@ -983,11 +983,8 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-
       File configScript = new File(new File(modulesBaseDir), template
           + "/src-db/database/configScript.xml");
-      System.out.println("Absolute path is: " + configScript.getAbsolutePath()
-          + " and modulesBaseDir es " + modulesBaseDir);
       if (configScript.exists()) {
         DatabaseIO dbIO = new DatabaseIO();
         getLog().info("Loading configuration script: " + configScript.getAbsolutePath());

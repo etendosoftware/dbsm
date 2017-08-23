@@ -362,9 +362,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     } else {
       // We read model files using the filter, obtaining a file array.The models will be merged to
       // create a final target model.
-      System.out
-          .println("From readDatabaseModel() when executing UPDATE.DATABASE TASK modulesBaseDir is: "
-              + modulesBaseDir);
       final Vector<File> dirs = new Vector<File>();
       dirs.add(getModel());
       final DirectoryScanner dirScanner = new DirectoryScanner();
@@ -386,7 +383,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     }
     DatabaseData dbData = new DatabaseData(db);
     DBSMOBUtil.getInstance().loadDataStructures(config.getPlatform(), dbData, database, db,
-        modulesBaseDir, dataFilter, inputFile, config.isStrict(), config.isApplyConfigScriptData());
+        modulesBaseDir, dataFilter, inputFile, config.isStrict(), false);
 
     return new DatabaseInfo(db, dbData);
   }

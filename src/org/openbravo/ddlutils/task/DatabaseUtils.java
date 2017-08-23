@@ -233,7 +233,6 @@ public class DatabaseUtils {
    *          The file to be loaded as a database model.
    */
   private static Database getMergedDatabaseAndInitialize(File[] f) throws ModelException {
-
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
       d.mergeWith(readDatabase_noChecks(f[i]));
