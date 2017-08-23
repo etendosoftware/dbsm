@@ -145,8 +145,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
-      DatabaseInfo databaseInfo = readDatabaseModel(new DatabaseModelConfig(platform, null,
-          originaldb, basedir, datafilter, input, strict, true));
+      boolean applyConfigScriptData = true;
+      boolean loadModuleInfoFromXML = true;
+      DatabaseInfo databaseInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir,
+          strict, applyConfigScriptData, loadModuleInfoFromXML), originaldb, datafilter, input);
+
       Database db = databaseInfo.getDatabase();
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
@@ -336,18 +339,18 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   }
 
   protected Database readDatabaseModel() {
-    DatabaseInfo dbInfo = readDatabaseModel(new DatabaseModelConfig(SystemService.getInstance()
-        .getPlatform(), null, null, null, datafilter, input, strict, false));
+    boolean applyConfigScriptData = false;
+    boolean loadModuleInfoFromXML = true;
+    DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(SystemService.getInstance()
+        .getPlatform(), null, strict, applyConfigScriptData, loadModuleInfoFromXML), null,
+        datafilter, input);
     return dbInfo.getDatabase();
   }
 
-  protected DatabaseInfo readDatabaseModel(DatabaseModelConfig databaseConfig) {
+  protected DatabaseInfo readDatabaseModel(ConfigScriptConfig config, Database database,
+      String dataFilter, File inputFile) {
     Database db = null;
-    boolean loadModuleInfoFromXML = true;
-    ConfigScriptConfig config = new ConfigScriptConfig(databaseConfig.getPlatform(),
-        databaseConfig.getBaseDir(), databaseConfig.isStrictMode(),
-        databaseConfig.isApplyConfigScriptData(), loadModuleInfoFromXML);
-    if (databaseConfig.getBaseDir() == null) {
+    if (config.getBasedir() == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
 
@@ -358,13 +361,13 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(getModel());
       final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(databaseConfig.getBaseDir()));
+      dirScanner.setBasedir(new File(config.getBasedir()));
       final String[] dirFilterA = { dirFilter };
       dirScanner.setIncludes(dirFilterA);
       dirScanner.scan();
       final String[] incDirs = dirScanner.getIncludedDirectories();
       for (int j = 0; j < incDirs.length; j++) {
-        final File dirF = new File(databaseConfig.getBaseDir(), incDirs[j]);
+        final File dirF = new File(config.getBasedir(), incDirs[j]);
         dirs.add(dirF);
       }
       final File[] fileArray = new File[dirs.size()];
@@ -375,10 +378,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       db = DatabaseUtils.readDatabase(fileArray, config);
     }
     DatabaseData dbData = new DatabaseData(db);
-    DBSMOBUtil.getInstance().loadDataStructures(databaseConfig.getPlatform(), dbData,
-        databaseConfig.getDatabase(), db, databaseConfig.getBaseDir(),
-        databaseConfig.getDataFilter(), databaseConfig.getInputFile(),
-        databaseConfig.isStrictMode(), false);
+    DBSMOBUtil.getInstance().loadDataStructures(config.getPlatform(), dbData, database, db,
+        config.getBasedir(), dataFilter, inputFile, config.isStrict(),
+        config.isApplyConfigScriptData());
 
     return new DatabaseInfo(db, dbData);
   }
@@ -557,65 +559,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       return databaseData;
     }
 
-  }
-
-  /**
-   * Helper class that contains the configuration for reading the database model.
-   */
-  protected static class DatabaseModelConfig {
-    private Platform platform;
-    private DatabaseData databaseData;
-    private Database originaldb;
-    private String baseDir;
-    private String dataFilter;
-    private File inputFile;
-    private boolean strictMode;
-    private boolean applyConfigScriptData;
-
-    DatabaseModelConfig(Platform platform, DatabaseData databaseData, Database originaldb,
-        String baseDir, String dataFilter, File inputFile, boolean strictMode,
-        boolean applyConfigScriptData) {
-      this.platform = platform;
-      this.databaseData = databaseData;
-      this.originaldb = originaldb;
-      this.baseDir = baseDir;
-      this.dataFilter = dataFilter;
-      this.inputFile = inputFile;
-      this.strictMode = strictMode;
-      this.applyConfigScriptData = applyConfigScriptData;
-    }
-
-    public Platform getPlatform() {
-      return platform;
-    }
-
-    public DatabaseData getDatabaseData() {
-      return databaseData;
-    }
-
-    public Database getDatabase() {
-      return originaldb;
-    }
-
-    public String getBaseDir() {
-      return baseDir;
-    }
-
-    public String getDataFilter() {
-      return dataFilter;
-    }
-
-    public File getInputFile() {
-      return inputFile;
-    }
-
-    public boolean isStrictMode() {
-      return strictMode;
-    }
-
-    public boolean isApplyConfigScriptData() {
-      return applyConfigScriptData;
-    }
   }
 
 }
