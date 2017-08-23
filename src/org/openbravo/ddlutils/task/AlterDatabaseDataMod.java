@@ -104,7 +104,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
           applyConfigScriptData, loadModuleInfoFromXML);
       dbXML = DatabaseUtils.readDatabase(getModel(), config);
     } else {
@@ -127,7 +127,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
           applyConfigScriptData, loadModuleInfoFromXML);
       dbXML = DatabaseUtils.readDatabase(fileArray, config);
     }

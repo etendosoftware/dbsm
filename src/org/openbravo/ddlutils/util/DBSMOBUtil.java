@@ -899,19 +899,20 @@ public class DBSMOBUtil {
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input, false);
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input) {
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
+        input, false);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input,
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input,
-        strict, true);
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
+        input, strict, true);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input,
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
 
     final Vector<File> files = new Vector<File>();
@@ -923,13 +924,13 @@ public class DBSMOBUtil {
     }
     final String token = datafilter;
     final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(basedir));
+    dirScanner.setBasedir(new File(modulesBaseDir));
     final String[] dirFilterA = token.split(",");
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
     for (int j = 0; j < incDirs.length; j++) {
-      final File dirFolder = new File(basedir, incDirs[j] + "/");
+      final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
       final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
       for (int i = 0; i < fileArray.length; i++) {
         if (fileArray[i].getName().endsWith(".xml")) {
@@ -965,10 +966,8 @@ public class DBSMOBUtil {
   }
 
   public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,
-      String basedir, boolean strict, boolean applyConfigScriptData) {
-
+      String modulesBaseDir, boolean strict, boolean applyConfigScriptData) {
     getLog().info("Loading and applying configuration scripts");
-    Vector<File> configScripts = new Vector<File>();
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     if (sortedTemplates == null) {
       getLog().info("There aren't detected templates.");
@@ -984,10 +983,12 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      File configScript = new File(new File(basedir), "/modules/" + template
+
+      File configScript = new File(new File(modulesBaseDir), template
           + "/src-db/database/configScript.xml");
+      System.out.println("Absolute path is: " + configScript.getAbsolutePath()
+          + " and modulesBaseDir es " + modulesBaseDir);
       if (configScript.exists()) {
-        configScripts.add(configScript);
         DatabaseIO dbIO = new DatabaseIO();
         getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);

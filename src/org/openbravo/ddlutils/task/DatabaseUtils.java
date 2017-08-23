@@ -113,28 +113,16 @@ public class DatabaseUtils {
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData dbDataPartialModel = new DatabaseData(d);
     if (config.isLoadModuleInfoFromXML()) {
-      readDataModuleInfo(d, dbDataPartialModel, getValidBasedir(config.getBasedir()));
+      readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
     } else {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      ExcludeFilter excludeFilter = util.getExcludeFilter(new File(getValidBasedir(config
-          .getBasedir())));
+      ExcludeFilter excludeFilter = util.getExcludeFilter(new File(config.getBasedir()));
       util.getModules(config.getPlatform(), excludeFilter);
       util.generateIndustryTemplateTree();
     }
     DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
-        getValidBasedir(config.getBasedir()), config.isStrict(), config.isApplyConfigScriptData());
+        config.getBasedir() + "/modules/", config.isStrict(), config.isApplyConfigScriptData());
     return d;
-  }
-
-  /**
-   * This method ensures that path should be sources basedir instead of modules basedir.
-   */
-  private static String getValidBasedir(String path) {
-    if (path.endsWith("modules/")) {
-      log.info("Basedir " + path + "is updated properly to " + path.concat("../"));
-      return path.concat("../");
-    }
-    return path;
   }
 
   /**
@@ -245,6 +233,7 @@ public class DatabaseUtils {
    *          The file to be loaded as a database model.
    */
   private static Database getMergedDatabaseAndInitialize(File[] f) throws ModelException {
+
     Database d = readDatabase_noChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
       d.mergeWith(readDatabase_noChecks(f[i]));

@@ -140,15 +140,16 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         boolean strictMode = true;
         boolean applyConfigScriptData = false;
         boolean loadModuleInfoFromXML = false;
-        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
             applyConfigScriptData, loadModuleInfoFromXML);
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
       boolean applyConfigScriptData = true;
       boolean loadModuleInfoFromXML = true;
-      DatabaseInfo databaseInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir,
-          strict, applyConfigScriptData, loadModuleInfoFromXML), originaldb, datafilter, input);
+      DatabaseInfo databaseInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir
+          + "../", strict, applyConfigScriptData, loadModuleInfoFromXML), originaldb, datafilter,
+          input);
 
       Database db = databaseInfo.getDatabase();
       getLog().info("Checking datatypes from the model loaded from XML files");
@@ -349,7 +350,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected DatabaseInfo readDatabaseModel(ConfigScriptConfig config, Database database,
       String dataFilter, File inputFile) {
+    System.out.println("Desde readDatabaseModel() para UPDATE.DATABASE TASK basedir is: "
+        + config.getBasedir());
     Database db = null;
+    String modulesBaseDir = config.getBasedir() + "modules/";
     if (config.getBasedir() == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
@@ -358,16 +362,19 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     } else {
       // We read model files using the filter, obtaining a file array.The models will be merged to
       // create a final target model.
+      System.out
+          .println("From readDatabaseModel() when executing UPDATE.DATABASE TASK modulesBaseDir is: "
+              + modulesBaseDir);
       final Vector<File> dirs = new Vector<File>();
       dirs.add(getModel());
       final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(config.getBasedir()));
+      dirScanner.setBasedir(new File(modulesBaseDir));
       final String[] dirFilterA = { dirFilter };
       dirScanner.setIncludes(dirFilterA);
       dirScanner.scan();
       final String[] incDirs = dirScanner.getIncludedDirectories();
       for (int j = 0; j < incDirs.length; j++) {
-        final File dirF = new File(config.getBasedir(), incDirs[j]);
+        final File dirF = new File(modulesBaseDir, incDirs[j]);
         dirs.add(dirF);
       }
       final File[] fileArray = new File[dirs.size()];
@@ -379,8 +386,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     }
     DatabaseData dbData = new DatabaseData(db);
     DBSMOBUtil.getInstance().loadDataStructures(config.getPlatform(), dbData, database, db,
-        config.getBasedir(), dataFilter, inputFile, config.isStrict(),
-        config.isApplyConfigScriptData());
+        modulesBaseDir, dataFilter, inputFile, config.isStrict(), config.isApplyConfigScriptData());
 
     return new DatabaseInfo(db, dbData);
   }
