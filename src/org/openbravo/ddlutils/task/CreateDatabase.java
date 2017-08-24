@@ -20,17 +20,14 @@ import java.util.Vector;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DatabaseDataIO;
-import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
-import org.openbravo.ddlutils.util.ModuleRow;
 
 /**
  * 
@@ -198,25 +195,6 @@ public class CreateDatabase extends BaseDatabaseTask {
        */
       dataReader.getSink().end();
 
-      final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      util.getModules(platform, excludeFilter);
-      util.generateIndustryTemplateTree();
-      for (int i = 0; i < util.getIndustryTemplateCount(); i++) {
-        final ModuleRow temp = util.getIndustryTemplateId(i);
-        final File f = new File(basedir, "modules/" + temp.dir
-            + "/src-db/database/configScript.xml");
-        getLog().info(
-            "Loading config script for module " + temp.name + ". Path: " + f.getAbsolutePath());
-        if (f.exists()) {
-          final DatabaseIO dbIO = new DatabaseIO();
-          final Vector<Change> changesConfigScript = dbIO.readChanges(f);
-          platform.applyConfigScript(db, changesConfigScript);
-        } else {
-          getLog().error(
-              "Error. We couldn't find configuration script for template " + temp.name + ". Path: "
-                  + f.getAbsolutePath());
-        }
-      }
       getLog().info("Executing onCreateDefault statements");
       platform.executeOnCreateDefaultForMandatoryColumns(db, null);
       getLog().info("Enabling notnull constraints");
