@@ -194,6 +194,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       final Connection connection = platform.borrowConnection();
+      // Now we apply the data changes in configuration scripts
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
+          true);
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -350,8 +353,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected DatabaseInfo readDatabaseModel(ConfigScriptConfig config, Database database,
       String dataFilter, File inputFile) {
-    System.out.println("Desde readDatabaseModel() para UPDATE.DATABASE TASK basedir is: "
-        + config.getBasedir());
     Database db = null;
     String modulesBaseDir = config.getBasedir() + "modules/";
     if (config.getBasedir() == null) {
