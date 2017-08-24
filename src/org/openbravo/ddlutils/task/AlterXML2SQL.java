@@ -99,6 +99,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
 
       OBDataset ad = new OBDataset(dbData, "AD");
 
+      // Now we apply the data changes in configuration scripts
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, dbData, db, basedir, false, true);
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.compareToUpdate(db, platform, dbData, ad, null);
