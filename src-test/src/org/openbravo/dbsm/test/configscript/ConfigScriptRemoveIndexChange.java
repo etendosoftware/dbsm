@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Index;
@@ -29,6 +30,7 @@ public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_INDEX = "TEST_INDEX";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeIndexChange/configScript.xml";
 
   public ConfigScriptRemoveIndexChange(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
@@ -43,10 +45,26 @@ public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
   }
 
   @Test
-  public void isIndexRemoved() {
+  public void isIndexRemovedOnUpdate() {
     Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
     Table table = database.findTable(TEST_TABLE);
     Index index = table.findIndex(TEST_INDEX);
     assertNull("Index " + TEST_INDEX + " removed by the configuration script", index);
+  }
+
+  @Test
+  public void isIndexRemovedOnInstall() {
+    Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsIndexRemoved(originalDB, TEST_TABLE, TEST_INDEX);
+  }
+
+  /**
+   * Check if index is removed from the database
+   */
+  private void assertIsIndexRemoved(Database db, String tableName, String indexName) {
+    Table table = db.findTable(tableName);
+    Index index = table.findIndex(indexName);
+    assertNull("Index " + indexName + " removed by the configuration script", index);
   }
 }

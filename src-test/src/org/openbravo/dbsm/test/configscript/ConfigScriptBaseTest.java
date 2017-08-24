@@ -62,15 +62,10 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     updateDatabase(model, DATA_DIRECTORY, adTableNames, assertDBisCorrect, configScripts);
   }
 
-  protected Database createDatabaseAndApplyConfigurationScript(String model, String configScript) {
+  protected Database createDatabaseAndApplyConfigurationScript(String model,
+      List<String> configScripts) {
     resetDB();
-    Database originalDB = createDatabase(model);
-    Vector<Change> changes = readConfigScript(configScript);
-    if (changes == null) {
-      log.info("No changes retrieved from Configuration Script: " + configScript);
-    } else {
-      getPlatform().applyConfigScript(originalDB, changes);
-    }
+    Database originalDB = createDatabase(model, configScripts);
     return originalDB;
   }
 

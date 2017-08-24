@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -29,6 +30,9 @@ public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_COLUMN = "COL1";
+  private static final String TEST_COLUMN_INSTALL = "COL2";
+
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/columnRequiredChange/configScript.xml";
   private boolean isRequired;
 
   public ConfigScriptColumnRequiredChange(String rdbms, String driver, String url, String sid,
@@ -45,11 +49,29 @@ public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
   }
 
   @Test
-  public void isColumnRequiredChangeApplied() {
+  public void isColumnRequiredChangeAppliedOnUpdate() {
     Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
     assertEquals("Required property of column " + TEST_COLUMN
         + " changed by the configuration script", isRequired, column.isRequired());
   }
+
+  @Test
+  public void isColumnRequiredChangeAppliedOnInstall() {
+    Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsColumnRequiredChangeApplied(originalDB, TEST_TABLE, TEST_COLUMN_INSTALL);
+  }
+
+  /**
+   * Check if column required is changed in the database
+   */
+  private void assertIsColumnRequiredChangeApplied(Database db, String tableName, String columnName) {
+    Table table = db.findTable(tableName);
+    Column column = table.findColumn(columnName);
+    assertEquals("Required property of column " + columnName
+        + " changed by the configuration script", true, column.isRequired());
+  }
+
 }

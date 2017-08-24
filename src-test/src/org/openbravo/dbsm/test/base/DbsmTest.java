@@ -515,11 +515,23 @@ public class DbsmTest {
         .getTablename().equalsIgnoreCase("AD_FIELD"));
   }
 
-  protected Database createDatabase(String dbModelPath) {
-    return createDatabase(dbModelPath, false);
+  protected Database createDatabase(String dbModelPath, List<String> configScripts) {
+    Database db = createDatabase(dbModelPath);
+    final Platform platform = getPlatform();
+    platform.setMaxThreads(threads);
+    log.info("Max threads " + platform.getMaxThreads());
+
+    final DatabaseData databaseOrgData = new DatabaseData(db);
+    databaseOrgData.setStrictMode(false);
+
+    if (configScripts != null) {
+      applyConfigScripts(configScripts, platform, databaseOrgData, db, true);
+    }
+
+    return db;
   }
 
-  protected Database createDatabase(String dbModelPath, boolean applyConfigScripts) {
+  protected Database createDatabase(String dbModelPath) {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
 

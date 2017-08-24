@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -29,6 +30,8 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_COLUMN = "COL1";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/columnSizeChange/configScript.xml";
+
   private int newColumnSize;
 
   public ConfigScriptColumnSizeChange(String rdbms, String driver, String url, String sid,
@@ -45,11 +48,28 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   }
 
   @Test
-  public void isColumnSizeChangeApplied() {
+  public void isColumnSizeChangeAppliedOnUpdate() {
     Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
     assertEquals("Size of column " + TEST_COLUMN + " increased by the configuration script",
         newColumnSize, Integer.parseInt(column.getSize()));
+  }
+
+  @Test
+  public void isColumnSizeChangeAppliedOnInstall() {
+    Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsColumnSizeChangeApplied(originalDB, TEST_TABLE, TEST_COLUMN);
+  }
+
+  /**
+   * Check if column size is changed in the database
+   */
+  private void assertIsColumnSizeChangeApplied(Database db, String tableName, String columnName) {
+    Table table = db.findTable(tableName);
+    Column column = table.findColumn(columnName);
+    assertEquals("Size of the column " + columnName + " was 32 and now is " + column.getSize()
+        + ".", 40, column.getSizeAsInt());
   }
 }

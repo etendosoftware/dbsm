@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Trigger;
@@ -49,7 +50,7 @@ public class ConfigScriptRemoveTriggerChange extends ConfigScriptBaseTest {
   @Test
   public void isTriggerRemovedOnInstall() {
     Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
-        CONFIG_SCRIPT_INSTALL);
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     assertIsTriggerRemoved(originalDB, TRIGGER_TEST);
   }
 

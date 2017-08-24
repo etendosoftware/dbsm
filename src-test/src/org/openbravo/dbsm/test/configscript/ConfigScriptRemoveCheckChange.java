@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Database;
@@ -61,9 +62,8 @@ public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
    */
   @Test
   public void isCheckConstraintRemovedOnInstall() {
-    // Install source and applyConfigurationScript
     Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL_INSTALL,
-        CONFIG_SCRIPT_INSTALL);
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     assertIsCheckConstraintRemoved(originalDB, TEST_TABLE, CHECK_TEST);
   }
 
