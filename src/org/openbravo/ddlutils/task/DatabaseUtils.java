@@ -144,8 +144,8 @@ public class DatabaseUtils {
   }
 
   private static void addModuleFilesIfExist(Vector<File> dirs, String path) {
-    addFileIfExists(dirs, path, SOURCEDATA_PATH + AD_MODULE_FILE_NAME);
-    addFileIfExists(dirs, path, SOURCEDATA_PATH + AD_MODULE_DEP_FILE_NAME);
+    addFileIfExists(dirs, path + SOURCEDATA_PATH, AD_MODULE_FILE_NAME);
+    addFileIfExists(dirs, path + SOURCEDATA_PATH, AD_MODULE_DEP_FILE_NAME);
   }
 
   /**

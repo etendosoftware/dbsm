@@ -148,8 +148,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       boolean applyConfigScriptData = true;
       boolean loadModuleInfoFromXML = true;
       DatabaseInfo databaseInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir
-          + "../", strict, applyConfigScriptData, loadModuleInfoFromXML), originaldb, datafilter,
-          input);
+          + "../", strict, applyConfigScriptData, loadModuleInfoFromXML), originaldb);
 
       Database db = databaseInfo.getDatabase();
       getLog().info("Checking datatypes from the model loaded from XML files");
@@ -346,13 +345,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     boolean applyConfigScriptData = false;
     boolean loadModuleInfoFromXML = true;
     DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(SystemService.getInstance()
-        .getPlatform(), null, strict, applyConfigScriptData, loadModuleInfoFromXML), null,
-        datafilter, input);
+        .getPlatform(), null, strict, applyConfigScriptData, loadModuleInfoFromXML), null);
     return dbInfo.getDatabase();
   }
 
-  protected DatabaseInfo readDatabaseModel(ConfigScriptConfig config, Database database,
-      String dataFilter, File inputFile) {
+  protected DatabaseInfo readDatabaseModel(ConfigScriptConfig config, Database database) {
     Database db = null;
     String modulesBaseDir = config.getBasedir() + "modules/";
     if (config.getBasedir() == null) {
@@ -384,7 +381,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     }
     DatabaseData dbData = new DatabaseData(db);
     DBSMOBUtil.getInstance().loadDataStructures(config.getPlatform(), dbData, database, db,
-        modulesBaseDir, dataFilter, inputFile, config.isStrict(), false);
+        modulesBaseDir, datafilter, input, config.isStrict(), false);
 
     return new DatabaseInfo(db, dbData);
   }

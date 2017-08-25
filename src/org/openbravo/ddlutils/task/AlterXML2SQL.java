@@ -70,7 +70,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       boolean applyConfigScriptData = true;
       boolean loadModuleInfoFromXML = true;
       DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir + "../",
-          strict, applyConfigScriptData, loadModuleInfoFromXML), db, datafilter, input);
+          strict, applyConfigScriptData, loadModuleInfoFromXML), db);
 
       db = dbInfo.getDatabase();
       DatabaseData dbData = dbInfo.getDatabaseData();
