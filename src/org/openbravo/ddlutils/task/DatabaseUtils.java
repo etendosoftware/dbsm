@@ -121,7 +121,7 @@ public class DatabaseUtils {
       util.generateIndustryTemplateTree();
     }
     DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
-        config.getBasedir() + "/modules/", config.isStrict(), config.isApplyConfigScriptData());
+        config.getBasedir() + "/modules/", config.isStrict(), config.applyConfigScriptDataChanges());
     return d;
   }
 
@@ -468,15 +468,15 @@ public class DatabaseUtils {
     private String basedir;
 
     private boolean strict;
-    private boolean applyConfigScriptData;
+    private boolean applyConfigScriptDataChanges;
     private boolean loadModuleInfoFromXML;
 
     ConfigScriptConfig(Platform platform, String basedir, boolean strict,
-        boolean applyConfigScriptData, boolean loadModuleInfoFromXML) {
+        boolean applyConfigScriptDataChanges, boolean loadModuleInfoFromXML) {
       this.platform = platform;
       this.basedir = basedir;
       this.strict = strict;
-      this.applyConfigScriptData = applyConfigScriptData;
+      this.applyConfigScriptDataChanges = applyConfigScriptDataChanges;
       this.loadModuleInfoFromXML = loadModuleInfoFromXML;
     }
 
@@ -498,8 +498,8 @@ public class DatabaseUtils {
     /**
      * If it is true the data part (DataChange) of the configScripts should be applied.
      */
-    public boolean isApplyConfigScriptData() {
-      return applyConfigScriptData;
+    public boolean applyConfigScriptDataChanges() {
+      return applyConfigScriptDataChanges;
     }
 
     /**

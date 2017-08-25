@@ -92,10 +92,10 @@ public class ImportSampledata extends BaseDatabaseTask {
         fileArray2[i] = dirs.get(i);
       }
 
-      boolean strictMode = false;
+      boolean noStrictMode = false;
       boolean applyConfigScriptData = true;
       boolean loadModuleInfoFromXML = true;
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, noStrictMode,
           applyConfigScriptData, loadModuleInfoFromXML);
       Database db = DatabaseUtils.readDatabase(fileArray2, config);
 
