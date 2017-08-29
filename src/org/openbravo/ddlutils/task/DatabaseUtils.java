@@ -120,8 +120,10 @@ public class DatabaseUtils {
       util.getModules(config.getPlatform(), excludeFilter);
       util.generateIndustryTemplateTree();
     }
-    DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
-        config.getBasedir() + "/modules/", config.isStrict(), config.applyConfigScriptDataChanges());
+    DBSMOBUtil.getInstance()
+        .applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
+            config.getBasedir() + "/modules/", config.isStrict(),
+            config.applyConfigScriptDataChanges());
     return d;
   }
 
@@ -432,10 +434,15 @@ public class DatabaseUtils {
    */
   // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
   static Database readDatabaseModel(Platform platform, File model, String basedir, String dirFilter) {
+    boolean strictMode = true;
+    boolean applyConfigScriptData = false;
+    boolean loadModuleInfoFromXML = true;
+    ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+        applyConfigScriptData, loadModuleInfoFromXML);
 
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
-      return DatabaseUtils.readDatabaseWithoutConfigScript(model);
+      return DatabaseUtils.readDatabase(model, config);
     }
 
     // We read model files using the filter, obtaining a file array. The models will be merged to
@@ -456,7 +463,7 @@ public class DatabaseUtils {
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
     }
-    return DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
+    return DatabaseUtils.readDatabase(fileArray, config);
   }
 
   /**
