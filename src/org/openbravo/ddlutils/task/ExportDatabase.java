@@ -242,7 +242,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
           // once model is exported, reload it from files to guarantee data is exported in a fixed
           // manner, other case column position could be different
           Database dbXML = DatabaseUtils.readDatabaseModel(platform, model,
-              moduledir.getAbsolutePath() + "../", "*/src-db/database/model");
+              moduledir.getAbsolutePath() + "/../", "*/src-db/database/model");
 
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);
