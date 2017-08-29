@@ -450,13 +450,15 @@ public class DatabaseUtils {
     final Vector<File> dirs = new Vector<File>();
     dirs.add(model);
     final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(basedir));
+    String modulesBaseDir = config.getBasedir() + "modules/";
+
+    dirScanner.setBasedir(new File(modulesBaseDir));
     final String[] dirFilterA = { dirFilter };
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
     for (int j = 0; j < incDirs.length; j++) {
-      final File dirF = new File(basedir, incDirs[j]);
+      final File dirF = new File(modulesBaseDir, incDirs[j]);
       dirs.add(dirF);
     }
     final File[] fileArray = new File[dirs.size()];
