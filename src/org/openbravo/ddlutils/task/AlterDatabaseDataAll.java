@@ -356,6 +356,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
 
+      modulesBaseDir = null;
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
       // We read model files using the filter, obtaining a file array.The models will be merged to
