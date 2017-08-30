@@ -46,7 +46,8 @@ public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
 
   @Test
   public void isIndexRemovedOnUpdate() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     Table table = database.findTable(TEST_TABLE);
     Index index = table.findIndex(TEST_INDEX);
     assertNull("Index " + TEST_INDEX + " removed by the configuration script", index);

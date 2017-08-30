@@ -43,7 +43,8 @@ public class ConfigScriptRemoveTriggerChange extends ConfigScriptBaseTest {
 
   @Test
   public void isTriggerRemovedOnUpdate() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     assertIsTriggerRemoved(database, TRIGGER_TEST);
   }
 

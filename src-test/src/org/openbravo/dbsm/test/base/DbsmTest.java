@@ -354,17 +354,20 @@ public class DbsmTest {
 
       Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
 
+      // Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
+
+      // Applied manually ConfigScripts. Applied in the same order as in the dbsm source
+      if (configScripts != null) {
+        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, false);
+      }
 
       if (adDirectoryName != null) {
         DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originalDB, newDB,
             new File(adDirectoryName).getAbsolutePath(), "none", new File(adDirectoryName), false,
             false);
-      }
-      if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, false);
       }
 
       OBDataset ad = new OBDataset(databaseOrgData);
@@ -515,6 +518,15 @@ public class DbsmTest {
         .getTablename().equalsIgnoreCase("AD_FIELD"));
   }
 
+  /**
+   * Create database applying configScript changes.
+   * 
+   * @param dbModelPath
+   *          path of the model.
+   * @param configScripts
+   *          paths of the configScript files.
+   * @return the database with the changes in the configScript files applied.
+   */
   protected Database createDatabase(String dbModelPath, List<String> configScripts) {
     Database db = createDatabase(dbModelPath);
     final Platform platform = getPlatform();
@@ -531,6 +543,13 @@ public class DbsmTest {
     return db;
   }
 
+  /**
+   * Create database without applying configScript changes.
+   * 
+   * @param dbModelPath
+   *          path of the model.
+   * @return the database.
+   */
   protected Database createDatabase(String dbModelPath) {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();

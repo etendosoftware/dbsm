@@ -49,11 +49,12 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
 
   @Test
   public void isColumnSizeChangeAppliedOnUpdate() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
-    assertEquals("Size of column " + TEST_COLUMN + " increased by the configuration script",
-        newColumnSize, Integer.parseInt(column.getSize()));
+    assertEquals("Size of column " + TEST_COLUMN + " increased by the configuration script", 40,
+        Integer.parseInt(column.getSize()));
   }
 
   @Test

@@ -49,7 +49,8 @@ public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
 
   @Test
   public void isCheckConstraintRemovedOnUpdate() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     assertIsCheckConstraintRemoved(database, TEST_TABLE, CHECK_TEST);
   }
 

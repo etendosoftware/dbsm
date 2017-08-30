@@ -50,7 +50,8 @@ public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
 
   @Test
   public void isColumnRequiredChangeAppliedOnUpdate() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
     assertEquals("Required property of column " + TEST_COLUMN
