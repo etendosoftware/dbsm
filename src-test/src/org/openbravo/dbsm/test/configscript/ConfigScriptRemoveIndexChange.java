@@ -28,20 +28,14 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeIndexChange/configScript.xml";
+
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_INDEX = "TEST_INDEX";
-  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeIndexChange/configScript.xml";
 
   public ConfigScriptRemoveIndexChange(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
-  }
-
-  @Override
-  protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Index index = table.findIndex(TEST_INDEX);
-    table.removeIndex(index);
   }
 
   @Test

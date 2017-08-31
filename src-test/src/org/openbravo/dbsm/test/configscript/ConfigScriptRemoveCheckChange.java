@@ -40,13 +40,6 @@ public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
-  @Override
-  protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Check check = table.findCheck(CHECK_TEST);
-    table.removeCheck(check);
-  }
-
   @Test
   public void isCheckConstraintRemovedOnUpdate() {
     Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,

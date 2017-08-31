@@ -27,18 +27,13 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptRemoveTriggerChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
-  private static final String TRIGGER_TEST = "TEST_TRIGGER";
   private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeTriggerChange/configScript.xml";
+
+  private static final String TRIGGER_TEST = "TEST_TRIGGER";
 
   public ConfigScriptRemoveTriggerChange(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
-  }
-
-  @Override
-  protected void doModelChanges(Database database) {
-    Trigger trigger = database.findTrigger(TRIGGER_TEST);
-    database.removeTrigger(trigger);
   }
 
   @Test

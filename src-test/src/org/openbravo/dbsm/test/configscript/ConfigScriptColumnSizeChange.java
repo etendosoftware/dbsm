@@ -28,23 +28,14 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
-  private static final String TEST_TABLE = "TEST";
-  private static final String TEST_COLUMN = "COL1";
   private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/columnSizeChange/configScript.xml";
 
-  private int newColumnSize;
+  private static final String TEST_TABLE = "TEST";
+  private static final String TEST_COLUMN = "COL1";
 
   public ConfigScriptColumnSizeChange(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
-  }
-
-  @Override
-  protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Column column = table.findColumn(TEST_COLUMN);
-    newColumnSize = Integer.parseInt(column.getSize()) + 10;
-    column.setSize(newColumnSize + "");
   }
 
   @Test
@@ -53,7 +44,7 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
         Arrays.asList(CONFIG_SCRIPT_INSTALL));
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
-    assertEquals("Size of column " + TEST_COLUMN + " increased by the configuration script", 40,
+    assertEquals("Size of column " + TEST_COLUMN + " increased by the configuration script", 70,
         Integer.parseInt(column.getSize()));
   }
 
@@ -70,7 +61,7 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   private void assertIsColumnSizeChangeApplied(Database db, String tableName, String columnName) {
     Table table = db.findTable(tableName);
     Column column = table.findColumn(columnName);
-    assertEquals("Size of the column " + columnName + " was 32 and now is " + column.getSize()
-        + ".", 40, column.getSizeAsInt());
+    assertEquals("Size of the column " + columnName + " was 60 and now is " + column.getSize()
+        + ".", 70, column.getSizeAsInt());
   }
 }

@@ -87,7 +87,4 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     }
     exportTo.mkdirs();
   }
-
-  protected abstract void doModelChanges(Database database);
-
 }

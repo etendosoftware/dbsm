@@ -28,24 +28,14 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
-  private static final String TEST_TABLE = "TEST";
-  private static final String TEST_COLUMN = "COL1";
-  private static final String TEST_COLUMN_INSTALL = "COL2";
-
   private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/columnRequiredChange/configScript.xml";
-  private boolean isRequired;
+
+  private static final String TEST_TABLE = "TEST";
+  private static final String TEST_COLUMN = "COL2";
 
   public ConfigScriptColumnRequiredChange(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
-  }
-
-  @Override
-  protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Column column = table.findColumn(TEST_COLUMN);
-    isRequired = !column.isRequired();
-    column.setRequired(isRequired);
   }
 
   @Test
@@ -55,14 +45,14 @@ public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
     assertEquals("Required property of column " + TEST_COLUMN
-        + " changed by the configuration script", isRequired, column.isRequired());
+        + " changed by the configuration script", true, column.isRequired());
   }
 
   @Test
   public void isColumnRequiredChangeAppliedOnInstall() {
     Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
         Arrays.asList(CONFIG_SCRIPT_INSTALL));
-    assertIsColumnRequiredChangeApplied(originalDB, TEST_TABLE, TEST_COLUMN_INSTALL);
+    assertIsColumnRequiredChangeApplied(originalDB, TEST_TABLE, TEST_COLUMN);
   }
 
   /**
