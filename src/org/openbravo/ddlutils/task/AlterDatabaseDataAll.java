@@ -341,11 +341,21 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
+  /**
+   * This method is invoked from GenerateProcess task defined in ezattributes module and it is
+   * required to maintain backwards compatibility and to ensures that the API is not broken.
+   */
   protected Database readDatabaseModel() {
+    // Set input file and datafilter needed in loadDataStructures
+    input = new File(basedir + "/../src-db/database/sourcedata");
+    datafilter = "*/src-db/database/sourcedata";
+
     boolean applyConfigScriptData = false;
     boolean loadModuleInfoFromXML = true;
     DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(SystemService.getInstance()
-        .getPlatform(), null, strict, applyConfigScriptData, loadModuleInfoFromXML), null);
+        .getPlatform(), basedir + "/../", strict, applyConfigScriptData, loadModuleInfoFromXML),
+        null);
+
     return dbInfo.getDatabase();
   }
 
