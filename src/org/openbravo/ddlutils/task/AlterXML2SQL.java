@@ -67,10 +67,7 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       platform.getSqlBuilder().setScript(true);
 
       Database db = null;
-      boolean applyConfigScriptData = true;
-      boolean loadModuleInfoFromXML = true;
-      DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir + "../",
-          strict, applyConfigScriptData, loadModuleInfoFromXML), db);
+      DatabaseInfo dbInfo = readDatabaseModelWithoutConfigScript(platform, db);
 
       db = dbInfo.getDatabase();
       DatabaseData dbData = dbInfo.getDatabaseData();
@@ -86,8 +83,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       } else {
         // Load the model from the file
         boolean strictMode = true;
-        applyConfigScriptData = false;
-        loadModuleInfoFromXML = false;
+        boolean applyConfigScriptData = false;
+        boolean loadModuleInfoFromXML = false;
 
         ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
             applyConfigScriptData, loadModuleInfoFromXML);

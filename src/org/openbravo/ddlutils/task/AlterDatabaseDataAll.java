@@ -369,24 +369,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       modulesBaseDir = null;
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
-      // We read model files using the filter, obtaining a file array.The models will be merged to
-      // create a final target model.
-      final Vector<File> dirs = new Vector<File>();
-      dirs.add(getModel());
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(modulesBaseDir));
-      final String[] dirFilterA = { dirFilter };
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirF = new File(modulesBaseDir, incDirs[j]);
-        dirs.add(dirF);
-      }
-      final File[] fileArray = new File[dirs.size()];
-      for (int i = 0; i < dirs.size(); i++) {
-        fileArray[i] = dirs.get(i);
-      }
+      final File[] fileArray = readModelFiles(modulesBaseDir);
       getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray, config);
     }
@@ -395,6 +378,51 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         modulesBaseDir, datafilter, input, config.isStrict(), false);
 
     return new DatabaseInfo(db, dbData);
+  }
+
+  protected DatabaseInfo readDatabaseModelWithoutConfigScript(Platform platform, Database database) {
+    Database db = null;
+    String modulesBaseDir = basedir + "../modules/";
+    if (basedir == null) {
+      getLog()
+          .info("Basedir for additional files not specified. Updating database with just Core.");
+
+      modulesBaseDir = null;
+      db = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
+    } else {
+      final File[] fileArray = readModelFiles(modulesBaseDir);
+      getLog().info("Reading model files...");
+      db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
+    }
+    DatabaseData dbData = new DatabaseData(db);
+    DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, database, db, modulesBaseDir,
+        datafilter, input, strict, false);
+
+    return new DatabaseInfo(db, dbData);
+  }
+
+  /**
+   * This method read model files using the filter, obtaining a file array.The models will be merged
+   * to create a final target model.
+   */
+  private File[] readModelFiles(String modulesBaseDir) throws IllegalStateException {
+    final Vector<File> dirs = new Vector<File>();
+    dirs.add(getModel());
+    final DirectoryScanner dirScanner = new DirectoryScanner();
+    dirScanner.setBasedir(new File(modulesBaseDir));
+    final String[] dirFilterA = { dirFilter };
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    final String[] incDirs = dirScanner.getIncludedDirectories();
+    for (int j = 0; j < incDirs.length; j++) {
+      final File dirF = new File(modulesBaseDir, incDirs[j]);
+      dirs.add(dirF);
+    }
+    final File[] fileArray = new File[dirs.size()];
+    for (int i = 0; i < dirs.size(); i++) {
+      fileArray[i] = dirs.get(i);
+    }
+    return fileArray;
   }
 
   public String getExcludeobjects() {
