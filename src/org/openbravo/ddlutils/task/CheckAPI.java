@@ -32,7 +32,6 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.openbravo.base.exception.OBException;
-import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.ValidateAPIData;
@@ -47,7 +46,7 @@ public class CheckAPI extends BaseDatabaseTask {
   File stableDBdir;
   File testDBdir;
 
-  private static final String PATH_TO_ROOT = "/../../";
+  private static final String PATH_TO_ROOT = "/../../modules/";
 
   public File getStableDBdir() {
     return stableDBdir;
@@ -79,20 +78,19 @@ public class CheckAPI extends BaseDatabaseTask {
     File testData = new File(testDBdir, "/sourcedata");
 
     boolean strictMode = true;
-    boolean applyConfigScriptData = false;
-    boolean loadModuleInfoFromXML = false;
+    boolean applyConfigScriptData = true;
 
     getLog().info("Reading XML model for API checking " + stableModel.getAbsolutePath());
-    ConfigScriptConfig configStable = new ConfigScriptConfig(platform, stableDBdir + PATH_TO_ROOT,
-        strictMode, applyConfigScriptData, loadModuleInfoFromXML);
-    Database dbModelStable = DatabaseUtils.readDatabase(stableModel, configStable);
+    Database dbModelStable = DatabaseUtils.readDatabaseWithoutConfigScript(stableModel);
     DatabaseData dbDataStable = readDatabaseData(dbModelStable, stableData);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, dbDataStable, dbModelStable,
+        stableDBdir + PATH_TO_ROOT, strictMode, applyConfigScriptData);
 
     getLog().info("Reading XML model for API checking " + testModel.getAbsolutePath());
-    ConfigScriptConfig configTest = new ConfigScriptConfig(platform, testDBdir + PATH_TO_ROOT,
-        strictMode, applyConfigScriptData, loadModuleInfoFromXML);
-    Database dbModelTest = DatabaseUtils.readDatabase(testModel, configTest);
+    Database dbModelTest = DatabaseUtils.readDatabaseWithoutConfigScript(testModel);
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, dbDataTest, dbModelTest,
+        testDBdir + PATH_TO_ROOT, strictMode, applyConfigScriptData);
 
     getLog().info("Comparing data models");
     final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
