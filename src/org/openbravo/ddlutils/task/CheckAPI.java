@@ -46,7 +46,8 @@ public class CheckAPI extends BaseDatabaseTask {
   File stableDBdir;
   File testDBdir;
 
-  private static final String PATH_TO_ROOT = "/../../modules/";
+  private static final String PATH_TO_ROOT = "/../../";
+  private static final String PATH_TO_MODULES_ROOT = PATH_TO_ROOT + "modules/";
 
   public File getStableDBdir() {
     return stableDBdir;
@@ -70,7 +71,7 @@ public class CheckAPI extends BaseDatabaseTask {
     final String databaseName = new PlatformUtils().determineDatabaseType(getDriver(), getUrl());
     final Platform platform = PlatformFactory.createNewPlatformInstance(databaseName);
 
-    getLog().info("Using database platform: " + databaseName);
+    getLog().info("******Using database platform: " + databaseName);
 
     File stableModel = new File(stableDBdir, "/model");
     File stableData = new File(stableDBdir, "/sourcedata");
@@ -83,14 +84,16 @@ public class CheckAPI extends BaseDatabaseTask {
     getLog().info("Reading XML model for API checking " + stableModel.getAbsolutePath());
     Database dbModelStable = DatabaseUtils.readDatabaseWithoutConfigScript(stableModel);
     DatabaseData dbDataStable = readDatabaseData(dbModelStable, stableData);
+    DatabaseUtils.readDataModuleInfo(dbModelStable, dbDataStable, stableDBdir + PATH_TO_ROOT);
     DBSMOBUtil.getInstance().applyConfigScripts(platform, dbDataStable, dbModelStable,
-        stableDBdir + PATH_TO_ROOT, strictMode, applyConfigScriptData);
+        stableDBdir + PATH_TO_MODULES_ROOT, strictMode, applyConfigScriptData);
 
     getLog().info("Reading XML model for API checking " + testModel.getAbsolutePath());
     Database dbModelTest = DatabaseUtils.readDatabaseWithoutConfigScript(testModel);
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);
+    DatabaseUtils.readDataModuleInfo(dbModelTest, dbDataTest, testDBdir + PATH_TO_ROOT);
     DBSMOBUtil.getInstance().applyConfigScripts(platform, dbDataTest, dbModelTest,
-        testDBdir + PATH_TO_ROOT, strictMode, applyConfigScriptData);
+        testDBdir + PATH_TO_MODULES_ROOT, strictMode, applyConfigScriptData);
 
     getLog().info("Comparing data models");
     final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()

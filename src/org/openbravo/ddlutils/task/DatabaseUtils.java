@@ -132,7 +132,7 @@ public class DatabaseUtils {
    * configScripts defined in the template modules when it isn't exists a database yet: Install
    * source task,...
    */
-  private static void readDataModuleInfo(Database d, DatabaseData dbdata, String path) {
+  protected static void readDataModuleInfo(Database d, DatabaseData dbdata, String path) {
     log.debug("Loading data for AD_MODULE and AD_MODULE_DEPENDENCY from XML files");
     Vector<File> dirs = new Vector<File>();
     addModuleFilesIfExist(dirs, path);
