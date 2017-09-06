@@ -145,12 +145,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
-      boolean applyConfigScriptData = true;
-      boolean loadModuleInfoFromXML = true;
-      DatabaseInfo databaseInfo = readDatabaseModel(new ConfigScriptConfig(platform, basedir
-          + "../", strict, applyConfigScriptData, loadModuleInfoFromXML), originaldb);
-
+      DatabaseInfo databaseInfo = readDatabaseModelWithoutConfigScript(platform, originaldb);
       Database db = databaseInfo.getDatabase();
+
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
       final DatabaseData databaseOrgData = databaseInfo.getDatabaseData();
