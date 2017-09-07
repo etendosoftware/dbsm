@@ -354,7 +354,6 @@ public class DbsmTest {
 
       Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
 
-      // Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
