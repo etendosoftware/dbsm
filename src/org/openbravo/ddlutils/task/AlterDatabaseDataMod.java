@@ -98,14 +98,10 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
-    boolean strictMode = true;
-    boolean applyConfigScriptData = false;
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
-          applyConfigScriptData);
-      dbXML = DatabaseUtils.readDatabase(getModel(), config);
+      dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
     } else {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -126,9 +122,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
-          applyConfigScriptData);
-      dbXML = DatabaseUtils.readDatabase(fileArray, config);
+      dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);

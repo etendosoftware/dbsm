@@ -103,6 +103,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       final Database xmlModel = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
 
       getLog().info("Loading original data from XML files");
+
       final DatabaseDataIO dbdio = new DatabaseDataIO();
       dbdio.setEnsureFKOrder(false);
 

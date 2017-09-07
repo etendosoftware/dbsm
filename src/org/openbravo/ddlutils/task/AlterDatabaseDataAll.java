@@ -137,11 +137,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       } else {
         // Load the model from the file
-        boolean strictMode = true;
-        boolean applyConfigScriptData = false;
-        ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
-            applyConfigScriptData);
-        originaldb = DatabaseUtils.readDatabase(getModel(), config);
+        originaldb = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
         getLog().info("Original model loaded from file.");
       }
       DatabaseInfo databaseInfo = readDatabaseModelWithoutConfigScript(platform, originaldb);
@@ -189,7 +185,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       final Connection connection = platform.borrowConnection();
-      // Now we apply the data changes in configuration scripts
+      // Now we apply the configuration scripts
       DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
           true);
       getLog().info("Comparing databases to find differences");

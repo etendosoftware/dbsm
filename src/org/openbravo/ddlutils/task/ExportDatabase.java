@@ -159,11 +159,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
         if (testAPI) {
           getLog().info("Reading XML model for API checking" + path);
-          boolean strictMode = true;
-          boolean applyConfigScriptData = true;
-          ConfigScriptConfig config = new ConfigScriptConfig(platform, model.getAbsolutePath()
-              + "/../../../", strictMode, applyConfigScriptData);
-          Database dbXML = DatabaseUtils.readDatabase(path, config);
+          Database dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(path);
           validateAPIForModel(platform, dbI, dbXML, ad);
         }
 
