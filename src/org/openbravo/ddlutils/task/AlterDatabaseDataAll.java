@@ -139,9 +139,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         // Load the model from the file
         boolean strictMode = true;
         boolean applyConfigScriptData = false;
-        boolean loadModuleInfoFromXML = false;
         ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir + "../", strictMode,
-            applyConfigScriptData, loadModuleInfoFromXML);
+            applyConfigScriptData);
         originaldb = DatabaseUtils.readDatabase(getModel(), config);
         getLog().info("Original model loaded from file.");
       }
@@ -348,10 +347,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     datafilter = "*/src-db/database/sourcedata";
 
     boolean applyConfigScriptData = false;
-    boolean loadModuleInfoFromXML = true;
     DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(SystemService.getInstance()
-        .getPlatform(), basedir + "/../", strict, applyConfigScriptData, loadModuleInfoFromXML),
-        null);
+        .getPlatform(), basedir + "/../", strict, applyConfigScriptData), null);
 
     return dbInfo.getDatabase();
   }

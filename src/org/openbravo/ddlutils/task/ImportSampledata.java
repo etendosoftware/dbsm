@@ -94,9 +94,8 @@ public class ImportSampledata extends BaseDatabaseTask {
 
       boolean strictMode = false;
       boolean applyConfigScriptData = false;
-      boolean loadModuleInfoFromXML = true;
       ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-          applyConfigScriptData, loadModuleInfoFromXML);
+          applyConfigScriptData);
       Database db = DatabaseUtils.readDatabase(fileArray2, config);
 
       log.info("Disabling constraints...");

@@ -60,9 +60,8 @@ public class DatabaseUtils {
   public static Database readDatabase(File f) {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
-    boolean loadModuleInfoFromXML = false;
     ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
-        getSourcePath(), strictMode, applyConfigScriptData, loadModuleInfoFromXML);
+        getSourcePath(), strictMode, applyConfigScriptData);
     return readDatabase(f, config);
   }
 
@@ -112,14 +111,7 @@ public class DatabaseUtils {
    */
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData dbDataPartialModel = new DatabaseData(d);
-    if (config.isLoadModuleInfoFromXML()) {
-      readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
-    } else {
-      final DBSMOBUtil util = DBSMOBUtil.getInstance();
-      ExcludeFilter excludeFilter = util.getExcludeFilter(new File(config.getBasedir()));
-      util.getModules(config.getPlatform(), excludeFilter);
-      util.generateIndustryTemplateTree();
-    }
+    readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
     DBSMOBUtil.getInstance()
         .applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
             config.getBasedir() + "/modules/", config.isStrict(),
@@ -191,9 +183,8 @@ public class DatabaseUtils {
   public static Database readDatabase(File[] f) {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
-    boolean loadModuleInfoFromXML = false;
     ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
-        getSourcePath(), strictMode, applyConfigScriptData, loadModuleInfoFromXML);
+        getSourcePath(), strictMode, applyConfigScriptData);
     return readDatabase(f, config);
   }
 
@@ -436,9 +427,8 @@ public class DatabaseUtils {
   static Database readDatabaseModel(Platform platform, File model, String basedir, String dirFilter) {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
-    boolean loadModuleInfoFromXML = true;
     ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-        applyConfigScriptData, loadModuleInfoFromXML);
+        applyConfigScriptData);
 
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
@@ -478,15 +468,13 @@ public class DatabaseUtils {
 
     private boolean strict;
     private boolean applyConfigScriptDataChanges;
-    private boolean loadModuleInfoFromXML;
 
     ConfigScriptConfig(Platform platform, String basedir, boolean strict,
-        boolean applyConfigScriptDataChanges, boolean loadModuleInfoFromXML) {
+        boolean applyConfigScriptDataChanges) {
       this.platform = platform;
       this.basedir = basedir;
       this.strict = strict;
       this.applyConfigScriptDataChanges = applyConfigScriptDataChanges;
-      this.loadModuleInfoFromXML = loadModuleInfoFromXML;
     }
 
     public Platform getPlatform() {
@@ -509,13 +497,6 @@ public class DatabaseUtils {
      */
     public boolean applyConfigScriptDataChanges() {
       return applyConfigScriptDataChanges;
-    }
-
-    /**
-     * If it is true the database is not mounted and information should be obtained from XML files.
-     */
-    public boolean isLoadModuleInfoFromXML() {
-      return loadModuleInfoFromXML;
     }
 
   }

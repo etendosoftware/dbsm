@@ -69,9 +69,8 @@ public class CreateXML2SQL extends BaseDatabaseTask {
           .getProperty("source.path");
       boolean strictMode = true;
       boolean applyConfigScriptData = false;
-      boolean loadModuleInfoFromXML = true;
       ConfigScriptConfig config = new ConfigScriptConfig(pl, basedir, strictMode,
-          applyConfigScriptData, loadModuleInfoFromXML);
+          applyConfigScriptData);
       Database db = DatabaseUtils.readDatabase(model, config);
 
       // Write creation script
