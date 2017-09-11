@@ -334,8 +334,10 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   }
 
   /**
-   * This method is invoked from GenerateProcess task defined in ezattributes module and it is
+   * This method is only invoked from GenerateProcess task defined in ezattributes module and it is
    * required to maintain backwards compatibility and to ensures that the API is not broken.
+   * 
+   * Avoid uses loadDataStructures because process that invokes this method executes it.
    */
   protected Database readDatabaseModel() {
     // Set input file and datafilter needed in loadDataStructures
@@ -343,13 +345,9 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     datafilter = "*/src-db/database/sourcedata";
 
     boolean applyConfigScriptData = false;
-    DatabaseInfo dbInfo = readDatabaseModel(new ConfigScriptConfig(SystemService.getInstance()
-        .getPlatform(), basedir + "/../", strict, applyConfigScriptData), null);
+    ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
+        basedir + "/../", strict, applyConfigScriptData);
 
-    return dbInfo.getDatabase();
-  }
-
-  protected DatabaseInfo readDatabaseModel(ConfigScriptConfig config, Database database) {
     Database db = null;
     String modulesBaseDir = config.getBasedir() + "modules/";
     if (config.getBasedir() == null) {
@@ -363,11 +361,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray, config);
     }
-    DatabaseData dbData = new DatabaseData(db);
-    DBSMOBUtil.getInstance().loadDataStructures(config.getPlatform(), dbData, database, db,
-        modulesBaseDir, datafilter, input, config.isStrict(), false);
 
-    return new DatabaseInfo(db, dbData);
+    return db;
   }
 
   protected DatabaseInfo readDatabaseModelWithoutConfigScript(Platform platform, Database database) {
