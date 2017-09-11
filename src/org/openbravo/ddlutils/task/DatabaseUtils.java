@@ -424,13 +424,14 @@ public class DatabaseUtils {
    * @return Database object representing the loaded model
    */
   // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
-  static Database readDatabaseModel(Platform platform, File model, String basedir, String dirFilter) {
+  static Database readDatabaseModel(Platform platform, File model, String modulesBaseDir,
+      String dirFilter) {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
-    ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-        applyConfigScriptData);
+    ConfigScriptConfig config = new ConfigScriptConfig(platform, modulesBaseDir + "/../",
+        strictMode, applyConfigScriptData);
 
-    if (basedir == null) {
+    if (modulesBaseDir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
       return DatabaseUtils.readDatabase(model, config);
     }
@@ -440,8 +441,6 @@ public class DatabaseUtils {
     final Vector<File> dirs = new Vector<File>();
     dirs.add(model);
     final DirectoryScanner dirScanner = new DirectoryScanner();
-    String modulesBaseDir = config.getBasedir() + "modules/";
-
     dirScanner.setBasedir(new File(modulesBaseDir));
     final String[] dirFilterA = { dirFilter };
     dirScanner.setIncludes(dirFilterA);

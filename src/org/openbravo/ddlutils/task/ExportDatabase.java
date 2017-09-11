@@ -35,7 +35,6 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
@@ -237,7 +236,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
           // once model is exported, reload it from files to guarantee data is exported in a fixed
           // manner, other case column position could be different
           Database dbXML = DatabaseUtils.readDatabaseModel(platform, model,
-              moduledir.getAbsolutePath() + "/../", "*/src-db/database/model");
+              moduledir.getAbsolutePath(), "*/src-db/database/model");
 
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);

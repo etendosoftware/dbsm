@@ -186,10 +186,10 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     return filterForModule;
   }
 
-  private Database readModelRecursiveHelper(Platform platform, File erpBaseDir, File basedirFile) {
+  private Database readModelRecursiveHelper(File erpBaseDir, File modulesBaseDir) {
     String modelFilter = "*/src-db/database/model";
     File modelFolder = new File(erpBaseDir, "src-db/database/model");
-    String basedir = basedirFile.getAbsolutePath() + "/";
+    String basedir = modulesBaseDir + "/modules/";
 
     Database fullModelToBeTested = DatabaseUtils.readDatabaseModel(platform, modelFolder, basedir,
         modelFilter);
