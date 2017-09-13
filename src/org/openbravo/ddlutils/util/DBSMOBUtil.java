@@ -922,24 +922,24 @@ public class DBSMOBUtil {
         files.add(sourceFiles[i]);
       }
     }
-    if (modulesBaseDir != null) {
-      final String token = datafilter;
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(modulesBaseDir));
-      final String[] dirFilterA = token.split(",");
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
-        final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
-        for (int i = 0; i < fileArray.length; i++) {
-          if (fileArray[i].getName().endsWith(".xml")) {
-            files.add(fileArray[i]);
-          }
+
+    final String token = datafilter;
+    final DirectoryScanner dirScanner = new DirectoryScanner();
+    dirScanner.setBasedir(new File(modulesBaseDir));
+    final String[] dirFilterA = token.split(",");
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    final String[] incDirs = dirScanner.getIncludedDirectories();
+    for (int j = 0; j < incDirs.length; j++) {
+      final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
+      final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+      for (int i = 0; i < fileArray.length; i++) {
+        if (fileArray[i].getName().endsWith(".xml")) {
+          files.add(fileArray[i]);
         }
       }
     }
+
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
@@ -971,11 +971,6 @@ public class DBSMOBUtil {
       String modulesBaseDir, boolean strict, boolean applyConfigScriptData) {
     getLog().info("Loading and applying configuration scripts");
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
-    if (sortedTemplates == null) {
-      getLog().info("There aren't detected templates.");
-    } else if (sortedTemplates.size() == 0) {
-      getLog().info("There aren't detected templates with configScript.");
-    }
     for (String template : sortedTemplates) {
       boolean isApplied = isApplied(platform, template);
       if (isApplied) {
