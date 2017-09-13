@@ -100,7 +100,7 @@ public class DatabaseUtils {
     try {
       d.initialize();
     } catch (Exception e) {
-      log.warn("Warning: " + e.getMessage());
+      System.out.println("Warning: " + e.getMessage());
     }
     return d;
   }
