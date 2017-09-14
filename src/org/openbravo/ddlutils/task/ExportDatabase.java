@@ -86,8 +86,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
 
-    // platform.setDelimitedIdentifierModeOn(true);
-    // DBSMOBUtil.verifyRevision(platform, getCodeRevision(), getLog());
     if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
         .getAbsolutePath())) {
       if (force) {
@@ -118,7 +116,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
           moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, moduledir.getAbsolutePath());
+      DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, databaseOrgData,
+          moduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         getLog().info("Exporting module: " + util.getActiveModule(i).name);
         Database dbI = null;
@@ -159,7 +158,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
         if (testAPI) {
           getLog().info("Reading XML model for API checking" + path);
-          Database dbXML = DatabaseUtils.readDatabase(path);
+          Database dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(path);
           validateAPIForModel(platform, dbI, dbXML, ad);
         }
 
@@ -236,8 +235,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
           // once model is exported, reload it from files to guarantee data is exported in a fixed
           // manner, other case column position could be different
-          Database dbXML = DatabaseUtils.readDatabaseModel(model, moduledir.getAbsolutePath(),
-              "*/src-db/database/model");
+          Database dbXML = DatabaseUtils.readDatabaseModel(platform, model,
+              moduledir.getAbsolutePath(), "*/src-db/database/model");
 
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);

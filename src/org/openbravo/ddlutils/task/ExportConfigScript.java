@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2006 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -82,8 +82,6 @@ public class ExportConfigScript extends BaseDatabaseTask {
       final String indTemp = util.getNameOfActiveIndustryTemplate();
       industryTemplate = indTemp;
 
-      // util.getModulesForIndustryTemplate(industryTemplate, new
-      // Vector<String>());
       getLog().info("Loading model from XML files");
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -101,7 +99,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
         getLog().debug("Loading model for module. Path: " + dirs.get(i).getAbsolutePath());
         fileArray[i] = dirs.get(i);
       }
-      final Database xmlModel = DatabaseUtils.readDatabase(fileArray);
+      // ConfigScripts should not be applied in order to export changes into a configScript
+      final Database xmlModel = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
 
       getLog().info("Loading original data from XML files");
 

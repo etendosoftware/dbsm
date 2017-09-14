@@ -72,10 +72,13 @@ import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
@@ -3086,7 +3089,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     for (Change change : changes) {
       if (change instanceof ColumnDataChange) {
         columnDataChanges.add(change);
-      } else {
+      } else if (change instanceof ModelChange) {
         modelChanges.add(change);
       }
     }
@@ -3099,10 +3102,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     getSqlBuilder().setWriter(buffer);
     try {
       for (Change change : changes) {
-        if (change instanceof RemoveCheckChange) {
-          ((RemoveCheckChange) change).apply(database, isDelimitedIdentifierModeOn());
-        } else if (change instanceof ColumnSizeChange) {
+        if (change instanceof ColumnSizeChange) {
           getSqlBuilder().printColumnSizeChange(database, (ColumnSizeChange) change);
+        } else if (change instanceof RemoveTriggerChange) {
+          getSqlBuilder().printRemoveTriggerChange(database, (RemoveTriggerChange) change);
+        } else if (change instanceof RemoveIndexChange) {
+          getSqlBuilder().printRemoveIndexChange(database, (RemoveIndexChange) change);
+        } else if (change instanceof ColumnRequiredChange) {
+          getSqlBuilder().printColumnRequiredChange(database, (ColumnRequiredChange) change);
+        } else if (change instanceof RemoveCheckChange) {
+          getSqlBuilder().printRemoveCheckChange(database, (RemoveCheckChange) change);
         }
       }
       Connection connection = borrowConnection();

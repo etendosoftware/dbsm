@@ -31,6 +31,9 @@ import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -786,6 +789,51 @@ public class PostgreSqlBuilder extends SqlBuilder {
     column.setSize(Integer.toString(change.getNewSize()));
     print("ALTER TABLE " + table.getName() + " ALTER COLUMN " + column.getName() + " TYPE ");
     print(getSqlType(column));
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
+      throws IOException {
+    Trigger trigger = database.findTrigger(change.getTriggerName());
+    database.removeTrigger(trigger);
+    print("DROP TRIGGER " + trigger.getName() + " ON " + trigger.getTable());
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Index idx = table.findIndex(change.getIndexName());
+    table.removeIndex(idx);
+    print("DROP INDEX " + idx.getName());
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Column column = table.findColumn(change.getColumnName());
+    column.setRequired(change.getRequired());
+    String sqlColumnRequired = "ALTER TABLE " + table.getName() + " ALTER COLUMN "
+        + column.getName();
+    if (change.getRequired()) {
+      print(sqlColumnRequired + " SET NOT NULL");
+    } else {
+      print(sqlColumnRequired + " DROP NOT NULL");
+    }
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printRemoveCheckChange(Database database, RemoveCheckChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Check check = table.findCheck(change.getCheckName());
+    table.removeCheck(check);
+    print("ALTER TABLE " + table.getName() + " DROP CONSTRAINT " + check.getName());
     printEndOfStatement();
   }
 

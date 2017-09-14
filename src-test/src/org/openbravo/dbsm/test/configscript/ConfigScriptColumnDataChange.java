@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ddlutils.model.Database;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -32,9 +31,10 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String CONFIG_SCRIPT = "model/configScripts/configScript.xml";
+
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_ROW_ID = "1";
-  private static final String CONFIG_SCRIPT = "model/configScripts/configScript.xml";
 
   private static final Map<String, String> columnDataChanges;
 
@@ -50,11 +50,6 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
   public ConfigScriptColumnDataChange(String rdbms, String driver, String url, String sid,
       String user, String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
-  }
-
-  @Override
-  protected void doModelChanges(Database database) {
-    // Not needed as this test case does not perform model but data changes
   }
 
   @Test

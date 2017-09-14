@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -39,6 +39,7 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 import org.openbravo.ddlutils.util.OBDataset;
@@ -94,14 +95,13 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-    // platform.setDelimitedIdentifierModeOn(true);
 
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      dbXML = DatabaseUtils.readDatabase(getModel());
+      dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
     } else {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -122,7 +122,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      dbXML = DatabaseUtils.readDatabase(fileArray);
+      dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);

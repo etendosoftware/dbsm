@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Index;
@@ -27,6 +28,8 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeIndexChange/configScript.xml";
+
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_INDEX = "TEST_INDEX";
 
@@ -35,18 +38,28 @@ public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
-  @Override
-  protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Index index = table.findIndex(TEST_INDEX);
-    table.removeIndex(index);
-  }
-
   @Test
-  public void isIndexRemoved() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
+  public void isIndexRemovedOnUpdate() {
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
     Table table = database.findTable(TEST_TABLE);
     Index index = table.findIndex(TEST_INDEX);
     assertNull("Index " + TEST_INDEX + " removed by the configuration script", index);
+  }
+
+  @Test
+  public void isIndexRemovedOnInstall() {
+    Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsIndexRemoved(originalDB, TEST_TABLE, TEST_INDEX);
+  }
+
+  /**
+   * Check if index is removed from the database
+   */
+  private void assertIsIndexRemoved(Database db, String tableName, String indexName) {
+    Table table = db.findTable(tableName);
+    Index index = table.findIndex(indexName);
+    assertNull("Index " + indexName + " removed by the configuration script", index);
   }
 }

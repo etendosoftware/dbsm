@@ -14,7 +14,6 @@ package org.openbravo.dbsm.test.configscript;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
@@ -33,10 +32,10 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
-  protected Database exportModelChangesAndUpdateDatabase(String model) {
+  protected Database exportModelChangesAndUpdateDatabase(String model, List<String> configScripts) {
     cleanExportDirectory();
     resetDB();
-    Database originalDB = createDatabase(model);
+    Database originalDB = createDatabase(model, configScripts);
     Database modifiedDB = null;
     Database updatedDB = null;
     try {
@@ -45,12 +44,12 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
       log.error("Error cloning database", ex);
       return null;
     }
-    // Create new changes
-    doModelChanges(modifiedDB);
+
     // Export changes to configuration script
     exportToConfigScript(originalDB, modifiedDB, EXPORT_DIRECTORY);
+
     // Update database, applying the configuration script also
-    updatedDB = updateDatabase(model, Arrays.asList(EXPORT_DIRECTORY + "configScript.xml"));
+    updatedDB = updateDatabase(model, configScripts);
     return updatedDB;
   }
 
@@ -62,15 +61,10 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     updateDatabase(model, DATA_DIRECTORY, adTableNames, assertDBisCorrect, configScripts);
   }
 
-  protected Database createDatabaseAndApplyConfigurationScript(String model, String configScript) {
+  protected Database createDatabaseAndApplyConfigurationScript(String model,
+      List<String> configScripts) {
     resetDB();
-    Database originalDB = createDatabase(model);
-    Vector<Change> changes = readConfigScript(configScript);
-    if (changes == null) {
-      log.info("No changes retrieved from Configuration Script: " + configScript);
-    } else {
-      getPlatform().applyConfigScript(originalDB, changes);
-    }
+    Database originalDB = createDatabase(model, configScripts);
     return originalDB;
   }
 
@@ -93,7 +87,4 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     }
     exportTo.mkdirs();
   }
-
-  protected abstract void doModelChanges(Database database);
-
 }

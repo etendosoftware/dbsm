@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -26,6 +26,7 @@ import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -61,14 +62,15 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       ds.setTestOnBorrow(true);
 
       final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-      // platform.setDelimitedIdentifierModeOn(true);
 
       Writer w = new FileWriter(output);
       platform.getSqlBuilder().setScript(true);
 
       Database db = null;
-      db = readDatabaseModel();
+      DatabaseInfo dbInfo = readDatabaseModelWithoutConfigScript(platform, db);
 
+      db = dbInfo.getDatabase();
+      DatabaseData dbData = dbInfo.getDatabaseData();
       Database originaldb;
       if (getOriginalmodel() == null) {
         originaldb = platform.loadModelFromDatabase(excludeFilter);
@@ -80,21 +82,19 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabase(getModel());
+        originaldb = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
         getLog().info("Original model loaded from file.");
       }
 
-      final DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-          basedir, datafilter, input);
-
       getLog().info("Comparing databases to find differences");
 
-      OBDataset ad = new OBDataset(databaseOrgData, "AD");
+      OBDataset ad = new OBDataset(dbData, "AD");
 
+      // Now we apply the data changes in configuration scripts
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, dbData, db, basedir, false, true);
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
+      dataComparator.compareToUpdate(db, platform, dbData, ad, null);
 
       getLog().info("Data changes we will perform: ");
       for (final Change change : dataComparator.getChanges())
@@ -145,9 +145,9 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       }
       w.flush();
       w.close();
+      getLog().info("The script is created in : " + output.getPath());
 
     } catch (final Exception e) {
-      // log(e.getLocalizedMessage());
       e.printStackTrace();
       throw new BuildException(e);
     }

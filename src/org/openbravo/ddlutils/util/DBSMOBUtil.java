@@ -1,3 +1,15 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
+
 package org.openbravo.ddlutils.util;
 
 import java.io.File;
@@ -887,19 +899,20 @@ public class DBSMOBUtil {
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input, false);
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input) {
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
+        input, false);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input,
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input,
-        strict, true);
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
+        input, strict, true);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input,
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
 
     final Vector<File> files = new Vector<File>();
@@ -909,15 +922,16 @@ public class DBSMOBUtil {
         files.add(sourceFiles[i]);
       }
     }
+
     final String token = datafilter;
     final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(basedir));
+    dirScanner.setBasedir(new File(modulesBaseDir));
     final String[] dirFilterA = token.split(",");
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
     for (int j = 0; j < incDirs.length; j++) {
-      final File dirFolder = new File(basedir, incDirs[j] + "/");
+      final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
       final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
       for (int i = 0; i < fileArray.length; i++) {
         if (fileArray[i].getName().endsWith(".xml")) {
@@ -925,12 +939,11 @@ public class DBSMOBUtil {
         }
       }
     }
-    readDataIntoDatabaseData(platform, db, databaseOrgData, files);
-    applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
+
+    readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
-  public void readDataIntoDatabaseData(Platform platform, Database db,
-      DatabaseData databaseOrgData, List<File> files) {
+  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData, List<File> files) {
 
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
@@ -955,10 +968,8 @@ public class DBSMOBUtil {
   }
 
   public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,
-      String basedir, boolean strict, boolean applyConfigScriptData) {
-
+      String modulesBaseDir, boolean strict, boolean applyConfigScriptData) {
     getLog().info("Loading and applying configuration scripts");
-    Vector<File> configScripts = new Vector<File>();
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     for (String template : sortedTemplates) {
       boolean isApplied = isApplied(platform, template);
@@ -969,10 +980,9 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      File configScript = new File(new File(basedir), "/" + template
+      File configScript = new File(new File(modulesBaseDir), template
           + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
-        configScripts.add(configScript);
         DatabaseIO dbIO = new DatabaseIO();
         getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
@@ -1082,6 +1092,15 @@ public class DBSMOBUtil {
   }
 
   public void removeSortedTemplates(Platform platform, Database database, String basedir) {
+    DatabaseData dbData = new DatabaseData(database);
+    removeSortedTemplates(platform, database, dbData, basedir);
+  }
+
+  public void removeSortedTemplates(Platform platform, Database database,
+      DatabaseData databaseOrgData, String basedir) {
+    if (sortedTemplates == null) {
+      sortedTemplates = getSortedTemplates(databaseOrgData);
+    }
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
       boolean isindevelopment = false;
       for (int j = 0; j < activeModules.size(); j++) {
