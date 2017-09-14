@@ -19,7 +19,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -66,7 +65,6 @@ public class DBSMOBUtil {
   private HashMap<String, Vector<String>> prefixDependencies = new HashMap<String, Vector<String>>();
   private Vector<String> idTemplates = new Vector<String>();
   private Vector<String> idModulesToExport = new Vector<String>();
-  private Vector<String> idDependantModules = new Vector<String>();
   private List<String> sortedTemplates;
 
   private static DBSMOBUtil instance = null;
@@ -468,26 +466,6 @@ public class DBSMOBUtil {
     return null;
   }
 
-  private void getDependencyHashMap() {
-    for (final ModuleRow row : allModules) {
-      getDependencyForPrefix(row.dir, new Vector<String>(), row);
-    }
-  }
-
-  private void getDependencyForPrefix(String dir, Vector<String> idList, ModuleRow row) {
-    if (prefixDependencies.get(dir) == null)
-      prefixDependencies.put(dir, new Vector<String>());
-    prefixDependencies.get(dir).addAll(row.prefixes);
-    idList.add(row.idMod);
-    if (dependencies.get(row.idMod) != null) {
-      for (final String id : dependencies.get(row.idMod)) {
-        if (!idList.contains(id))
-          getDependencyForPrefix(dir, idList, getRow(id));
-      }
-    }
-
-  }
-
   private void getDependencies(Platform platform) {
     final String query = "SELECT * from AD_MODULE_DEPENDENCY";
     final Connection connection = platform.borrowConnection();
@@ -569,19 +547,13 @@ public class DBSMOBUtil {
     return null;
   }
 
-  public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
+  public boolean hasBeenModified(OBDataset dataset, boolean updateCRC) {
     Connection connection = null;
     try {
       connection = getUnpooledConnection();
       // Execute the session config query before calling ad_db_modified, the same way it is done
       // when using the Module Management Console
       executeSessionConfigQuery(connection);
-      PreparedStatement statementDate = connection
-          .prepareStatement("SELECT last_dbupdate from AD_SYSTEM_INFO");
-      statementDate.execute();
-      ResultSet rsDate = statementDate.getResultSet();
-      rsDate.next();
-      Timestamp date = rsDate.getTimestamp(1);
 
       getLog().info("Checking if database structure was modified locally.");
       String sql;
@@ -619,7 +591,6 @@ public class DBSMOBUtil {
       }
     }
     return false;
-
   }
 
   public void updateCRC(Platform platform) {
