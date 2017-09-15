@@ -75,6 +75,8 @@ public class ImportSampledata extends BaseDatabaseTask {
     platform.setOverrideDefaultValueOnMissingData(false);
     platform.setMaxThreads(threads);
 
+    // Checking changes in the database before import sampledata
+    boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().haveChangesTheDatabase();
     try {
 
       Vector<File> dirs = new Vector<File>();
@@ -209,6 +211,14 @@ public class ImportSampledata extends BaseDatabaseTask {
         if (con != null) {
           platform.returnConnection(con);
         }
+      }
+
+      if (isDatabaseModifiedPreviously) {
+        log.info("It have been detected changes in the database before import the sampledata and for this reason checksum is not updated.");
+      } else {
+        // Updated checksum in order to handled properly the case when a module script modified the
+        // database structure.
+        DBSMOBUtil.getInstance().updateCRC();
       }
 
     } catch (final Exception e) {

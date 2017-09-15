@@ -564,26 +564,11 @@ public class DBSMOBUtil {
       executeSessionConfigQuery(connection);
 
       getLog().info("Checking if database structure was modified locally.");
-      String sql;
-      if (updateCRC)
-        sql = "SELECT ad_db_modified('Y') FROM DUAL";
-      else
-        sql = "SELECT ad_db_modified('N') FROM DUAL";
-
-      PreparedStatement statement = connection.prepareStatement(sql);
-      statement.execute();
-      ResultSet rs = statement.getResultSet();
-      rs.next();
-      String answer = rs.getString(1);
-      if (answer.equalsIgnoreCase("Y"))
+      if (haveChangesTheDatabase())
         return true;
 
       getLog().info("Checking if data has changed in the application dictionary.");
-      boolean datachange = dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
-      if (datachange)
-        return true;
-      else
-        return false;
+      return dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -615,9 +600,7 @@ public class DBSMOBUtil {
       // Execute the session config query before calling ad_db_modified, the same way it is done
       // when using the Module Management Console
       executeSessionConfigQuery(connection);
-      String sql = "SELECT ad_db_modified('Y') FROM DUAL";
-      PreparedStatement statement = connection.prepareStatement(sql);
-      statement.execute();
+      invokeAdDbModified(connection, true);
     } catch (Exception e) {
       System.out.println("There was a problem updating the CRC in the database.");
       e.printStackTrace();
@@ -630,6 +613,51 @@ public class DBSMOBUtil {
         getLog().error("Error while closing connection", e);
       }
     }
+  }
+
+  /**
+   * This method checks if database has changes by invoking ad_db_modified function. In any case the
+   * checksum is not updated.
+   * 
+   * @return true if database structure have been modified.
+   */
+  public boolean haveChangesTheDatabase() {
+    Connection connection = null;
+    boolean hasBeenChanges = false;
+    try {
+      connection = getUnpooledConnection();
+      PreparedStatement statement = invokeAdDbModified(connection, false);
+      ResultSet rs = statement.getResultSet();
+      rs.next();
+      String answer = rs.getString(1);
+      if (answer.equalsIgnoreCase("Y"))
+        hasBeenChanges = true;
+    } catch (Exception e) {
+      System.out.println("There was a problem checking the CRC in the database.");
+      e.printStackTrace();
+    } finally {
+      try {
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        getLog().error("Error while closing connection", e);
+      }
+    }
+    return hasBeenChanges;
+  }
+
+  private PreparedStatement invokeAdDbModified(Connection connection, boolean updateChecksum)
+      throws SQLException {
+    String sql;
+    if (updateChecksum)
+      sql = "SELECT ad_db_modified('Y') FROM DUAL";
+    else
+      sql = "SELECT ad_db_modified('N') FROM DUAL";
+
+    PreparedStatement statement = connection.prepareStatement(sql);
+    statement.execute();
+    return statement;
   }
 
   private Connection getUnpooledConnection() {
