@@ -39,7 +39,6 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModuleRow;
 import org.openbravo.ddlutils.util.OBDataset;
@@ -368,7 +367,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       } catch (Exception e) {
         log.error("Error while executing postscript: ", e);
       }
-      DBSMOBUtil.getInstance().updateCRC(platform);
+      DBSMOBUtil.getInstance().updateCRC();
       DatabaseData databaseOrgData2 = new DatabaseData(dbAD);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData2, dbAD, dbAD, basedir,
           datafilter, input);

@@ -547,6 +547,14 @@ public class DBSMOBUtil {
     return null;
   }
 
+  /**
+   * @deprecated platform it is not used at all. Replaced by
+   *             {@link #hasBeenModified(OBDataset, boolean)} method.
+   */
+  public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
+    return hasBeenModified(dataset, updateCRC);
+  }
+
   public boolean hasBeenModified(OBDataset dataset, boolean updateCRC) {
     Connection connection = null;
     try {
@@ -593,7 +601,14 @@ public class DBSMOBUtil {
     return false;
   }
 
+  /**
+   * @deprecated platform it is not used at all. Replaced by {@link #updateCRC()} method.
+   */
   public void updateCRC(Platform platform) {
+    updateCRC();
+  }
+
+  public void updateCRC() {
     Connection connection = null;
     try {
       connection = getUnpooledConnection();

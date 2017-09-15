@@ -280,7 +280,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
       getLog().info("Writing checksum info");
       DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
           .getAbsolutePath());
-      DBSMOBUtil.getInstance().updateCRC(platform);
+      DBSMOBUtil.getInstance().updateCRC();
     } catch (Exception e) {
       throw new BuildException(e);
     }

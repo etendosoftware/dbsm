@@ -255,7 +255,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       } else {
         platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
       }
-      DBSMOBUtil.getInstance().updateCRC(platform);
+      DBSMOBUtil.getInstance().updateCRC();
       if (!triggersEnabled) {
         getLog()
             .error(

@@ -254,7 +254,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       for (final Change c : notExportedChanges) {
         getLog().info(c);
       }
-      DBSMOBUtil.getInstance().updateCRC(platform);
+      DBSMOBUtil.getInstance().updateCRC();
     } catch (Exception e) {
       e.printStackTrace();
     }
