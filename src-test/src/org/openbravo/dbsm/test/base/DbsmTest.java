@@ -352,16 +352,11 @@ public class DbsmTest {
         platform.getSqlBuilder().setForcedRecreation("all");
       }
 
-      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
+      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), false);
 
       Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
-
-      // Applied manually ConfigScripts. Applied in the same order as in the dbsm source
-      if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, false);
-      }
 
       if (adDirectoryName != null) {
         DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originalDB, newDB,
@@ -369,8 +364,12 @@ public class DbsmTest {
             false);
       }
 
-      OBDataset ad = new OBDataset(databaseOrgData);
+      // Applied ConfigScripts in the same order as in the dbsm source
+      if (configScripts != null) {
+        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
+      }
 
+      OBDataset ad = new OBDataset(databaseOrgData);
       if (adDirectoryName != null && adTableNames != null) {
         Vector<OBDatasetTable> adTables = new Vector<OBDatasetTable>();
         for (String tName : adTableNames) {
@@ -396,10 +395,6 @@ public class DbsmTest {
         DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
       }
       connection = platform.borrowConnection();
-      // Now we apply the data part of the configuration scripts
-      if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
-      }
       log.info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -466,9 +461,10 @@ public class DbsmTest {
       if (assertDBisCorrect) {
         ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
             platform.isDelimitedIdentifierModeOn());
+
+        // DatabaseUtils.readDatabaseWithoutConfigScript(dbModel)
         @SuppressWarnings("unchecked")
-        List<ModelChange> newChanges = comparator.compare(
-            DatabaseUtils.readDatabaseWithoutConfigScript(dbModel),
+        List<ModelChange> newChanges = comparator.compare(newDB,
             platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
@@ -536,7 +532,14 @@ public class DbsmTest {
     databaseOrgData.setStrictMode(false);
 
     if (configScripts != null) {
-      applyConfigScripts(configScripts, platform, databaseOrgData, db, true);
+      for (String configScript : configScripts) {
+        Vector<Change> changes = readConfigScript(configScript);
+        if (changes == null) {
+          log.info("No changes retrieved from Configuration Script: " + configScript);
+        } else {
+          getPlatform().applyConfigScript(db, changes);
+        }
+      }
     }
 
     return db;

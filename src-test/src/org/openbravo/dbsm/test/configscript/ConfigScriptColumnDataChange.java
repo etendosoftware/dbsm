@@ -15,7 +15,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -58,18 +57,22 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
     List<String> configScripts = Arrays.asList(CONFIG_SCRIPT);
     applyConfigurationScripts(BASE_MODEL, adTableNames, configScripts);
     assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(), getRowValues(TEST_ROW_ID));
+        getColumnDataChangesColumnValues(),
+        getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 
-  // This test checks that data changes present in a Configuration Script are applied properly.
-  // Eventually, this test makes use of {@link org.apache.ddlutils.Platform#applyConfigScript}
-  // method.
+  /**
+   * This test checks that data changes present in a Configuration Script are applied properly.
+   * Eventually, this test makes use of {@link org.apache.ddlutils.Platform#applyConfigScript}
+   * method.
+   */
   @Test
   public void isConfigurationScriptApplied() {
     List<String> adTableNames = Arrays.asList(TEST_TABLE);
     applyConfigurationScript(BASE_MODEL, adTableNames, CONFIG_SCRIPT);
     assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(), getRowValues(TEST_ROW_ID));
+        getColumnDataChangesColumnValues(),
+        getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 
   private static List<String> getColumnDataChangesColumnValues() {
@@ -80,23 +83,4 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
     return columnDataChanges.keySet();
   }
 
-  private List<String> getRowValues(String rowId) {
-    List<String> values = new ArrayList<String>();
-    try {
-      Row row = getRowValues(TEST_TABLE, rowId);
-      for (String column : getColumnDataChangesColumnNames()) {
-        values.add(getColumnValue(row, column));
-      }
-    } catch (SQLException sqlex) {
-      log.error("Error retrieving row", sqlex);
-    }
-    return values;
-  }
-
-  private String getColumnValue(Row row, String columnName) {
-    if (getRdbms() == Rdbms.ORA) {
-      return row.getValue(columnName.toUpperCase());
-    }
-    return row.getValue(columnName.toLowerCase());
-  }
 }
