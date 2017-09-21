@@ -3,6 +3,7 @@
     <excludedFunction name="GIN_EXTRACT_QUERY_TRGM"/>
     <excludedFunction name="GIN_EXTRACT_VALUE_TRGM"/>
     <excludedFunction name="GIN_TRGM_CONSISTENT"/>
+    <excludedFunction name="GIN_TRGM_TRICONSISTENT"/>
     <excludedFunction name="GTRGM_COMPRESS"/>
     <excludedFunction name="GTRGM_CONSISTENT"/>
     <excludedFunction name="GTRGM_DECOMPRESS"/>
@@ -19,4 +20,9 @@
     <excludedFunction name="SIMILARITY"/>
     <excludedFunction name="SIMILARITY_DIST"/>
     <excludedFunction name="SIMILARITY_OP"/>
+    <excludedFunction name="WORD_SIMILARITY"/>
+    <excludedFunction name="WORD_SIMILARITY_DIST_OP"/>
+    <excludedFunction name="WORD_SIMILARITY_DIST_COMMUTATOR_OP"/>
+    <excludedFunction name="WORD_SIMILARITY_OP"/>
+    <excludedFunction name="WORD_SIMILARITY_COMMUTATOR_OP"/>
   </vector>
