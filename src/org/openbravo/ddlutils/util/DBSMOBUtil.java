@@ -411,30 +411,6 @@ public class DBSMOBUtil {
     return false;
   }
 
-  public void generateIndustryTemplateTree() {
-    for (final ModuleRow row : allModules) {
-      if (row.type.equalsIgnoreCase("T") && incdependencies.get(row.idMod) == null) {
-        // We've found an Industry Template which is not included in any
-        // other one.
-        // We will find the Industry Templates which are included in it
-        recursiveTemplateLoader(row.idMod);
-        idTemplates.add(row.idMod);
-      }
-    }
-  }
-
-  private void recursiveTemplateLoader(String idDepTemplate) {
-    for (final ModuleRow row : allModules) {
-      if (row.type.equalsIgnoreCase("T")) {
-        final Vector<String> dep = incdependencies.get(row.idMod);
-        if (dep != null && dep.contains(idDepTemplate)) {
-          recursiveTemplateLoader(row.idMod);
-          idTemplates.add(row.idMod);
-        }
-      }
-    }
-  }
-
   public void checkTemplateExportIsPossible(Logger log) {
     int numTemplatesInDevelopment = 0;
     ModuleRow rowT = null;
