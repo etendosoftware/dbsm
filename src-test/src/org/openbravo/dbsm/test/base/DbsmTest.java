@@ -447,7 +447,7 @@ public class DbsmTest {
       log.info("Recreating not null constraints");
       platform.enableNOTNULLColumns(newDB, ad);
       log.info("Executing update final script (dropping temporary tables)");
-      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, false, changes,
+      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, true, changes,
           null, ad);
 
       // assertThat("Postscript should be correct", postscriptCorrect, is(true));
