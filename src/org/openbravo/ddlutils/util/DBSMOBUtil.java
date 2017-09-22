@@ -540,7 +540,7 @@ public class DBSMOBUtil {
       executeSessionConfigQuery(connection);
 
       getLog().info("Checking if database structure was modified locally.");
-      if (haveChangesTheDatabase())
+      if (databaseHasChanges())
         return true;
 
       getLog().info("Checking if data has changed in the application dictionary.");
@@ -576,7 +576,9 @@ public class DBSMOBUtil {
       // Execute the session config query before calling ad_db_modified, the same way it is done
       // when using the Module Management Console
       executeSessionConfigQuery(connection);
-      invokeAdDbModified(connection, true);
+      String sql = "SELECT ad_db_modified('Y') FROM DUAL";
+      PreparedStatement statement = connection.prepareStatement(sql);
+      statement.execute();
     } catch (Exception e) {
       System.out.println("There was a problem updating the CRC in the database.");
       e.printStackTrace();
@@ -597,20 +599,19 @@ public class DBSMOBUtil {
    * 
    * @return true if database structure have been modified.
    */
-  public boolean haveChangesTheDatabase() {
+  public boolean databaseHasChanges() {
     Connection connection = null;
     boolean hasBeenChanges = false;
     try {
       connection = getUnpooledConnection();
-      PreparedStatement statement = invokeAdDbModified(connection, false);
+      PreparedStatement statement = isAdDbModified(connection);
       ResultSet rs = statement.getResultSet();
       rs.next();
       String answer = rs.getString(1);
       if (answer.equalsIgnoreCase("Y"))
         hasBeenChanges = true;
     } catch (Exception e) {
-      System.out.println("There was a problem checking the CRC in the database.");
-      e.printStackTrace();
+      getLog().error("There was a problem checking the CRC in the database.", e);
     } finally {
       try {
         if (connection != null) {
@@ -623,14 +624,8 @@ public class DBSMOBUtil {
     return hasBeenChanges;
   }
 
-  private PreparedStatement invokeAdDbModified(Connection connection, boolean updateChecksum)
-      throws SQLException {
-    String sql;
-    if (updateChecksum)
-      sql = "SELECT ad_db_modified('Y') FROM DUAL";
-    else
-      sql = "SELECT ad_db_modified('N') FROM DUAL";
-
+  private PreparedStatement isAdDbModified(Connection connection) throws SQLException {
+    String sql = "SELECT ad_db_modified('N') FROM DUAL";
     PreparedStatement statement = connection.prepareStatement(sql);
     statement.execute();
     return statement;

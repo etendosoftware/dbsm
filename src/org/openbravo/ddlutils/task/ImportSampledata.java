@@ -76,7 +76,7 @@ public class ImportSampledata extends BaseDatabaseTask {
     platform.setMaxThreads(threads);
 
     // Checking changes in the database before import sampledata
-    boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().haveChangesTheDatabase();
+    boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().databaseHasChanges();
     try {
 
       Vector<File> dirs = new Vector<File>();
@@ -213,10 +213,12 @@ public class ImportSampledata extends BaseDatabaseTask {
         }
       }
 
+      // Do not update the checksum if the db structure has been modified right before executing
+      // import.sample.data task manually
       if (isDatabaseModifiedPreviously) {
         log.info("It have been detected changes in the database before import the sampledata and for this reason checksum is not updated.");
       } else {
-        // Updated checksum in order to handled properly the case when a module script modified the
+        // Update checksum in order to handle properly the case when a module script modified the
         // database structure.
         DBSMOBUtil.getInstance().updateCRC();
       }
