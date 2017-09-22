@@ -25,8 +25,8 @@ import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.tools.ant.BuildException;
-import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
@@ -110,7 +110,9 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
       final Database oldModel = (Database) originaldb.clone();
       platform.getSqlBuilder().setWriter(w);
       getLog().info("Updating database model...");
-      platform.getSqlBuilder().alterDatabase(originaldb, db, null);
+      CreationParameters params = null;
+      platform.getSqlBuilder().prepareDatabaseForAlter(oldModel, oldModel, params);
+      platform.getSqlBuilder().alterDatabase(originaldb, db, params);
       getLog().info("Model update complete.");
 
       getLog().info("Disabling foreign keys");
