@@ -249,58 +249,14 @@ public class Oracle8Platform extends PlatformImplBase {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void disableAllTriggers(Connection connection, Database model, boolean continueOnError)
-      throws DatabaseOperationException {
-
-    String current = null;
-    try {
-      current = "SELECT 'ALTER TRIGGER'|| ' ' || TRIGGER_NAME || ' ' || 'DISABLE' SQL_STR FROM USER_TRIGGERS";
-      PreparedStatement pstmt = connection.prepareStatement(current);
-      ResultSet rs = pstmt.executeQuery();
-
-      while (rs.next()) {
-        current = rs.getString("SQL_STR");
-        PreparedStatement pstmtd = connection.prepareStatement(current);
-        pstmtd.executeUpdate();
-        pstmtd.close();
-      }
-      rs.close();
-      pstmt.close();
-    } catch (SQLException e) {
-      System.out.println("SQL command failed with " + e.getMessage());
-      System.out.println(current);
-      throw new DatabaseOperationException("Error while disabling triggers ", e);
-    }
+  @Override
+  protected String getQueryToBuildTriggerDisablementQuery() {
+    return "SELECT 'ALTER TRIGGER'|| ' ' || TRIGGER_NAME || ' ' || 'DISABLE' SQL_STR FROM USER_TRIGGERS";
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
-      throws DatabaseOperationException {
-
-    String current = null;
-    try {
-      current = "SELECT 'ALTER TRIGGER'|| ' ' || TRIGGER_NAME || ' ' || 'ENABLE' SQL_STR FROM USER_TRIGGERS";
-      PreparedStatement pstmt = connection.prepareStatement(current);
-      ResultSet rs = pstmt.executeQuery();
-      while (rs.next()) {
-        current = rs.getString("SQL_STR");
-        PreparedStatement pstmtd = connection.prepareStatement(current);
-        pstmtd.executeUpdate();
-        pstmtd.close();
-      }
-      rs.close();
-      pstmt.close();
-      return true;
-    } catch (SQLException e) {
-      System.out.println("SQL command failed with " + e.getMessage());
-      System.out.println(current);
-      throw new DatabaseOperationException("Error while enabling triggers ", e);
-    }
+  @Override
+  protected String getQueryToBuildTriggerEnablementQuery() {
+    return "SELECT 'ALTER TRIGGER'|| ' ' || TRIGGER_NAME || ' ' || 'ENABLE' SQL_STR FROM USER_TRIGGERS";
   }
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)

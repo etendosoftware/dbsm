@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2013-2016 Openbravo S.L.U.
+ * Copyright (C) 2013-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -24,6 +24,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -35,7 +38,9 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
+import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
@@ -52,6 +57,7 @@ public class ImportSampledata extends BaseDatabaseTask {
   private static final String POSTGRE_RDBMS = "POSTGRE";
 
   private boolean executeModuleScripts = true;
+  private int threads = 0;
   private String rdbms;
 
   public ImportSampledata() {
@@ -67,7 +73,10 @@ public class ImportSampledata extends BaseDatabaseTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // default value defined for a column should be used on missing data
     platform.setOverrideDefaultValueOnMissingData(false);
+    platform.setMaxThreads(threads);
 
+    // Checking changes in the database before import sampledata
+    boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().databaseHasChanges();
     try {
 
       Vector<File> dirs = new Vector<File>();
@@ -84,7 +93,12 @@ public class ImportSampledata extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray2[i] = dirs.get(i);
       }
-      Database db = DatabaseUtils.readDatabase(fileArray2);
+
+      boolean strictMode = false;
+      boolean applyConfigScriptData = false;
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+          applyConfigScriptData);
+      Database db = DatabaseUtils.readDatabase(fileArray2, config);
 
       log.info("Disabling constraints...");
       Connection con = null;
@@ -147,19 +161,23 @@ public class ImportSampledata extends BaseDatabaseTask {
           getLog().debug("Number of files read: " + files.size());
 
           getLog().info("Inserting data into the database...");
-
+          ExecutorService es = Executors.newFixedThreadPool(platform.getMaxThreads());
           for (int i = 0; i < files.size(); i++) {
             File f = files.get(i);
-            getLog().debug("Importing data from file: " + files.get(i).getName());
-            if (f.getName().endsWith(".xml")) {
-              importXmlFile(f, platform, db);
-            } else if (f.getName().endsWith(".copy")) {
-              if (POSTGRE_RDBMS.equals(rdbms)) {
-                importPgCopyFile(f, platform);
-              } else {
-                getLog().warn("File " + f.getName() + " cannot be imported in Oracle");
-              }
-            }
+            getLog().debug("Queueing data import from file: " + files.get(i).getName());
+            ImportRunner ir = new ImportRunner(getLog(), platform, db, f, rdbms);
+            es.execute(ir);
+          }
+          es.shutdown();
+          boolean ok;
+          try {
+            // Wait until all the tables have been imported, or until 24 hours have passed
+            ok = es.awaitTermination(24, TimeUnit.HOURS);
+          } catch (InterruptedException e) {
+            throw new RuntimeException("InterruptedException in ");
+          }
+          if (!ok) {
+            throw new RuntimeException("Didn't finish in timeout");
           }
         }
       }
@@ -193,6 +211,16 @@ public class ImportSampledata extends BaseDatabaseTask {
         if (con != null) {
           platform.returnConnection(con);
         }
+      }
+
+      // Do not update the checksum if the db structure has been modified right before executing
+      // import.sample.data task manually
+      if (isDatabaseModifiedPreviously) {
+        log.info("It have been detected changes in the database before import the sampledata and for this reason checksum is not updated.");
+      } else {
+        // Update checksum in order to handle properly the case when a module script modified the
+        // database structure.
+        DBSMOBUtil.getInstance().updateCRC();
       }
 
     } catch (final Exception e) {
@@ -299,20 +327,58 @@ public class ImportSampledata extends BaseDatabaseTask {
     this.executeModuleScripts = executeModuleScripts;
   }
 
-  private void importXmlFile(File file, Platform platform, Database db) {
-    final DatabaseDataIO dbdio = new DatabaseDataIO();
-    dbdio.setEnsureFKOrder(false);
-    DataReader dataReader = null;
-    dbdio.setUseBatchMode(true);
-    dataReader = dbdio.getConfiguredDataReader(platform, db);
-    dataReader.getSink().start();
-    dbdio.writeDataToDatabase(dataReader, file);
-    dataReader.getSink().end();
+  public void setThreads(int threads) {
+    this.threads = threads;
   }
 
-  private void importPgCopyFile(File file, Platform platform) {
-    final PostgreSqlDatabaseDataIO dbdio = new PostgreSqlDatabaseDataIO();
-    dbdio.importCopyFile(file, platform);
+  /**
+   * Runnable class that will read data from a file and will write it in the database
+   *
+   */
+  private static class ImportRunner implements Runnable {
+    private final Logger log;
+    private final Platform platform;
+    private final Database db;
+    private final File file;
+    private final String rdbms;
+
+    public ImportRunner(Logger log, Platform platform, Database db, File file, String rdbms) {
+      this.log = log;
+      this.platform = platform;
+      this.db = db;
+      this.file = file;
+      this.rdbms = rdbms;
+    }
+
+    @Override
+    public void run() {
+      String fileName = file.getName();
+      log.debug("Importing data from file: " + fileName);
+      if (fileName.endsWith(".xml")) {
+        importXmlFile();
+      } else if (fileName.endsWith(".copy")) {
+        if (POSTGRE_RDBMS.equals(rdbms)) {
+          importPgCopyFile();
+        } else {
+          log.warn("File " + fileName + " cannot be imported in Oracle");
+        }
+      }
+    }
+
+    private void importXmlFile() {
+      final DatabaseDataIO dbdio = new DatabaseDataIO();
+      dbdio.setEnsureFKOrder(false);
+      dbdio.setUseBatchMode(true);
+      DataReader dataReader = dbdio.getConfiguredDataReader(platform, db);
+      dataReader.getSink().start();
+      dbdio.writeDataToDatabase(dataReader, file);
+      dataReader.getSink().end();
+    }
+
+    private void importPgCopyFile() {
+      final PostgreSqlDatabaseDataIO dbdio = new PostgreSqlDatabaseDataIO();
+      dbdio.importCopyFile(file, platform);
+    }
   }
 
 }

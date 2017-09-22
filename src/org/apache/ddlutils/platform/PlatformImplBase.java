@@ -72,10 +72,14 @@ import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
+import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemoveRowChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Column;
@@ -2529,7 +2533,38 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void disableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
-    throw new DatabaseOperationException("Error: Operation not supported");
+
+    try {
+      StringWriter endStatementBuffer = new StringWriter();
+      getSqlBuilder().setWriter(endStatementBuffer);
+      getSqlBuilder().printEndOfStatement();
+
+      String endOfStatement = endStatementBuffer.toString();
+
+      StringBuilder buffer = new StringBuilder();
+      String query = getQueryToBuildTriggerDisablementQuery();
+      try (PreparedStatement pstmt = connection.prepareStatement(query);
+          ResultSet rs = pstmt.executeQuery();) {
+        while (rs.next()) {
+          buffer.append(rs.getString("SQL_STR"));
+          buffer.append(endOfStatement);
+        }
+        evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      } catch (SQLException e) {
+        getLog().error("SQL command failed: " + query, e);
+        throw new DatabaseOperationException("Error while disabling triggers ", e);
+      }
+    } catch (IOException e) {
+      getLog().error("Error when writing in a StringWriter", e);
+    }
+  }
+
+  /**
+   * @return a query that must return a list of queries (one row per table) that can be used to
+   *         disable the user triggers of the each table
+   */
+  protected String getQueryToBuildTriggerDisablementQuery() {
+    return "";
   }
 
   /**
@@ -2581,7 +2616,38 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
-    throw new DatabaseOperationException("Error: Operation not supported");
+    try {
+      StringWriter endStatementBuffer = new StringWriter();
+      getSqlBuilder().setWriter(endStatementBuffer);
+      getSqlBuilder().printEndOfStatement();
+
+      String endOfStatement = endStatementBuffer.toString();
+
+      StringBuilder buffer = new StringBuilder();
+      String query = getQueryToBuildTriggerEnablementQuery();
+      try (PreparedStatement pstmt = connection.prepareStatement(query);
+          ResultSet rs = pstmt.executeQuery();) {
+        while (rs.next()) {
+          buffer.append(rs.getString("SQL_STR"));
+          buffer.append(endOfStatement);
+        }
+        evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+      } catch (SQLException e) {
+        getLog().error("SQL command failed: " + query, e);
+        throw new DatabaseOperationException("Error while disabling triggers ", e);
+      }
+    } catch (IOException e) {
+      getLog().error("Error when writing in a StringWriter", e);
+    }
+    return true;
+  }
+
+  /**
+   * @return a query that must return a list of queries (one row per table) that can be used to
+   *         enable the user triggers of the each table
+   */
+  protected String getQueryToBuildTriggerEnablementQuery() {
+    return "";
   }
 
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
@@ -3063,7 +3129,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     for (Change change : changes) {
       if (change instanceof ColumnDataChange) {
         columnDataChanges.add(change);
-      } else {
+      } else if (change instanceof ModelChange) {
         modelChanges.add(change);
       }
     }
@@ -3078,6 +3144,14 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       for (Change change : changes) {
         if (change instanceof ColumnSizeChange) {
           getSqlBuilder().printColumnSizeChange(database, (ColumnSizeChange) change);
+        } else if (change instanceof RemoveTriggerChange) {
+          getSqlBuilder().printRemoveTriggerChange(database, (RemoveTriggerChange) change);
+        } else if (change instanceof RemoveIndexChange) {
+          getSqlBuilder().printRemoveIndexChange(database, (RemoveIndexChange) change);
+        } else if (change instanceof ColumnRequiredChange) {
+          getSqlBuilder().printColumnRequiredChange(database, (ColumnRequiredChange) change);
+        } else if (change instanceof RemoveCheckChange) {
+          getSqlBuilder().printRemoveCheckChange(database, (RemoveCheckChange) change);
         }
       }
       Connection connection = borrowConnection();

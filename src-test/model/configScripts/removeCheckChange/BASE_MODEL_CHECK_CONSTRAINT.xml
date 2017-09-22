@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TEST_C" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <check name="TEST_CONSTRAINT"><![CDATA[TEST_C IN ('Y', 'N')]]></check>
+    </table>    
+  </database>

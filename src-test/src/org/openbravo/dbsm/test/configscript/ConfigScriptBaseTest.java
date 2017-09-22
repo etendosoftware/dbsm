@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -11,23 +11,17 @@
  */
 package org.openbravo.dbsm.test.configscript;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assume.assumeThat;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
-import org.codehaus.jettison.json.JSONException;
-import org.junit.Before;
-import org.junit.runners.Parameterized.Parameters;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
 public abstract class ConfigScriptBaseTest extends DbsmTest {
@@ -36,44 +30,20 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
   protected static final String DATA_DIRECTORY = "data/configScripts";
   protected static final String EXPORT_DIRECTORY = "/tmp/export-test/";
 
-  protected enum UpdateModelTask {
-    installSource, updateDatabase
-  }
-
-  private UpdateModelTask task;
-
   public ConfigScriptBaseTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, UpdateModelTask task) throws FileNotFoundException, IOException {
+      String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
-    this.task = task;
   }
 
-  @Parameters(name = "DB: {6} - task: {7}")
-  public static Collection<Object[]> parameters() throws IOException, JSONException {
-    List<Object[]> configs = new ArrayList<Object[]>();
-
-    for (String[] param : DbsmTest.params()) {
-      for (UpdateModelTask task : UpdateModelTask.values()) {
-        List<Object> p = new ArrayList<Object>(Arrays.asList(param));
-        p.add(task);
-        configs.add(p.toArray());
-      }
-    }
-    return configs;
+  protected Database exportModelChangesAndUpdateDatabase(String model, List<String> configScripts) {
+    return exportModelChangesAndUpdateDatabase(model, null, configScripts, null);
   }
 
-  @Before
-  public void executeOnlyInUpdateDatabaseTask() {
-    // See issue https://issues.openbravo.com/view.php?id=34102
-    // Currently some model changes are not supported by install.source
-    // Meantime test classes extending this one will only consider update.database flow
-    assumeThat("not executing install.source task", task, is(UpdateModelTask.updateDatabase));
-  }
-
-  protected Database exportModelChangesAndUpdateDatabase(String model) {
+  protected Database exportModelChangesAndUpdateDatabase(String model, List<String> adTableNames,
+      List<String> configScripts, String dataDir) {
     cleanExportDirectory();
     resetDB();
-    Database originalDB = createDatabase(model);
+    Database originalDB = createDatabase(model, configScripts);
     Database modifiedDB = null;
     Database updatedDB = null;
     try {
@@ -82,12 +52,12 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
       log.error("Error cloning database", ex);
       return null;
     }
-    // Create new changes
-    doModelChanges(modifiedDB);
+
     // Export changes to configuration script
     exportToConfigScript(originalDB, modifiedDB, EXPORT_DIRECTORY);
-    // Update database, applying the configuration script also
-    updatedDB = updateDatabase(model, Arrays.asList(EXPORT_DIRECTORY + "configScript.xml"));
+
+    // Update database, applying the configuration script also..maybe false?
+    updatedDB = updateDatabase(model, dataDir, adTableNames, true, configScripts);
     return updatedDB;
   }
 
@@ -97,6 +67,13 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     boolean assertDBisCorrect = Boolean.TRUE;
     // Update database, applying the configuration script data changes also
     updateDatabase(model, DATA_DIRECTORY, adTableNames, assertDBisCorrect, configScripts);
+  }
+
+  protected Database createDatabaseAndApplyConfigurationScript(String model,
+      List<String> configScripts) {
+    resetDB();
+    Database originalDB = createDatabase(model, configScripts);
+    return originalDB;
   }
 
   protected void applyConfigurationScript(String model, List<String> adTableNames,
@@ -111,6 +88,26 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     }
   }
 
+  protected List<String> getRowValues(String rowId, String testTabe, Set<String> dataChanges) {
+    List<String> values = new ArrayList<String>();
+    try {
+      Row row = getRowValues(testTabe, rowId);
+      for (String column : dataChanges) {
+        values.add(getColumnValue(row, column));
+      }
+    } catch (SQLException sqlex) {
+      log.error("Error retrieving row", sqlex);
+    }
+    return values;
+  }
+
+  private String getColumnValue(Row row, String columnName) {
+    if (getRdbms() == Rdbms.ORA) {
+      return row.getValue(columnName.toUpperCase());
+    }
+    return row.getValue(columnName.toLowerCase());
+  }
+
   private void cleanExportDirectory() {
     File exportTo = new File(EXPORT_DIRECTORY);
     if (exportTo.exists()) {
@@ -118,7 +115,4 @@ public abstract class ConfigScriptBaseTest extends DbsmTest {
     }
     exportTo.mkdirs();
   }
-
-  protected abstract void doModelChanges(Database database);
-
 }

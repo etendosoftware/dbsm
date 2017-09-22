@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -55,7 +55,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;
-
+    long t = System.currentTimeMillis();
     boolean _ignoreWarns = platform.areWarnsIgnored();
 
     ArrayList<String> aForcedCommands = new ArrayList<String>();
@@ -150,7 +150,8 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
         }
       } while (changedSomething);
 
-      logCommands(errors, commandCount);
+      logCommands(errors, commandCount, t);
+      t = System.currentTimeMillis();
 
       // execute the forced commands
       int loops = 0;
@@ -189,13 +190,14 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
           }
         }
         String errorNumber2 = "";
-        if (errors > 0)
+        if (errors > 0) {
           errorNumber2 = " with " + errors + " error(s)";
-        else
+        } else {
           errorNumber2 = " successfully";
+        }
+        errorNumber2 += " in " + (System.currentTimeMillis() - t + " ms");
         if (commandCount > 0) {
           _log.info("Executed " + commandCount + " forced SQL command(s)" + errorNumber2);
-
         }
       }
       Iterator it = errorMap.keySet().iterator();
@@ -227,12 +229,15 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
     return errors;
   }
 
-  private void logCommands(int errors, int commandCount) {
+  private void logCommands(int errors, int commandCount, long startTime) {
     String errorNumber = "";
-    if (errors > 0)
+    if (errors > 0) {
       errorNumber = " with " + errors + " error(s)";
-    else
+    } else {
       errorNumber = " successfully";
+    }
+
+    errorNumber += " in " + (System.currentTimeMillis() - startTime + " ms");
     if (commandCount > 0) {
       if (errors == 0 && !logInfoSucessCommands) {
         _log.debug("Executed " + commandCount + " SQL command(s)" + errorNumber);
@@ -248,6 +253,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;
+    long t = System.currentTimeMillis();
 
     // we tokenize the SQL along the delimiters, and we also make sure that
     // only delimiters
@@ -325,7 +331,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
       }
     }
 
-    logCommands(errors, commandCount);
+    logCommands(errors, commandCount, t);
 
     return errors;
   }

@@ -95,7 +95,7 @@ public class DynaClassCache {
    *          The table
    * @return The <code>SqlDynaClass</code> for the indicated table
    */
-  public SqlDynaClass getDynaClass(Table table) {
+  public synchronized SqlDynaClass getDynaClass(Table table) {
     SqlDynaClass answer = (SqlDynaClass) _dynaClassCache.get(table.getName());
 
     if (answer == null) {

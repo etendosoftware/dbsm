@@ -83,7 +83,7 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
       copyCommand.append("COPY (" + query + ")");
       copyCommand.append(" TO STDOUT WITH (FORMAT CSV, HEADER true)");
       count = copyManager.copyOut(copyCommand.toString(), output);
-      log.info("  " + count + " records have been exported");
+      log.info("  " + count + " records have been exported from table " + dsTable.getName());
     } catch (Exception e) {
       log.error("Error while exporting table", e);
     } finally {

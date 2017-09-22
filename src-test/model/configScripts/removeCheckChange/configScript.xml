@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+  <vector>
+    <removeCheckChange tableName="TEST" checkName="TEST_CONSTRAINT">
+      <check name="TEST_CONSTRAINT"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+    </removeCheckChange>
+  </vector>

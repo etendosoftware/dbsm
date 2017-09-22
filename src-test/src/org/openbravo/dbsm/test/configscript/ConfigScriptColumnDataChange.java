@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -15,7 +15,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ddlutils.model.Database;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -32,9 +30,10 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String CONFIG_SCRIPT = "model/configScripts/configScript.xml";
+
   private static final String TEST_TABLE = "TEST";
   private static final String TEST_ROW_ID = "1";
-  private static final String CONFIG_SCRIPT = "model/configScripts/configScript.xml";
 
   private static final Map<String, String> columnDataChanges;
 
@@ -48,14 +47,8 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
   }
 
   public ConfigScriptColumnDataChange(String rdbms, String driver, String url, String sid,
-      String user, String password, String name, UpdateModelTask task)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name, task);
-  }
-
-  @Override
-  protected void doModelChanges(Database database) {
-    // Not needed as this test case does not perform model but data changes
+      String user, String password, String name) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name);
   }
 
   @Test
@@ -64,18 +57,22 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
     List<String> configScripts = Arrays.asList(CONFIG_SCRIPT);
     applyConfigurationScripts(BASE_MODEL, adTableNames, configScripts);
     assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(), getRowValues(TEST_ROW_ID));
+        getColumnDataChangesColumnValues(),
+        getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 
-  // This test checks that data changes present in a Configuration Script are applied properly.
-  // Eventually, this test makes use of {@link org.apache.ddlutils.Platform#applyConfigScript}
-  // method.
+  /**
+   * This test checks that data changes present in a Configuration Script are applied properly.
+   * Eventually, this test makes use of {@link org.apache.ddlutils.Platform#applyConfigScript}
+   * method.
+   */
   @Test
   public void isConfigurationScriptApplied() {
     List<String> adTableNames = Arrays.asList(TEST_TABLE);
     applyConfigurationScript(BASE_MODEL, adTableNames, CONFIG_SCRIPT);
     assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(), getRowValues(TEST_ROW_ID));
+        getColumnDataChangesColumnValues(),
+        getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 
   private static List<String> getColumnDataChangesColumnValues() {
@@ -86,23 +83,4 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
     return columnDataChanges.keySet();
   }
 
-  private List<String> getRowValues(String rowId) {
-    List<String> values = new ArrayList<String>();
-    try {
-      Row row = getRowValues(TEST_TABLE, rowId);
-      for (String column : getColumnDataChangesColumnNames()) {
-        values.add(getColumnValue(row, column));
-      }
-    } catch (SQLException sqlex) {
-      log.error("Error retrieving row", sqlex);
-    }
-    return values;
-  }
-
-  private String getColumnValue(Row row, String columnName) {
-    if (getRdbms() == Rdbms.ORA) {
-      return row.getValue(columnName.toUpperCase());
-    }
-    return row.getValue(columnName.toLowerCase());
-  }
 }
