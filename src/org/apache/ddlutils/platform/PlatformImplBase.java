@@ -74,6 +74,7 @@ import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
 import org.apache.ddlutils.alteration.ModelChange;
+import org.apache.ddlutils.alteration.ModelComparator;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
@@ -666,35 +667,66 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void alterTables(Connection connection, Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException {
+
+    ModelComparator comparator = new ModelComparator(getPlatformInfo(),
+        isDelimitedIdentifierModeOn());
+    List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
+    prepareDatabaseForAlter(connection, currentModel, desiredModel, changes);
+    doAlterTables(connection, currentModel, desiredModel, continueOnError, changes);
+  }
+
+  public void prepareDatabaseForAlter(Connection connection, Database currentModel,
+      Database desiredModel, List<ModelChange> changes) {
     String sql = null;
 
     try {
       StringWriter buffer = new StringWriter();
-
       getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabase(currentModel, desiredModel, null);
+      CreationParameters params = null;
+      getSqlBuilder().prepareDatabaseForAlter(currentModel, desiredModel, params, changes);
       sql = buffer.toString();
+      // continue on error, because there might be views that depend on other views, and it would
+      // take several attempts to drop them all
+      boolean continueOnError = true;
+      evaluateBatch(connection, sql, continueOnError);
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
-
-    evaluateBatch(connection, sql, continueOnError);
   }
 
   public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError,
       List changes) throws DatabaseOperationException {
+    doAlterTables(currentModel, desiredModel, continueOnError, changes);
+  }
+
+  public void doAlterTables(Database currentModel, Database desiredModel, boolean continueOnError,
+      List<ModelChange> changes) {
     String sql = null;
 
     try {
       StringWriter buffer = new StringWriter();
-
       getSqlBuilder().setWriter(buffer);
       getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
       sql = buffer.toString();
+      evaluateBatch(sql, continueOnError);
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
-    evaluateBatch(sql, continueOnError);
+  }
+
+  public void doAlterTables(Connection connection, Database currentModel, Database desiredModel,
+      boolean continueOnError, List<ModelChange> changes) {
+    String sql = null;
+
+    try {
+      StringWriter buffer = new StringWriter();
+      getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
+      sql = buffer.toString();
+      evaluateBatch(connection, sql, continueOnError);
+    } catch (IOException ex) {
+      // won't happen because we're using a string writer
+    }
   }
 
   /**
@@ -907,7 +939,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
 
       getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabase(currentModel, desiredModel, null);
+      CreationParameters params = null;
+      getSqlBuilder().prepareDatabaseForAlter(currentModel, desiredModel, params);
+      getSqlBuilder().alterDatabase(currentModel, desiredModel, params);
       sql = buffer.toString();
     } catch (IOException ex) {
       // won't happen because we're using a string writer
@@ -925,7 +959,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
       getSqlBuilder().setWriter(buffer);
       System.out.println("0");
-      getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
+      CreationParameters params = null;
+      getSqlBuilder().prepareDatabaseForAlter(currentModel, desiredModel, params, changes);
+      getSqlBuilder().alterDatabase(currentModel, desiredModel, params, changes);
       System.out.println("9");
       sql = buffer.toString();
       System.out.println(sql);
@@ -957,6 +993,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
 
       getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().prepareDatabaseForAlter(currentModel, desiredModel, params);
       getSqlBuilder().alterDatabase(currentModel, desiredModel, params);
       sql = buffer.toString();
     } catch (IOException ex) {
@@ -1046,7 +1083,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
 
       getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabase(currentModel, desiredModel, null);
+      CreationParameters params = null;
+      getSqlBuilder().prepareDatabaseForAlter(currentModel, desiredModel, params);
+      getSqlBuilder().alterDatabase(currentModel, desiredModel, params);
       sql = buffer.toString();
     } catch (IOException ex) {
       // won't happen because we're using a string writer
@@ -1079,6 +1118,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       StringWriter buffer = new StringWriter();
 
       getSqlBuilder().setWriter(buffer);
+      getSqlBuilder().prepareDatabaseForAlter(currentModel, desiredModel, params);
       getSqlBuilder().alterDatabase(currentModel, desiredModel, params);
       sql = buffer.toString();
     } catch (IOException ex) {

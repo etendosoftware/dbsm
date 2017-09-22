@@ -560,7 +560,22 @@ public abstract class SqlBuilder {
     List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
 
     alterDatabase(currentModel, desiredModel, params, changes);
+  }
 
+  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel, CreationParameters params)
+      throws IOException {
+    ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
+        .isDelimitedIdentifierModeOn());
+    List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
+    prepareDatabaseForAlter(currentModel, desiredModel, params, changes);
+  }
+
+  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel, CreationParameters params,
+      List<ModelChange> changes) throws IOException {
+    CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
+        Database.class, Database.class, CreationParameters.class, null }, new Object[] {
+        currentModel, desiredModel, params, null });
+    removeExternalConstraintsIndexesAndViews(currentModel, changes, callbackClosure);
   }
 
   public void alterDatabase(Database currentModel, Database desiredModel,
@@ -981,6 +996,37 @@ public abstract class SqlBuilder {
     });
   }
 
+  protected void removeExternalConstraintsIndexesAndViews(Database currentModel,
+      List<ModelChange> changes, CallbackClosure callbackClosure) throws IOException {
+
+    // The list of removed indexes that define an operator class
+    // It is populated in processChange(Database currentModel, Database desiredModel,
+    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a parameter to
+    // applyForSelectedChanges because it is a too generic method, that's why it is defined as a
+    // class attribute
+    _removedIndexesWithOperatorClassMap = new HashMap<String, List<Index>>();
+
+    // The list of removed partial index, populated also in processChange(Database currentModel,
+    // Database desiredModel, CreationParameters params, RemoveIndexChange change)
+    _removedIndexesWithWhereClause = new HashMap<String, List<Index>>();
+    // 1st pass: removing external constraints and indices
+    applyForSelectedChanges(changes, new Class[] { RemoveForeignKeyChange.class,
+        RemoveUniqueChange.class, RemoveIndexChange.class, RemoveCheckChange.class },
+        callbackClosure);
+
+    if (!_removedIndexesWithOperatorClassMap.isEmpty()) {
+      removedOperatorClassIndexesPostAction(_removedIndexesWithOperatorClassMap);
+    }
+
+    if (!_removedIndexesWithWhereClause.isEmpty()) {
+      removedPartialIndexesPostAction(_removedIndexesWithWhereClause);
+    }
+
+    for (int i = 0; i < currentModel.getViewCount(); i++) {
+      dropView(currentModel.getView(i));
+    }
+  }
+
   /**
    * Processes the changes. The default argument performs several passes:
    * <ol>
@@ -1026,34 +1072,6 @@ public abstract class SqlBuilder {
     CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
         Database.class, Database.class, CreationParameters.class, null }, new Object[] {
         currentModel, desiredModel, params, null });
-
-    // The list of removed indexes that define an operator class
-    // It is populated in processChange(Database currentModel, Database desiredModel,
-    // CreationParameters params, RemoveIndexChange change), but cannot be passed as a parameter to
-    // applyForSelectedChanges because it is a too generic method, that's why it is defined as a
-    // class attribute
-    _removedIndexesWithOperatorClassMap = new HashMap<String, List<Index>>();
-
-    // The list of removed partial index, populated also in processChange(Database currentModel,
-    // Database desiredModel, CreationParameters params, RemoveIndexChange change)
-    _removedIndexesWithWhereClause = new HashMap<String, List<Index>>();
-
-    // 1st pass: removing external constraints and indices
-    applyForSelectedChanges(changes, new Class[] { RemoveForeignKeyChange.class,
-        RemoveUniqueChange.class, RemoveIndexChange.class, RemoveCheckChange.class },
-        callbackClosure);
-
-    if (!_removedIndexesWithOperatorClassMap.isEmpty()) {
-      removedOperatorClassIndexesPostAction(_removedIndexesWithOperatorClassMap);
-    }
-
-    if (!_removedIndexesWithWhereClause.isEmpty()) {
-      removedPartialIndexesPostAction(_removedIndexesWithWhereClause);
-    }
-
-    for (int i = 0; i < currentModel.getViewCount(); i++) {
-      dropView(currentModel.getView(i));
-    }
 
     // 2nd pass: removing tables and views and functions and triggers
     applyForSelectedChanges(changes, new Class[] { RemoveViewChange.class }, callbackClosure);
