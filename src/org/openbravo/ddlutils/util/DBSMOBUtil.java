@@ -1,3 +1,15 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
+
 package org.openbravo.ddlutils.util;
 
 import java.io.File;
@@ -7,7 +19,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +65,6 @@ public class DBSMOBUtil {
   private HashMap<String, Vector<String>> prefixDependencies = new HashMap<String, Vector<String>>();
   private Vector<String> idTemplates = new Vector<String>();
   private Vector<String> idModulesToExport = new Vector<String>();
-  private Vector<String> idDependantModules = new Vector<String>();
   private List<String> sortedTemplates;
 
   private static DBSMOBUtil instance = null;
@@ -401,30 +411,6 @@ public class DBSMOBUtil {
     return false;
   }
 
-  public void generateIndustryTemplateTree() {
-    for (final ModuleRow row : allModules) {
-      if (row.type.equalsIgnoreCase("T") && incdependencies.get(row.idMod) == null) {
-        // We've found an Industry Template which is not included in any
-        // other one.
-        // We will find the Industry Templates which are included in it
-        recursiveTemplateLoader(row.idMod);
-        idTemplates.add(row.idMod);
-      }
-    }
-  }
-
-  private void recursiveTemplateLoader(String idDepTemplate) {
-    for (final ModuleRow row : allModules) {
-      if (row.type.equalsIgnoreCase("T")) {
-        final Vector<String> dep = incdependencies.get(row.idMod);
-        if (dep != null && dep.contains(idDepTemplate)) {
-          recursiveTemplateLoader(row.idMod);
-          idTemplates.add(row.idMod);
-        }
-      }
-    }
-  }
-
   public void checkTemplateExportIsPossible(Logger log) {
     int numTemplatesInDevelopment = 0;
     ModuleRow rowT = null;
@@ -454,26 +440,6 @@ public class DBSMOBUtil {
       if (row.type.equals("T") && row.isInDevelopment.equals("Y"))
         return row.dir;
     return null;
-  }
-
-  private void getDependencyHashMap() {
-    for (final ModuleRow row : allModules) {
-      getDependencyForPrefix(row.dir, new Vector<String>(), row);
-    }
-  }
-
-  private void getDependencyForPrefix(String dir, Vector<String> idList, ModuleRow row) {
-    if (prefixDependencies.get(dir) == null)
-      prefixDependencies.put(dir, new Vector<String>());
-    prefixDependencies.get(dir).addAll(row.prefixes);
-    idList.add(row.idMod);
-    if (dependencies.get(row.idMod) != null) {
-      for (final String id : dependencies.get(row.idMod)) {
-        if (!idList.contains(id))
-          getDependencyForPrefix(dir, idList, getRow(id));
-      }
-    }
-
   }
 
   private void getDependencies(Platform platform) {
@@ -557,41 +523,28 @@ public class DBSMOBUtil {
     return null;
   }
 
+  /**
+   * @deprecated platform it is not used at all. Replaced by
+   *             {@link #hasBeenModified(OBDataset, boolean)} method.
+   */
   public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
+    return hasBeenModified(dataset, updateCRC);
+  }
+
+  public boolean hasBeenModified(OBDataset dataset, boolean updateCRC) {
     Connection connection = null;
     try {
       connection = getUnpooledConnection();
       // Execute the session config query before calling ad_db_modified, the same way it is done
       // when using the Module Management Console
       executeSessionConfigQuery(connection);
-      PreparedStatement statementDate = connection
-          .prepareStatement("SELECT last_dbupdate from AD_SYSTEM_INFO");
-      statementDate.execute();
-      ResultSet rsDate = statementDate.getResultSet();
-      rsDate.next();
-      Timestamp date = rsDate.getTimestamp(1);
 
       getLog().info("Checking if database structure was modified locally.");
-      String sql;
-      if (updateCRC)
-        sql = "SELECT ad_db_modified('Y') FROM DUAL";
-      else
-        sql = "SELECT ad_db_modified('N') FROM DUAL";
-
-      PreparedStatement statement = connection.prepareStatement(sql);
-      statement.execute();
-      ResultSet rs = statement.getResultSet();
-      rs.next();
-      String answer = rs.getString(1);
-      if (answer.equalsIgnoreCase("Y"))
+      if (databaseHasChanges())
         return true;
 
       getLog().info("Checking if data has changed in the application dictionary.");
-      boolean datachange = dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
-      if (datachange)
-        return true;
-      else
-        return false;
+      return dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -607,10 +560,16 @@ public class DBSMOBUtil {
       }
     }
     return false;
-
   }
 
+  /**
+   * @deprecated platform it is not used at all. Replaced by {@link #updateCRC()} method.
+   */
   public void updateCRC(Platform platform) {
+    updateCRC();
+  }
+
+  public void updateCRC() {
     Connection connection = null;
     try {
       connection = getUnpooledConnection();
@@ -632,6 +591,44 @@ public class DBSMOBUtil {
         getLog().error("Error while closing connection", e);
       }
     }
+  }
+
+  /**
+   * This method checks if database has changes by invoking ad_db_modified function. In any case the
+   * checksum is not updated.
+   * 
+   * @return true if database structure have been modified.
+   */
+  public boolean databaseHasChanges() {
+    Connection connection = null;
+    boolean hasBeenChanges = false;
+    try {
+      connection = getUnpooledConnection();
+      PreparedStatement statement = isAdDbModified(connection);
+      ResultSet rs = statement.getResultSet();
+      rs.next();
+      String answer = rs.getString(1);
+      if (answer.equalsIgnoreCase("Y"))
+        hasBeenChanges = true;
+    } catch (Exception e) {
+      getLog().error("There was a problem checking the CRC in the database.", e);
+    } finally {
+      try {
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        getLog().error("Error while closing connection", e);
+      }
+    }
+    return hasBeenChanges;
+  }
+
+  private PreparedStatement isAdDbModified(Connection connection) throws SQLException {
+    String sql = "SELECT ad_db_modified('N') FROM DUAL";
+    PreparedStatement statement = connection.prepareStatement(sql);
+    statement.execute();
+    return statement;
   }
 
   private Connection getUnpooledConnection() {
@@ -887,19 +884,20 @@ public class DBSMOBUtil {
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input, false);
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input) {
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
+        input, false);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input,
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, basedir, datafilter, input,
-        strict, true);
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
+        input, strict, true);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
-      Database originaldb, Database db, String basedir, String datafilter, File input,
+      Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
 
     final Vector<File> files = new Vector<File>();
@@ -909,15 +907,16 @@ public class DBSMOBUtil {
         files.add(sourceFiles[i]);
       }
     }
+
     final String token = datafilter;
     final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(basedir));
+    dirScanner.setBasedir(new File(modulesBaseDir));
     final String[] dirFilterA = token.split(",");
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
     for (int j = 0; j < incDirs.length; j++) {
-      final File dirFolder = new File(basedir, incDirs[j] + "/");
+      final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
       final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
       for (int i = 0; i < fileArray.length; i++) {
         if (fileArray[i].getName().endsWith(".xml")) {
@@ -925,12 +924,11 @@ public class DBSMOBUtil {
         }
       }
     }
-    readDataIntoDatabaseData(platform, db, databaseOrgData, files);
-    applyConfigScripts(platform, databaseOrgData, db, basedir, strict, applyConfigScriptData);
+
+    readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
-  public void readDataIntoDatabaseData(Platform platform, Database db,
-      DatabaseData databaseOrgData, List<File> files) {
+  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData, List<File> files) {
 
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
@@ -955,10 +953,8 @@ public class DBSMOBUtil {
   }
 
   public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,
-      String basedir, boolean strict, boolean applyConfigScriptData) {
-
+      String modulesBaseDir, boolean strict, boolean applyConfigScriptData) {
     getLog().info("Loading and applying configuration scripts");
-    Vector<File> configScripts = new Vector<File>();
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     for (String template : sortedTemplates) {
       boolean isApplied = isApplied(platform, template);
@@ -969,10 +965,9 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      File configScript = new File(new File(basedir), "/" + template
+      File configScript = new File(new File(modulesBaseDir), template
           + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
-        configScripts.add(configScript);
         DatabaseIO dbIO = new DatabaseIO();
         getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
@@ -1082,6 +1077,15 @@ public class DBSMOBUtil {
   }
 
   public void removeSortedTemplates(Platform platform, Database database, String basedir) {
+    DatabaseData dbData = new DatabaseData(database);
+    removeSortedTemplates(platform, database, dbData, basedir);
+  }
+
+  public void removeSortedTemplates(Platform platform, Database database,
+      DatabaseData databaseOrgData, String basedir) {
+    if (sortedTemplates == null) {
+      sortedTemplates = getSortedTemplates(databaseOrgData);
+    }
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
       boolean isindevelopment = false;
       for (int j = 0; j < activeModules.size(); j++) {

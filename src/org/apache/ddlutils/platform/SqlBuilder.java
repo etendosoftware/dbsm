@@ -4717,6 +4717,26 @@ public abstract class SqlBuilder {
     _log.error("Column size change not supported.");
   }
 
+  public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
+      throws IOException {
+    _log.error("Remove Trigger change not supported.");
+  }
+
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change)
+      throws IOException {
+    _log.error("Remove Index change not supported.");
+  }
+
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
+      throws IOException {
+    _log.error("Column Required change not supported.");
+  }
+
+  public void printRemoveCheckChange(Database database, RemoveCheckChange change)
+      throws IOException {
+    _log.error("Remove Check change not supported.");
+  }
+
   public void printAddRowChangeChange(Database model, AddRowChange change) throws IOException {
     Table table = change.getTable();
     DynaBean db = change.getRow();

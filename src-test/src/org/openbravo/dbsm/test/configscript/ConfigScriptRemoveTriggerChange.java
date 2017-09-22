@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Trigger;
@@ -26,6 +27,8 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptRemoveTriggerChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeTriggerChange/configScript.xml";
+
   private static final String TRIGGER_TEST = "TEST_TRIGGER";
 
   public ConfigScriptRemoveTriggerChange(String rdbms, String driver, String url, String sid,
@@ -33,16 +36,22 @@ public class ConfigScriptRemoveTriggerChange extends ConfigScriptBaseTest {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
-  @Override
-  protected void doModelChanges(Database database) {
-    Trigger trigger = database.findTrigger(TRIGGER_TEST);
-    database.removeTrigger(trigger);
+  @Test
+  public void isTriggerRemovedOnUpdate() {
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsTriggerRemoved(database, TRIGGER_TEST);
   }
 
   @Test
-  public void isTriggerRemoved() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
-    Trigger trigger = database.findTrigger(TRIGGER_TEST);
-    assertNull("Trigger " + TRIGGER_TEST + " removed by the configuration script", trigger);
+  public void isTriggerRemovedOnInstall() {
+    Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsTriggerRemoved(originalDB, TRIGGER_TEST);
+  }
+
+  private void assertIsTriggerRemoved(Database database, String triggerName) {
+    Trigger trg = database.findTrigger(triggerName);
+    assertNull("Trigger " + triggerName + " removed by the configuration script", trg);
   }
 }

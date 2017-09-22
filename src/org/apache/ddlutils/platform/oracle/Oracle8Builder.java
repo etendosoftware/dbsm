@@ -42,13 +42,18 @@ import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.RemoveCheckChange;
+import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
+import org.apache.ddlutils.alteration.RemoveTriggerChange;
+import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.ValueObject;
@@ -542,6 +547,47 @@ public class Oracle8Builder extends SqlBuilder {
     column.setSize(Integer.toString(change.getNewSize()));
     print("ALTER TABLE " + table.getName() + " MODIFY ");
     writeColumn(table, column);
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
+      throws IOException {
+    Trigger trigger = database.findTrigger(change.getTriggerName());
+    database.removeTrigger(trigger);
+    print("DROP TRIGGER " + trigger.getName());
+    writeDropTriggerFunction(trigger);
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Index idx = table.findIndex(change.getIndexName());
+    table.removeIndex(idx);
+    print("DROP INDEX " + idx.getName());
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Column column = table.findColumn(change.getColumnName());
+    column.setRequired(change.getRequired());
+    print("ALTER TABLE " + table.getName() + " MODIFY ");
+    writeColumn(table, column);
+    printEndOfStatement();
+  }
+
+  @Override
+  public void printRemoveCheckChange(Database database, RemoveCheckChange change)
+      throws IOException {
+    Table table = database.findTable(change.getTableName());
+    Check check = table.findCheck(change.getCheckName());
+    table.removeCheck(check);
+    print("ALTER TABLE " + table.getName() + " DROP CONSTRAINT " + check.getName());
     printEndOfStatement();
   }
 

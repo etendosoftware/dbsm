@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Database;
@@ -27,8 +28,9 @@ import org.junit.runners.Parameterized;
 public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
-  private static final String BASE_MODEL_INSTALL = "removeCheckChange/BASE_MODEL_CHECK_CONSTRAINT.xml";
-  private static final String CONFIG_SCRIPT_INSTALL = "model/removeCheckChange/configScript.xml";
+  private static final String BASE_MODEL_INSTALL = MODEL_DIRECTORY
+      + "removeCheckChange/BASE_MODEL_CHECK_CONSTRAINT.xml";
+  private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/removeCheckChange/configScript.xml";
 
   private static final String TEST_TABLE = "TEST";
   private static final String CHECK_TEST = "TEST_CONSTRAINT";
@@ -38,19 +40,11 @@ public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
-  @Override
-  protected void doModelChanges(Database database) {
-    Table table = database.findTable(TEST_TABLE);
-    Check check = table.findCheck(CHECK_TEST);
-    table.removeCheck(check);
-  }
-
   @Test
-  public void isCheckConstraintRemoved() {
-    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL);
-    Table table = database.findTable(TEST_TABLE);
-    Check check = table.findCheck(CHECK_TEST);
-    assertNull("Check " + CHECK_TEST + " removed by the configuration script", check);
+  public void isCheckConstraintRemovedOnUpdate() {
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsCheckConstraintRemoved(database, TEST_TABLE, CHECK_TEST);
   }
 
   /**
@@ -61,13 +55,18 @@ public class ConfigScriptRemoveCheckChange extends ConfigScriptBaseTest {
    *
    */
   @Test
-  public void isConfigurationScriptAppliedOnInstallSource() {
-    // Install source and applyConfigurationScript
+  public void isCheckConstraintRemovedOnInstall() {
     Database originalDB = createDatabaseAndApplyConfigurationScript(BASE_MODEL_INSTALL,
-        CONFIG_SCRIPT_INSTALL);
-    // Check if constraint is removed
-    Table table = originalDB.findTable(TEST_TABLE);
-    Check check = table.findCheck(CHECK_TEST);
-    assertNull("Check " + CHECK_TEST + " removed by the configuration script", check);
+        Arrays.asList(CONFIG_SCRIPT_INSTALL));
+    assertIsCheckConstraintRemoved(originalDB, TEST_TABLE, CHECK_TEST);
+  }
+
+  /**
+   * Check if constraint is removed from the database
+   */
+  private void assertIsCheckConstraintRemoved(Database db, String tableName, String checkName) {
+    Table table = db.findTable(tableName);
+    Check check = table.findCheck(checkName);
+    assertNull("Check " + checkName + " removed by the configuration script", check);
   }
 }

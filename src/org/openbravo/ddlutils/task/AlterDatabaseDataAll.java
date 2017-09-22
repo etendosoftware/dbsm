@@ -39,9 +39,11 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.modulescript.ModuleScriptHandler;
+import org.openbravo.service.system.SystemService;
 import org.openbravo.utils.CheckSum;
 
 /**
@@ -116,7 +118,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     }
 
     platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
-    // platform.setDelimitedIdentifierModeOn(true);
     DBSMOBUtil
         .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
 
@@ -136,19 +137,20 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
         }
       } else {
         // Load the model from the file
-        originaldb = DatabaseUtils.readDatabase(getModel());
+        originaldb = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
         getLog().info("Original model loaded from file.");
       }
-      Database db = null;
-      db = readDatabaseModel();
+      DatabaseInfo databaseInfo = readDatabaseModelWithoutConfigScript(platform, originaldb);
+      Database db = databaseInfo.getDatabase();
+
       getLog().info("Checking datatypes from the model loaded from XML files");
       db.checkDataTypes();
-      final DatabaseData databaseOrgData = new DatabaseData(db);
+      final DatabaseData databaseOrgData = databaseInfo.getDatabaseData();
       databaseOrgData.setStrictMode(strict);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originaldb, db,
-          basedir, datafilter, input, strict, false);
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, strict,
+          true);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
+      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
       if (hasBeenModified) {
         if (force)
           getLog()
@@ -185,9 +187,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
       DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       final Connection connection = platform.borrowConnection();
-      // Now we apply the configuration scripts
-      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, false,
-          true);
       getLog().info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -255,7 +254,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       } else {
         platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
       }
-      DBSMOBUtil.getInstance().updateCRC(platform);
+      DBSMOBUtil.getInstance().updateCRC();
       if (!triggersEnabled) {
         getLog()
             .error(
@@ -333,36 +332,81 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.execute();
   }
 
+  /**
+   * This method is only invoked from GenerateProcess task defined in ezattributes module and it is
+   * required to maintain backwards compatibility and to ensures that the API is not broken.
+   * 
+   * Avoid uses loadDataStructures because process that invokes this method executes it.
+   */
   protected Database readDatabaseModel() {
+    // Set input file and datafilter needed in loadDataStructures
+    input = new File(basedir + "/../src-db/database/sourcedata");
+    datafilter = "*/src-db/database/sourcedata";
+
+    boolean applyConfigScriptData = false;
+    ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
+        basedir + "/../", strict, applyConfigScriptData);
+
     Database db = null;
+    String modulesBaseDir = config.getBasedir() + "modules/";
+    if (config.getBasedir() == null) {
+      getLog()
+          .info("Basedir for additional files not specified. Updating database with just Core.");
+
+      modulesBaseDir = null;
+      db = DatabaseUtils.readDatabase(getModel(), config);
+    } else {
+      final File[] fileArray = readModelFiles(modulesBaseDir);
+      getLog().info("Reading model files...");
+      db = DatabaseUtils.readDatabase(fileArray, config);
+    }
+
+    return db;
+  }
+
+  protected DatabaseInfo readDatabaseModelWithoutConfigScript(Platform platform, Database database) {
+    Database db = null;
+    String modulesBaseDir = basedir + "../modules/";
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      db = DatabaseUtils.readDatabase(getModel());
+
+      modulesBaseDir = null;
+      db = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
     } else {
-      // We read model files using the filter, obtaining a file array.
-      // The models will be merged
-      // to create a final target model.
-      final Vector<File> dirs = new Vector<File>();
-      dirs.add(getModel());
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(basedir));
-      final String[] dirFilterA = { dirFilter };
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirF = new File(basedir, incDirs[j]);
-        dirs.add(dirF);
-      }
-      final File[] fileArray = new File[dirs.size()];
-      for (int i = 0; i < dirs.size(); i++) {
-        fileArray[i] = dirs.get(i);
-      }
+      final File[] fileArray = readModelFiles(modulesBaseDir);
       getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabase(fileArray);
+      db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
-    return db;
+    DatabaseData dbData = new DatabaseData(db);
+    DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, database, db, modulesBaseDir,
+        datafilter, input, strict, false);
+
+    return new DatabaseInfo(db, dbData);
+  }
+
+  /**
+   * This method read model files using the filter, obtaining a file array.The models will be merged
+   * to create a final target model.
+   */
+  private File[] readModelFiles(String modulesBaseDir) throws IllegalStateException {
+    final Vector<File> dirs = new Vector<File>();
+    dirs.add(getModel());
+    final DirectoryScanner dirScanner = new DirectoryScanner();
+    dirScanner.setBasedir(new File(modulesBaseDir));
+    final String[] dirFilterA = { dirFilter };
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    final String[] incDirs = dirScanner.getIncludedDirectories();
+    for (int j = 0; j < incDirs.length; j++) {
+      final File dirF = new File(modulesBaseDir, incDirs[j]);
+      dirs.add(dirF);
+    }
+    final File[] fileArray = new File[dirs.size()];
+    for (int i = 0; i < dirs.size(); i++) {
+      fileArray[i] = dirs.get(i);
+    }
+    return fileArray;
   }
 
   public String getExcludeobjects() {
@@ -517,4 +561,28 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   public void setThreads(int threads) {
     this.threads = threads;
   }
+
+  /**
+   * Helper class that contains the database and the databaseData information.
+   */
+  protected static class DatabaseInfo {
+
+    private Database database;
+    private DatabaseData databaseData;
+
+    private DatabaseInfo(Database database, DatabaseData databaseData) {
+      this.database = database;
+      this.databaseData = databaseData;
+    }
+
+    protected Database getDatabase() {
+      return database;
+    }
+
+    protected DatabaseData getDatabaseData() {
+      return databaseData;
+    }
+
+  }
+
 }

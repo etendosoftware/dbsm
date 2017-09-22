@@ -353,8 +353,8 @@ public class DbsmTest {
       }
 
       Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
-      Database newDB = DatabaseUtils.readDatabase(dbModel);
 
+      Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
       databaseOrgData.setStrictMode(false);
 
@@ -363,12 +363,13 @@ public class DbsmTest {
             new File(adDirectoryName).getAbsolutePath(), "none", new File(adDirectoryName), false,
             false);
       }
+
+      // Applied ConfigScripts in the same order as in the dbsm source
       if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, false);
+        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
       }
 
       OBDataset ad = new OBDataset(databaseOrgData);
-
       if (adDirectoryName != null && adTableNames != null) {
         Vector<OBDatasetTable> adTables = new Vector<OBDatasetTable>();
         for (String tName : adTableNames) {
@@ -394,10 +395,6 @@ public class DbsmTest {
         DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
       }
       connection = platform.borrowConnection();
-      // Now we apply the data part of the configuration scripts
-      if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
-      }
       log.info("Comparing databases to find differences");
       final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
@@ -450,7 +447,7 @@ public class DbsmTest {
       log.info("Recreating not null constraints");
       platform.enableNOTNULLColumns(newDB, ad);
       log.info("Executing update final script (dropping temporary tables)");
-      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, false, changes,
+      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, true, changes,
           null, ad);
 
       // assertThat("Postscript should be correct", postscriptCorrect, is(true));
@@ -464,8 +461,9 @@ public class DbsmTest {
       if (assertDBisCorrect) {
         ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
             platform.isDelimitedIdentifierModeOn());
+
         @SuppressWarnings("unchecked")
-        List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+        List<ModelChange> newChanges = comparator.compare(newDB,
             platform.loadModelFromDatabase(getExcludeFilter()));
         assertThat("changes between updated db and target db", newChanges, is(empty()));
       }
@@ -514,17 +512,58 @@ public class DbsmTest {
         .getTablename().equalsIgnoreCase("AD_FIELD"));
   }
 
+  /**
+   * Create database applying configScript changes.
+   * 
+   * @param dbModelPath
+   *          path of the model.
+   * @param configScripts
+   *          paths of the configScript files.
+   * @return the database with the changes in the configScript files applied.
+   */
+  protected Database createDatabase(String dbModelPath, List<String> configScripts) {
+    Database db = createDatabase(dbModelPath);
+    final Platform platform = getPlatform();
+    platform.setMaxThreads(threads);
+    log.info("Max threads " + platform.getMaxThreads());
+
+    final DatabaseData databaseOrgData = new DatabaseData(db);
+    databaseOrgData.setStrictMode(false);
+
+    if (configScripts != null) {
+      for (String configScript : configScripts) {
+        Vector<Change> changes = readConfigScript(configScript);
+        if (changes == null) {
+          log.info("No changes retrieved from Configuration Script: " + configScript);
+        } else {
+          getPlatform().applyConfigScript(db, changes);
+        }
+      }
+    }
+
+    return db;
+  }
+
+  /**
+   * Create database without applying configScript changes.
+   * 
+   * @param dbModelPath
+   *          path of the model.
+   * @return the database.
+   */
   protected Database createDatabase(String dbModelPath) {
     File dbModel = new File("model", dbModelPath);
     final Platform platform = getPlatform();
-    Database newDB = DatabaseUtils.readDatabase(dbModel);
+
+    Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
     platform.createTables(newDB, false, true);
 
     platform.enableNOTNULLColumns(newDB);
 
     ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
         platform.isDelimitedIdentifierModeOn());
-    List<ModelChange> newChanges = comparator.compare(DatabaseUtils.readDatabase(dbModel),
+    List<ModelChange> newChanges = comparator.compare(
+        DatabaseUtils.readDatabaseWithoutConfigScript(dbModel),
         platform.loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;

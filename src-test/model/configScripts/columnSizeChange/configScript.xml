@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+  <vector>
+    <columnSizeChange tablename="TEST" columnname="COL1" newSize="70" oldSize="60"/>
+  </vector>
+  
+
+  
