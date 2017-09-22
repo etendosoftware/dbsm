@@ -352,7 +352,7 @@ public class DbsmTest {
         platform.getSqlBuilder().setForcedRecreation("all");
       }
 
-      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), false);
+      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
 
       Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
       final DatabaseData databaseOrgData = new DatabaseData(newDB);
@@ -462,7 +462,6 @@ public class DbsmTest {
         ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
             platform.isDelimitedIdentifierModeOn());
 
-        // DatabaseUtils.readDatabaseWithoutConfigScript(dbModel)
         @SuppressWarnings("unchecked")
         List<ModelChange> newChanges = comparator.compare(newDB,
             platform.loadModelFromDatabase(getExcludeFilter()));
