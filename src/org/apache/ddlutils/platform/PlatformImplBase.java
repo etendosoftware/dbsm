@@ -844,15 +844,35 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void alterData(Connection connection, Database model, Vector<Change> changes)
       throws DatabaseOperationException {
+    List<ColumnDataChange> colDataChanges = new ArrayList<>(changes.size());
+
     for (Change change : changes) {
       if (change instanceof AddRowChange) {
         upsert(connection, model, ((AddRowChange) change).getRow());
       } else if (change instanceof RemoveRowChange) {
         delete(connection, model, (RemoveRowChange) change);
       } else if (change instanceof ColumnDataChange) {
-        update(connection, model, (ColumnDataChange) change);
+        colDataChanges.add((ColumnDataChange) change);
       }
     }
+
+    // ColumnDataChanges are individual column changes, let's group them per row to update them
+    // altogether. Note they're already sorted by row.
+    List<ColumnDataChange> rowDataChanges = new ArrayList<>();
+    Object currentPK = null;
+    String currentTable = null;
+    for (ColumnDataChange change : colDataChanges) {
+      String tableName = change.getTable() != null ? change.getTable().getName() : change
+          .getTablename();
+      if (!change.getPkRow().equals(currentPK) || !tableName.equals(currentTable)) {
+        update(connection, model, rowDataChanges);
+        currentPK = change.getPkRow();
+        currentTable = tableName;
+        rowDataChanges = new ArrayList<>();
+      }
+      rowDataChanges.add(change);
+    }
+    update(connection, model, rowDataChanges);
   }
 
   public void alterData(Database model, Vector<Change> changes, Writer writer)
@@ -2075,59 +2095,72 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  private int update(Connection connection, Database model, ColumnDataChange change)
+  private void update(Connection connection, Database model, List<ColumnDataChange> changes)
       throws DatabaseOperationException {
+    if (changes.isEmpty()) {
+      return;
+    }
 
-    Timestamp date = getDateStatement(connection);
+    ColumnDataChange firstChange = changes.get(0);
+    Table table = model.findTable(firstChange.getTablename());
+    String pkColumn = table.getPrimaryKeyColumns()[0].getName();
+    Object pkValue = firstChange.getPkRow();
 
-    HashMap map = new HashMap();
-    Table table = model.findTable(change.getTablename());
-    String pk = table.getPrimaryKeyColumns()[0].getName();
-    map.put(pk, change.getPkRow());
-    if (table.findColumn("UPDATED") != null)
-      map.put("UPDATED", date);
-    if (table.findColumn("UPDATEDBY") != null)
-      map.put("UPDATEDBY", "O");
-    map.put(change.getColumnname(), change.getNewValue());
+    Map<String, Object> params = new HashMap<>();
+    params.put(pkColumn, firstChange.getPkRow());
+    Timestamp now = getDateStatement(connection);
+    if (table.findColumn("UPDATED") != null) {
+      params.put("UPDATED", now);
+    }
+    if (table.findColumn("UPDATEDBY") != null) {
+      params.put("UPDATEDBY", "0");
+    }
 
-    String sql = getSqlBuilder().getUpdateSql(table, map, true);
-    // createUpdateSql(model, dynaClass, primaryKeys, properties, null);
+    for (ColumnDataChange change : changes) {
+      params.put(change.getColumnname(), change.getNewValue());
+    }
+
+    String sql = getSqlBuilder().getUpdateSql(table, params, true);
     PreparedStatement statement = null;
 
     if (_log.isDebugEnabled()) {
-      _log.debug("About to execute SQL: " + sql);
+      _log.debug("About to execute SQL: " + sql + " - " + params);
     }
+
     try {
       beforeUpdate(connection, table);
 
       statement = connection.prepareStatement(sql);
       int sqlIndex = 1;
-      for (int i = 0; i < table.getColumnCount(); i++) {
-        if (table.getColumn(i).getName().equalsIgnoreCase("UPDATED")) {
-          setObject(statement, sqlIndex++, date, table.findColumn("UPDATED"));
-        } else if (table.getColumn(i).getName().equalsIgnoreCase("UPDATEDBY")) {
-          setObject(statement, sqlIndex++, "0", table.findColumn("UPDATEDBY"));
-        } else if (table.getColumn(i).getName().equalsIgnoreCase(change.getColumnname())) {
-          if (table.getColumn(i).getName().equalsIgnoreCase("CREATEDBY"))
-            setObject(statement, sqlIndex++, "0", table.findColumn(change.getColumnname()));
-          else if (table.getColumn(i).getName().equalsIgnoreCase("CREATED"))
-            setObject(statement, sqlIndex++, date, table.findColumn(change.getColumnname()));
-          else
-            setObject(statement, sqlIndex++, change.getNewValue(),
-                table.findColumn(change.getColumnname()));
+      for (Column col : table.getColumns()) {
+        String colName = col.getName();
+        if (colName.equalsIgnoreCase("UPDATED")) {
+          setObject(statement, sqlIndex++, now, col);
+        } else if (colName.equalsIgnoreCase("UPDATEDBY")) {
+          setObject(statement, sqlIndex++, "0", col);
+        } else {
+          for (ColumnDataChange change : changes) {
+            if (!colName.equalsIgnoreCase(change.getColumnname())) {
+              continue;
+            }
+            if (colName.equalsIgnoreCase("CREATEDBY")) {
+              setObject(statement, sqlIndex++, "0", col);
+            } else if (colName.equalsIgnoreCase("CREATED")) {
+              setObject(statement, sqlIndex++, now, col);
+            } else {
+              setObject(statement, sqlIndex++, change.getNewValue(), col);
+            }
+          }
         }
       }
 
-      setObject(statement, sqlIndex++, change.getPkRow(), table.getPrimaryKeyColumns()[0]);
-      int count = statement.executeUpdate();
+      setObject(statement, sqlIndex++, pkValue, table.getPrimaryKeyColumns()[0]);
+      statement.executeUpdate();
 
       afterUpdate(connection, table);
-
-      return count;
     } catch (SQLException ex) {
-      ex.printStackTrace();
-      throw new DatabaseOperationException("Error while updating in the database : "
-          + ex.getMessage(), ex);
+      throw new DatabaseOperationException("Error while updating in the database : " + sql + " - "
+          + params + ex.getMessage(), ex);
     } finally {
       closeStatement(statement);
     }
