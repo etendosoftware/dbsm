@@ -679,7 +679,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     doAlterTables(connection, currentModel, desiredModel, continueOnError, changes);
   }
 
-  public void prepareDatabaseForAlter(Connection connection, Database currentModel,
+  private void prepareDatabaseForAlter(Connection connection, Database currentModel,
       Database desiredModel, List<ModelChange> changes) {
     String sql = null;
 
@@ -705,20 +705,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void doAlterTables(Database currentModel, Database desiredModel, boolean continueOnError,
       List<ModelChange> changes) {
-    String sql = null;
-
-    try {
-      StringWriter buffer = new StringWriter();
-      getSqlBuilder().setWriter(buffer);
-      getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
-      sql = buffer.toString();
-      evaluateBatch(sql, continueOnError);
-    } catch (IOException ex) {
-      // won't happen because we're using a string writer
-    }
+    Connection connection = null;
+    doAlterTables(connection, currentModel, desiredModel, continueOnError, changes);
   }
 
-  public void doAlterTables(Connection connection, Database currentModel, Database desiredModel,
+  private void doAlterTables(Connection connection, Database currentModel, Database desiredModel,
       boolean continueOnError, List<ModelChange> changes) {
     String sql = null;
 
@@ -727,7 +718,11 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       getSqlBuilder().setWriter(buffer);
       getSqlBuilder().alterDatabase(currentModel, desiredModel, null, changes);
       sql = buffer.toString();
-      evaluateBatch(connection, sql, continueOnError);
+      if (connection == null) {
+        evaluateBatch(sql, continueOnError);
+      } else {
+        evaluateBatch(connection, sql, continueOnError);
+      }
     } catch (IOException ex) {
       // won't happen because we're using a string writer
     }
