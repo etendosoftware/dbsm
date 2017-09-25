@@ -63,6 +63,7 @@ CheckConstraints.class, //
     PreventCascadeRowDeletion.class,//
     PLCode.class,
 
+    ColumnSizeChangesWithDependentViews.class,//
     ConfigScriptSuite.class })
 public class ModelSuite {
 

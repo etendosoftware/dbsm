@@ -38,7 +38,7 @@ public class ColumnSizeChangesWithDependentViews extends DbsmTest {
 
   /** update.database properly applies column size changes */
   @Test
-  public void updateDatabaseShouldApplyScaleChanges() throws CloneNotSupportedException {
+  public void updateDatabaseShouldApplyColumnSizeChanges() throws CloneNotSupportedException {
     resetDB();
     // loads the initial model, 1 table with a column with size 20, and 3 views
     updateDatabase("columnSizeChangesWithDependentViews/TEST.xml");
