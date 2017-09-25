@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1769,20 +1770,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   protected Timestamp getDateStatement(Connection connection) {
-    try {
-      PreparedStatement dateStatement = connection.prepareStatement("SELECT NOW() FROM DUAL");
-      dateStatement.execute();
-      ResultSet resDate = dateStatement.getResultSet();
-      resDate.next();
-      Timestamp date = resDate.getTimestamp(1);
-      dateStatement.close();
-      return date;
-    } catch (Exception e) {
-      // don't print stack trace, this can happen in test cases
-      // e.printStackTrace();
-    }
-    return null;
-
+    return new Timestamp(new Date().getTime());
   }
 
   /**
