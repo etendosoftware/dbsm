@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015-2017 Openbravo S.L.U.
+ * Copyright (C) 2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -10,23 +10,15 @@
  ************************************************************************************
  */
 
-package org.openbravo.dbsm.test;
+package org.openbravo.dbsm.test.sourcedata;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.openbravo.dbsm.test.configscript.ConfigScriptSuite;
-import org.openbravo.dbsm.test.model.ModelSuite;
-import org.openbravo.dbsm.test.sourcedata.SourceDataSuite;
 
-/**
- * Test suite including all tests to be executed for DBSM
- * 
- * @author alostale
- *
- */
+/** Suite that includes operations in source data */
 @RunWith(Suite.class)
-@SuiteClasses({ ModelSuite.class, ConfigScriptSuite.class, SourceDataSuite.class })
-public class DBSMTestSuite {
+@SuiteClasses({ SourcedataUpdates.class })
+public class SourceDataSuite {
 
 }
