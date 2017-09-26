@@ -221,6 +221,8 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     log.info("Reading dataset AD sourcedata"); // to find prefixes
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, model, model, basedir,
         dataFilter, dataFolder, strict);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, model, basedir, strict,
+        true);
 
     return databaseOrgData;
   }
