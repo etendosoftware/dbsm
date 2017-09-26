@@ -37,8 +37,6 @@ public class SourcedataUpdates extends DbsmTest {
    * statement. See issue #35653
    */
   @Test
-  // TODO: recover this tests case once #36938 gets fixed
-  // @Ignore("Current test plaform does not support src updates, see issue #36938")
   public void allChangesInARowAreExecutedAltogether() throws SQLException {
     resetDB();
     String model = "constraints/TWO_COLS_CHECK.xml";
