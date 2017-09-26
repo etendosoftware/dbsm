@@ -13,6 +13,7 @@ import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.io.DatabaseIO;
+import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
@@ -233,11 +234,17 @@ public class DBUpdater {
     OBDataset ad = new OBDataset(databaseOrgData, datasetName);
 
     if (adTableNames != null) {
+      Database db = databaseOrgData.getDatabase();
       Vector<OBDatasetTable> adTables = new Vector<>(adTableNames.size());
       for (String tName : adTableNames) {
         OBDatasetTable t = new OBDatasetTable();
         t.setName(tName);
-        t.setIncludeAllColumns(true);
+        Vector<String> cols = new Vector<>();
+        Table table = db.findTable(tName);
+        for (Column col : table.getColumns()) {
+          cols.add(col.getName());
+        }
+        t.setIncludedColumns(cols);
         adTables.add(t);
       }
       ad.setTables(adTables);
