@@ -12,7 +12,6 @@
 
 package org.openbravo.dbsm.test.model.data;
 
-import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -94,7 +93,8 @@ public class CreateDefault extends DbsmTest {
 
   @Test
   public void nonMandatoryDefault_NM1() throws SQLException {
-    assumeThat(dataMode, not(anyOf(is(DataMode.ADAfterUpdate), is(DataMode.ADAddInUpdate))));
+    assumeThat("AD data does not get defaulted with default, it requires onCreateDefault",
+        dataMode, is(DataMode.instance));
     assertDefaults("NM1", equalTo("A"));
   }
 
@@ -120,8 +120,8 @@ public class CreateDefault extends DbsmTest {
 
   @Test
   public void mandatoryDefault_M1() throws SQLException {
-    assumeThat(dataMode, not(anyOf(is(DataMode.ADAfterUpdate), is(DataMode.ADAddInUpdate))));
-
+    assumeThat("AD data does not get defaulted with default, it requires onCreateDefault",
+        dataMode, is(DataMode.instance));
     assertDefaults("M1", equalTo("A"));
   }
 
