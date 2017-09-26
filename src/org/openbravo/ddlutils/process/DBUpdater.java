@@ -304,6 +304,10 @@ public class DBUpdater {
     this.platform = platform;
   }
 
+  public Platform getPlatform() {
+    return platform;
+  }
+
   public void setUpdateCheckSums(boolean updateCheckSums) {
     this.updateCheckSums = updateCheckSums;
   }

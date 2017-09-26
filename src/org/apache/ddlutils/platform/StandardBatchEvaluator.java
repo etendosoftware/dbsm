@@ -350,4 +350,9 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
   public boolean isLogInfoSucessCommands() {
     return logInfoSucessCommands;
   }
+
+  @Override
+  public boolean isDBEvaluator() {
+    return true;
+  }
 }

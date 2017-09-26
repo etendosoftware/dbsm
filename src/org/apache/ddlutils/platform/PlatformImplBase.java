@@ -846,6 +846,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       throws DatabaseOperationException {
     List<ColumnDataChange> colDataChanges = new ArrayList<>(changes.size());
 
+    StringWriter buffer = new StringWriter();
+    getSqlBuilder().setWriter(buffer);
+
     for (Change change : changes) {
       if (change instanceof AddRowChange) {
         upsert(connection, model, ((AddRowChange) change).getRow());
@@ -873,6 +876,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       rowDataChanges.add(change);
     }
     update(connection, model, rowDataChanges);
+
+    String sql = buffer.toString();
+    evaluateBatch(connection, sql, false);
   }
 
   public void alterData(Database model, Vector<Change> changes, Writer writer)
@@ -1653,11 +1659,18 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       return;
     }
 
-    String insertSql = createInsertSql(model, dynaClass, properties, null);
+    String insertSql = createInsertSql(model, dynaClass, properties,
+        batchEvaluator.isDBEvaluator() ? null : dynaBean);
     String queryIdentitySql = null;
 
     if (_log.isDebugEnabled()) {
       _log.debug("About to execute SQL: " + insertSql);
+    }
+
+    if (!batchEvaluator.isDBEvaluator()) {
+      // not working with actual db -> evaluate and go
+      batchEvaluator.evaluateBatch(connection, Arrays.asList(insertSql + ";\n"), true, 0);
+      return;
     }
 
     if (autoIncrColumns.length > 0) {
@@ -2120,15 +2133,21 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       params.put(change.getColumnname(), change.getNewValue());
     }
 
-    String sql = getSqlBuilder().getUpdateSql(table, params, true);
+    String sql = getSqlBuilder().getUpdateSql(table, params, batchEvaluator.isDBEvaluator());
     PreparedStatement statement = null;
 
     if (_log.isDebugEnabled()) {
       _log.debug("About to execute SQL: " + sql + " - " + params);
     }
 
+    if (!batchEvaluator.isDBEvaluator()) {
+      // not working with actual db -> evaluate and go
+      batchEvaluator.evaluateBatch(connection, Arrays.asList(sql + ";\n"), true, 0);
+      return;
+    }
+
     try {
-      beforeUpdate(connection, table);
+      beforeUpdate(connection, table); // TODO: remove?
 
       statement = connection.prepareStatement(sql);
       int sqlIndex = 1;
@@ -2157,7 +2176,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       setObject(statement, sqlIndex++, pkValue, table.getPrimaryKeyColumns()[0]);
       statement.executeUpdate();
 
-      afterUpdate(connection, table);
+      afterUpdate(connection, table); // TODO: remove?
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while updating in the database : " + sql + " - "
           + params + ex.getMessage(), ex);
@@ -2345,10 +2364,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       Table table = change.getTable();
       Column[] pk = table.getPrimaryKeyColumns();
-      HashMap pkValues = new HashMap();
+      Map<String, Object> pkValues = new HashMap<>();
       pkValues.put(pk[0].getName(), change.getRow().get(pk[0].getName()).toString());
-      String sql = getSqlBuilder().getDeleteSql(change.getTable(), pkValues, true);
-      // createDeleteSql(model, dynaClass, primaryKeys, null);
+      String sql = getSqlBuilder().getDeleteSql(change.getTable(), pkValues,
+          batchEvaluator.isDBEvaluator());
+
+      if (!batchEvaluator.isDBEvaluator()) {
+        // not working with actual db -> evaluate and go
+        batchEvaluator.evaluateBatch(connection, Arrays.asList(sql + ";\n"), true, 0);
+        return;
+      }
 
       if (_log.isDebugEnabled()) {
         _log.debug("About to execute SQL " + sql);
@@ -2359,7 +2384,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         setObject(statement, idx + 1, change.getRow().get(pk[idx].getName()).toString(), pk[idx]);
       }
 
-      int count = statement.executeUpdate();
+      statement.executeUpdate();
 
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while deleting from the database", ex);

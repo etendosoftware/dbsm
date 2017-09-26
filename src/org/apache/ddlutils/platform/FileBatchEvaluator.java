@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -10,26 +10,34 @@
  ************************************************************************************
  */
 
-package org.openbravo.dbsm.test.base;
+package org.apache.ddlutils.platform;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.Platform;
-import org.apache.ddlutils.platform.SQLBatchEvaluator;
 
-/**
- * Batch evaluator for test cases. It does not execute any SQL statement, but it stores them in a
- * list which can later be retrieved with getSQLStatements, in this way asserts on what is executed
- * at DB level can be performed.
- * 
- * @author alostale
- *
- */
-public class TestBatchEvaluator implements SQLBatchEvaluator {
-  List<String> statements = new ArrayList<String>();
+/** Writes statements in {@code out File} */
+public class FileBatchEvaluator implements SQLBatchEvaluator {
+  private Path outPath;
+
+  public FileBatchEvaluator(File out) {
+    outPath = out.toPath();
+    try {
+      Files.deleteIfExists(outPath);
+      Files.createFile(outPath);
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+  }
 
   @Override
   public void setPlatform(Platform p) {
@@ -37,20 +45,22 @@ public class TestBatchEvaluator implements SQLBatchEvaluator {
   }
 
   @Override
-  public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError,
+  public int evaluateBatch(Connection connection, List<String> statements, boolean continueOnError,
       long firstSqlCommandIndex) throws DatabaseOperationException {
-    statements.addAll(sql);
-    return 0;
+    for (String sql : statements) {
+      try {
+        Files.write(outPath, sql.getBytes(), StandardOpenOption.APPEND);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    return 0; // 0 failures
   }
 
   @Override
   public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
       throws DatabaseOperationException {
     return evaluateBatch(connection, sql, continueOnError, 0);
-  }
-
-  public List<String> getSQLStatements() {
-    return statements;
   }
 
   @Override
