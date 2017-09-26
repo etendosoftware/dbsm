@@ -31,8 +31,10 @@ public class OBDataset {
   public OBDataset(DatabaseData databaseData, String name) {
     this.database = databaseData.getDatabase();
     this.databaseData = databaseData;
-    DynaBean dataset = searchDynaBeans("AD_DATASET", false, name, "NAME").get(0);
-    createDataset(dataset, false);
+    if (name != null) {
+      DynaBean dataset = searchDynaBeans("AD_DATASET", false, name, "NAME").get(0);
+      createDataset(dataset, false);
+    }
   }
 
   public OBDataset(DatabaseData databaseData) {

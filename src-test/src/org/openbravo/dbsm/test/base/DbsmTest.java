@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -43,14 +42,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.alteration.AddRowChange;
 import org.apache.ddlutils.alteration.Change;
-import org.apache.ddlutils.alteration.ColumnDataChange;
-import org.apache.ddlutils.alteration.DataChange;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.ModelComparator;
-import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -75,10 +70,10 @@ import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.openbravo.ddlutils.process.DBUpdater;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
-import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * Base class to for test cases for DBSM. Classes extending this one, should be run as
@@ -341,175 +336,46 @@ public class DbsmTest {
    */
   protected Database updateDatabase(String dbModelPath, String adDirectoryName,
       List<String> adTableNames, boolean assertDBisCorrect, List<String> configScripts) {
-    Connection connection = null;
-    try {
-      File dbModel = new File("model", dbModelPath);
-      final Platform platform = getPlatform();
-      platform.setMaxThreads(threads);
-      log.info("Max threads " + platform.getMaxThreads());
+    DBUpdater dbUpdater = getDBUpdater(dbModelPath, adDirectoryName, adTableNames, configScripts);
+    Database updatedDB = dbUpdater.update();
 
-      if (recreationMode == RecreationMode.forced) {
-        platform.getSqlBuilder().setForcedRecreation("all");
-      }
-
-      Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(), true);
-
-      Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
-      final DatabaseData databaseOrgData = new DatabaseData(newDB);
-      databaseOrgData.setStrictMode(false);
-
-      if (adDirectoryName != null) {
-        DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, originalDB, newDB,
-            new File(adDirectoryName).getAbsolutePath(), "none", new File(adDirectoryName), false,
-            false);
-      }
-
-      // Applied ConfigScripts in the same order as in the dbsm source
-      if (configScripts != null) {
-        applyConfigScripts(configScripts, platform, databaseOrgData, newDB, true);
-      }
-
-      OBDataset ad = new OBDataset(databaseOrgData);
-      if (adDirectoryName != null && adTableNames != null) {
-        Vector<OBDatasetTable> adTables = new Vector<OBDatasetTable>();
-        for (String tName : adTableNames) {
-          OBDatasetTable t = new OBDatasetTable();
-          t.setName(tName);
-          t.setIncludeAllColumns(true);
-          adTables.add(t);
-        }
-        ad.setTables(adTables);
-      }
-
-      Database oldModel;
-      try {
-        oldModel = (Database) originalDB.clone();
-      } catch (CloneNotSupportedException e1) {
-        throw new RuntimeException(e1);
-      }
-      log.info("Updating database model...");
-      platform.alterTables(originalDB, newDB, false);
-      log.info("Model update complete.");
-
-      if (false) {
-        DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, newDB, null);
-      }
-      connection = platform.borrowConnection();
-      log.info("Comparing databases to find differences");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      try {
-        dataComparator.compareToUpdate(newDB, platform, databaseOrgData, ad, null);
-      } catch (SQLException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
-      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
-      for (Change dataChange : dataComparator.getChanges()) {
-        if (dataChange instanceof RemoveRowChange) {
-          Table table = ((RemoveRowChange) dataChange).getTable();
-          String tableName = table.getName();
-          if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedOrInsertedRecords.add(tableName);
-            adTablesWithRemovedRecords.add(tableName);
-          }
-        } else if (dataChange instanceof AddRowChange) {
-          Table table = ((AddRowChange) dataChange).getTable();
-          String tableName = table.getName();
-          if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedOrInsertedRecords.add(tableName);
-          }
-        }
-      }
-      log.info("Disabling foreign keys");
-      platform.disableDatasetFK(connection, originalDB, ad, false,
-          adTablesWithRemovedOrInsertedRecords);
-      log.info("Disabling triggers");
-      platform.disableAllTriggers(connection, newDB, false);
-      platform.disableNOTNULLColumns(newDB, ad);
-
-      // // Executing modulescripts
-      //
-      // ModuleScriptHandler hd = new ModuleScriptHandler();
-      // hd.setBasedir(new File(basedir + "/../"));
-      // hd.execute();
-      //
-
-      log.info("Updating Application Dictionary data...");
-      platform.alterData(connection, newDB, dataComparator.getChanges());
-      log.info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(newDB, ad, adTablesWithRemovedRecords, false);
-      log.info("Recreating Primary Keys");
-      List changes = platform.alterTablesRecreatePKs(oldModel, newDB, false);
-      log.info("Executing oncreatedefault statements for mandatory columns");
-      platform.executeOnCreateDefaultForMandatoryColumns(newDB, ad);
-      log.info("Recreating not null constraints");
-      platform.enableNOTNULLColumns(newDB, ad);
-      log.info("Executing update final script (dropping temporary tables)");
-      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, newDB, true, changes,
-          null, ad);
-
-      // assertThat("Postscript should be correct", postscriptCorrect, is(true));
-
-      log.info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableDatasetFK(connection, originalDB, ad,
-          adTablesWithRemovedOrInsertedRecords, true);
-      boolean triggersEnabled = platform.enableAllTriggers(connection, newDB, false);
-
-      // Now check the new model updated in db is as it should
-      if (assertDBisCorrect) {
-        ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
-            platform.isDelimitedIdentifierModeOn());
-
-        @SuppressWarnings("unchecked")
-        List<ModelChange> newChanges = comparator.compare(newDB,
-            platform.loadModelFromDatabase(getExcludeFilter()));
-        assertThat("changes between updated db and target db", newChanges, is(empty()));
-      }
-
-      return newDB;
-    } finally {
-      platform.returnConnection(connection);
+    if (assertDBisCorrect) {
+      checkDBIsCorrect(updatedDB);
     }
+
+    return updatedDB;
   }
 
-  private void applyConfigScripts(List<String> templates, Platform currentPlatform,
-      DatabaseData databaseOrgData, Database db, boolean applyConfigScriptData) {
+  private DBUpdater getDBUpdater(String dbModelPath, String adDirectoryName,
+      List<String> adTableNames, List<String> configScripts) {
+    DBUpdater dbUpdater = new DBUpdater();
 
-    log.info("Loading and applying configuration scripts");
-    Vector<File> configScripts = new Vector<File>();
-    for (String template : templates) {
-      File configScript = new File(template);
-      if (configScript.exists()) {
-        configScripts.add(configScript);
-        DatabaseIO dbIO = new DatabaseIO();
-        log.info("Loading configuration script: " + configScript.getAbsolutePath());
-        Vector<Change> changes = dbIO.readChanges(configScript);
-        for (Change change : changes) {
-          if (change instanceof ModelChange)
-            ((ModelChange) change).apply(db, currentPlatform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange && applyConfigScriptData) {
-            if (isValidChange(change)) {
-              ((DataChange) change).apply(databaseOrgData,
-                  currentPlatform.isDelimitedIdentifierModeOn());
-            }
-          }
-          log.info("Change: " + change);
-        }
-      } else {
-        log.info("Couldn't find configuration script for template: " + template + " (file: "
-            + configScript.getAbsolutePath() + ")");
-      }
+    dbUpdater.setLog(log);
+    dbUpdater.setExcludeFilter(getExcludeFilter());
+    dbUpdater.setPlatform(getPlatform());
+    dbUpdater.setUpdateCheckSums(false);
+    dbUpdater.setStrict(false);
+    dbUpdater.setExecuteModuleScripts(false);
+    dbUpdater.setDatafilter("none");
+    dbUpdater.setCheckDBModified(false);
+
+    dbUpdater.setModel(new File("model", dbModelPath));
+    dbUpdater.setBaseSrcAD(new File(adDirectoryName));
+    dbUpdater.setAdTableNames(adTableNames);
+    dbUpdater.setConfigScripts(configScripts);
+    if (recreationMode == RecreationMode.forced) {
+      platform.getSqlBuilder().setForcedRecreation("all");
     }
+    return dbUpdater;
   }
 
-  private boolean isValidChange(Change change) {
-    if (!(change instanceof ColumnDataChange)) {
-      return true;
-    }
-    return !(((ColumnDataChange) change).getColumnname().equals("SEQNO") && ((ColumnDataChange) change)
-        .getTablename().equalsIgnoreCase("AD_FIELD"));
+  private void checkDBIsCorrect(Database updatedDB) {
+    ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
+        platform.isDelimitedIdentifierModeOn());
+
+    List<ModelChange> newChanges = comparator.compare(updatedDB,
+        platform.loadModelFromDatabase(getExcludeFilter()));
+    assertThat("changes between updated db and target db", newChanges, is(empty()));
   }
 
   /**
@@ -698,6 +564,7 @@ public class DbsmTest {
       }
     }
     platform.setBatchEvaluator(evaluator);
+    platform.setMaxThreads(threads);
 
     return platform;
   }
@@ -808,15 +675,19 @@ public class DbsmTest {
   protected String getActualValue(String tableName, String columnName) throws SQLException {
     Connection cn = null;
     PreparedStatement st = null;
+    String sql = "select " + columnName + " from " + tableName;
     try {
       cn = getDataSource().getConnection();
 
-      st = cn.prepareStatement("select " + columnName + " from " + tableName);
+      st = cn.prepareStatement(sql);
 
       ResultSet rs = st.executeQuery();
 
       rs.next();
       return rs.getString(1);
+    } catch (SQLException e) {
+      log.error("Error executing query: " + sql, e);
+      throw e;
     } finally {
       if (st != null) {
         try {

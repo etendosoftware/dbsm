@@ -908,23 +908,24 @@ public class DBSMOBUtil {
       }
     }
 
-    final String token = datafilter;
-    final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(modulesBaseDir));
-    final String[] dirFilterA = token.split(",");
-    dirScanner.setIncludes(dirFilterA);
-    dirScanner.scan();
-    final String[] incDirs = dirScanner.getIncludedDirectories();
-    for (int j = 0; j < incDirs.length; j++) {
-      final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
-      final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
-      for (int i = 0; i < fileArray.length; i++) {
-        if (fileArray[i].getName().endsWith(".xml")) {
-          files.add(fileArray[i]);
+    if (modulesBaseDir != null) {
+      final String token = datafilter;
+      final DirectoryScanner dirScanner = new DirectoryScanner();
+      dirScanner.setBasedir(new File(modulesBaseDir));
+      final String[] dirFilterA = token.split(",");
+      dirScanner.setIncludes(dirFilterA);
+      dirScanner.scan();
+      final String[] incDirs = dirScanner.getIncludedDirectories();
+      for (int j = 0; j < incDirs.length; j++) {
+        final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
+        final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+        for (int i = 0; i < fileArray.length; i++) {
+          if (fileArray[i].getName().endsWith(".xml")) {
+            files.add(fileArray[i]);
+          }
         }
       }
     }
-
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
@@ -967,36 +968,53 @@ public class DBSMOBUtil {
       }
       File configScript = new File(new File(modulesBaseDir), template
           + "/src-db/database/configScript.xml");
-      if (configScript.exists()) {
-        DatabaseIO dbIO = new DatabaseIO();
-        getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
-        Vector<Change> changes = dbIO.readChanges(configScript);
-        boolean isOldConfigScript = isOldConfigScript(changes);
-        boolean isOB3 = isOB3(platform);
-        for (Change change : changes) {
-          if (change instanceof ModelChange)
-            ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
-            if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
-              boolean applied = ((DataChange) change).apply(databaseOrgData,
-                  platform.isDelimitedIdentifierModeOn());
-              if (strict && !applied) {
-                throw new BuildException(
-                    "Change "
-                        + change
-                        + " of the configuration script for the template "
-                        + configScript.getAbsolutePath()
-                        + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
-              }
-            }
+      applyConfigScript(configScript, platform, databaseOrgData, db, strict, applyConfigScriptData,
+          isApplied);
+    }
+  }
+
+  public void applyConfigScripts(List<String> scripts, Platform platform,
+      DatabaseData databaseOrgData, Database db) {
+    for (String script : scripts) {
+      applyConfigScript(new File(script), platform, databaseOrgData, db, true, true, true);
+    }
+
+  }
+
+  private void applyConfigScript(File configScript, Platform platform,
+      DatabaseData databaseOrgData, Database db, boolean strict, boolean applyConfigScriptData,
+      boolean isApplied) {
+    if (!configScript.exists()) {
+      getLog().info(
+          "Couldn't find configuration script for template: " + configScript.getAbsolutePath());
+      return;
+    }
+    DatabaseIO dbIO = new DatabaseIO();
+    getLog().info("Loading configuration script: " + configScript.getAbsolutePath());
+    Vector<Change> changes = dbIO.readChanges(configScript);
+    boolean isOldConfigScript = isOldConfigScript(changes);
+    boolean isOB3 = isOB3(platform);
+    for (Change change : changes) {
+      if (change instanceof ModelChange)
+        ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
+      else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
+        if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
+          boolean applied = ((DataChange) change).apply(databaseOrgData,
+              platform.isDelimitedIdentifierModeOn());
+          if (strict && !applied) {
+            throw new BuildException(
+                "Change "
+                    + change
+                    + " of the configuration script for the template "
+                    + configScript.getAbsolutePath()
+                    + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
           }
-          getLog().debug(change);
+        } else {
+          System.out.println("no -> " + change + " ->"
+              + (!isOldConfigScript || !isOB3 || isValidChange(change)));
         }
-      } else {
-        getLog().info(
-            "Couldn't find configuration script for template: " + template + " (file: "
-                + configScript.getAbsolutePath() + ")");
       }
+      getLog().debug(change);
     }
   }
 
@@ -1169,6 +1187,7 @@ public class DBSMOBUtil {
 
   private boolean isOB3(Platform platform) {
     String version = getOBVersion(platform);
+
     if (version == null) {
       return false;
     }

@@ -40,7 +40,7 @@ public class TestBatchEvaluator implements SQLBatchEvaluator {
   public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError,
       long firstSqlCommandIndex) throws DatabaseOperationException {
     statements.addAll(sql);
-    return sql.size();
+    return 0;
   }
 
   @Override

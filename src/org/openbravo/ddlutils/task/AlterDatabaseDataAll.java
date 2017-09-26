@@ -16,35 +16,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.alteration.AddRowChange;
-import org.apache.ddlutils.alteration.Change;
-import org.apache.ddlutils.alteration.DataComparator;
-import org.apache.ddlutils.alteration.RemoveRowChange;
-import org.apache.ddlutils.io.DatabaseIO;
-import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.DatabaseData;
-import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.task.VerbosityLevel;
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.DirectoryScanner;
-import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
+import org.openbravo.ddlutils.process.DBUpdater;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
-import org.openbravo.ddlutils.util.OBDataset;
-import org.openbravo.modulescript.ModuleScriptHandler;
-import org.openbravo.service.system.SystemService;
-import org.openbravo.utils.CheckSum;
 
 /**
  * 
@@ -81,217 +62,44 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   private int threads = 0;
 
-  public AlterDatabaseDataAll() {
-    super();
-  }
-
   @Override
   protected void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(model.getAbsolutePath() + "/../../../"));
-    if (onlyIfModified) {
-      getLog().info("Checking if database files where modified after last build");
-      CheckSum cs = new CheckSum(basedir + "/../");
-      String oldStructCS = cs.getCheckSumDBSTructure();
-      String newStructCS = cs.calculateCheckSumDBStructure();
-      String oldDataCS = cs.getCheckSumDBSourceData();
-      String newDataCS = cs.calculateCheckSumDBSourceData();
-      if (oldStructCS.equals(newStructCS) && oldDataCS.equals(newDataCS)) {
-        getLog().info("Database files didn't change. No update process required.");
-        return;
-      } else {
-        getLog().info("Database files were changed. Initiating database update process.");
-      }
-    }
+    DBUpdater dbUpdater = getDBUpater();
 
+    dbUpdater.update();
+  }
+
+  protected DBUpdater getDBUpater() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
-
-    final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
-        getPassword());
-
-    final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
-    getLog().info("Max threads " + platform.getMaxThreads());
-
     if (!StringUtils.isEmpty(forcedRecreation)) {
       getLog().info("Forced recreation: " + forcedRecreation);
     }
-
     platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
-    DBSMOBUtil
-        .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
 
-    getLog().info("Executing full update.database");
-
-    try {
-
-      Database originaldb;
-      if (getOriginalmodel() == null) {
-        originaldb = platform.loadModelFromDatabase(excludeFilter, true);
-        getLog().info("Checking datatypes from the model loaded from the database");
-        if (originaldb == null) {
-          originaldb = new Database();
-          getLog().info("Original model considered empty.");
-        } else {
-          getLog().info("Original model loaded from database.");
-        }
-      } else {
-        // Load the model from the file
-        originaldb = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
-        getLog().info("Original model loaded from file.");
-      }
-      DatabaseInfo databaseInfo = readDatabaseModelWithoutConfigScript(platform, originaldb);
-      Database db = databaseInfo.getDatabase();
-
-      getLog().info("Checking datatypes from the model loaded from XML files");
-      db.checkDataTypes();
-      final DatabaseData databaseOrgData = databaseInfo.getDatabaseData();
-      databaseOrgData.setStrictMode(strict);
-      DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, strict,
-          true);
-      OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
-      if (hasBeenModified) {
-        if (force)
-          getLog()
-              .info(
-                  "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-        else {
-          getLog()
-              .error(
-                  "Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
-          throw new BuildException("Database has local changes. Update.database not done.");
-        }
-      }
-
-      // execute the pre-script
-      if (getPrescript() == null) {
-        // try to execute the default prescript
-        final File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
-        if (fpre.exists()) {
-          getLog().info("Executing default prescript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), true);
-      }
-      final Database oldModel = (Database) originaldb.clone();
-      getLog().info("Updating database model...");
-      platform.alterTables(originaldb, db, !isFailonerror());
-      getLog().info("Model update complete.");
-
-      // Initialize the ModuleScriptHandler that we will use later, to keep the current module
-      // versions, prior to the update
-      ModuleScriptHandler hd = new ModuleScriptHandler();
-      hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
-
-      DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
-      final Connection connection = platform.borrowConnection();
-      getLog().info("Comparing databases to find differences");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
-      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
-      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
-      for (Change dataChange : dataComparator.getChanges()) {
-        if (dataChange instanceof RemoveRowChange) {
-          Table table = ((RemoveRowChange) dataChange).getTable();
-          String tableName = table.getName();
-          if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedOrInsertedRecords.add(tableName);
-            adTablesWithRemovedRecords.add(tableName);
-          }
-        } else if (dataChange instanceof AddRowChange) {
-          Table table = ((AddRowChange) dataChange).getTable();
-          String tableName = table.getName();
-          if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedOrInsertedRecords.add(tableName);
-          }
-        }
-      }
-      getLog().info("Disabling foreign keys");
-      platform.disableDatasetFK(connection, originaldb, ad, !isFailonerror(),
-          adTablesWithRemovedOrInsertedRecords);
-      getLog().info("Disabling triggers");
-      platform.disableAllTriggers(connection, db, !isFailonerror());
-      platform.disableNOTNULLColumns(db, ad);
-
-      if (executeModuleScripts) {
-        getLog().info("Running modulescripts...");
-        // Executing modulescripts
-        hd.setBasedir(new File(basedir + "/../"));
-        hd.execute();
-      } else {
-        getLog().info("Skipping modulescripts...");
-      }
-      getLog().info("Updating Application Dictionary data...");
-      platform.alterData(connection, db, dataComparator.getChanges());
-      getLog().info("Removing invalid rows.");
-      platform.deleteInvalidConstraintRows(db, ad, adTablesWithRemovedRecords, !isFailonerror());
-      getLog().info("Recreating Primary Keys");
-      List changes = platform.alterTablesRecreatePKs(oldModel, db, !isFailonerror());
-      getLog().info("Executing oncreatedefault statements for mandatory columns");
-      platform.executeOnCreateDefaultForMandatoryColumns(db, ad);
-      getLog().info("Recreating not null constraints");
-      platform.enableNOTNULLColumns(db, ad);
-      getLog().info("Executing update final script (dropping temporary tables)");
-      boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, db, !isFailonerror(),
-          changes, null, ad);
-
-      getLog().info("Enabling Foreign Keys and Triggers");
-      boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad,
-          adTablesWithRemovedOrInsertedRecords, true);
-      boolean triggersEnabled = platform.enableAllTriggers(connection, db, !isFailonerror());
-
-      // execute the post-script
-      if (getPostscript() == null) {
-        // try to execute the default prescript
-        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
-        if (fpost.exists()) {
-          getLog().info("Executing default postscript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), true);
-      }
-      DBSMOBUtil.getInstance().updateCRC();
-      if (!triggersEnabled) {
-        getLog()
-            .error(
-                "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct. If that is the case, please remove/uninstall its module, or recover the sources backup and initiate the rebuild again");
-      }
-      if (!fksEnabled) {
-        getLog()
-            .error(
-                "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references, or recover the backup of your sources.");
-      }
-      if (!postscriptCorrect) {
-        getLog()
-            .error(
-                "Not all the commands in the final update step were executed correctly. This likely means at least one foreign key was not activated successfully. Please review which one, and fix the missing references, or recover the backup of your sources.");
-      }
-      if (!triggersEnabled || !fksEnabled || !postscriptCorrect) {
-        throw new Exception(
-            "There were serious problems while updating the database. Please review and fix them before continuing with the application rebuild");
-
-      }
-
-      final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      dataComparator2.compare(db, db, platform, databaseOrgData, ad, null);
-      Vector<Change> finalChanges = new Vector<Change>();
-      Vector<Change> notExportedChanges = new Vector<Change>();
-      dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
-
-      final DatabaseIO dbIO = new DatabaseIO();
-
-      final File configFile = new File("formalChangesScript.xml");
-      dbIO.write(configFile, finalChanges);
-    } catch (final Exception e) {
-      // log(e.getLocalizedMessage());
-      e.printStackTrace();
-      throw new BuildException(e);
-    }
+    DBUpdater dbUpdater = new DBUpdater();
+    dbUpdater.setLog(getLog());
+    dbUpdater.setExcludeFilter(DBSMOBUtil.getInstance().getExcludeFilter(
+        new File(model.getAbsolutePath() + "/../../../")));
+    dbUpdater.setPlatform(platform);
+    dbUpdater.setModel(model);
+    dbUpdater.setBasedir(basedir);
+    dbUpdater.setStrict(strict);
+    dbUpdater.setPrescript(prescript);
+    dbUpdater.setFailonerror(failonerror);
+    dbUpdater.setForce(force);
+    dbUpdater.setPostscript(postscript);
+    dbUpdater.setExecuteModuleScripts(executeModuleScripts);
+    dbUpdater.setDatafilter(datafilter);
+    dbUpdater.setBaseSrcAD(input);
+    dbUpdater.setDirFilter(dirFilter);
+    dbUpdater.setDatasetName("AD");
+    dbUpdater.setCheckDBModified(true);
+    dbUpdater.setCheckFormalChanges(true);
+    dbUpdater.setUpdateModuleInstallTables(true);
+    return dbUpdater;
   }
 
   public static void main(String[] args) throws FileNotFoundException, IOException {
@@ -330,83 +138,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.setVerbosity(new VerbosityLevel("DEBUG"));
 
     task.execute();
-  }
-
-  /**
-   * This method is only invoked from GenerateProcess task defined in ezattributes module and it is
-   * required to maintain backwards compatibility and to ensures that the API is not broken.
-   * 
-   * Avoid uses loadDataStructures because process that invokes this method executes it.
-   */
-  protected Database readDatabaseModel() {
-    // Set input file and datafilter needed in loadDataStructures
-    input = new File(basedir + "/../src-db/database/sourcedata");
-    datafilter = "*/src-db/database/sourcedata";
-
-    boolean applyConfigScriptData = false;
-    ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
-        basedir + "/../", strict, applyConfigScriptData);
-
-    Database db = null;
-    String modulesBaseDir = config.getBasedir() + "modules/";
-    if (config.getBasedir() == null) {
-      getLog()
-          .info("Basedir for additional files not specified. Updating database with just Core.");
-
-      modulesBaseDir = null;
-      db = DatabaseUtils.readDatabase(getModel(), config);
-    } else {
-      final File[] fileArray = readModelFiles(modulesBaseDir);
-      getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabase(fileArray, config);
-    }
-
-    return db;
-  }
-
-  protected DatabaseInfo readDatabaseModelWithoutConfigScript(Platform platform, Database database) {
-    Database db = null;
-    String modulesBaseDir = basedir + "../modules/";
-    if (basedir == null) {
-      getLog()
-          .info("Basedir for additional files not specified. Updating database with just Core.");
-
-      modulesBaseDir = null;
-      db = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
-    } else {
-      final File[] fileArray = readModelFiles(modulesBaseDir);
-      getLog().info("Reading model files...");
-      db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
-    }
-    DatabaseData dbData = new DatabaseData(db);
-    DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, database, db, modulesBaseDir,
-        datafilter, input, strict, false);
-
-    return new DatabaseInfo(db, dbData);
-  }
-
-  /**
-   * This method read model files using the filter, obtaining a file array.The models will be merged
-   * to create a final target model.
-   */
-  private File[] readModelFiles(String modulesBaseDir) throws IllegalStateException {
-    final Vector<File> dirs = new Vector<File>();
-    dirs.add(getModel());
-    final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(modulesBaseDir));
-    final String[] dirFilterA = { dirFilter };
-    dirScanner.setIncludes(dirFilterA);
-    dirScanner.scan();
-    final String[] incDirs = dirScanner.getIncludedDirectories();
-    for (int j = 0; j < incDirs.length; j++) {
-      final File dirF = new File(modulesBaseDir, incDirs[j]);
-      dirs.add(dirF);
-    }
-    final File[] fileArray = new File[dirs.size()];
-    for (int i = 0; i < dirs.size(); i++) {
-      fileArray[i] = dirs.get(i);
-    }
-    return fileArray;
   }
 
   public String getExcludeobjects() {
@@ -560,29 +291,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   /** Defines how many threads can be used to execute parallelizable tasks */
   public void setThreads(int threads) {
     this.threads = threads;
-  }
-
-  /**
-   * Helper class that contains the database and the databaseData information.
-   */
-  protected static class DatabaseInfo {
-
-    private Database database;
-    private DatabaseData databaseData;
-
-    private DatabaseInfo(Database database, DatabaseData databaseData) {
-      this.database = database;
-      this.databaseData = databaseData;
-    }
-
-    protected Database getDatabase() {
-      return database;
-    }
-
-    protected DatabaseData getDatabaseData() {
-      return databaseData;
-    }
-
   }
 
 }
