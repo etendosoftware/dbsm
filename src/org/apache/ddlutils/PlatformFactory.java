@@ -21,27 +21,13 @@ package org.apache.ddlutils;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.sql.DataSource;
-import org.apache.ddlutils.platform.axion.AxionPlatform;
-import org.apache.ddlutils.platform.cloudscape.CloudscapePlatform;
-import org.apache.ddlutils.platform.db2.Db2Platform;
-import org.apache.ddlutils.platform.db2.Db2v8Platform;
-import org.apache.ddlutils.platform.derby.DerbyPlatform;
-import org.apache.ddlutils.platform.firebird.FirebirdPlatform;
-import org.apache.ddlutils.platform.hsqldb.HsqlDbPlatform;
-import org.apache.ddlutils.platform.interbase.InterbasePlatform;
-import org.apache.ddlutils.platform.maxdb.MaxDbPlatform;
-import org.apache.ddlutils.platform.mckoi.MckoiPlatform;
-import org.apache.ddlutils.platform.mssql.MSSqlPlatform;
-import org.apache.ddlutils.platform.mysql.MySqlPlatform;
-import org.apache.ddlutils.platform.mysql.MySql50Platform;
+
 import org.apache.ddlutils.platform.oracle.Oracle10Platform;
 import org.apache.ddlutils.platform.oracle.Oracle8Platform;
 import org.apache.ddlutils.platform.oracle.Oracle9Platform;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
-import org.apache.ddlutils.platform.sapdb.SapDbPlatform;
-import org.apache.ddlutils.platform.sybase.SybaseASE15Platform;
-import org.apache.ddlutils.platform.sybase.SybasePlatform;
 
 /**
  * A factory of {@link org.apache.ddlutils.Platform} instances based on a case insensitive database
@@ -52,17 +38,16 @@ import org.apache.ddlutils.platform.sybase.SybasePlatform;
  */
 public class PlatformFactory {
   /** The database name -> platform map. */
-  private static Map _platforms = null;
+  private static Map<String, Class<? extends Platform>> _platforms = null;
 
   /**
    * Returns the platform map.
    * 
    * @return The platform list
    */
-  private static synchronized Map getPlatforms() {
+  private static synchronized Map<String, Class<? extends Platform>> getPlatforms() {
     if (_platforms == null) {
-      // lazy initialization
-      _platforms = new HashMap();
+      _platforms = new HashMap<>();
       registerPlatforms();
     }
     return _platforms;
@@ -78,10 +63,10 @@ public class PlatformFactory {
    */
   public static synchronized Platform createNewPlatformInstance(String databaseName)
       throws DdlUtilsException {
-    Class platformClass = (Class) getPlatforms().get(databaseName.toLowerCase());
+    Class<? extends Platform> platformClass = getPlatforms().get(databaseName.toLowerCase());
 
     try {
-      return platformClass != null ? (Platform) platformClass.newInstance() : null;
+      return platformClass != null ? platformClass.newInstance() : null;
     } catch (Exception ex) {
       throw new DdlUtilsException("Could not create platform for database " + databaseName, ex);
     }
@@ -177,7 +162,8 @@ public class PlatformFactory {
    * @param platformClass
    *          The platform class which must implement the {@link Platform} interface
    */
-  public static synchronized void registerPlatform(String platformName, Class platformClass) {
+  public static synchronized void registerPlatform(String platformName,
+      Class<? extends Platform> platformClass) {
     addPlatform(getPlatforms(), platformName, platformClass);
   }
 
@@ -185,26 +171,10 @@ public class PlatformFactory {
    * Registers the known platforms.
    */
   private static void registerPlatforms() {
-    addPlatform(_platforms, AxionPlatform.DATABASENAME, AxionPlatform.class);
-    addPlatform(_platforms, CloudscapePlatform.DATABASENAME, CloudscapePlatform.class);
-    addPlatform(_platforms, Db2Platform.DATABASENAME, Db2Platform.class);
-    addPlatform(_platforms, Db2v8Platform.DATABASENAME, Db2v8Platform.class);
-    addPlatform(_platforms, DerbyPlatform.DATABASENAME, DerbyPlatform.class);
-    addPlatform(_platforms, FirebirdPlatform.DATABASENAME, FirebirdPlatform.class);
-    addPlatform(_platforms, HsqlDbPlatform.DATABASENAME, HsqlDbPlatform.class);
-    addPlatform(_platforms, InterbasePlatform.DATABASENAME, InterbasePlatform.class);
-    addPlatform(_platforms, MaxDbPlatform.DATABASENAME, MaxDbPlatform.class);
-    addPlatform(_platforms, MckoiPlatform.DATABASENAME, MckoiPlatform.class);
-    addPlatform(_platforms, MSSqlPlatform.DATABASENAME, MSSqlPlatform.class);
-    addPlatform(_platforms, MySqlPlatform.DATABASENAME, MySqlPlatform.class);
-    addPlatform(_platforms, MySql50Platform.DATABASENAME, MySql50Platform.class);
     addPlatform(_platforms, Oracle8Platform.DATABASENAME, Oracle8Platform.class);
     addPlatform(_platforms, Oracle9Platform.DATABASENAME, Oracle9Platform.class);
     addPlatform(_platforms, Oracle10Platform.DATABASENAME, Oracle10Platform.class);
     addPlatform(_platforms, PostgreSqlPlatform.DATABASENAME, PostgreSqlPlatform.class);
-    addPlatform(_platforms, SapDbPlatform.DATABASENAME, SapDbPlatform.class);
-    addPlatform(_platforms, SybasePlatform.DATABASENAME, SybasePlatform.class);
-    addPlatform(_platforms, SybaseASE15Platform.DATABASENAME, SybaseASE15Platform.class);
   }
 
   /**
@@ -217,8 +187,8 @@ public class PlatformFactory {
    * @param platformClass
    *          The platform class which must implement the {@link Platform} interface
    */
-  private static synchronized void addPlatform(Map platformMap, String platformName,
-      Class platformClass) {
+  private static synchronized void addPlatform(Map<String, Class<? extends Platform>> platformMap,
+      String platformName, Class<? extends Platform> platformClass) {
     if (!Platform.class.isAssignableFrom(platformClass)) {
       throw new IllegalArgumentException("Cannot register class " + platformClass.getName()
           + " because it does not implement the " + Platform.class.getName() + " interface");

@@ -75,6 +75,12 @@ public class Oracle8Platform extends PlatformImplBase {
   /** The old thin subprotocol used by the standard Oracle driver. */
   public static final String JDBC_SUBPROTOCOL_THIN_OLD = "oracle:dnldthin";
 
+  public static final String JDBC_DRIVER_DATADIRECT_ORACLE = "com.ddtek.jdbc.oracle.OracleDriver";
+  public static final String JDBC_DRIVER_INET_ORACLE = "com.inet.ora.OraDriver";
+
+  public static final String JDBC_SUBPROTOCOL_DATADIRECT_ORACLE = "datadirect:oracle";
+  public static final String JDBC_SUBPROTOCOL_INET_ORACLE = "inetora";
+
   /**
    * Creates a new platform instance.
    */
