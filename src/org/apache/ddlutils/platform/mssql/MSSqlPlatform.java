@@ -141,4 +141,5 @@ public class MSSqlPlatform extends PlatformImplBase {
   protected void afterUpdate(Connection connection, Table table) throws SQLException {
     afterInsert(connection, table);
   }
+
 }
