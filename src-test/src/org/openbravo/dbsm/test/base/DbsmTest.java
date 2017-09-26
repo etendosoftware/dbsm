@@ -360,7 +360,7 @@ public class DbsmTest {
     dbUpdater.setCheckDBModified(false);
 
     dbUpdater.setModel(new File("model", dbModelPath));
-    dbUpdater.setBaseSrcAD(new File(adDirectoryName));
+    dbUpdater.setBaseSrcAD(adDirectoryName == null ? null : new File(adDirectoryName));
     dbUpdater.setAdTableNames(adTableNames);
     dbUpdater.setConfigScripts(configScripts);
     if (recreationMode == RecreationMode.forced) {
