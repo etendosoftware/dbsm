@@ -150,7 +150,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, strict,
           true);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
+      boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
       if (hasBeenModified) {
         if (force)
           getLog()
