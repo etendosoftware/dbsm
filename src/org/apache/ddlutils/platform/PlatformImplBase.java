@@ -2191,6 +2191,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
+  /** API for ezattributes */
   public Database loadModelFromDatabase(ExcludeFilter filter, String prefix,
       boolean loadCompleteTables, String moduleId) throws DatabaseOperationException {
 

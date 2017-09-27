@@ -276,10 +276,10 @@ public class DBUpdater {
   }
 
   /**
-   * This method read model files using the filter, obtaining a file array.The models will be merged
-   * to create a final target model.
+   * This method reads model files using the filter, obtaining a file array.The models will be
+   * merged to create a final target model.
    */
-  private File[] readModelFiles(String modulesBaseDir) throws IllegalStateException {
+  public File[] readModelFiles(String modulesBaseDir) throws IllegalStateException {
     final Vector<File> dirs = new Vector<File>();
     dirs.add(model);
     final DirectoryScanner dirScanner = new DirectoryScanner();

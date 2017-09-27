@@ -22,10 +22,13 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
+import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.task.VerbosityLevel;
 import org.openbravo.ddlutils.process.DBUpdater;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.service.system.SystemService;
 
 /**
  * 
@@ -138,6 +141,38 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.setVerbosity(new VerbosityLevel("DEBUG"));
 
     task.execute();
+  }
+
+  /**
+   * This method is only invoked from GenerateProcess task defined in ezattributes module and it is
+   * required to maintain backwards compatibility and to ensures that the API is not broken.
+   * 
+   * Avoid uses loadDataStructures because process that invokes this method executes it.
+   */
+  protected Database readDatabaseModel() {
+    // Set input file and datafilter needed in loadDataStructures
+    input = new File(basedir + "/../src-db/database/sourcedata");
+    datafilter = "*/src-db/database/sourcedata";
+
+    boolean applyConfigScriptData = false;
+    ConfigScriptConfig config = new ConfigScriptConfig(SystemService.getInstance().getPlatform(),
+        basedir + "/../", strict, applyConfigScriptData);
+
+    Database db = null;
+    String modulesBaseDir = config.getBasedir() + "modules/";
+    if (config.getBasedir() == null) {
+      getLog()
+          .info("Basedir for additional files not specified. Updating database with just Core.");
+
+      modulesBaseDir = null;
+      db = DatabaseUtils.readDatabase(getModel(), config);
+    } else {
+      final File[] fileArray = getDBUpater().readModelFiles(modulesBaseDir);
+      getLog().info("Reading model files...");
+      db = DatabaseUtils.readDatabase(fileArray, config);
+    }
+
+    return db;
   }
 
   public String getExcludeobjects() {
