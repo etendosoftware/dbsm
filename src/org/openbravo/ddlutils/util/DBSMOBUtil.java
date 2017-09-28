@@ -531,14 +531,6 @@ public class DBSMOBUtil {
     return hasBeenModified(dataset);
   }
 
-  /**
-   * @deprecated updateCRC is not used at all. Replaced by {@link #hasBeenModified(OBDataset)}
-   *             method.
-   */
-  public boolean hasBeenModified(OBDataset dataset, boolean updateCRC) {
-    return hasBeenModified(dataset);
-  }
-
   public boolean hasBeenModified(OBDataset dataset) {
     Connection connection = null;
     try {
