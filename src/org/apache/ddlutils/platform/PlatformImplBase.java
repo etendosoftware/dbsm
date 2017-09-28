@@ -470,12 +470,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void createTables(Database model, boolean dropTablesFirst, boolean continueOnError)
+  public boolean createTables(Database model, boolean dropTablesFirst, boolean continueOnError)
       throws DatabaseOperationException {
     Connection connection = borrowConnection();
 
     try {
-      createTables(connection, model, dropTablesFirst, continueOnError);
+      return createTables(connection, model, dropTablesFirst, continueOnError);
     } finally {
       returnConnection(connection);
     }
@@ -484,12 +484,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void createTables(Connection connection, Database model, boolean dropTablesFirst,
+  public boolean createTables(Connection connection, Database model, boolean dropTablesFirst,
       boolean continueOnError) throws DatabaseOperationException {
     String sql = getCreateTablesSql(model, dropTablesFirst, continueOnError);
     _log.info("Finished preparing SQL");
 
-    evaluateBatch(connection, sql, continueOnError);
+    return evaluateBatch(connection, sql, continueOnError) > 0 ? false : true;
   }
 
   /**
@@ -562,9 +562,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   @Override
-  public void createAllFKs(Database model, boolean continueOnError) {
+  public boolean createAllFKs(Database model, boolean continueOnError) {
     Connection connection = borrowConnection();
-
+    boolean isExecuted = false;
     try {
       String sql;
       StringWriter buffer = new StringWriter();
@@ -572,12 +572,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       getSqlBuilder().setWriter(buffer);
       getSqlBuilder().createExternalForeignKeys(model);
       sql = buffer.toString();
-      evaluateBatchRealBatch(connection, sql, continueOnError);
+      isExecuted = evaluateBatchRealBatch(connection, sql, continueOnError) > 0 ? false : true;
     } catch (IOException e) {
       // won't happen because we're using a string writer
     }
 
     returnConnection(connection);
+    return isExecuted;
   }
 
   /**

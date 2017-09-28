@@ -335,8 +335,9 @@ public interface Platform {
    *          Whether to drop the tables prior to creating them (anew)
    * @param continueOnError
    *          Whether to continue executing the sql commands when an error occurred
+   * @return false if an error is raised when executing sql commands
    */
-  public void createTables(Database model, boolean dropTablesFirst, boolean continueOnError)
+  public boolean createTables(Database model, boolean dropTablesFirst, boolean continueOnError)
       throws DatabaseOperationException;
 
   /**
@@ -350,8 +351,9 @@ public interface Platform {
    *          Whether to drop the tables prior to creating them (anew)
    * @param continueOnError
    *          Whether to continue executing the sql commands when an error occurred
+   * @return false if an error is raised when executing sql commands
    */
-  public void createTables(Connection connection, Database model, boolean dropTablesFirst,
+  public boolean createTables(Connection connection, Database model, boolean dropTablesFirst,
       boolean continueOnError) throws DatabaseOperationException;
 
   /**
@@ -425,8 +427,9 @@ public interface Platform {
    *          The database model
    * @param continueOnError
    *          Whether to continue executing the sql commands when an error occurred
+   * @return true if all FK are created as expected. false if an error is occurred.
    */
-  public void createAllFKs(Database model, boolean continueOnError);
+  public boolean createAllFKs(Database model, boolean continueOnError);
 
   /**
    * Returns the SQL for altering the database schema so that it match the given model.
