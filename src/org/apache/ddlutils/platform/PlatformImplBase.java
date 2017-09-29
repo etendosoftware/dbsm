@@ -2179,7 +2179,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public Database loadModelFromDatabase(ExcludeFilter filter, boolean doPlSqlStandardization)
       throws DatabaseOperationException {
-
+    _log.info("Loading model from database...");
     Connection connection = borrowConnection();
     try {
       getModelLoader().setLog(_log);

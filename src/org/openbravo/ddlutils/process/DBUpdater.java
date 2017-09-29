@@ -2,6 +2,7 @@ package org.openbravo.ddlutils.process;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,23 +63,17 @@ public class DBUpdater {
     Connection connection = null;
     try {
       Database originaldb = platform.loadModelFromDatabase(excludeFilter, true);
-      log.info("Original model loaded from database.");
 
-      DatabaseInfo databaseInfo = readDatabaseModelWithoutConfigScript(originaldb);
-      Database db = databaseInfo.getDatabase();
+      Database db = readDatabaseModelWithoutConfigScript();
+      DatabaseData newData = readADData(db);
 
-      log.info("Checking datatypes from the model loaded from XML files");
-      db.checkDataTypes();
-      final DatabaseData databaseOrgData = databaseInfo.getDatabaseData();
-      databaseOrgData.setStrictMode(strict);
       if (configScripts == null) {
-        DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, db, basedir, strict,
-            true);
+        DBSMOBUtil.getInstance().applyConfigScripts(platform, newData, db, basedir, strict, true);
       } else {
-        DBSMOBUtil.getInstance().applyConfigScripts(configScripts, platform, databaseOrgData, db);
+        DBSMOBUtil.getInstance().applyConfigScripts(configScripts, platform, newData, db);
       }
 
-      OBDataset ad = getADDataset(databaseOrgData);
+      OBDataset ad = getADDataset(newData);
 
       if (checkDBModified) {
         boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
@@ -123,7 +118,7 @@ public class DBUpdater {
           .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
       Set<String> adTablesWithRemovedRecords = new HashSet<String>();
-      dataComparator.compareToUpdate(db, platform, databaseOrgData, ad, null);
+      dataComparator.compareToUpdate(db, platform, newData, ad, null);
       for (Change dataChange : dataComparator.getChanges()) {
         if (dataChange instanceof RemoveRowChange) {
           Table table = ((RemoveRowChange) dataChange).getTable();
@@ -209,7 +204,7 @@ public class DBUpdater {
       if (checkFormalChanges) {
         final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
             .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-        dataComparator2.compare(db, db, platform, databaseOrgData, ad, null);
+        dataComparator2.compare(db, db, platform, newData, ad, null);
         Vector<Change> finalChanges = new Vector<Change>();
         Vector<Change> notExportedChanges = new Vector<Change>();
         dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
@@ -252,27 +247,30 @@ public class DBUpdater {
     return ad;
   }
 
-  private DatabaseInfo readDatabaseModelWithoutConfigScript(Database database) {
+  private Database readDatabaseModelWithoutConfigScript() throws SQLException {
     Database db = null;
-    String modulesBaseDir = null;
     if (basedir == null) {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(model);
     } else {
-      modulesBaseDir = basedir + "../modules/";
+      String modulesBaseDir = basedir + "../modules/";
       final File[] fileArray = readModelFiles(modulesBaseDir);
       log.info("Reading model files...");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
+    db.checkDataTypes();
+    return db;
+  }
 
-    // TODO: why load data here?
+  private DatabaseData readADData(Database db) {
     DatabaseData dbData = new DatabaseData(db);
     if (baseSrcAD != null) {
-      DBSMOBUtil.getInstance().loadDataStructures(platform, dbData, database, db, modulesBaseDir,
-          datafilter, baseSrcAD, strict, false);
+      String modulesBaseDir = basedir == null ? null : basedir + "../modules/";
+      DBSMOBUtil.getInstance()
+          .loadDataStructures(dbData, db, modulesBaseDir, datafilter, baseSrcAD);
     }
-
-    return new DatabaseInfo(db, dbData);
+    dbData.setStrictMode(strict);
+    return dbData;
   }
 
   /**
@@ -385,27 +383,5 @@ public class DBUpdater {
 
   public void setUpdateModuleInstallTables(boolean updateModuleInstallTables) {
     this.updateModuleInstallTables = updateModuleInstallTables;
-  }
-
-  /**
-   * Helper class that contains the database and the databaseData information.
-   */
-  private static class DatabaseInfo {
-
-    private Database database;
-    private DatabaseData databaseData;
-
-    private DatabaseInfo(Database database, DatabaseData databaseData) {
-      this.database = database;
-      this.databaseData = databaseData;
-    }
-
-    protected Database getDatabase() {
-      return database;
-    }
-
-    protected DatabaseData getDatabaseData() {
-      return databaseData;
-    }
   }
 }

@@ -900,6 +900,11 @@ public class DBSMOBUtil {
       Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
 
+    loadDataStructures(databaseOrgData, db, modulesBaseDir, datafilter, input);
+  }
+
+  public void loadDataStructures(DatabaseData databaseOrgData, Database db, String modulesBaseDir,
+      String datafilter, File input) {
     final Vector<File> files = new Vector<File>();
     File[] sourceFiles = input.listFiles();
     for (int i = 0; i < sourceFiles.length; i++) {
