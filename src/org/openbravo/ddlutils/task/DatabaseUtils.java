@@ -12,14 +12,13 @@
 
 package org.openbravo.ddlutils.task;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -343,17 +342,7 @@ public class DatabaseUtils {
   }
 
   public static String readFile(File f) throws IOException {
-
-    StringBuffer s = new StringBuffer();
-    BufferedReader br = new BufferedReader(new FileReader(f));
-
-    String line;
-    while ((line = br.readLine()) != null) {
-      s.append(line);
-      s.append('\n');
-    }
-    br.close();
-    return s.toString();
+    return new String(Files.readAllBytes(f.toPath()));
   }
 
   /**

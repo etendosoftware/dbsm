@@ -2,6 +2,7 @@ package org.openbravo.ddlutils.process;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -267,7 +268,8 @@ public class DBUpdater {
   private void executeScript(File script) throws IOException {
     if (script.exists()) {
       log.info("Executing script " + script.getName());
-      platform.evaluateBatch(DatabaseUtils.readFile(script), true);
+      String sql = new String(Files.readAllBytes(script.toPath()));
+      platform.evaluateBatch(sql, true);
     }
   }
 
