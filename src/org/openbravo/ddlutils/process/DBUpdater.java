@@ -1,3 +1,15 @@
+/*
+ ************************************************************************************
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Licensed under the Apache Software License version 2.0
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to  in writing,  software  distributed
+ * under the License is distributed  on  an  "AS IS"  BASIS,  WITHOUT  WARRANTIES  OR
+ * CONDITIONS OF ANY KIND, either  express  or  implied.  See  the  License  for  the
+ * specific language governing permissions and limitations under the License.
+ ************************************************************************************
+ */
+
 package org.openbravo.ddlutils.process;
 
 import java.io.File;
@@ -30,6 +42,10 @@ import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
 
+/**
+ * Compares two databases, one of them an actual DB and the other defined in XML files to obtain and
+ * apply the scripts to update actual DB to the model and data defined in XML.
+ */
 public class DBUpdater {
   private Logger log;
   private ExcludeFilter excludeFilter;
@@ -51,6 +67,7 @@ public class DBUpdater {
   private boolean checkFormalChanges;
   private boolean updateModuleInstallTables;
 
+  /** Compares and updates database according to set parameters */
   public Database update() {
     log.info("Executing full update.database");
     log.info("Max threads " + platform.getMaxThreads());
