@@ -343,19 +343,19 @@ public class DBUpdater {
   }
 
   public void setStrict(boolean strict) {
-    this.strict = strict; // TODO: review this
+    this.strict = strict;
   }
 
   public void setFailonerror(boolean failonerror) {
-    this.failonerror = failonerror;// TODO: used?
+    this.failonerror = failonerror;
   }
 
   public void setForce(boolean force) {
-    this.force = force;// TODO: used?
+    this.force = force;
   }
 
   public void setDatafilter(String datafilter) {
-    this.datafilter = datafilter; // TODO: needed?
+    this.datafilter = datafilter;
   }
 
   public void setBaseSrcAD(File baseSrcAD) {
