@@ -1,6 +1,7 @@
 package org.openbravo.ddlutils.process;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -67,43 +68,19 @@ public class DBUpdater {
       Database db = readDatabaseModelWithoutConfigScript();
       DatabaseData newData = readADData(db);
 
-      if (configScripts == null) {
-        DBSMOBUtil.getInstance().applyConfigScripts(platform, newData, db, basedir, strict, true);
-      } else {
-        DBSMOBUtil.getInstance().applyConfigScripts(configScripts, platform, newData, db);
-      }
+      applyConfigScripts(db, newData);
 
       OBDataset ad = getADDataset(newData);
 
-      if (checkDBModified) {
-        boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
-        if (hasBeenModified) {
-          if (force)
-            log.info("Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-          else {
-            log.error("Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
-            throw new BuildException("Database has local changes. Update.database not done.");
-          }
-        }
-      }
+      checkIfDBWasModified(ad);
 
-      // execute the pre-script
-      if (prescript == null) {
-        // try to execute the default prescript
-        final File fpre = new File(model, "prescript-" + platform.getName() + ".sql");
-        if (fpre.exists()) {
-          log.info("Executing default prescript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpre), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(prescript), true);
-      }
+      executePreScript();
       final Database oldModel = (Database) originaldb.clone();
       log.info("Updating database model...");
       platform.alterTables(originaldb, db, !failonerror);
       log.info("Model update complete.");
 
-      // Initialize the ModuleScriptHandler that we will use later, to keep the current module
+      // Initialize the ModuleScriptHandler that we will use later to keep the current module
       // versions, prior to the update
       ModuleScriptHandler hd = new ModuleScriptHandler();
       hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
@@ -112,57 +89,41 @@ public class DBUpdater {
         DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, db, null);
       }
 
+      final DataComparator dataComparator = compareData(db, newData, ad);
+
+      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<>();
+      Set<String> adTablesWithRemovedRecords = new HashSet<>();
+      computeTablesWithRemovedOrInsertedRecords(dataComparator.getChanges(), ad,
+          adTablesWithRemovedOrInsertedRecords, adTablesWithRemovedRecords);
+
       connection = platform.borrowConnection();
-      log.info("Comparing databases to find differences");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-      Set<String> adTablesWithRemovedOrInsertedRecords = new HashSet<String>();
-      Set<String> adTablesWithRemovedRecords = new HashSet<String>();
-      dataComparator.compareToUpdate(db, platform, newData, ad, null);
-      for (Change dataChange : dataComparator.getChanges()) {
-        if (dataChange instanceof RemoveRowChange) {
-          Table table = ((RemoveRowChange) dataChange).getTable();
-          String tableName = table.getName();
-          if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedOrInsertedRecords.add(tableName);
-            adTablesWithRemovedRecords.add(tableName);
-          }
-        } else if (dataChange instanceof AddRowChange) {
-          Table table = ((AddRowChange) dataChange).getTable();
-          String tableName = table.getName();
-          if (ad.getTable(tableName) != null) {
-            adTablesWithRemovedOrInsertedRecords.add(tableName);
-          }
-        }
-      }
+
       log.info("Disabling foreign keys");
       platform.disableDatasetFK(connection, originaldb, ad, !failonerror,
           adTablesWithRemovedOrInsertedRecords);
+
       log.info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !failonerror);
       platform.disableNOTNULLColumns(db, ad);
 
-      if (executeModuleScripts) {
-        log.info("Running modulescripts...");
-        // Executing modulescripts
-        hd.setBasedir(new File(basedir + "/../"));
-        hd.execute();
-      } else {
-        log.info("Skipping modulescripts...");
-      }
+      executeModuleScripts(hd);
+
       log.info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
+
       log.info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(db, ad, adTablesWithRemovedRecords, !failonerror);
-      log.info("Recreating Primary Keys");
 
+      log.info("Recreating Primary Keys");
       @SuppressWarnings("rawtypes")
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !failonerror);
 
       log.info("Executing oncreatedefault statements for mandatory columns");
       platform.executeOnCreateDefaultForMandatoryColumns(db, ad);
+
       log.info("Recreating not null constraints");
       platform.enableNOTNULLColumns(db, ad);
+
       log.info("Executing update final script (dropping temporary tables)");
       boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, db, !failonerror,
           changes, null, ad);
@@ -172,57 +133,52 @@ public class DBUpdater {
           adTablesWithRemovedOrInsertedRecords, true);
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !failonerror);
 
-      // execute the post-script
-      if (postscript == null) {
-        // try to execute the default prescript
-        final File fpost = new File(model, "postscript-" + platform.getName() + ".sql");
-        if (fpost.exists()) {
-          log.info("Executing default postscript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpost), true);
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(postscript), true);
-      }
+      executePostScript();
 
       if (updateCheckSums) {
         DBSMOBUtil.getInstance().updateCRC();
       }
-      if (!triggersEnabled) {
-        log.error("Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct. If that is the case, please remove/uninstall its module, or recover the sources backup and initiate the rebuild again");
-      }
-      if (!fksEnabled) {
-        log.error("Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references, or recover the backup of your sources.");
-      }
-      if (!postscriptCorrect) {
-        log.error("Not all the commands in the final update step were executed correctly. This likely means at least one foreign key was not activated successfully. Please review which one, and fix the missing references, or recover the backup of your sources.");
-      }
-      if (!triggersEnabled || !fksEnabled || !postscriptCorrect) {
-        throw new Exception(
-            "There were serious problems while updating the database. Please review and fix them before continuing with the application rebuild");
-      }
 
-      if (checkFormalChanges) {
-        final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
-            .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-        dataComparator2.compare(db, db, platform, newData, ad, null);
-        Vector<Change> finalChanges = new Vector<Change>();
-        Vector<Change> notExportedChanges = new Vector<Change>();
-        dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
-
-        final DatabaseIO dbIO = new DatabaseIO();
-
-        final File configFile = new File("formalChangesScript.xml");
-        dbIO.write(configFile, finalChanges);
-      }
+      checkErrors(postscriptCorrect, fksEnabled, triggersEnabled);
+      checkFormalChanges(db, newData, ad);
       return db;
     } catch (final Exception e) {
-      // log(e.getLocalizedMessage());
       e.printStackTrace();
-      throw new BuildException(e); // TODO
+      throw new BuildException(e);
     } finally {
       platform.returnConnection(connection);
     }
+  }
 
+  private void computeTablesWithRemovedOrInsertedRecords(Vector<Change> changes, OBDataset ad,
+      Set<String> adTablesWithRemovedOrInsertedRecords, Set<String> adTablesWithRemovedRecords) {
+    for (Change dataChange : changes) {
+      if (dataChange instanceof RemoveRowChange) {
+        Table table = ((RemoveRowChange) dataChange).getTable();
+        String tableName = table.getName();
+        if (ad.getTable(tableName) != null) {
+          adTablesWithRemovedOrInsertedRecords.add(tableName);
+          adTablesWithRemovedRecords.add(tableName);
+        }
+      } else if (dataChange instanceof AddRowChange) {
+        Table table = ((AddRowChange) dataChange).getTable();
+        String tableName = table.getName();
+        if (ad.getTable(tableName) != null) {
+          adTablesWithRemovedOrInsertedRecords.add(tableName);
+        }
+      }
+    }
+  }
+
+  private void executeModuleScripts(ModuleScriptHandler hd) {
+    if (executeModuleScripts) {
+      log.info("Running modulescripts...");
+      // Executing modulescripts
+      hd.setBasedir(new File(basedir + "/../"));
+      hd.execute();
+    } else {
+      log.info("Skipping modulescripts...");
+    }
   }
 
   private OBDataset getADDataset(DatabaseData databaseOrgData) {
@@ -271,6 +227,92 @@ public class DBUpdater {
     }
     dbData.setStrictMode(strict);
     return dbData;
+  }
+
+  private void applyConfigScripts(Database db, DatabaseData newData) {
+    if (configScripts == null) {
+      DBSMOBUtil.getInstance().applyConfigScripts(platform, newData, db, basedir, strict, true);
+    } else {
+      DBSMOBUtil.getInstance().applyConfigScripts(configScripts, platform, newData, db);
+    }
+  }
+
+  protected void checkIfDBWasModified(OBDataset ad) {
+    if (!checkDBModified) {
+      return;
+    }
+    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
+    if (hasBeenModified) {
+      if (force)
+        log.info("Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+      else {
+        log.error("Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
+        throw new BuildException("Database has local changes. Update.database not done.");
+      }
+    }
+  }
+
+  private void executePreScript() throws IOException {
+    File script = prescript != null ? prescript : new File(model, "prescript-" + platform.getName()
+        + ".sql");
+    executeScript(script);
+  }
+
+  private void executePostScript() throws IOException {
+    File script = postscript != null ? postscript : new File(model, "postscript-"
+        + platform.getName() + ".sql");
+    executeScript(script);
+  }
+
+  private void executeScript(File script) throws IOException {
+    if (script.exists()) {
+      log.info("Executing script " + script.getName());
+      platform.evaluateBatch(DatabaseUtils.readFile(script), true);
+    }
+  }
+
+  private DataComparator compareData(Database db, DatabaseData newData, OBDataset ad)
+      throws SQLException {
+    log.info("Comparing databases to find data differences...");
+    final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
+        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+    dataComparator.compareToUpdate(db, platform, newData, ad, null);
+    return dataComparator;
+  }
+
+  private void checkFormalChanges(Database db, DatabaseData newData, OBDataset ad)
+      throws SQLException {
+    if (!checkFormalChanges) {
+      return;
+    }
+    final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
+        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+    dataComparator2.compare(db, db, platform, newData, ad, null);
+    Vector<Change> finalChanges = new Vector<Change>();
+    Vector<Change> notExportedChanges = new Vector<Change>();
+    dataComparator2.generateConfigScript(finalChanges, notExportedChanges);
+
+    final DatabaseIO dbIO = new DatabaseIO();
+
+    final File configFile = new File("formalChangesScript.xml");
+    dbIO.write(configFile, finalChanges);
+  }
+
+  private void checkErrors(boolean postscriptCorrect, boolean fksEnabled, boolean triggersEnabled)
+      throws Exception {
+    if (!triggersEnabled) {
+      log.error("Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct. If that is the case, please remove/uninstall its module, or recover the sources backup and initiate the rebuild again");
+    }
+    if (!fksEnabled) {
+      log.error("Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references, or recover the backup of your sources.");
+    }
+    if (!postscriptCorrect) {
+      log.error("Not all the commands in the final update step were executed correctly. This likely means at least one foreign key was not activated successfully. Please review which one, and fix the missing references, or recover the backup of your sources.");
+    }
+    if (!triggersEnabled || !fksEnabled || !postscriptCorrect) {
+      throw new Exception(
+          "There were serious problems while updating the database. Please review and fix them before continuing with the application rebuild");
+    }
   }
 
   /**
