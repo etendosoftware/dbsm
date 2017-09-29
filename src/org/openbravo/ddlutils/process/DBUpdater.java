@@ -38,8 +38,6 @@ public class DBUpdater {
   private File model;
   private String basedir;
   private boolean strict;
-  private File prescript = null;
-  private File postscript = null;
   private boolean failonerror = false;
   private boolean force;
   private boolean executeModuleScripts;
@@ -231,14 +229,12 @@ public class DBUpdater {
   }
 
   private void executePreScript() throws IOException {
-    File script = prescript != null ? prescript : new File(model, "prescript-" + platform.getName()
-        + ".sql");
+    File script = new File(model, "prescript-" + platform.getName() + ".sql");
     executeScript(script);
   }
 
   private void executePostScript() throws IOException {
-    File script = postscript != null ? postscript : new File(model, "postscript-"
-        + platform.getName() + ".sql");
+    File script = new File(model, "postscript-" + platform.getName() + ".sql");
     executeScript(script);
   }
 
@@ -350,20 +346,12 @@ public class DBUpdater {
     this.strict = strict; // TODO: review this
   }
 
-  public void setPrescript(File prescript) {
-    this.prescript = prescript; // TODO: used?
-  }
-
   public void setFailonerror(boolean failonerror) {
     this.failonerror = failonerror;// TODO: used?
   }
 
   public void setForce(boolean force) {
     this.force = force;// TODO: used?
-  }
-
-  public void setPostscript(File postscript) {
-    this.postscript = postscript;
   }
 
   public void setDatafilter(String datafilter) {

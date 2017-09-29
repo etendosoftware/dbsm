@@ -38,9 +38,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
 
-  protected File prescript = null;
-  protected File postscript = null;
-
   protected File input;
   protected String encoding = "UTF-8";
   protected File originalmodel;
@@ -90,10 +87,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     dbUpdater.setModel(model);
     dbUpdater.setBasedir(basedir);
     dbUpdater.setStrict(strict);
-    dbUpdater.setPrescript(prescript);
     dbUpdater.setFailonerror(failonerror);
     dbUpdater.setForce(force);
-    dbUpdater.setPostscript(postscript);
     dbUpdater.setExecuteModuleScripts(executeModuleScripts);
     dbUpdater.setDatafilter(datafilter);
     dbUpdater.setBaseSrcAD(input);
@@ -245,22 +240,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   public void setEncoding(String encoding) {
     this.encoding = encoding;
-  }
-
-  public File getPrescript() {
-    return prescript;
-  }
-
-  public void setPrescript(File prescript) {
-    this.prescript = prescript;
-  }
-
-  public File getPostscript() {
-    return postscript;
-  }
-
-  public void setPostscript(File postscript) {
-    this.postscript = postscript;
   }
 
   public void setObject(String object) {
