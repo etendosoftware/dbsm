@@ -65,21 +65,13 @@ public class DBUpdater {
     Connection connection = null;
     try {
       Database originaldb = platform.loadModelFromDatabase(excludeFilter, true);
-
       Database db = readDatabaseModelWithoutConfigScript();
       DatabaseData newData = readADData(db);
-
       applyConfigScripts(db, newData);
-
       OBDataset ad = getADDataset(newData);
-
       checkIfDBWasModified(ad);
-
       executePreScript();
-      final Database oldModel = (Database) originaldb.clone();
-      log.info("Updating database model...");
       platform.alterTables(originaldb, db, !failonerror);
-      log.info("Model update complete.");
 
       // Initialize the ModuleScriptHandler that we will use later to keep the current module
       // versions, prior to the update
@@ -99,37 +91,22 @@ public class DBUpdater {
 
       connection = platform.borrowConnection();
 
-      log.info("Disabling foreign keys");
       platform.disableDatasetFK(connection, originaldb, ad, !failonerror,
           adTablesWithRemovedOrInsertedRecords);
-
-      log.info("Disabling triggers");
       platform.disableAllTriggers(connection, db, !failonerror);
       platform.disableNOTNULLColumns(db, ad);
-
       executeModuleScripts(hd);
-
-      log.info("Updating Application Dictionary data...");
       platform.alterData(connection, db, dataComparator.getChanges());
-
-      log.info("Removing invalid rows.");
       platform.deleteInvalidConstraintRows(db, ad, adTablesWithRemovedRecords, !failonerror);
 
-      log.info("Recreating Primary Keys");
+      final Database oldModel = (Database) originaldb.clone();
       @SuppressWarnings("rawtypes")
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !failonerror);
 
-      log.info("Executing oncreatedefault statements for mandatory columns");
       platform.executeOnCreateDefaultForMandatoryColumns(db, ad);
-
-      log.info("Recreating not null constraints");
       platform.enableNOTNULLColumns(db, ad);
-
-      log.info("Executing update final script (dropping temporary tables)");
       boolean postscriptCorrect = platform.alterTablesPostScript(oldModel, db, !failonerror,
           changes, null, ad);
-
-      log.info("Enabling Foreign Keys and Triggers");
       boolean fksEnabled = platform.enableDatasetFK(connection, originaldb, ad,
           adTablesWithRemovedOrInsertedRecords, true);
       boolean triggersEnabled = platform.enableAllTriggers(connection, db, !failonerror);

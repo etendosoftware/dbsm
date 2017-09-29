@@ -626,7 +626,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError)
       throws DatabaseOperationException {
-
+    _log.info("Updating database model...");
     Connection connection = borrowConnection();
 
     try {
@@ -710,7 +710,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
       boolean continueOnError, List changes, Database fullModel, OBDataset ad)
       throws DatabaseOperationException {
-
+    _log.info("Dropping temporary tables...");
     Connection connection = borrowConnection();
 
     try {
@@ -724,7 +724,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException {
-
+    _log.info("Recreating Primary Keys...");
     Connection connection = borrowConnection();
 
     try {
@@ -813,6 +813,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void alterData(Connection connection, Database model, Vector<Change> changes)
       throws DatabaseOperationException {
+    _log.info("Updating Application Dictionary data...");
     List<ColumnDataChange> colDataChanges = new ArrayList<>(changes.size());
 
     StringWriter buffer = new StringWriter();
@@ -2294,6 +2295,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException {
+    _log.info("Disabling foreign keys");
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
@@ -2340,7 +2342,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void disableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
-
+    _log.info("Disabling triggers");
     try {
       StringWriter endStatementBuffer = new StringWriter();
       getSqlBuilder().setWriter(endStatementBuffer);
@@ -2391,6 +2393,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
       Set<String> datasetTablesWithRemovedOrInsertedRecords, boolean continueOnError)
       throws DatabaseOperationException {
+    _log.info("Enabling Foreign Keys...");
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
@@ -2423,6 +2426,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
+    _log.info("Enabling Triggers...");
     try {
       StringWriter endStatementBuffer = new StringWriter();
       getSqlBuilder().setWriter(endStatementBuffer);
@@ -2885,6 +2889,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError) {
+    _log.info("Removing invalid rows.");
     Set<String> allDatasetTables = new HashSet<String>();
     Vector<OBDatasetTable> datasetTables = dataset.getTableList();
     for (int i = 0; i < datasetTables.size(); i++) {
@@ -3083,6 +3088,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void disableNOTNULLColumns(Database db, OBDataset ad) {
+    _log.info("Disabling not null constatraints...");
     Connection connection = borrowConnection();
     try {
       evaluateBatch(connection, disableNOTNULLColumnsSql(db, ad), true);
@@ -3177,7 +3183,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void enableNOTNULLColumns(Database database, OBDataset dataset) {
-
+    _log.info("Recreating not null constraints...");
     Connection connection = borrowConnection();
 
     try {
@@ -3321,6 +3327,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void executeOnCreateDefaultForMandatoryColumns(Database database, OBDataset ad) {
+    _log.info("Executing oncreatedefault statements for mandatory columns...");
     Connection connection = borrowConnection();
 
     try {
