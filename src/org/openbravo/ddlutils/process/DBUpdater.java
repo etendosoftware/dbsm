@@ -234,7 +234,7 @@ public class DBUpdater {
     if (!checkDBModified) {
       return;
     }
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
+    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
     if (hasBeenModified) {
       if (force)
         log.info("Database was modified locally, but as update.database command is forced, the database will be updated anyway.");

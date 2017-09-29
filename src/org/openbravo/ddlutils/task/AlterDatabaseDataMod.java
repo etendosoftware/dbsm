@@ -129,7 +129,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
         "*/src-db/database/sourcedata", input, strict);
     OBDataset ad = new OBDataset(databaseFullData, "AD");
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad, false);
+    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
     if (hasBeenModified) {
       if (force)
         getLog()
