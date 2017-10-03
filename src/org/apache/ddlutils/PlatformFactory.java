@@ -19,82 +19,27 @@ package org.apache.ddlutils;
  * under the License.
  */
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.apache.ddlutils.platform.oracle.Oracle10Platform;
 import org.apache.ddlutils.platform.oracle.Oracle8Platform;
-import org.apache.ddlutils.platform.oracle.Oracle9Platform;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 
 /**
- * A factory of {@link org.apache.ddlutils.Platform} instances based on a case insensitive database
- * name. Note that this is a convenience class as the platforms can also simply be created via their
- * constructors.
+ * A factory of {@link org.apache.ddlutils.Platform} instances. Note that this is a convenience
+ * class as the platforms can also simply be created via their constructors.
  * 
  * @version $Revision: 209952 $
  */
 public class PlatformFactory {
-  /** The database name -> platform map. */
-  private static Map<String, Class<? extends Platform>> _platforms = null;
 
   /**
-   * Returns the platform map.
-   * 
-   * @return The platform list
-   */
-  private static synchronized Map<String, Class<? extends Platform>> getPlatforms() {
-    if (_platforms == null) {
-      _platforms = new HashMap<>();
-      registerPlatforms();
-    }
-    return _platforms;
-  }
-
-  /**
-   * Creates a new platform for the given (case insensitive) database name or returns null if the
-   * database is not recognized.
-   * 
-   * @param databaseName
-   *          The name of the database (case is not important)
-   * @return The platform or <code>null</code> if the database is not supported
-   */
-  public static synchronized Platform createNewPlatformInstance(String databaseName)
-      throws DdlUtilsException {
-    Class<? extends Platform> platformClass = getPlatforms().get(databaseName.toLowerCase());
-
-    try {
-      return platformClass != null ? platformClass.newInstance() : null;
-    } catch (Exception ex) {
-      throw new DdlUtilsException("Could not create platform for database " + databaseName, ex);
-    }
-  }
-
-  /**
-   * Creates a new platform for the specified database. This is a shortcut method that uses
-   * {@link PlatformUtils#determineDatabaseType(String, String)} to determine the parameter for
-   * {@link #createNewPlatformInstance(String)}. Note that no database connection is established
-   * when using this method.
-   * 
-   * @param jdbcDriver
-   *          The jdbc driver
-   * @param jdbcConnectionUrl
-   *          The connection url
-   * @return The platform or <code>null</code> if the database is not supported
-   */
-  public static synchronized Platform createNewPlatformInstance(String jdbcDriver,
-      String jdbcConnectionUrl) throws DdlUtilsException {
-    return createNewPlatformInstance(new PlatformUtils().determineDatabaseType(jdbcDriver,
-        jdbcConnectionUrl));
-  }
-
-  /**
-   * Creates a new platform for the specified database. This is a shortcut method that uses
-   * {@link PlatformUtils#determineDatabaseType(DataSource)} to determine the parameter for
-   * {@link #createNewPlatformInstance(String)} . Note that this method sets the data source at the
-   * returned platform instance (method {@link Platform#setDataSource(DataSource)}).
+   * Creates a new platform for the database whose information is retrieved using the data source
+   * passed as parameter. Note that this method sets the data source at the returned platform
+   * instance (method {@link Platform#setDataSource(DataSource)}).
    * 
    * @param dataSource
    *          The data source for the database
@@ -102,45 +47,48 @@ public class PlatformFactory {
    */
   public static synchronized Platform createNewPlatformInstance(DataSource dataSource)
       throws DdlUtilsException {
-    Platform platform = createNewPlatformInstance(new PlatformUtils()
-        .determineDatabaseType(dataSource));
-
-    platform.setDataSource(dataSource);
-    return platform;
+    Connection connection = null;
+    try {
+      connection = dataSource.getConnection();
+      DatabaseMetaData metaData = connection.getMetaData();
+      Platform platform = selectPlatformInstance(metaData.getDatabaseProductName(),
+          metaData.getDatabaseMajorVersion());
+      if (platform != null) {
+        platform.setDataSource(dataSource);
+      }
+      return platform;
+    } catch (SQLException ex) {
+      throw new DatabaseOperationException("Error while reading the database metadata: "
+          + ex.getMessage(), ex);
+    } finally {
+      if (connection != null) {
+        try {
+          connection.close();
+        } catch (SQLException ex) {
+          // we ignore this one
+        }
+      }
+    }
   }
 
-  /**
-   * Creates a new platform for the specified database. This is a shortcut method that uses
-   * {@link PlatformUtils#determineDatabaseType(DataSource)} to determine the parameter for
-   * {@link #createNewPlatformInstance(String)} . Note that this method sets the data source at the
-   * returned platform instance (method {@link Platform#setDataSource(DataSource)}).
-   * 
-   * @param dataSource
-   *          The data source for the database
-   * @param username
-   *          The user name to use for connecting to the database
-   * @param password
-   *          The password to use for connecting to the database
-   * @return The platform or <code>null</code> if the database is not supported
-   */
-  public static synchronized Platform createNewPlatformInstance(DataSource dataSource,
-      String username, String password) throws DdlUtilsException {
-    Platform platform = createNewPlatformInstance(new PlatformUtils().determineDatabaseType(
-        dataSource, username, password));
-
-    platform.setDataSource(dataSource);
-    platform.setUsername(username);
-    platform.setPassword(password);
-    return platform;
-  }
-
-  /**
-   * Returns a list of all supported platforms.
-   * 
-   * @return The names of the currently registered platforms
-   */
-  public static synchronized String[] getSupportedPlatforms() {
-    return (String[]) getPlatforms().keySet().toArray(new String[0]);
+  private static Platform selectPlatformInstance(String databaseProductName, int majorVersion) {
+    try {
+      Class<? extends Platform> selectedPlatform;
+      switch (databaseProductName) {
+      case "Oracle":
+        selectedPlatform = Oracle8Platform.class;
+        break;
+      case "PostgreSQL":
+        selectedPlatform = PostgreSqlPlatform.class;
+        break;
+      default:
+        return null;
+      }
+      return selectedPlatform.newInstance();
+    } catch (Exception ex) {
+      throw new DdlUtilsException("Could not create platform for database " + databaseProductName
+          + " version " + majorVersion, ex);
+    }
   }
 
   /**
@@ -151,48 +99,7 @@ public class PlatformFactory {
    * @return <code>true</code> if the platform is supported
    */
   public static boolean isPlatformSupported(String platformName) {
-    return getPlatforms().containsKey(platformName.toLowerCase());
-  }
-
-  /**
-   * Registers a new platform.
-   * 
-   * @param platformName
-   *          The platform name
-   * @param platformClass
-   *          The platform class which must implement the {@link Platform} interface
-   */
-  public static synchronized void registerPlatform(String platformName,
-      Class<? extends Platform> platformClass) {
-    addPlatform(getPlatforms(), platformName, platformClass);
-  }
-
-  /**
-   * Registers the known platforms.
-   */
-  private static void registerPlatforms() {
-    addPlatform(_platforms, Oracle8Platform.DATABASENAME, Oracle8Platform.class);
-    addPlatform(_platforms, Oracle9Platform.DATABASENAME, Oracle9Platform.class);
-    addPlatform(_platforms, Oracle10Platform.DATABASENAME, Oracle10Platform.class);
-    addPlatform(_platforms, PostgreSqlPlatform.DATABASENAME, PostgreSqlPlatform.class);
-  }
-
-  /**
-   * Registers a new platform.
-   * 
-   * @param platformMap
-   *          The map to add the platform info to
-   * @param platformName
-   *          The platform name
-   * @param platformClass
-   *          The platform class which must implement the {@link Platform} interface
-   */
-  private static synchronized void addPlatform(Map<String, Class<? extends Platform>> platformMap,
-      String platformName, Class<? extends Platform> platformClass) {
-    if (!Platform.class.isAssignableFrom(platformClass)) {
-      throw new IllegalArgumentException("Cannot register class " + platformClass.getName()
-          + " because it does not implement the " + Platform.class.getName() + " interface");
-    }
-    platformMap.put(platformName.toLowerCase(), platformClass);
+    return Oracle8Platform.DATABASENAME.equalsIgnoreCase(platformName)
+        || PostgreSqlPlatform.DATABASENAME.equalsIgnoreCase(platformName);
   }
 }
