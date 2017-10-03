@@ -61,42 +61,45 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
   private boolean executeModuleScripts = true;
 
   private int threads = 0;
+  private DBUpdater dbUpdater;
 
   @Override
   protected void doExecute() {
-    DBUpdater dbUpdater = getDBUpdater();
-
-    dbUpdater.update();
+    DBUpdater updater = getDBUpdater();
+    updater.update();
   }
 
   protected DBUpdater getDBUpdater() {
-    getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
-    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
-    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-    platform.setMaxThreads(threads);
-    if (!StringUtils.isEmpty(forcedRecreation)) {
-      getLog().info("Forced recreation: " + forcedRecreation);
-    }
-    platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
+    if (dbUpdater == null) {
+      getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
+      BasicDataSource ds = DBSMOBUtil
+          .getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+      Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+      platform.setMaxThreads(threads);
+      if (!StringUtils.isEmpty(forcedRecreation)) {
+        getLog().info("Forced recreation: " + forcedRecreation);
+      }
+      platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
 
-    DBUpdater dbUpdater = new DBUpdater();
-    dbUpdater.setLog(getLog());
-    dbUpdater.setExcludeFilter(DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(model.getAbsolutePath() + "/../../../")));
-    dbUpdater.setPlatform(platform);
-    dbUpdater.setModel(model);
-    dbUpdater.setBasedir(basedir);
-    dbUpdater.setStrict(strict);
-    dbUpdater.setFailonerror(failonerror);
-    dbUpdater.setForce(force);
-    dbUpdater.setExecuteModuleScripts(executeModuleScripts);
-    dbUpdater.setDatafilter(datafilter);
-    dbUpdater.setBaseSrcAD(input);
-    dbUpdater.setDirFilter(dirFilter);
-    dbUpdater.setDatasetName("AD");
-    dbUpdater.setCheckDBModified(true);
-    dbUpdater.setCheckFormalChanges(true);
-    dbUpdater.setUpdateModuleInstallTables(true);
+      dbUpdater = new DBUpdater();
+      dbUpdater.setLog(getLog());
+      dbUpdater.setExcludeFilter(DBSMOBUtil.getInstance().getExcludeFilter(
+          new File(model.getAbsolutePath() + "/../../../")));
+      dbUpdater.setPlatform(platform);
+      dbUpdater.setModel(model);
+      dbUpdater.setBasedir(basedir);
+      dbUpdater.setStrict(strict);
+      dbUpdater.setFailonerror(failonerror);
+      dbUpdater.setForce(force);
+      dbUpdater.setExecuteModuleScripts(executeModuleScripts);
+      dbUpdater.setDatafilter(datafilter);
+      dbUpdater.setBaseSrcAD(input);
+      dbUpdater.setDirFilter(dirFilter);
+      dbUpdater.setDatasetName("AD");
+      dbUpdater.setCheckDBModified(true);
+      dbUpdater.setCheckFormalChanges(true);
+      dbUpdater.setUpdateModuleInstallTables(true);
+    }
     return dbUpdater;
   }
 
