@@ -28,8 +28,8 @@ public class AlterXML2SQL extends AlterDatabaseDataAll {
   }
 
   @Override
-  protected DBUpdater getDBUpater() {
-    DBUpdater updater = super.getDBUpater();
+  protected DBUpdater getDBUpdater() {
+    DBUpdater updater = super.getDBUpdater();
 
     updater.getPlatform().setBatchEvaluator(new FileBatchEvaluator(output));
     updater.setUpdateCheckSums(false);

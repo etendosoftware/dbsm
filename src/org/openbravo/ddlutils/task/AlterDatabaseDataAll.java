@@ -64,12 +64,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   @Override
   protected void doExecute() {
-    DBUpdater dbUpdater = getDBUpater();
+    DBUpdater dbUpdater = getDBUpdater();
 
     dbUpdater.update();
   }
 
-  protected DBUpdater getDBUpater() {
+  protected DBUpdater getDBUpdater() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
     BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
     Platform platform = PlatformFactory.createNewPlatformInstance(ds);
@@ -162,7 +162,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       modulesBaseDir = null;
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
-      final File[] fileArray = getDBUpater().readModelFiles(modulesBaseDir);
+      final File[] fileArray = getDBUpdater().readModelFiles(modulesBaseDir);
       getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray, config);
     }
