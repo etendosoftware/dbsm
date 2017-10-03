@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
@@ -48,5 +49,23 @@ public class SourcedataUpdates extends DbsmTest {
     updateDatabase(model, "data/datachanges/v2", adTables);
 
     assertThat("updated value in test.col1", getActualValue("test", "col1"), is("v2"));
+  }
+
+  /**
+   * Regression test for issue #36984
+   * 
+   * Ensures changes in different AD rows are applied in proper order.
+   */
+  @Test
+  // TODO: recover this tests case once #36938 gets fixed
+  @Ignore("Current test plaform does not support src updates, see issue #36938")
+  public void updatesAreAppliedInProperOrder() throws SQLException {
+    resetDB();
+    String model = "constraints/SIMPLE_UNIQUE.xml";
+    List<String> adTables = Arrays.asList("TEST");
+
+    updateDatabase(model, "data/datachanges1/v1", adTables);
+
+    updateDatabase(model, "data/datachanges1/v2", adTables);
   }
 }

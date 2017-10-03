@@ -814,37 +814,40 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public void alterData(Connection connection, Database model, Vector<Change> changes)
       throws DatabaseOperationException {
     _log.info("Updating Application Dictionary data...");
-    List<ColumnDataChange> colDataChanges = new ArrayList<>(changes.size());
-
-    StringWriter buffer = new StringWriter();
-    getSqlBuilder().setWriter(buffer);
-
-    for (Change change : changes) {
-      if (change instanceof AddRowChange) {
-        insert(connection, model, ((AddRowChange) change).getRow());
-      } else if (change instanceof RemoveRowChange) {
-        delete(connection, model, (RemoveRowChange) change);
-      } else if (change instanceof ColumnDataChange) {
-        colDataChanges.add((ColumnDataChange) change);
-      }
-    }
 
     // ColumnDataChanges are individual column changes, let's group them per row to update them
     // altogether. Note they're already sorted by row.
     List<ColumnDataChange> rowDataChanges = new ArrayList<>();
     Object currentPK = null;
     String currentTable = null;
-    for (ColumnDataChange change : colDataChanges) {
-      String tableName = change.getTable() != null ? change.getTable().getName() : change
-          .getTablename();
-      if (!change.getPkRow().equals(currentPK) || !tableName.equals(currentTable)) {
+
+    StringWriter buffer = new StringWriter();
+    getSqlBuilder().setWriter(buffer);
+
+    for (Change change : changes) {
+      if (change instanceof ColumnDataChange) {
+        ColumnDataChange updateChange = (ColumnDataChange) change;
+        String tableName = updateChange.getTable() != null ? updateChange.getTable().getName()
+            : updateChange.getTablename();
+        if (!updateChange.getPkRow().equals(currentPK) || !tableName.equals(currentTable)) {
+          update(connection, model, rowDataChanges);
+          currentPK = updateChange.getPkRow();
+          currentTable = tableName;
+        }
+        rowDataChanges.add(updateChange);
+      } else {
+        // flush possible pending row data changes
         update(connection, model, rowDataChanges);
-        currentPK = change.getPkRow();
-        currentTable = tableName;
-        rowDataChanges = new ArrayList<>();
       }
-      rowDataChanges.add(change);
+
+      if (change instanceof AddRowChange) {
+        insert(connection, model, ((AddRowChange) change).getRow());
+      } else if (change instanceof RemoveRowChange) {
+        delete(connection, model, (RemoveRowChange) change);
+      }
     }
+
+    // flush possible pending row data changes
     update(connection, model, rowDataChanges);
 
     String sql = buffer.toString();
@@ -2016,6 +2019,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           + params + ex.getMessage(), ex);
     } finally {
       closeStatement(statement);
+      changes.clear();
     }
   }
 
