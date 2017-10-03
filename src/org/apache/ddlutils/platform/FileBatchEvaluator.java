@@ -20,11 +20,14 @@ import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.Platform;
 
 /** Writes statements in {@code out File} */
 public class FileBatchEvaluator implements SQLBatchEvaluator {
+  private static final Log log = LogFactory.getLog(PlatformImplBase.class);
   private Path outPath;
 
   public FileBatchEvaluator(File out) {
@@ -33,8 +36,7 @@ public class FileBatchEvaluator implements SQLBatchEvaluator {
       Files.deleteIfExists(outPath);
       Files.createFile(outPath);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new RuntimeException("Couldn't create file " + out, e);
     }
 
   }
@@ -51,7 +53,7 @@ public class FileBatchEvaluator implements SQLBatchEvaluator {
       try {
         Files.write(outPath, sql.getBytes(), StandardOpenOption.APPEND);
       } catch (IOException e) {
-        e.printStackTrace();
+        log.error("Error writting to " + outPath, e);
       }
     }
     return 0; // 0 failures
