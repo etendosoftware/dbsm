@@ -1069,7 +1069,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void dropTable(Database model, Table table, boolean continueOnError)
       throws DatabaseOperationException {
-    // TODO: check if used
     Connection connection = borrowConnection();
 
     try {
@@ -1984,7 +1983,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
 
     try {
-      beforeUpdate(connection, table); // TODO: remove?
+      beforeUpdate(connection, table);
 
       statement = connection.prepareStatement(sql);
       int sqlIndex = 1;
@@ -2013,7 +2012,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       setObject(statement, sqlIndex++, pkValue, table.getPrimaryKeyColumns()[0]);
       statement.executeUpdate();
 
-      afterUpdate(connection, table); // TODO: remove?
+      afterUpdate(connection, table);
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while updating in the database : " + sql + " - "
           + params + ex.getMessage(), ex);
@@ -2921,7 +2920,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     evaluateBatch(connection, buffer.toString(), continueOnError);
   }
 
-  // TODO: check used
   public void deleteAllInvalidConstraintRows(Database model, boolean continueOnError) {
 
     Connection connection = borrowConnection();
