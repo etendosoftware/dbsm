@@ -25,7 +25,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.apache.ddlutils.platform.oracle.Oracle8Platform;
+import org.apache.ddlutils.platform.oracle.OraclePlatform;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 
 /**
@@ -76,7 +76,7 @@ public class PlatformFactory {
       Class<? extends Platform> selectedPlatform;
       switch (databaseProductName) {
       case "Oracle":
-        selectedPlatform = Oracle8Platform.class;
+        selectedPlatform = OraclePlatform.class;
         break;
       case "PostgreSQL":
         selectedPlatform = PostgreSqlPlatform.class;
@@ -99,7 +99,7 @@ public class PlatformFactory {
    * @return <code>true</code> if the platform is supported
    */
   public static boolean isPlatformSupported(String platformName) {
-    return Oracle8Platform.DATABASENAME.equalsIgnoreCase(platformName)
+    return OraclePlatform.DATABASENAME.equalsIgnoreCase(platformName)
         || PostgreSqlPlatform.DATABASENAME.equalsIgnoreCase(platformName);
   }
 }

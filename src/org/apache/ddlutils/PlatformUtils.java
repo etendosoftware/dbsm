@@ -28,7 +28,7 @@ import java.util.Map.Entry;
 
 import javax.sql.DataSource;
 
-import org.apache.ddlutils.platform.oracle.Oracle8Platform;
+import org.apache.ddlutils.platform.oracle.OraclePlatform;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 
 /**
@@ -42,24 +42,24 @@ public class PlatformUtils {
   private Map<String, String> jdbcDriverToPlatform = new HashMap<>();
 
   public PlatformUtils() {
-    jdbcSubProtocolToPlatform.put(Oracle8Platform.JDBC_SUBPROTOCOL_THIN,
-        Oracle8Platform.DATABASENAME);
-    jdbcSubProtocolToPlatform.put(Oracle8Platform.JDBC_SUBPROTOCOL_OCI8,
-        Oracle8Platform.DATABASENAME);
-    jdbcSubProtocolToPlatform.put(Oracle8Platform.JDBC_SUBPROTOCOL_THIN_OLD,
-        Oracle8Platform.DATABASENAME);
-    jdbcSubProtocolToPlatform.put(Oracle8Platform.JDBC_SUBPROTOCOL_DATADIRECT_ORACLE,
-        Oracle8Platform.DATABASENAME);
-    jdbcSubProtocolToPlatform.put(Oracle8Platform.JDBC_SUBPROTOCOL_INET_ORACLE,
-        Oracle8Platform.DATABASENAME);
+    jdbcSubProtocolToPlatform
+        .put(OraclePlatform.JDBC_SUBPROTOCOL_THIN, OraclePlatform.DATABASENAME);
+    jdbcSubProtocolToPlatform
+        .put(OraclePlatform.JDBC_SUBPROTOCOL_OCI8, OraclePlatform.DATABASENAME);
+    jdbcSubProtocolToPlatform.put(OraclePlatform.JDBC_SUBPROTOCOL_THIN_OLD,
+        OraclePlatform.DATABASENAME);
+    jdbcSubProtocolToPlatform.put(OraclePlatform.JDBC_SUBPROTOCOL_DATADIRECT_ORACLE,
+        OraclePlatform.DATABASENAME);
+    jdbcSubProtocolToPlatform.put(OraclePlatform.JDBC_SUBPROTOCOL_INET_ORACLE,
+        OraclePlatform.DATABASENAME);
     jdbcSubProtocolToPlatform.put(PostgreSqlPlatform.JDBC_SUBPROTOCOL,
         PostgreSqlPlatform.DATABASENAME);
 
-    jdbcDriverToPlatform.put(Oracle8Platform.JDBC_DRIVER, Oracle8Platform.DATABASENAME);
-    jdbcDriverToPlatform.put(Oracle8Platform.JDBC_DRIVER_OLD, Oracle8Platform.DATABASENAME);
-    jdbcDriverToPlatform.put(Oracle8Platform.JDBC_DRIVER_DATADIRECT_ORACLE,
-        Oracle8Platform.DATABASENAME);
-    jdbcDriverToPlatform.put(Oracle8Platform.JDBC_DRIVER_INET_ORACLE, Oracle8Platform.DATABASENAME);
+    jdbcDriverToPlatform.put(OraclePlatform.JDBC_DRIVER, OraclePlatform.DATABASENAME);
+    jdbcDriverToPlatform.put(OraclePlatform.JDBC_DRIVER_OLD, OraclePlatform.DATABASENAME);
+    jdbcDriverToPlatform.put(OraclePlatform.JDBC_DRIVER_DATADIRECT_ORACLE,
+        OraclePlatform.DATABASENAME);
+    jdbcDriverToPlatform.put(OraclePlatform.JDBC_DRIVER_INET_ORACLE, OraclePlatform.DATABASENAME);
     jdbcDriverToPlatform.put(PostgreSqlPlatform.JDBC_DRIVER, PostgreSqlPlatform.DATABASENAME);
   }
 
