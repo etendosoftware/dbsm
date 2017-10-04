@@ -48,9 +48,7 @@ public class PlatformFactory {
    */
   public static synchronized Platform createNewPlatformInstance(DataSource dataSource)
       throws DdlUtilsException {
-    Connection connection = null;
-    try {
-      connection = dataSource.getConnection();
+    try (Connection connection = dataSource.getConnection()) {
       DatabaseMetaData metaData = connection.getMetaData();
       Platform platform = selectPlatformInstance(metaData.getDatabaseProductName(),
           metaData.getDatabaseMajorVersion());
@@ -61,14 +59,6 @@ public class PlatformFactory {
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while reading the database metadata: "
           + ex.getMessage(), ex);
-    } finally {
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (SQLException ex) {
-          // we ignore this one
-        }
-      }
     }
   }
 
