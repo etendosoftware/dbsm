@@ -2431,6 +2431,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
     _log.info("Enabling Triggers...");
+    boolean isEvaluated = false;
     try {
       StringWriter endStatementBuffer = new StringWriter();
       getSqlBuilder().setWriter(endStatementBuffer);
@@ -2446,7 +2447,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           buffer.append(rs.getString("SQL_STR"));
           buffer.append(endOfStatement);
         }
-        evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+        isEvaluated = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError) > 0 ? false
+            : true;
       } catch (SQLException e) {
         getLog().error("SQL command failed: " + query, e);
         throw new DatabaseOperationException("Error while disabling triggers ", e);
@@ -2454,7 +2456,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     } catch (IOException e) {
       getLog().error("Error when writing in a StringWriter", e);
     }
-    return true;
+    return isEvaluated;
   }
 
   /**

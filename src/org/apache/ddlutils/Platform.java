@@ -1197,6 +1197,7 @@ public interface Platform {
    *          The database model
    * @param continueOnError
    *          Whether to continue executing the sql commands when an error occurred
+   * @return true if all triggers are enabled as expected. false if an error is occurred.
    */
   public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException;
