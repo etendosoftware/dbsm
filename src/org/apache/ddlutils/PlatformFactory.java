@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.apache.ddlutils.platform.oracle.OraclePlatform;
+import org.apache.ddlutils.platform.postgresql.PostgreSql10Platform;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 
 /**
@@ -79,7 +80,11 @@ public class PlatformFactory {
         selectedPlatform = OraclePlatform.class;
         break;
       case "PostgreSQL":
-        selectedPlatform = PostgreSqlPlatform.class;
+        if (majorVersion == 9) {
+          selectedPlatform = PostgreSqlPlatform.class;
+        } else {
+          selectedPlatform = PostgreSql10Platform.class;
+        }
         break;
       default:
         return null;
