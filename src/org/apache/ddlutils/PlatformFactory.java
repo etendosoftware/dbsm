@@ -80,10 +80,10 @@ public class PlatformFactory {
         selectedPlatform = OraclePlatform.class;
         break;
       case "PostgreSQL":
-        if (majorVersion == 9) {
-          selectedPlatform = PostgreSqlPlatform.class;
-        } else {
+        if (majorVersion >= 10) {
           selectedPlatform = PostgreSql10Platform.class;
+        } else {
+          selectedPlatform = PostgreSqlPlatform.class;
         }
         break;
       default:
