@@ -20,37 +20,37 @@ import java.util.Collection;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.platform.RowConstructor;
 
+/**
+ * Class used by the {@link org.apache.ddlutils.platform.postgresql.PostgreSql10Platform} platform
+ * to load the database model. It differs from the loader of previous PostgreSQL versions in the way
+ * sequences are loaded.
+ */
 public class PostgreSql10ModelLoader extends PostgreSqlModelLoader {
-
-  /** Creates a new instance of PostgreSql10ModelLoader */
-  public PostgreSql10ModelLoader() {
-  }
 
   @SuppressWarnings("rawtypes")
   @Override
   protected Collection readSequences() throws SQLException {
     return readList(_stmt_listsequences, new RowConstructor() {
       public Object getRow(ResultSet r) throws SQLException {
-        _log.debug("Sequence " + r.getString(1));
-        final Sequence sequence = new Sequence();
         String sequenceName = r.getString(1);
+        Object oid = r.getObject(2);
+        _log.debug("Sequence " + sequenceName);
+        final Sequence sequence = new Sequence();
         sequence.setName(sequenceName);
 
         // Since PG 10 sequence details are stored in catalog (pg_sequence table)
-        String sql = "select seqstart, seqincrement from pg_sequence where seqrelid = "
-            + r.getString(2);
-        PreparedStatement stmtCurrentSequence = _connection.prepareStatement(sql);
-        readList(stmtCurrentSequence, new RowConstructor() {
-          @Override
-          public Object getRow(ResultSet seqDetails) throws SQLException {
-            sequence.setStart(seqDetails.getInt(1));
-            sequence.setIncrement(seqDetails.getInt(2));
-            return sequence;
-          }
-        });
-
-        stmtCurrentSequence.close();
-
+        String sql = "select seqstart, seqincrement from pg_sequence where seqrelid = ?";
+        try (PreparedStatement stmtCurrentSequence = _connection.prepareStatement(sql)) {
+          stmtCurrentSequence.setObject(1, oid);
+          readList(stmtCurrentSequence, new RowConstructor() {
+            @Override
+            public Object getRow(ResultSet seqDetails) throws SQLException {
+              sequence.setStart(seqDetails.getInt(1));
+              sequence.setIncrement(seqDetails.getInt(2));
+              return sequence;
+            }
+          });
+        }
         return sequence;
       }
     });
