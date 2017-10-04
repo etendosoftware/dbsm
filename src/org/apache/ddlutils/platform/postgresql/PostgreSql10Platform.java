@@ -15,8 +15,6 @@ package org.apache.ddlutils.platform.postgresql;
  * The platform implementation for PostgresSql 10.
  */
 public class PostgreSql10Platform extends PostgreSqlPlatform {
-  /** Database name of this platform. */
-  private static final String PG_10_DATABASENAME = "PostgreSql10";
 
   /**
    * Creates a new platform instance.
@@ -26,11 +24,4 @@ public class PostgreSql10Platform extends PostgreSqlPlatform {
     setModelLoader(new PostgreSql10ModelLoader());
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String getName() {
-    return PG_10_DATABASENAME;
-  }
 }
