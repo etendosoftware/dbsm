@@ -17,9 +17,9 @@ import java.util.List;
 
 import org.apache.ddlutils.Platform;
 
-public class Oracle8StandardBatchEvaluator extends StandardBatchEvaluator {
+public class OracleStandardBatchEvaluator extends StandardBatchEvaluator {
 
-  public Oracle8StandardBatchEvaluator(Platform platform) {
+  public OracleStandardBatchEvaluator(Platform platform) {
     super(platform);
   }
 

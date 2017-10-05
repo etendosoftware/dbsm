@@ -52,7 +52,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
-import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
+import org.apache.ddlutils.platform.OracleStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.SQLBatchEvaluator;
 import org.apache.log4j.Level;
@@ -559,7 +559,7 @@ public class DbsmTest {
         evaluator = new PGStandardBatchEvaluator(platform);
         break;
       case ORA:
-        evaluator = new Oracle8StandardBatchEvaluator(platform);
+        evaluator = new OracleStandardBatchEvaluator(platform);
         break;
       }
     }

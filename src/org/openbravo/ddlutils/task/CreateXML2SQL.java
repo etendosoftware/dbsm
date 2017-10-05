@@ -30,8 +30,6 @@ import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
  */
 public class CreateXML2SQL extends BaseDatabaseTask {
 
-  private String platform = null;
-
   private File model;
   private File output;
   private boolean dropfirst;
@@ -42,27 +40,21 @@ public class CreateXML2SQL extends BaseDatabaseTask {
   public CreateXML2SQL() {
   }
 
+  @Override
   public void doExecute() {
-
   }
 
   @Override
   public void execute() {
 
-    Platform pl;
-    if (platform == null) {
-      final BasicDataSource ds = new BasicDataSource();
-      ds.setDriverClassName(getDriver());
-      ds.setUrl(getUrl());
-      ds.setUsername(getUser());
-      ds.setPassword(getPassword());
+    final BasicDataSource ds = new BasicDataSource();
+    ds.setDriverClassName(getDriver());
+    ds.setUrl(getUrl());
+    ds.setUsername(getUser());
+    ds.setPassword(getPassword());
 
-      pl = PlatformFactory.createNewPlatformInstance(ds);
-      getLog().info("Using database platform.");
-    } else {
-      pl = PlatformFactory.createNewPlatformInstance(platform);
-      getLog().info("Using platform : " + platform);
-    }
+    Platform pl = PlatformFactory.createNewPlatformInstance(ds);
+    getLog().info("Using database platform " + pl.getName());
 
     try {
       String basedir = OBPropertiesProvider.getInstance().getOpenbravoProperties()
@@ -94,14 +86,6 @@ public class CreateXML2SQL extends BaseDatabaseTask {
     } catch (final Exception e) {
       throw new BuildException(e);
     }
-  }
-
-  public String getPlatform() {
-    return platform;
-  }
-
-  public void setPlatform(String platform) {
-    this.platform = platform;
   }
 
   public File getModel() {

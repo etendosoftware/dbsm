@@ -72,7 +72,7 @@ import org.openbravo.ddlutils.util.DBSMContants;
  * 
  * @version $Revision: 517050 $
  */
-public class Oracle8Builder extends SqlBuilder {
+public class OracleBuilder extends SqlBuilder {
   /** The regular expression pattern for ISO dates, i.e. 'YYYY-MM-DD'. */
   private Pattern _isoDatePattern;
   /** The regular expression pattern for ISO times, i.e. 'HH:MI:SS'. */
@@ -92,7 +92,7 @@ public class Oracle8Builder extends SqlBuilder {
    * @param platform
    *          The plaftform this builder belongs to
    */
-  public Oracle8Builder(Platform platform) {
+  public OracleBuilder(Platform platform) {
     super(platform);
     addEscapedCharSequence("'", "''");
 

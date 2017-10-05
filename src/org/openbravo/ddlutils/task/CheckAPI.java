@@ -22,9 +22,9 @@ import java.io.File;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
@@ -64,11 +64,10 @@ public class CheckAPI extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    // create platform object without access to dbms (as not needed here)
-    final String databaseName = new PlatformUtils().determineDatabaseType(getDriver(), getUrl());
-    final Platform platform = PlatformFactory.createNewPlatformInstance(databaseName);
+    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
 
-    getLog().info("Using database platform: " + databaseName);
+    getLog().info("Using database platform: " + platform.getName());
 
     File stableModel = new File(stableDBdir, "/model");
     File stableData = new File(stableDBdir, "/sourcedata");
@@ -134,7 +133,7 @@ public class CheckAPI extends BaseDatabaseTask {
         databaseXMLData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
         dataReader.getSink().end();
       } catch (final Exception e) {
-        e.printStackTrace();
+        getLog().error("Error reading database data", e);
       }
     }
     return databaseXMLData;

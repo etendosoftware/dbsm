@@ -22,7 +22,6 @@ package org.apache.ddlutils.task;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.PlatformUtils;
 import org.apache.tools.ant.BuildException;
 
 /**
@@ -189,21 +188,11 @@ public class PlatformConfiguration {
    */
   public Platform getPlatform() throws BuildException {
     Platform platform = null;
-
-    if (_databaseType == null) {
-      if (_dataSource == null) {
-        throw new BuildException("No database specified.");
-      }
-      if (_databaseType == null) {
-        _databaseType = new PlatformUtils().determineDatabaseType(_dataSource.getDriverClassName(),
-            _dataSource.getUrl());
-      }
-      if (_databaseType == null) {
-        _databaseType = new PlatformUtils().determineDatabaseType(_dataSource);
-      }
+    if (_dataSource == null) {
+      throw new BuildException("No database specified.");
     }
     try {
-      platform = PlatformFactory.createNewPlatformInstance(_databaseType);
+      platform = PlatformFactory.createNewPlatformInstance(_dataSource);
     } catch (Exception ex) {
       throw new BuildException("Database type " + _databaseType + " is not supported.", ex);
     }
