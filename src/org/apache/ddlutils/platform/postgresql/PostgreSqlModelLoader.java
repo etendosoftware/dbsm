@@ -319,7 +319,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     // sequences are partially loaded from catalog, details (start number and increment) are read by
     // readSequences method
     firstExpressionInWhereClause = false;
-    sql = "SELECT upper(relname), 1, 1 FROM pg_class WHERE relkind = 'S' "
+    sql = "SELECT upper(relname), oid FROM pg_class WHERE relkind = 'S' "
         + _filter.getExcludeFilterWhereClause("relname", _filter.getExcludedSequences(),
             firstExpressionInWhereClause);
     if (_prefix != null) {

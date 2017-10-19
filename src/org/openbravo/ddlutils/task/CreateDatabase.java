@@ -53,6 +53,8 @@ public class CreateDatabase extends BaseDatabaseTask {
   private String input;
   private ExcludeFilter excludeFilter;
 
+  private static final String MSG_ERROR = "There were serious problems while creating the database. Please review and fix them before continuing with the creation of the database.";
+
   /** Creates a new instance of CreateDatabase */
   public CreateDatabase() {
     doOBRebuildAppender = false;
@@ -121,7 +123,9 @@ public class CreateDatabase extends BaseDatabaseTask {
         getLog().info("for the complete database");
       }
 
-      platform.createTables(db, isDropfirst(), !isFailonerror());
+      if (!platform.createTables(db, isDropfirst(), !isFailonerror())) {
+        throw new Exception(MSG_ERROR);
+      }
 
       // execute the post-script
       if (getPostscript() == null) {
@@ -134,6 +138,7 @@ public class CreateDatabase extends BaseDatabaseTask {
       } else {
         platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
       }
+
       getLog().info("Writing checksum info");
       DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
           .getAbsolutePath());
@@ -216,11 +221,11 @@ public class CreateDatabase extends BaseDatabaseTask {
 
       boolean continueOnError = false;
       getLog().info("Creating foreign keys");
-      platform.createAllFKs(db, continueOnError);
+      boolean fksEnabled = platform.createAllFKs(db, continueOnError);
 
       _connection = platform.borrowConnection();
       getLog().info("Enabling triggers");
-      platform.enableAllTriggers(_connection, db, false);
+      boolean triggersEnabled = platform.enableAllTriggers(_connection, db, false);
       platform.returnConnection(_connection);
 
       // execute the post-script
@@ -233,6 +238,20 @@ public class CreateDatabase extends BaseDatabaseTask {
         }
       } else {
         platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
+      }
+
+      if (!triggersEnabled) {
+        getLog()
+            .error(
+                "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct.");
+      }
+      if (!fksEnabled) {
+        getLog()
+            .error(
+                "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references.");
+      }
+      if (!triggersEnabled || !fksEnabled) {
+        throw new Exception(MSG_ERROR);
       }
 
     } catch (final Exception e) {

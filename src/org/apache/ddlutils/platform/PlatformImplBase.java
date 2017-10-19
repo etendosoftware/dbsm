@@ -470,12 +470,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void createTables(Database model, boolean dropTablesFirst, boolean continueOnError)
+  public boolean createTables(Database model, boolean dropTablesFirst, boolean continueOnError)
       throws DatabaseOperationException {
     Connection connection = borrowConnection();
 
     try {
-      createTables(connection, model, dropTablesFirst, continueOnError);
+      return createTables(connection, model, dropTablesFirst, continueOnError);
     } finally {
       returnConnection(connection);
     }
@@ -484,12 +484,12 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void createTables(Connection connection, Database model, boolean dropTablesFirst,
+  public boolean createTables(Connection connection, Database model, boolean dropTablesFirst,
       boolean continueOnError) throws DatabaseOperationException {
     String sql = getCreateTablesSql(model, dropTablesFirst, continueOnError);
     _log.info("Finished preparing SQL");
 
-    evaluateBatch(connection, sql, continueOnError);
+    return evaluateBatch(connection, sql, continueOnError) > 0 ? false : true;
   }
 
   /**
@@ -562,9 +562,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   @Override
-  public void createAllFKs(Database model, boolean continueOnError) {
+  public boolean createAllFKs(Database model, boolean continueOnError) {
     Connection connection = borrowConnection();
-
+    boolean isExecuted = false;
     try {
       String sql;
       StringWriter buffer = new StringWriter();
@@ -572,26 +572,13 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       getSqlBuilder().setWriter(buffer);
       getSqlBuilder().createExternalForeignKeys(model);
       sql = buffer.toString();
-      evaluateBatchRealBatch(connection, sql, continueOnError);
+      isExecuted = evaluateBatchRealBatch(connection, sql, continueOnError) > 0 ? false : true;
     } catch (IOException e) {
       // won't happen because we're using a string writer
     }
 
     returnConnection(connection);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void alterTables(Database desiredDb, boolean continueOnError)
-      throws DatabaseOperationException {
-    Connection connection = borrowConnection();
-
-    try {
-      alterTables(connection, desiredDb, continueOnError);
-    } finally {
-      returnConnection(connection);
-    }
+    return isExecuted;
   }
 
   /**
@@ -638,26 +625,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public void alterTables(Connection connection, Database desiredModel, boolean continueOnError)
-      throws DatabaseOperationException {
-    String sql = getAlterTablesSql(connection, desiredModel);
-
-    evaluateBatch(connection, sql, continueOnError);
-  }
-
-  public void alterTables(Connection connection, Database desiredModel, boolean continueOnError,
-      List changes) throws DatabaseOperationException {
-    String sql = getAlterTablesSql(connection, desiredModel, changes);
-
-    evaluateBatch(connection, sql, continueOnError);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   public void alterTables(Database currentModel, Database desiredModel, boolean continueOnError)
       throws DatabaseOperationException {
-
+    _log.info("Updating database model...");
     Connection connection = borrowConnection();
 
     try {
@@ -741,7 +711,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public boolean alterTablesPostScript(Database currentModel, Database desiredModel,
       boolean continueOnError, List changes, Database fullModel, OBDataset ad)
       throws DatabaseOperationException {
-
+    _log.info("Dropping temporary tables...");
     Connection connection = borrowConnection();
 
     try {
@@ -755,7 +725,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public List alterTablesRecreatePKs(Database currentModel, Database desiredModel,
       boolean continueOnError) throws DatabaseOperationException {
-
+    _log.info("Recreating Primary Keys...");
     Connection connection = borrowConnection();
 
     try {
@@ -844,11 +814,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public void alterData(Connection connection, Database model, Vector<Change> changes)
       throws DatabaseOperationException {
+    _log.info("Updating Application Dictionary data...");
+
     // ColumnDataChanges are individual column changes, let's group them per row to update them
     // altogether. Note they're already sorted by row.
     List<ColumnDataChange> rowDataChanges = new ArrayList<>();
     Object currentPK = null;
     String currentTable = null;
+
+    StringWriter buffer = new StringWriter();
+    getSqlBuilder().setWriter(buffer);
 
     for (Change change : changes) {
       if (change instanceof ColumnDataChange) {
@@ -867,7 +842,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
 
       if (change instanceof AddRowChange) {
-        upsert(connection, model, ((AddRowChange) change).getRow());
+        insert(connection, model, ((AddRowChange) change).getRow());
       } else if (change instanceof RemoveRowChange) {
         delete(connection, model, (RemoveRowChange) change);
       }
@@ -875,79 +850,10 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
     // flush possible pending row data changes
     update(connection, model, rowDataChanges);
+
+    String sql = buffer.toString();
+    evaluateBatch(connection, sql, false);
   }
-
-  public void alterData(Database model, Vector<Change> changes, Writer writer)
-      throws DatabaseOperationException {
-    try {
-      getSqlBuilder().setWriter(writer);
-      for (Change change : changes) {
-        if (change instanceof AddRowChange) {
-          HashMap map = new HashMap();
-          AddRowChange addChange = (AddRowChange) change;
-          Table table = addChange.getTable();
-          for (int i = 0; i < table.getColumnCount(); i++) {
-            if (table.getColumn(i).getName().equalsIgnoreCase("UPDATED"))
-              map.put(table.getColumn(i).getName(), "now()");
-            else if (table.getColumn(i).getName().equalsIgnoreCase("UPDATEDBY"))
-              map.put(table.getColumn(i).getName(), "O");
-            else if (table.getColumn(i).getName().equalsIgnoreCase("CREATED"))
-              map.put(table.getColumn(i).getName(), "now()");
-            else if (table.getColumn(i).getName().equalsIgnoreCase("CREATEDBY"))
-              map.put(table.getColumn(i).getName(), "0");
-            else
-              map.put(table.getColumn(i).getName(),
-                  addChange.getRow().get(table.getColumn(i).getName()));
-          }
-
-          writer.append(getSqlBuilder().getInsertSql(table, map, false));
-          getSqlBuilder().printEndOfStatement("");
-        } else if (change instanceof RemoveRowChange) {
-          RemoveRowChange removeChange = (RemoveRowChange) change;
-          HashMap map = new HashMap();
-          Table table = removeChange.getTable();
-          for (int i = 0; i < table.getPrimaryKeyColumns().length; i++)
-            map.put(table.getPrimaryKeyColumns()[i].getName(),
-                removeChange.getRow().get(table.getPrimaryKeyColumns()[i].getName()).toString());
-          writer.append(getSqlBuilder().getDeleteSql(table, map, false));
-          getSqlBuilder().printEndOfStatement("");
-        } else if (change instanceof ColumnDataChange) {
-          HashMap map = new HashMap();
-          ColumnDataChange colChange = (ColumnDataChange) change;
-          Table table = colChange.getTable();
-          String pk = table.getPrimaryKeyColumns()[0].getName();
-          map.put(pk, colChange.getPkRow());
-          if (table.findColumn("UPDATED") != null)
-            map.put("UPDATED", "now()");
-          else if (table.findColumn("UPDATEDBY") != null)
-            map.put("UPDATEDBY", "O");
-          if (colChange.getColumnname().equalsIgnoreCase("CREATED"))
-            map.put(colChange.getColumnname(), "now()");
-          else if (colChange.getColumnname().equalsIgnoreCase("CREATEDBY"))
-            map.put(colChange.getColumnname(), "0");
-          else
-            map.put(colChange.getColumnname(), colChange.getNewValue());
-
-          writer.append(getSqlBuilder().getUpdateSql(table, map, false));
-          getSqlBuilder().printEndOfStatement("");
-        }
-      }
-      writer.flush();
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  /*
-   * String sql = null;
-   * 
-   * try { StringWriter buffer = new StringWriter();
-   * 
-   * getSqlBuilder().setWriter(buffer); getSqlBuilder().alterData(model, changes); sql =
-   * buffer.toString(); } catch (IOException ex) { // won't happen because we're using a string
-   * writer } evaluateBatch(connection, sql, true);
-   */
 
   /**
    * {@inheritDoc}
@@ -1614,15 +1520,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void upsert(Connection connection, Database model, DynaBean dynaBean)
       throws DatabaseOperationException {
-    _log.debug("Attempting to update a single row " + dynaBean + " into table ");
-    // int count = privateupdate(connection, model, dynaBean);
-    // if (count == 0) {
     insert(connection, model, dynaBean);
-    /*
-     * } else if (count != 1) { _log.warn("Attempted to update a single row " + dynaBean +
-     * " into table " + model.getDynaClassFor(dynaBean).getTableName() + " but changed " + count +
-     * " row(s)"); }
-     */
   }
 
   /**
@@ -1655,11 +1553,18 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       return;
     }
 
-    String insertSql = createInsertSql(model, dynaClass, properties, null);
+    String insertSql = createInsertSql(model, dynaClass, properties,
+        batchEvaluator.isDBEvaluator() ? null : dynaBean);
     String queryIdentitySql = null;
 
     if (_log.isDebugEnabled()) {
       _log.debug("About to execute SQL: " + insertSql);
+    }
+
+    if (!batchEvaluator.isDBEvaluator()) {
+      // not working with actual db -> evaluate and go
+      batchEvaluator.evaluateBatch(connection, Arrays.asList(insertSql + ";\n"), true, 0);
+      return;
     }
 
     if (autoIncrColumns.length > 0) {
@@ -1681,8 +1586,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
 
       Timestamp date = getDateStatement(connection);
-
-      beforeInsert(connection, dynaClass.getTable());
 
       statement = connection.prepareStatement(insertSql);
 
@@ -1714,8 +1617,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       }
 
       int count = statement.executeUpdate();
-
-      afterInsert(connection, dynaClass.getTable());
 
       if (count != 1) {
         _log.warn("Attempted to insert a single row " + dynaBean + " in table "
@@ -1793,19 +1694,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   protected Timestamp getDateStatement(Connection connection) {
     return new Timestamp(new Date().getTime());
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void insert(Database model, DynaBean dynaBean) throws DatabaseOperationException {
-    Connection connection = borrowConnection();
-
-    try {
-      insert(connection, model, dynaBean);
-    } finally {
-      returnConnection(connection);
-    }
   }
 
   /**
@@ -1912,12 +1800,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       try {
         Connection connection = statement.getConnection();
 
-        beforeInsert(connection, table);
-
         int[] results = statement.executeBatch();
 
         closeStatement(statement);
-        afterInsert(connection, table);
 
         boolean hasSum = true;
         int sum = 0;
@@ -1945,43 +1830,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
             + table.getName(), ex);
       }
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void insert(Database model, Collection dynaBeans) throws DatabaseOperationException {
-    Connection connection = borrowConnection();
-
-    try {
-      insert(connection, model, dynaBeans);
-    } finally {
-      returnConnection(connection);
-    }
-  }
-
-  /**
-   * Allows platforms to issue statements directly before rows are inserted into the specified
-   * table.
-   * 
-   * @param connection
-   *          The connection used for the insertion
-   * @param table
-   *          The table that the rows are inserted into
-   */
-  protected void beforeInsert(Connection connection, Table table) throws SQLException {
-  }
-
-  /**
-   * Allows platforms to issue statements directly after rows have been inserted into the specified
-   * table.
-   * 
-   * @param connection
-   *          The connection used for the insertion
-   * @param table
-   *          The table that the rows have been inserted into
-   */
-  protected void afterInsert(Connection connection, Table table) throws SQLException {
   }
 
   /**
@@ -2122,11 +1970,17 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       params.put(change.getColumnname(), change.getNewValue());
     }
 
-    String sql = getSqlBuilder().getUpdateSql(table, params, true);
+    String sql = getSqlBuilder().getUpdateSql(table, params, batchEvaluator.isDBEvaluator());
     PreparedStatement statement = null;
 
     if (_log.isDebugEnabled()) {
       _log.debug("About to execute SQL: " + sql + " - " + params);
+    }
+
+    if (!batchEvaluator.isDBEvaluator()) {
+      // not working with actual db -> evaluate and go
+      batchEvaluator.evaluateBatch(connection, Arrays.asList(sql + ";\n"), true, 0);
+      return;
     }
 
     try {
@@ -2178,19 +2032,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     if (count != 1) {
       _log.warn("Attempted to insert a single row " + dynaBean + " into table "
           + model.getDynaClassFor(dynaBean).getTableName() + " but changed " + count + " row(s)");
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void update(Database model, DynaBean dynaBean) throws DatabaseOperationException {
-    Connection connection = borrowConnection();
-
-    try {
-      update(connection, model, dynaBean);
-    } finally {
-      returnConnection(connection);
     }
   }
 
@@ -2286,61 +2127,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void delete(Database model, DynaBean dynaBean) throws DatabaseOperationException {
-    Connection connection = borrowConnection();
-
-    try {
-      delete(connection, model, dynaBean);
-    } finally {
-      returnConnection(connection);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public void delete(Connection connection, Database model, DynaBean dynaBean)
-      throws DatabaseOperationException {
-    PreparedStatement statement = null;
-
-    try {
-      SqlDynaClass dynaClass = model.getDynaClassFor(dynaBean);
-      SqlDynaProperty[] primaryKeys = dynaClass.getPrimaryKeyProperties();
-
-      if (primaryKeys.length == 0) {
-        _log.warn("Cannot delete instances of type " + dynaClass
-            + " because it has no primary keys");
-        return;
-      }
-
-      String sql = createDeleteSql(model, dynaClass, primaryKeys, null);
-
-      if (_log.isDebugEnabled()) {
-        _log.debug("About to execute SQL " + sql);
-      }
-
-      statement = connection.prepareStatement(sql);
-
-      for (int idx = 0; idx < primaryKeys.length; idx++) {
-        setObject(statement, idx + 1, dynaBean, primaryKeys[idx]);
-      }
-
-      int count = statement.executeUpdate();
-
-      if (count != 1) {
-        _log.warn("Attempted to delete a single row " + dynaBean + " in table "
-            + dynaClass.getTableName() + " but changed " + count + " row(s).");
-      }
-    } catch (SQLException ex) {
-      throw new DatabaseOperationException("Error while deleting from the database", ex);
-    } finally {
-      closeStatement(statement);
-    }
-  }
-
   public void delete(Connection connection, Database model, RemoveRowChange change)
       throws DatabaseOperationException {
     PreparedStatement statement = null;
@@ -2348,10 +2134,16 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     try {
       Table table = change.getTable();
       Column[] pk = table.getPrimaryKeyColumns();
-      HashMap pkValues = new HashMap();
+      Map<String, Object> pkValues = new HashMap<>();
       pkValues.put(pk[0].getName(), change.getRow().get(pk[0].getName()).toString());
-      String sql = getSqlBuilder().getDeleteSql(change.getTable(), pkValues, true);
-      // createDeleteSql(model, dynaClass, primaryKeys, null);
+      String sql = getSqlBuilder().getDeleteSql(change.getTable(), pkValues,
+          batchEvaluator.isDBEvaluator());
+
+      if (!batchEvaluator.isDBEvaluator()) {
+        // not working with actual db -> evaluate and go
+        batchEvaluator.evaluateBatch(connection, Arrays.asList(sql + ";\n"), true, 0);
+        return;
+      }
 
       if (_log.isDebugEnabled()) {
         _log.debug("About to execute SQL " + sql);
@@ -2362,7 +2154,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         setObject(statement, idx + 1, change.getRow().get(pk[idx].getName()).toString(), pk[idx]);
       }
 
-      int count = statement.executeUpdate();
+      statement.executeUpdate();
 
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Error while deleting from the database", ex);
@@ -2392,7 +2184,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   public Database loadModelFromDatabase(ExcludeFilter filter, boolean doPlSqlStandardization)
       throws DatabaseOperationException {
-
+    _log.info("Loading model from database...");
     Connection connection = borrowConnection();
     try {
       getModelLoader().setLog(_log);
@@ -2404,6 +2196,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
   }
 
+  /** API for ezattributes */
   public Database loadModelFromDatabase(ExcludeFilter filter, String prefix,
       boolean loadCompleteTables, String moduleId) throws DatabaseOperationException {
 
@@ -2506,6 +2299,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public void disableDatasetFK(Connection connection, Database model, OBDataset dataset,
       boolean continueOnError, Set<String> datasetTablesWithRemovedOrInsertedRecords)
       throws DatabaseOperationException {
+    _log.info("Disabling foreign keys");
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
@@ -2552,7 +2346,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public void disableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
-
+    _log.info("Disabling triggers");
     try {
       StringWriter endStatementBuffer = new StringWriter();
       getSqlBuilder().setWriter(endStatementBuffer);
@@ -2603,6 +2397,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   public boolean enableDatasetFK(Connection connection, Database model, OBDataset dataset,
       Set<String> datasetTablesWithRemovedOrInsertedRecords, boolean continueOnError)
       throws DatabaseOperationException {
+    _log.info("Enabling Foreign Keys...");
     try {
       StringWriter buffer = new StringWriter();
       getSqlBuilder().setWriter(buffer);
@@ -2635,6 +2430,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
    */
   public boolean enableAllTriggers(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
+    _log.info("Enabling Triggers...");
+    boolean isEvaluated = false;
     try {
       StringWriter endStatementBuffer = new StringWriter();
       getSqlBuilder().setWriter(endStatementBuffer);
@@ -2650,7 +2447,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
           buffer.append(rs.getString("SQL_STR"));
           buffer.append(endOfStatement);
         }
-        evaluateBatchRealBatch(connection, buffer.toString(), continueOnError);
+        isEvaluated = evaluateBatchRealBatch(connection, buffer.toString(), continueOnError) > 0 ? false
+            : true;
       } catch (SQLException e) {
         getLog().error("SQL command failed: " + query, e);
         throw new DatabaseOperationException("Error while disabling triggers ", e);
@@ -2658,7 +2456,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     } catch (IOException e) {
       getLog().error("Error when writing in a StringWriter", e);
     }
-    return true;
+    return isEvaluated;
   }
 
   /**
@@ -3097,6 +2895,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError) {
+    _log.info("Removing invalid rows.");
     Set<String> allDatasetTables = new HashSet<String>();
     Vector<OBDatasetTable> datasetTables = dataset.getTableList();
     for (int i = 0; i < datasetTables.size(); i++) {
@@ -3294,6 +3093,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void disableNOTNULLColumns(Database db, OBDataset ad) {
+    _log.info("Disabling not null constatraints...");
     Connection connection = borrowConnection();
     try {
       evaluateBatch(connection, disableNOTNULLColumnsSql(db, ad), true);
@@ -3388,7 +3188,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   }
 
   public void enableNOTNULLColumns(Database database, OBDataset dataset) {
-
+    _log.info("Recreating not null constraints...");
     Connection connection = borrowConnection();
 
     try {
@@ -3532,6 +3332,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   @Override
   public void executeOnCreateDefaultForMandatoryColumns(Database database, OBDataset ad) {
+    _log.info("Executing oncreatedefault statements for mandatory columns...");
     Connection connection = borrowConnection();
 
     try {

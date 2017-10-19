@@ -21,7 +21,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
@@ -38,8 +37,6 @@ public class SourcedataUpdates extends DbsmTest {
    * statement. See issue #35653
    */
   @Test
-  // TODO: recover this tests case once #36938 gets fixed
-  @Ignore("Current test plaform does not support src updates, see issue #36938")
   public void allChangesInARowAreExecutedAltogether() throws SQLException {
     resetDB();
     String model = "constraints/TWO_COLS_CHECK.xml";
@@ -59,8 +56,6 @@ public class SourcedataUpdates extends DbsmTest {
    * Ensures changes in different AD rows are applied in proper order.
    */
   @Test
-  // TODO: recover this tests case once #36938 gets fixed
-  @Ignore("Current test plaform does not support src updates, see issue #36938")
   public void updatesAreAppliedInProperOrder() throws SQLException {
     resetDB();
     String model = "constraints/SIMPLE_UNIQUE.xml";

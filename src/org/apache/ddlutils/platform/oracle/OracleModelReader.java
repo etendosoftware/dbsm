@@ -51,7 +51,7 @@ import org.apache.oro.text.regex.Perl5Matcher;
  * 
  * @version $Revision: $
  */
-public class Oracle8ModelReader extends JdbcModelReader {
+public class OracleModelReader extends JdbcModelReader {
   /** The regular expression pattern for the Oracle conversion of ISO dates. */
   private Pattern _oracleIsoDatePattern;
   /** The regular expression pattern for the Oracle conversion of ISO times. */
@@ -67,7 +67,7 @@ public class Oracle8ModelReader extends JdbcModelReader {
    * @param platform
    *          The platform that this model reader belongs to
    */
-  public Oracle8ModelReader(Platform platform) {
+  public OracleModelReader(Platform platform) {
     super(platform);
     setDefaultCatalogPattern(null);
     setDefaultSchemaPattern(null);
@@ -300,8 +300,8 @@ public class Oracle8ModelReader extends JdbcModelReader {
 
     try {
       stmt = getConnection().prepareStatement(query.toString());
-      stmt.setString(1, getPlatform().isDelimitedIdentifierModeOn() ? tableName : tableName
-          .toUpperCase());
+      stmt.setString(1,
+          getPlatform().isDelimitedIdentifierModeOn() ? tableName : tableName.toUpperCase());
       stmt.setString(2, "N");
       stmt.setString(3, "TABLE");
       stmt.setString(4, "P");

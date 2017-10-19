@@ -41,7 +41,7 @@ import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
-import org.apache.ddlutils.platform.Oracle8StandardBatchEvaluator;
+import org.apache.ddlutils.platform.OracleStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionStandarization;
 import org.apache.ddlutils.platform.postgresql.PostgrePLSQLFunctionTranslation;
@@ -61,7 +61,7 @@ import org.apache.ddlutils.util.ExtTypes;
  * 
  * @version $Revision: 231306 $
  */
-public class Oracle8Platform extends PlatformImplBase {
+public class OraclePlatform extends PlatformImplBase {
   /** Database name of this platform. */
   public static final String DATABASENAME = "Oracle";
   /** The standard Oracle jdbc driver. */
@@ -75,10 +75,16 @@ public class Oracle8Platform extends PlatformImplBase {
   /** The old thin subprotocol used by the standard Oracle driver. */
   public static final String JDBC_SUBPROTOCOL_THIN_OLD = "oracle:dnldthin";
 
+  public static final String JDBC_DRIVER_DATADIRECT_ORACLE = "com.ddtek.jdbc.oracle.OracleDriver";
+  public static final String JDBC_DRIVER_INET_ORACLE = "com.inet.ora.OraDriver";
+
+  public static final String JDBC_SUBPROTOCOL_DATADIRECT_ORACLE = "datadirect:oracle";
+  public static final String JDBC_SUBPROTOCOL_INET_ORACLE = "inetora";
+
   /**
    * Creates a new platform instance.
    */
-  public Oracle8Platform() {
+  public OraclePlatform() {
     PlatformInfo info = getPlatformInfo();
 
     info.setMaxIdentifierLength(30);
@@ -124,10 +130,10 @@ public class Oracle8Platform extends PlatformImplBase {
     info.setColumnOrderManaged(false);
     info.setEmptyStringIsNull(true);
 
-    setSqlBuilder(new Oracle8Builder(this));
-    setModelReader(new Oracle8ModelReader(this));
+    setSqlBuilder(new OracleBuilder(this));
+    setModelReader(new OracleModelReader(this));
     setModelLoader(new OracleModelLoader());
-    setBatchEvaluator(new Oracle8StandardBatchEvaluator(this));
+    setBatchEvaluator(new OracleStandardBatchEvaluator(this));
   }
 
   /**

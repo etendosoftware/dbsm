@@ -22,9 +22,9 @@ import java.io.File;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
@@ -74,11 +74,10 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    // create platform object without access to database (as not needed here)
-    final String databaseName = new PlatformUtils().determineDatabaseType(getDriver(), getUrl());
-    final Platform platform = PlatformFactory.createNewPlatformInstance(databaseName);
+    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
 
-    getLog().info("Using database platform: " + databaseName);
+    getLog().info("Using database platform: " + platform.getName());
 
     log.info("Using stableDBdir: " + stableDBdir);
     log.info("Using testDBDir:   " + testDBdir);
@@ -191,9 +190,7 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     File modelFolder = new File(erpBaseDir, "src-db/database/model");
     String basedir = modulesBaseDir + "/modules/";
 
-    Database fullModelToBeTested = DatabaseUtils.readDatabaseModel(platform, modelFolder, basedir,
-        modelFilter);
-    return fullModelToBeTested;
+    return DatabaseUtils.readDatabaseModel(platform, modelFolder, basedir, modelFilter);
   }
 
   private DatabaseData readDataRecursiveHelper(Platform platform, File erpBaseDir,
@@ -208,13 +205,14 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     if (modulesArray == null) {
       dataFilter = "*/src-db/database/sourcedata";
     } else {
-      dataFilter = "";
+      StringBuilder dataFilterBuilder = new StringBuilder("");
       for (String module : modulesArray) {
-        if (!dataFilter.equals("")) {
-          dataFilter += ",";
+        if (!dataFilterBuilder.toString().equals("")) {
+          dataFilterBuilder.append(",");
         }
-        dataFilter += module + "/src-db/database/sourcedata";
+        dataFilterBuilder.append(module + "/src-db/database/sourcedata");
       }
+      dataFilter = dataFilterBuilder.toString();
     }
     File dataFolder = new File(erpBaseDir, "src-db/database/sourcedata");
 
