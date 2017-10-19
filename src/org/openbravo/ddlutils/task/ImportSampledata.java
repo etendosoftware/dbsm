@@ -44,6 +44,7 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
+import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
@@ -78,6 +79,8 @@ public class ImportSampledata extends BaseDatabaseTask {
     platform.setOverrideDefaultValueOnMissingData(false);
     platform.setMaxThreads(threads);
 
+    // Checking changes in the database before import sampledata
+    boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().databaseHasChanges();
     try {
 
       Vector<File> dirs = new Vector<File>();
@@ -94,7 +97,12 @@ public class ImportSampledata extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray2[i] = dirs.get(i);
       }
-      Database db = DatabaseUtils.readDatabase(fileArray2);
+
+      boolean strictMode = false;
+      boolean applyConfigScriptData = false;
+      ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
+          applyConfigScriptData);
+      Database db = DatabaseUtils.readDatabase(fileArray2, config);
 
       log.info("Disabling constraints...");
       Connection con = null;
@@ -202,6 +210,16 @@ public class ImportSampledata extends BaseDatabaseTask {
         if (con != null) {
           platform.returnConnection(con);
         }
+      }
+
+      // Do not update the checksum if the db structure has been modified right before executing
+      // import.sample.data task manually
+      if (isDatabaseModifiedPreviously) {
+        log.info("Detected database changes before importing the sample data. Checksum will not be updated.");
+      } else {
+        // Update checksum in order to handle properly the case when a module script modified the
+        // database structure.
+        DBSMOBUtil.getInstance().updateCRC();
       }
 
     } catch (final Exception e) {

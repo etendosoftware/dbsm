@@ -119,6 +119,7 @@ public class DataSetTableQueryGenerator {
    */
   public String generateQuery(List<OBDatasetTable> dataSetTables, List<String> columns,
       DataSetTableQueryGeneratorExtraProperties extraProperties) {
+    customizeExtraProperties(dataSetTables, extraProperties);
     String moduleId = extraProperties.getModuleId();
     List<WhereClauseSimpleExpression> additionalWhereClauses = extraProperties
         .getAdditionalWhereClauses();
@@ -137,6 +138,25 @@ public class DataSetTableQueryGenerator {
     return generateQuery(tableName, columns, whereClause, orderByClause);
   }
 
+  /**
+   * Hook that allows the subclasses of DataSetTableQueryGenerator to add
+   * WhereClauseSimpleExpressions to DataSetTableQueryGeneratorExtraProperties, which will result in
+   * extra where clauses being added to the query.
+   * 
+   * For instance, this method is extended by the
+   * org.openbravo.retail.storeserver.synchronization.task.ExportStoreDataSetTableQueryGenerator to
+   * create a where clause that ensures that the records part of exported ADRD tables are not
+   * returned by the query
+   * 
+   * @param dataSetTables
+   *          the dataset tables being exported
+   * @param extraProperties
+   *          the original extraProperties passed to the DataSetTableQueryGenerator constructor
+   */
+  protected void customizeExtraProperties(List<OBDatasetTable> dataSetTables,
+      DataSetTableQueryGeneratorExtraProperties extraProperties) {
+  }
+
   private String buildAdditionalWhereClause(List<WhereClauseSimpleExpression> additionalWhereClauses) {
     StringBuilder additionalWhereClause = new StringBuilder();
     Iterator<WhereClauseSimpleExpression> iterator = additionalWhereClauses.iterator();
@@ -144,6 +164,9 @@ public class DataSetTableQueryGenerator {
       WhereClauseSimpleExpression expression = iterator.next();
       additionalWhereClause.append(expression.getColumnName() + " " + expression.getOperator()
           + " " + expression.getValue());
+      if (iterator.hasNext()) {
+        additionalWhereClause.append(" AND ");
+      }
     }
     return additionalWhereClause.toString();
   }
@@ -166,7 +189,7 @@ public class DataSetTableQueryGenerator {
       String orderByClause) {
     StringBuilder query = new StringBuilder();
     String columnNames = columns.isEmpty() ? "*" : stringifyColumnNames(columns);
-    String transformedWhereClause = transformWhereClause(whereClause);
+    String transformedWhereClause = transformWhereClause(tableName, whereClause);
     query.append("SELECT " + columnNames + " FROM " + tableName + " ");
     if (!StringUtils.isBlank(transformedWhereClause)) {
       query.append(" WHERE " + transformedWhereClause);
@@ -197,7 +220,7 @@ public class DataSetTableQueryGenerator {
    *          the original where clause
    * @return the where clause after applying the transformations
    */
-  protected String transformWhereClause(String whereClause) {
+  protected String transformWhereClause(String tableName, String whereClause) {
     return whereClause;
   }
 

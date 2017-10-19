@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2015 Openbravo S.L.U.
+ * Copyright (C) 2001-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -94,14 +94,13 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-    // platform.setDelimitedIdentifierModeOn(true);
 
     getLog().info("Creating submodel for application dictionary");
     Database dbXML = null;
     if (basedir == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
-      dbXML = DatabaseUtils.readDatabase(getModel());
+      dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
     } else {
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
@@ -122,7 +121,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       for (int i = 0; i < dirs.size(); i++) {
         fileArray[i] = dirs.get(i);
       }
-      dbXML = DatabaseUtils.readDatabase(fileArray);
+      dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);
@@ -130,7 +129,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
         "*/src-db/database/sourcedata", input, strict);
     OBDataset ad = new OBDataset(databaseFullData, "AD");
-    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(platform, ad, false);
+    boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
     if (hasBeenModified) {
       if (force)
         getLog()
@@ -368,7 +367,7 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       } catch (Exception e) {
         log.error("Error while executing postscript: ", e);
       }
-      DBSMOBUtil.getInstance().updateCRC(platform);
+      DBSMOBUtil.getInstance().updateCRC();
       DatabaseData databaseOrgData2 = new DatabaseData(dbAD);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData2, dbAD, dbAD, basedir,
           datafilter, input);

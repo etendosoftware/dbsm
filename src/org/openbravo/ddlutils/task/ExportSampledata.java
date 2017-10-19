@@ -125,7 +125,6 @@ public class ExportSampledata extends BaseDatabaseTask {
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(nThreads);
-    // platform.setDelimitedIdentifierModeOn(true);
     try {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeFilter);

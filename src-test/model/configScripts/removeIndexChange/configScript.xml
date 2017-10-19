@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <vector>
+    <removeIndexChange tableName="TEST" indexName="TEST_INDEX"></removeIndexChange>
+  </vector>

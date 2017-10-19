@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2010 Openbravo SLU 
+ * All portions are Copyright (C) 2009-2017 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -22,9 +22,9 @@ import java.io.File;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
-import org.apache.ddlutils.PlatformUtils;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
@@ -74,11 +74,10 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    // create platform object without access to database (as not needed here)
-    final String databaseName = new PlatformUtils().determineDatabaseType(getDriver(), getUrl());
-    final Platform platform = PlatformFactory.createNewPlatformInstance(databaseName);
+    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
 
-    getLog().info("Using database platform: " + databaseName);
+    getLog().info("Using database platform: " + platform.getName());
 
     log.info("Using stableDBdir: " + stableDBdir);
     log.info("Using testDBDir:   " + testDBdir);
@@ -89,9 +88,9 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     DatabaseData dbDataTest;
 
     getLog().info("Reading full stable reference model (core+all modules) ...");
-    dbModelStable = readModelRecursiveHelper(stableDBdir, stableDBdir);
+    dbModelStable = readModelRecursiveHelper(platform, stableDBdir, stableDBdir);
     getLog().info("Reading model to be tested (core+all modules) ...");
-    dbModelTest = readModelRecursiveHelper(testDBdir, testDBdir);
+    dbModelTest = readModelRecursiveHelper(platform, testDBdir, testDBdir);
     if (getModules() != null && !getModules().equals("")) {
       String modulesList = getModules();
       // In case of API check for modules, we use the testDBDir for the data loading, for the
@@ -186,14 +185,12 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     return filterForModule;
   }
 
-  private Database readModelRecursiveHelper(File erpBaseDir, File modulesBaseDir) {
+  private Database readModelRecursiveHelper(Platform platform, File erpBaseDir, File modulesBaseDir) {
     String modelFilter = "*/src-db/database/model";
     File modelFolder = new File(erpBaseDir, "src-db/database/model");
     String basedir = modulesBaseDir + "/modules/";
 
-    Database fullModelToBeTested = DatabaseUtils.readDatabaseModel(modelFolder, basedir,
-        modelFilter);
-    return fullModelToBeTested;
+    return DatabaseUtils.readDatabaseModel(platform, modelFolder, basedir, modelFilter);
   }
 
   private DatabaseData readDataRecursiveHelper(Platform platform, File erpBaseDir,
@@ -208,19 +205,22 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     if (modulesArray == null) {
       dataFilter = "*/src-db/database/sourcedata";
     } else {
-      dataFilter = "";
+      StringBuilder dataFilterBuilder = new StringBuilder("");
       for (String module : modulesArray) {
-        if (!dataFilter.equals("")) {
-          dataFilter += ",";
+        if (!dataFilterBuilder.toString().equals("")) {
+          dataFilterBuilder.append(",");
         }
-        dataFilter += module + "/src-db/database/sourcedata";
+        dataFilterBuilder.append(module + "/src-db/database/sourcedata");
       }
+      dataFilter = dataFilterBuilder.toString();
     }
     File dataFolder = new File(erpBaseDir, "src-db/database/sourcedata");
 
     log.info("Reading dataset AD sourcedata"); // to find prefixes
     DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, model, model, basedir,
         dataFilter, dataFolder, strict);
+    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, model, basedir, strict,
+        true);
 
     return databaseOrgData;
   }

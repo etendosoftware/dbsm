@@ -562,16 +562,50 @@ public abstract class SqlBuilder {
     alterDatabase(currentModel, desiredModel, params, changes);
   }
 
-  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel, CreationParameters params)
-      throws IOException {
+  /**
+   * Creates statements to remove external constraints, indexes and views. This method should be
+   * invoked as a previous step to processChanges, as it is in charge of preparing the database for
+   * the changes. It is split in two methods because the statementes added by
+   * removeExternalConstraintsIndexesAndViews need to be evaluated in a different bach, see issue
+   * https://issues.openbravo.com/view.php?id=36908
+   * 
+   * @param currentModel
+   *          The current database schema
+   * @param desiredModel
+   *          The desired database schema
+   * @param params
+   *          The parameters used in the creation of new tables. Note that for existing tables, the
+   *          parameters won't be applied
+   * @throws IOException
+   */
+  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel,
+      CreationParameters params) throws IOException {
     ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
         .isDelimitedIdentifierModeOn());
     List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
     prepareDatabaseForAlter(currentModel, desiredModel, params, changes);
   }
 
-  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel, CreationParameters params,
-      List<ModelChange> changes) throws IOException {
+  /**
+   * Creates statements to remove external constraints, indexes and views. This method should be
+   * invoked as a previous step to processChanges, as it is in charge of preparing the database for
+   * the changes. It is split in two methods because the statementes added by
+   * removeExternalConstraintsIndexesAndViews need to be evaluated in a different bach, see issue
+   * https://issues.openbravo.com/view.php?id=36908
+   * 
+   * @param currentModel
+   *          The current database schema
+   * @param desiredModel
+   *          The desired database schema
+   * @param params
+   *          The parameters used in the creation of new tables. Note that for existing tables, the
+   *          parameters won't be applied
+   * @param changes
+   *          The changes to be applied
+   * @throws IOException
+   */
+  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel,
+      CreationParameters params, List<ModelChange> changes) throws IOException {
     CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
         Database.class, Database.class, CreationParameters.class, null }, new Object[] {
         currentModel, desiredModel, params, null });
@@ -996,7 +1030,7 @@ public abstract class SqlBuilder {
     });
   }
 
-  protected void removeExternalConstraintsIndexesAndViews(Database currentModel,
+  private void removeExternalConstraintsIndexesAndViews(Database currentModel,
       List<ModelChange> changes, CallbackClosure callbackClosure) throws IOException {
 
     // The list of removed indexes that define an operator class
@@ -1004,11 +1038,11 @@ public abstract class SqlBuilder {
     // CreationParameters params, RemoveIndexChange change), but cannot be passed as a parameter to
     // applyForSelectedChanges because it is a too generic method, that's why it is defined as a
     // class attribute
-    _removedIndexesWithOperatorClassMap = new HashMap<String, List<Index>>();
+    _removedIndexesWithOperatorClassMap = new HashMap<>();
 
     // The list of removed partial index, populated also in processChange(Database currentModel,
     // Database desiredModel, CreationParameters params, RemoveIndexChange change)
-    _removedIndexesWithWhereClause = new HashMap<String, List<Index>>();
+    _removedIndexesWithWhereClause = new HashMap<>();
     // 1st pass: removing external constraints and indices
     applyForSelectedChanges(changes, new Class[] { RemoveForeignKeyChange.class,
         RemoveUniqueChange.class, RemoveIndexChange.class, RemoveCheckChange.class },
@@ -1022,8 +1056,8 @@ public abstract class SqlBuilder {
       removedPartialIndexesPostAction(_removedIndexesWithWhereClause);
     }
 
-    for (int i = 0; i < currentModel.getViewCount(); i++) {
-      dropView(currentModel.getView(i));
+    for (View view : currentModel.getViews()) {
+      dropView(view);
     }
   }
 
@@ -4715,6 +4749,26 @@ public abstract class SqlBuilder {
 
   public void printColumnSizeChange(Database database, ColumnSizeChange change) throws IOException {
     _log.error("Column size change not supported.");
+  }
+
+  public void printRemoveTriggerChange(Database database, RemoveTriggerChange change)
+      throws IOException {
+    _log.error("Remove Trigger change not supported.");
+  }
+
+  public void printRemoveIndexChange(Database database, RemoveIndexChange change)
+      throws IOException {
+    _log.error("Remove Index change not supported.");
+  }
+
+  public void printColumnRequiredChange(Database database, ColumnRequiredChange change)
+      throws IOException {
+    _log.error("Column Required change not supported.");
+  }
+
+  public void printRemoveCheckChange(Database database, RemoveCheckChange change)
+      throws IOException {
+    _log.error("Remove Check change not supported.");
   }
 
   public void printAddRowChangeChange(Database model, AddRowChange change) throws IOException {

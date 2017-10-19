@@ -91,13 +91,7 @@ public abstract class DatabaseTaskBase extends Task {
   }
 
   /**
-   * Specifies the database type. You should only need to set this if DdlUtils is not able to derive
-   * the setting from the name of the used jdbc driver or the jdbc connection url. If you have to
-   * specify this, please post your jdbc driver and connection url combo to the user mailing list so
-   * that DdlUtils can be enhanced to support this combo.<br/>
-   * Valid values are currently:<br/>
-   * <code>axion, cloudscape, db2, derby, firebird, hsqldb, interbase,
-   * maxdb, mckoi, mssql, mysql, mysql5, oracle, oracle9, oracle10, postgresql, sapdb, sybase</code>
+   * Specifies the database type.
    * 
    * @param type
    *          The database type

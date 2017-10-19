@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TEXT" primaryKey="false" required="false" type="NVARCHAR" size="20" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+    <view name="TEST_VIEW_1"><![CDATA[SELECT text FROM TEST]]></view>
+    <view name="TEST_VIEW_2"><![CDATA[SELECT text FROM TEST_VIEW_1]]></view>
+    <view name="TEST_VIEW_3"><![CDATA[SELECT text FROM TEST_VIEW_2]]></view>
+  </database>
+  
