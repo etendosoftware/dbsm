@@ -20,16 +20,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.io.DataReader;
@@ -154,22 +158,17 @@ public class ImportSampledata extends BaseDatabaseTask {
 
           getLog().info("Inserting data into the database...");
           ExecutorService es = Executors.newFixedThreadPool(platform.getMaxThreads());
+
+          ExecutorCompletionService<Void> ecs = new ExecutorCompletionService<>(es);
           for (int i = 0; i < files.size(); i++) {
             File f = files.get(i);
             getLog().debug("Queueing data import from file: " + files.get(i).getName());
             ImportRunner ir = new ImportRunner(getLog(), platform, db, f, rdbms);
-            es.execute(ir);
+            ecs.submit(ir);
           }
-          es.shutdown();
-          boolean ok;
-          try {
-            // Wait until all the tables have been imported, or until 24 hours have passed
-            ok = es.awaitTermination(24, TimeUnit.HOURS);
-          } catch (InterruptedException e) {
-            throw new RuntimeException("InterruptedException in ");
-          }
-          if (!ok) {
-            throw new RuntimeException("Didn't finish in timeout");
+          for (int i = 0; i < files.size(); i++) {
+            Future<Void> future = ecs.take();
+            future.get();
           }
         }
       }
@@ -206,7 +205,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       }
 
     } catch (final Exception e) {
-      e.printStackTrace();
+      log.error("Error while importing the sample data", e);
       throw new BuildException(e);
     }
   }
@@ -317,7 +316,7 @@ public class ImportSampledata extends BaseDatabaseTask {
    * Runnable class that will read data from a file and will write it in the database
    *
    */
-  private static class ImportRunner implements Runnable {
+  private static class ImportRunner implements Callable<Void> {
     private final Logger log;
     private final Platform platform;
     private final Database db;
@@ -333,7 +332,7 @@ public class ImportSampledata extends BaseDatabaseTask {
     }
 
     @Override
-    public void run() {
+    public Void call() {
       String fileName = file.getName();
       log.debug("Importing data from file: " + fileName);
       if (fileName.endsWith(".xml")) {
@@ -345,6 +344,7 @@ public class ImportSampledata extends BaseDatabaseTask {
           log.warn("File " + fileName + " cannot be imported in Oracle");
         }
       }
+      return null;
     }
 
     private void importXmlFile() {
@@ -359,7 +359,11 @@ public class ImportSampledata extends BaseDatabaseTask {
 
     private void importPgCopyFile() {
       final PostgreSqlDatabaseDataIO dbdio = new PostgreSqlDatabaseDataIO();
-      dbdio.importCopyFile(file, platform);
+      try {
+        dbdio.importCopyFile(file, platform);
+      } catch (IOException | SQLException e) {
+        throw new DdlUtilsException("Error while importing file " + file.getAbsolutePath(), e);
+      }
     }
   }
 

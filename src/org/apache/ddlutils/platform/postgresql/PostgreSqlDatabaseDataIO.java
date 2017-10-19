@@ -16,11 +16,13 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +30,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.io.DataSetTableExporter;
 import org.apache.ddlutils.io.DataSetTableQueryGenerator;
@@ -117,10 +118,12 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
    *          The file being imported
    * @param platform
    *          Platform instance that will be used to retrieve the database connection
-   * @throws DdlUtilsException
-   *           if the file cannot be imported using PostgreSQL's COPY
+   * @throws IOException
+   *           if there is a problem reading the copy file
+   * @throws SQLException
+   *           if there is a problem importing the file contents
    */
-  public void importCopyFile(File file, Platform platform) throws DdlUtilsException {
+  public void importCopyFile(File file, Platform platform) throws IOException, SQLException {
     String tableName = getTableName(file);
     Connection connection = platform.borrowConnection();
     try (InputStream inputStream = new FileInputStream(file);) {
@@ -132,8 +135,6 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
       copyCommand.append("(" + getColumnNames(file) + " ) ");
       copyCommand.append("FROM STDIN WITH (FORMAT CSV, HEADER TRUE) ");
       copyManager.copyIn(copyCommand.toString(), bufferedInStream);
-    } catch (Exception e) {
-      log.error("Error while importing file " + file.getName(), e);
     } finally {
       platform.returnConnection(connection);
     }
