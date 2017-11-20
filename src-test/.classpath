@@ -21,7 +21,7 @@
 	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/wstx-asl-3.0.2.jar"/>
 	<classpathentry kind="lib" path="/openbravo/lib/test/hamcrest-all-1.3.jar" sourcepath="/home/alostale/src/hamcrest-1.3/hamcrest-all-1.3-sources.jar"/>
 	<classpathentry kind="lib" path="/openbravo/lib/test/junit.jar"/>
-	<classpathentry kind="lib" path="/openbravo/lib/runtime/jettison-1.3.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/jettison-1.3-patched.jar"/>
 	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-io-2.4.jar"/>
 	<classpathentry kind="lib" path="/openbravo/src-db/database/lib/dbmanager.jar"/>
 	<classpathentry kind="output" path="build"/>
