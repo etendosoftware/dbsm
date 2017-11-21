@@ -266,7 +266,7 @@ public interface Platform {
   public int evaluateBatchWithSystemUser(String sql) throws DatabaseOperationException;
 
   /**
-   * Executes a series of sql statements which must be seperated by the delimiter configured as
+   * Executes a series of sql statements which must be separated by the delimiter configured as
    * {@link PlatformInfo#getSqlCommandDelimiter()} of the info object of this platform.
    * 
    * @param sql
@@ -278,7 +278,7 @@ public interface Platform {
   public int evaluateBatch(String sql, boolean continueOnError) throws DatabaseOperationException;
 
   /**
-   * Executes a series of sql statements which must be seperated by the delimiter configured as
+   * Executes a series of sql statements which must be separated by the delimiter configured as
    * {@link PlatformInfo#getSqlCommandDelimiter()} of the info object of this platform.
    * 
    * TODO: consider outputting a collection of String or some kind of statement object from the
