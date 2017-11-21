@@ -97,6 +97,21 @@ public interface Platform {
   public void setDataSource(DataSource dataSource);
 
   /**
+   * Returns the data source that this platform uses to access the database with the system user.
+   * 
+   * @return The data source to be used by the system user
+   */
+  public DataSource getSystemDataSource();
+
+  /**
+   * Sets the data source that this platform shall use to access the database with the system user.
+   * 
+   * @param dataSource
+   *          The data source to be used by the system user
+   */
+  public void setSystemDataSource(DataSource systemDatasource);
+
+  /**
    * Returns the username that this platform shall use to access the database.
    * 
    * @return The username
@@ -238,6 +253,17 @@ public interface Platform {
    *          The connection
    */
   public void returnConnection(Connection connection);
+
+  /**
+   * Executes a series of sql statements which must be separated by the delimiter configured as
+   * {@link PlatformInfo#getSqlCommandDelimiter()} of the info object of this platform. It makes use
+   * of the data source defined with the system user to execute the statements.
+   * 
+   * @param sql
+   *          The sql statements to execute
+   * @return The number of errors
+   */
+  public int evaluateBatchWithSystemUser(String sql) throws DatabaseOperationException;
 
   /**
    * Executes a series of sql statements which must be seperated by the delimiter configured as
