@@ -39,7 +39,7 @@ public class AlterDatabaseJava {
     // args[6] was 'filter' now unused
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
-    ada.setFailonerror(new Boolean(args[9]).booleanValue());
+    ada.setFailonerror(Boolean.parseBoolean(args[9]));
     ada.setVerbosity(new VerbosityLevel(args[10]));
     ada.setBasedir(args[11]);
     ada.setDirFilter(args[12]);
@@ -48,12 +48,12 @@ public class AlterDatabaseJava {
     String force = args[15];
     if (force.equalsIgnoreCase("yes"))
       force = "true";
-    ada.setForce(new Boolean(force).booleanValue());
+    ada.setForce(Boolean.parseBoolean(force));
     String strict = args[16];
     if (strict.equalsIgnoreCase("yes"))
       strict = "true";
 
-    ada.setStrict(new Boolean(strict).booleanValue());
+    ada.setStrict(Boolean.parseBoolean(strict));
 
     if (args.length > 17) {
       ada.setForcedRecreation(args[17]);
