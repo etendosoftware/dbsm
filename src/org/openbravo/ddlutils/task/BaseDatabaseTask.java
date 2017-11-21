@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009 Openbravo SLU 
+ * All portions are Copyright (C) 2009-2017 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -40,6 +40,8 @@ public abstract class BaseDatabaseTask extends Task {
   private String url;
   private String user;
   private String password;
+  private String systemUser;
+  private String systemPassword;
 
   protected Logger log;
   private VerbosityLevel verbosity = null;
@@ -141,6 +143,22 @@ public abstract class BaseDatabaseTask extends Task {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getSystemUser() {
+    return systemUser;
+  }
+
+  public void setSystemUser(String systemUser) {
+    this.systemUser = systemUser;
+  }
+
+  public String getSystemPassword() {
+    return systemPassword;
+  }
+
+  public void setSystemPassword(String systemPassword) {
+    this.systemPassword = systemPassword;
   }
 
   public void setLog(Logger log) {
