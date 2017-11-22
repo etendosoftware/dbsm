@@ -420,9 +420,8 @@ public class DbsmTest {
    */
   protected Database createDatabase(String dbModelPath, List<String> configScripts) {
     Database db = createDatabase(dbModelPath);
-    final Platform platform = getPlatform();
-    platform.setMaxThreads(threads);
-    log.info("Max threads " + platform.getMaxThreads());
+    Platform currentPlatform = getPlatform();
+    log.info("Max threads " + currentPlatform.getMaxThreads());
 
     final DatabaseData databaseOrgData = new DatabaseData(db);
     databaseOrgData.setStrictMode(false);
@@ -450,18 +449,18 @@ public class DbsmTest {
    */
   protected Database createDatabase(String dbModelPath) {
     File dbModel = new File("model", dbModelPath);
-    final Platform platform = getPlatform();
+    final Platform currentPlatform = getPlatform();
 
     Database newDB = DatabaseUtils.readDatabaseWithoutConfigScript(dbModel);
-    platform.createTables(newDB, false, true);
+    currentPlatform.createTables(newDB, false, true);
 
-    platform.enableNOTNULLColumns(newDB);
+    currentPlatform.enableNOTNULLColumns(newDB);
 
-    ModelComparator comparator = new ModelComparator(platform.getPlatformInfo(),
-        platform.isDelimitedIdentifierModeOn());
+    ModelComparator comparator = new ModelComparator(currentPlatform.getPlatformInfo(),
+        currentPlatform.isDelimitedIdentifierModeOn());
     List<ModelChange> newChanges = comparator.compare(
         DatabaseUtils.readDatabaseWithoutConfigScript(dbModel),
-        platform.loadModelFromDatabase(getExcludeFilter()));
+        currentPlatform.loadModelFromDatabase(getExcludeFilter()));
     assertThat("changes between updated db and target db", newChanges, is(empty()));
     return newDB;
   }
