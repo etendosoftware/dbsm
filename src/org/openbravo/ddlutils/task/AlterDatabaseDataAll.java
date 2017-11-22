@@ -74,26 +74,11 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       getLog().info(
           "Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
               + getSystemUser());
-      BasicDataSource ds = DBSMOBUtil
-          .getDataSource(getDriver(), getUrl(), getUser(), getPassword());
-      Platform platform = PlatformFactory.createNewPlatformInstance(ds);
-      if (getSystemUser() != null && getSystemPassword() != null) {
-        // Create the data source used to execute statements with the system user
-        BasicDataSource systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
-            getSystemPassword());
-        platform.setSystemDataSource(systemds);
-      }
-      platform.setMaxThreads(threads);
-      if (!StringUtils.isEmpty(forcedRecreation)) {
-        getLog().info("Forced recreation: " + forcedRecreation);
-      }
-      platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
-
       dbUpdater = new DBUpdater();
       dbUpdater.setLog(getLog());
       dbUpdater.setExcludeFilter(DBSMOBUtil.getInstance().getExcludeFilter(
           new File(model.getAbsolutePath() + "/../../../")));
-      dbUpdater.setPlatform(platform);
+      dbUpdater.setPlatform(getPlatformInstance());
       dbUpdater.setModel(model);
       dbUpdater.setBasedir(basedir);
       dbUpdater.setStrict(strict);
@@ -109,6 +94,23 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       dbUpdater.setUpdateModuleInstallTables(true);
     }
     return dbUpdater;
+  }
+
+  private Platform getPlatformInstance() {
+    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    if (getSystemUser() != null && getSystemPassword() != null) {
+      // Create the data source used to execute statements with the system user
+      BasicDataSource systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
+          getSystemPassword());
+      platform.setSystemDataSource(systemds);
+    }
+    platform.setMaxThreads(threads);
+    if (!StringUtils.isEmpty(forcedRecreation)) {
+      getLog().info("Forced recreation: " + forcedRecreation);
+    }
+    platform.getSqlBuilder().setForcedRecreation(forcedRecreation);
+    return platform;
   }
 
   public static void main(String[] args) throws FileNotFoundException, IOException {
