@@ -85,6 +85,7 @@ public class DBUpdater {
       applyConfigScripts(db, newData);
       OBDataset ad = getADDataset(newData);
       checkIfDBWasModified(ad);
+      executeSystemPreScript();
       executePreScript();
       platform.alterTables(originaldb, db, !failonerror);
 
@@ -242,6 +243,19 @@ public class DBUpdater {
         log.error("Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
         throw new BuildException("Database has local changes. Update.database not done.");
       }
+    }
+  }
+
+  private void executeSystemPreScript() throws IOException {
+    File script = new File(model, "prescript-systemuser-" + platform.getName() + ".sql");
+    executeSystemScript(script);
+  }
+
+  private void executeSystemScript(File script) throws IOException {
+    if (script.exists()) {
+      log.info("Executing script " + script.getName());
+      String sql = new String(Files.readAllBytes(script.toPath()));
+      platform.evaluateBatchWithSystemUser(sql);
     }
   }
 

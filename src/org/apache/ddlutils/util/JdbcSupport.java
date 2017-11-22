@@ -33,7 +33,7 @@ import org.apache.ddlutils.DatabaseOperationException;
 
 /**
  * JdbcSupport is an abstract base class for objects which need to perform JDBC operations. It
- * contains a number of useful methods for implementation inheritence..
+ * contains a number of useful methods for implementation inheritance..
  * 
  * @version $Revision: 463757 $
  */
@@ -42,6 +42,8 @@ public abstract class JdbcSupport {
   private final Log _log = LogFactory.getLog(JdbcSupport.class);
   /** The data source. */
   private DataSource _dataSource;
+  /** The data source of the system user. */
+  private DataSource _systemDataSource;
   /** The username for accessing the database. */
   private String _username;
   /** The password for accessing the database. */
@@ -69,6 +71,25 @@ public abstract class JdbcSupport {
    */
   public void setDataSource(DataSource dataSource) {
     _dataSource = dataSource;
+  }
+
+  /**
+   * Returns the data source used for communicating with the database using the system user.
+   * 
+   * @return The data source of the system user
+   */
+  public DataSource getSystemDataSource() {
+    return _systemDataSource;
+  }
+
+  /**
+   * Sets the DataSource used for communicating with the database using the system user.
+   * 
+   * @param dataSource
+   *          The data source of the system user
+   */
+  public void setSystemDataSource(DataSource systemDataSource) {
+    _systemDataSource = systemDataSource;
   }
 
   /**
@@ -126,15 +147,39 @@ public abstract class JdbcSupport {
       } else {
         connection = getDataSource().getConnection(_username, _password);
       }
-      if (_log.isDebugEnabled()) {
-        String connName = connection.toString();
-
-        _log.debug("Borrowed connection " + connName + " from data source");
-        _openConnectionNames.add(connName);
-      }
+      logOpenConnection(connection);
       return connection;
     } catch (SQLException ex) {
       throw new DatabaseOperationException("Could not get a connection from the datasource", ex);
+    }
+  }
+
+  /**
+   * Returns a (new) JDBC connection from the data source that accesses to the database with the
+   * system user. This method returns null if that data source is not set.
+   * 
+   * @return The connection
+   */
+  public Connection borrowConnectionWithSystemUser() throws DatabaseOperationException {
+    if (_systemDataSource == null) {
+      return null;
+    }
+    try {
+      Connection connection = _systemDataSource.getConnection();
+      logOpenConnection(connection);
+      return connection;
+    } catch (SQLException ex) {
+      throw new DatabaseOperationException(
+          "Could not get a connection from the system user datasource", ex);
+    }
+  }
+
+  private void logOpenConnection(Connection connection) {
+    if (_log.isDebugEnabled()) {
+      String connName = connection.toString();
+
+      _log.debug("Borrowed connection " + connName + " from data source");
+      _openConnectionNames.add(connName);
     }
   }
 

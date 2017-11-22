@@ -71,10 +71,18 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected DBUpdater getDBUpdater() {
     if (dbUpdater == null) {
-      getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
+      getLog().info(
+          "Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
+              + getSystemUser());
       BasicDataSource ds = DBSMOBUtil
           .getDataSource(getDriver(), getUrl(), getUser(), getPassword());
       Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+      if (getSystemUser() != null && getSystemPassword() != null) {
+        // Create the data source used to execute statements with the system user
+        BasicDataSource systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
+            getSystemPassword());
+        platform.setSystemDataSource(systemds);
+      }
       platform.setMaxThreads(threads);
       if (!StringUtils.isEmpty(forcedRecreation)) {
         getLog().info("Forced recreation: " + forcedRecreation);
@@ -124,6 +132,8 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.setUrl(ownerUrl);
     task.setUser(props.getProperty("bbdd.user"));
     task.setPassword(props.getProperty("bbdd.password"));
+    task.setSystemUser(props.getProperty("bbdd.systemUser"));
+    task.setSystemPassword(props.getProperty("bbdd.systemPassword"));
     task.setExcludeobjects(props.getProperty("com.openbravo.db.OpenbravoExcludeFilter"));
     task.setModel(new File(baseDir + "/model"));
 
