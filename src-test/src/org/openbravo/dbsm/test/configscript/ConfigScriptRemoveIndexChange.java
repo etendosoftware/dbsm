@@ -34,8 +34,9 @@ public class ConfigScriptRemoveIndexChange extends ConfigScriptBaseTest {
   private static final String TEST_INDEX = "TEST_INDEX";
 
   public ConfigScriptRemoveIndexChange(String rdbms, String driver, String url, String sid,
-      String user, String password, String name) throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name);
+      String user, String password, String systemUser, String systemPassword, String name)
+      throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name);
   }
 
   @Test

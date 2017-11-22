@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -30,9 +30,9 @@ public class DataTypeChanges extends TableRecreationBaseTest {
   }
 
   public DataTypeChanges(String rdbms, String driver, String url, String sid, String user,
-      String password, String name, ActionType type, DbsmTest.RecreationMode recMode)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, name, type, recMode);
+      String password, String systemUser, String systemPassword, String name, ActionType type,
+      DbsmTest.RecreationMode recMode) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name, type, recMode);
   }
 
   @Parameters(name = "DB: {6} - recreation {8}")

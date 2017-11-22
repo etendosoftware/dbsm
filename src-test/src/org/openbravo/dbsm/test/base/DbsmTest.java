@@ -91,11 +91,14 @@ import org.openbravo.ddlutils.util.OBDataset;
 public class DbsmTest {
   private String password;
   private String user;
+  private String systemPassword;
+  private String systemUser;
   private String driver;
   private String url;
   protected Logger log;
   protected String modelPath;
   private static BasicDataSource ds;
+  private static BasicDataSource systemds;
   private static String previousDB;
   private Rdbms rdbms;
   private Platform platform;
@@ -123,7 +126,8 @@ public class DbsmTest {
   };
 
   public DbsmTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String name) throws FileNotFoundException, IOException {
+      String password, String systemUser, String systemPassword, String name)
+      throws FileNotFoundException, IOException {
     initLogging();
 
     String workingDir = System.getProperty("user.dir");
@@ -142,25 +146,38 @@ public class DbsmTest {
 
     this.password = password;
     this.user = user;
+    this.systemPassword = systemPassword;
+    this.systemUser = systemUser;
     this.driver = driver;
     this.url = ownerUrl;
 
     if (previousDB == null || !previousDB.equals(ownerUrl)) {
-      if (ds != null) {
-        try {
-          log.info("Closing datasource to switch DB from " + previousDB + " to " + ownerUrl);
-          ds.close();
-        } catch (SQLException e) {
-          log.error("Error closing ds", e);
-        }
-      }
-
+      log.info("Closing datasources to switch DB from " + previousDB + " to " + ownerUrl);
+      closeDatasource(ds);
+      closeDatasource(systemds);
       ds = null;
+      systemds = null;
       previousDB = ownerUrl;
     }
 
     if (ds == null) {
       ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    }
+
+    if (systemds == null) {
+      systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
+          getSystemPassword());
+    }
+  }
+
+  private void closeDatasource(BasicDataSource dataSource) {
+    if (dataSource == null) {
+      return;
+    }
+    try {
+      dataSource.close();
+    } catch (SQLException e) {
+      log.error("Error closing ds", e);
     }
   }
 
@@ -188,6 +205,8 @@ public class DbsmTest {
               jsonDb.getString("sid"), //
               jsonDb.getString("user"), //
               jsonDb.getString("password"), //
+              jsonDb.getString("systemUser"), //
+              jsonDb.getString("systemPassword"), //
               dbName });
     }
 
@@ -240,6 +259,14 @@ public class DbsmTest {
     return user;
   }
 
+  protected String getSystemPassword() {
+    return systemPassword;
+  }
+
+  protected String getSystemUser() {
+    return systemUser;
+  }
+
   protected String getDriver() {
     return driver;
   }
@@ -270,6 +297,10 @@ public class DbsmTest {
 
   protected BasicDataSource getDataSource() {
     return ds;
+  }
+
+  protected BasicDataSource getSystemDataSource() {
+    return systemds;
   }
 
   public Rdbms getRdbms() {
@@ -553,6 +584,7 @@ public class DbsmTest {
   /** returns platform for current execution */
   protected Platform getPlatform() {
     platform = PlatformFactory.createNewPlatformInstance(getDataSource());
+    platform.setSystemDataSource(getSystemDataSource());
     if (evaluator == null) {
       switch (rdbms) {
       case PG:

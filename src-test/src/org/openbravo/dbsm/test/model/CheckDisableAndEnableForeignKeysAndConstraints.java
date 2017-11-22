@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2017 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -39,9 +39,9 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
 
   public CheckDisableAndEnableForeignKeysAndConstraints(String rdbms, String driver, String url,
-      String sid, String user, String password, String name) throws FileNotFoundException,
-      IOException {
-    super(rdbms, driver, url, sid, user, password, name);
+      String sid, String user, String password, String systemUser, String systemPassword,
+      String name) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name);
   }
 
   @Test
