@@ -432,7 +432,7 @@ public class DbsmTest {
         if (changes == null) {
           log.info("No changes retrieved from Configuration Script: " + configScript);
         } else {
-          getPlatform().applyConfigScript(db, changes);
+          currentPlatform.applyConfigScript(db, changes);
         }
       }
     }
