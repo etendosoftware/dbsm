@@ -4,8 +4,10 @@
       "rdbms": "POSTGRE",
       "url": "jdbc:postgresql://localhost:5432",
       "sid": "test1",
-      "password": "-",
       "user": "tad",
+      "password": "-",
+      "systemUser": "postgres",
+      "systemPassword": "-",
       "driver": "org.postgresql.Driver",
       "name": "pg-9.3"
     },
@@ -15,6 +17,8 @@
       "sid": "oborcl",
       "user": "test1",
       "password": "test1",
+      "systemUser": "SYSTEM",
+      "systemPassword": "-",
       "driver": "oracle.jdbc.driver.OracleDriver",
       "name": "oracle"
     }
