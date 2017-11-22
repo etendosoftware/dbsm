@@ -67,6 +67,10 @@ public class DBUpdater {
   private boolean checkFormalChanges;
   private boolean updateModuleInstallTables;
 
+  private enum ScriptType {
+    DEFAULT, SYSTEM;
+  }
+
   /** Compares and updates database according to set parameters */
   public Database update() {
     log.info("Executing full update.database");
@@ -248,32 +252,33 @@ public class DBUpdater {
 
   private void executeSystemPreScript() throws IOException {
     File script = new File(model, "prescript-systemuser-" + platform.getName() + ".sql");
-    executeSystemScript(script);
-  }
-
-  private void executeSystemScript(File script) throws IOException {
-    if (script.exists()) {
-      log.info("Executing script " + script.getName());
-      String sql = new String(Files.readAllBytes(script.toPath()));
-      platform.evaluateBatchWithSystemUser(sql);
-    }
+    executeScript(script, ScriptType.SYSTEM);
   }
 
   private void executePreScript() throws IOException {
     File script = new File(model, "prescript-" + platform.getName() + ".sql");
-    executeScript(script);
+    executeScript(script, ScriptType.DEFAULT);
   }
 
   private void executePostScript() throws IOException {
     File script = new File(model, "postscript-" + platform.getName() + ".sql");
-    executeScript(script);
+    executeScript(script, ScriptType.DEFAULT);
   }
 
-  private void executeScript(File script) throws IOException {
-    if (script.exists()) {
-      log.info("Executing script " + script.getName());
-      String sql = new String(Files.readAllBytes(script.toPath()));
-      platform.evaluateBatch(sql, true);
+  private void executeScript(File script, ScriptType type) throws IOException {
+    if (!script.exists()) {
+      return;
+    }
+    log.info("Executing script " + script.getName());
+    String sql = new String(Files.readAllBytes(script.toPath()));
+    int errors;
+    if (type == ScriptType.SYSTEM) {
+      errors = platform.evaluateBatchWithSystemUser(sql);
+    } else {
+      errors = platform.evaluateBatch(sql, true);
+    }
+    if (errors > 0) {
+      log.warn("Script " + script.getName() + " executed with " + errors + " error(s)");
     }
   }
 
