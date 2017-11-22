@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
   <vector>
+    <!-- PostgreSQL pg_trgm functions -->
     <excludedFunction name="GIN_EXTRACT_QUERY_TRGM"/>
     <excludedFunction name="GIN_EXTRACT_VALUE_TRGM"/>
     <excludedFunction name="GIN_TRGM_CONSISTENT"/>
@@ -25,4 +26,6 @@
     <excludedFunction name="WORD_SIMILARITY_DIST_COMMUTATOR_OP"/>
     <excludedFunction name="WORD_SIMILARITY_OP"/>
     <excludedFunction name="WORD_SIMILARITY_COMMUTATOR_OP"/>
+     <!-- PostgreSQL uuid functions -->
+    <excludedFunction name="UUID\_%"/>
   </vector>

@@ -773,13 +773,24 @@ public class DbsmTest {
     } finally {
       getPlatform().returnConnection(connection);
     }
-    // Configure the exclude filter
+    configureExcludeFilter();
+  }
+
+  protected void configureExcludeFilter() {
     ExcludeFilter localExcludeFilter = new ExcludeFilter();
-    localExcludeFilter.fillFromFile(new File("model/excludeFilter/excludePgTrgmFunctions.xml"));
+    localExcludeFilter.fillFromFile(new File("model/excludeFilter/excludeExtensionFunctions.xml"));
     setExcludeFilter(localExcludeFilter);
   }
 
   protected void uninstallPgTrgmExtension() {
+    uninstallPgExtension("pg_trgm");
+  }
+
+  protected void uninstallUUIDExtension() {
+    uninstallPgExtension("uuid-ossp");
+  }
+
+  private void uninstallPgExtension(String extensionName) {
     if (getRdbms() != Rdbms.PG) {
       return;
     }
@@ -787,11 +798,11 @@ public class DbsmTest {
     try {
       connection = getDataSource().getConnection();
       StringBuilder query = new StringBuilder();
-      query.append("DROP EXTENSION \"pg_trgm\" CASCADE");
+      query.append("DROP EXTENSION \"" + extensionName + "\" CASCADE");
       PreparedStatement st = connection.prepareStatement(query.toString());
       st.execute();
     } catch (SQLException e) {
-      log.error("Error while deleting pg_trgm extension");
+      log.error("Error while deleting " + extensionName + " extension");
     } finally {
       getPlatform().returnConnection(connection);
     }

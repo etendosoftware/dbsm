@@ -24,6 +24,7 @@ import org.openbravo.dbsm.test.model.recreation.OtherRecreations;
 import org.openbravo.dbsm.test.model.recreation.PLCode;
 import org.openbravo.dbsm.test.model.recreation.SQLCommands;
 import org.openbravo.dbsm.test.model.recreation.TypeChangeSuite;
+import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
 
 /**
  * Test suite grouping all cases for database model
@@ -35,6 +36,7 @@ import org.openbravo.dbsm.test.model.recreation.TypeChangeSuite;
 @SuiteClasses({ //
 CheckConstraints.class, //
     Pg95SqlStandardization.class, //
+    PgSystemPreScriptTest.class, //
     Sequences.class, //
     NumericScaleChanges.class, //
     AddDropColumn.class, //
