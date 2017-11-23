@@ -261,9 +261,12 @@ public interface Platform {
    * 
    * @param sql
    *          The sql statements to execute
+   * @param continueOnError
+   *          Whether to continue executing the sql commands when an error occurred
    * @return The number of errors
    */
-  public int evaluateBatchWithSystemUser(String sql) throws DatabaseOperationException;
+  public int evaluateBatchWithSystemUser(String sql, boolean continueOnError)
+      throws DatabaseOperationException;
 
   /**
    * Executes a series of sql statements which must be separated by the delimiter configured as

@@ -318,7 +318,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
   /**
    * {@inheritDoc}
    */
-  public int evaluateBatchWithSystemUser(String sql) throws DatabaseOperationException {
+  public int evaluateBatchWithSystemUser(String sql, boolean continueOnError)
+      throws DatabaseOperationException {
     Connection connection = borrowConnectionWithSystemUser();
     if (connection == null) {
       _log.warn("Could not retrieve a database connection to execute a batch as system user");
@@ -329,7 +330,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     }
 
     try {
-      return evaluateBatch(connection, sql, true);
+      return evaluateBatch(connection, sql, continueOnError);
     } finally {
       returnConnection(connection);
     }

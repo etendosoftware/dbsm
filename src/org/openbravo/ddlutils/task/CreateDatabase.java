@@ -13,6 +13,7 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -64,25 +65,13 @@ public class CreateDatabase extends BaseDatabaseTask {
   public void doExecute() {
     excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
         new File(model.getAbsolutePath() + "/../../../"));
-    getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
-    final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
-        getPassword());
-
-    final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    getLog().info(
+        "Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
+            + getSystemUser());
+    final Platform platform = getPlatformInstance();
     try {
-
-      // execute the pre-script
-      if (getPrescript() == null) {
-        // try to execute the default prescript
-        final File fpre = new File(getModel(), "prescript-" + platform.getName() + ".sql");
-        if (fpre.exists()) {
-          getLog().info("Executing default prescript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpre), !isFailonerror());
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPrescript()), !isFailonerror());
-      }
-
+      executeSystemPreScript(platform);
+      executePreScript(platform);
       Database db = null;
       if (modulesDir == null) {
         getLog().info(
@@ -228,17 +217,7 @@ public class CreateDatabase extends BaseDatabaseTask {
       boolean triggersEnabled = platform.enableAllTriggers(_connection, db, false);
       platform.returnConnection(_connection);
 
-      // execute the post-script
-      if (getPostscript() == null) {
-        // try to execute the default prescript
-        final File fpost = new File(getModel(), "postscript-" + platform.getName() + ".sql");
-        if (fpost.exists()) {
-          getLog().info("Executing default postscript");
-          platform.evaluateBatch(DatabaseUtils.readFile(fpost), !isFailonerror());
-        }
-      } else {
-        platform.evaluateBatch(DatabaseUtils.readFile(getPostscript()), !isFailonerror());
-      }
+      executePostScript(platform);
 
       if (!triggersEnabled) {
         getLog()
@@ -257,6 +236,49 @@ public class CreateDatabase extends BaseDatabaseTask {
     } catch (final Exception e) {
       e.printStackTrace();
       throw new BuildException(e);
+    }
+  }
+
+  private Platform getPlatformInstance() {
+    BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
+    Platform platform = PlatformFactory.createNewPlatformInstance(ds);
+    if (getSystemUser() != null && getSystemPassword() != null) {
+      // Create the data source used to execute statements with the system user
+      BasicDataSource systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
+          getSystemPassword());
+      platform.setSystemDataSource(systemds);
+    }
+    return platform;
+  }
+
+  private void executeSystemPreScript(Platform platform) throws IOException {
+    File script = new File(getModel(), "prescript-systemuser-" + platform.getName() + ".sql");
+    if (script.exists()) {
+      platform.evaluateBatchWithSystemUser(DatabaseUtils.readFile(script), !isFailonerror());
+    }
+  }
+
+  private void executePreScript(Platform platform) throws IOException {
+    File preScript = getPrescript();
+    if (preScript == null) {
+      // try to execute the default prescript
+      preScript = new File(getModel(), "prescript-" + platform.getName() + ".sql");
+    }
+    if (preScript.exists()) {
+      getLog().info("Executing script " + preScript.getName());
+      platform.evaluateBatch(DatabaseUtils.readFile(preScript), !isFailonerror());
+    }
+  }
+
+  private void executePostScript(Platform platform) throws IOException {
+    File postScript = getPostscript();
+    if (postScript == null) {
+      // try to execute the default postscript
+      postScript = new File(getModel(), "postscript-" + platform.getName() + ".sql");
+    }
+    if (postScript.exists()) {
+      getLog().info("Executing script " + postScript.getName());
+      platform.evaluateBatch(DatabaseUtils.readFile(postScript), !isFailonerror());
     }
   }
 

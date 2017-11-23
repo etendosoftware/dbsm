@@ -273,7 +273,7 @@ public class DBUpdater {
     String sql = new String(Files.readAllBytes(script.toPath()));
     int errors;
     if (type == ScriptType.SYSTEM) {
-      errors = platform.evaluateBatchWithSystemUser(sql);
+      errors = platform.evaluateBatchWithSystemUser(sql, true);
     } else {
       errors = platform.evaluateBatch(sql, true);
     }
