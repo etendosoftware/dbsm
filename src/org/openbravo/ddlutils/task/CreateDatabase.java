@@ -234,7 +234,7 @@ public class CreateDatabase extends BaseDatabaseTask {
       }
 
     } catch (final Exception e) {
-      e.printStackTrace();
+      getLog().error("Error creating database", e);
       throw new BuildException(e);
     }
   }
@@ -254,6 +254,7 @@ public class CreateDatabase extends BaseDatabaseTask {
   private void executeSystemPreScript(Platform platform) throws IOException {
     File script = new File(getModel(), "prescript-systemuser-" + platform.getName() + ".sql");
     if (script.exists()) {
+      getLog().info("Executing script " + script.getName());
       platform.evaluateBatchWithSystemUser(DatabaseUtils.readFile(script), !isFailonerror());
     }
   }
