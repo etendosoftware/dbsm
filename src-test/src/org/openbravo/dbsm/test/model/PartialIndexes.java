@@ -44,9 +44,8 @@ import org.junit.Test;
 public class PartialIndexes extends IndexBaseTest {
 
   public PartialIndexes(String rdbms, String driver, String url, String sid, String user,
-      String password, String systemUser, String systemPassword, String name, TestType testType)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name, testType);
+      String password, String name, TestType testType) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name, testType);
   }
 
   @Test

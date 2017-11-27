@@ -26,9 +26,8 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 public class PLCode extends DbsmTest {
 
   public PLCode(String rdbms, String driver, String url, String sid, String user, String password,
-      String systemUser, String systemPassword, String name) throws FileNotFoundException,
-      IOException {
-    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name);
+      String name) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name);
   }
 
   @Test

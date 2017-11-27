@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016-2017 Openbravo S.L.U.
+ * Copyright (C) 2016 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -34,9 +34,8 @@ public class PreventCascadeRowDeletion extends DbsmTest {
   private static final String TABLE6_NAME = "TABLE6";
 
   public PreventCascadeRowDeletion(String rdbms, String driver, String url, String sid,
-      String user, String password, String systemUser, String systemPassword, String name)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name);
+      String user, String password, String name) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name);
   }
 
   // When a record of an AD table is deleted, if another AD table references that table, the records

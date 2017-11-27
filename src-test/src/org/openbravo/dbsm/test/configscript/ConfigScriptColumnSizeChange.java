@@ -51,9 +51,8 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   }
 
   public ConfigScriptColumnSizeChange(String rdbms, String driver, String url, String sid,
-      String user, String password, String systemUser, String systemPassword, String name)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name);
+      String user, String password, String name) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name);
   }
 
   @Test

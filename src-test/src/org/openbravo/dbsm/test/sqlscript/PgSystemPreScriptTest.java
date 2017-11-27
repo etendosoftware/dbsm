@@ -27,16 +27,15 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.openbravo.dbsm.test.base.PGOnlyDbsmTest;
+import org.openbravo.dbsm.test.base.PGOnlySystemDbsmTest;
 
-public class PgSystemPreScriptTest extends PGOnlyDbsmTest {
+public class PgSystemPreScriptTest extends PGOnlySystemDbsmTest {
 
   private final String MODEL = "sqlScripts";
 
   public PgSystemPreScriptTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String systemUser, String systemPassword, String name)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name);
+      String password, String name) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name);
   }
 
   @Before

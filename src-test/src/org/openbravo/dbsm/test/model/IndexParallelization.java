@@ -29,9 +29,8 @@ public class IndexParallelization extends IndexBaseTest {
   private static int MAX_ACTIVE_CONNECTIONS = 2;
 
   public IndexParallelization(String rdbms, String driver, String url, String sid, String user,
-      String password, String systemUser, String systemPassword, String name, TestType testType)
-      throws FileNotFoundException, IOException {
-    super(rdbms, driver, url, sid, user, password, systemUser, systemPassword, name, testType);
+      String password, String name, TestType testType) throws FileNotFoundException, IOException {
+    super(rdbms, driver, url, sid, user, password, name, testType);
   }
 
   @Before

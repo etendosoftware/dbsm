@@ -91,8 +91,6 @@ import org.openbravo.ddlutils.util.OBDataset;
 public class DbsmTest {
   private String password;
   private String user;
-  private String systemPassword;
-  private String systemUser;
   private String driver;
   private String url;
   protected Logger log;
@@ -126,8 +124,7 @@ public class DbsmTest {
   };
 
   public DbsmTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String systemUser, String systemPassword, String name)
-      throws FileNotFoundException, IOException {
+      String password, String name) throws FileNotFoundException, IOException {
     initLogging();
 
     String workingDir = System.getProperty("user.dir");
@@ -146,8 +143,6 @@ public class DbsmTest {
 
     this.password = password;
     this.user = user;
-    this.systemPassword = systemPassword;
-    this.systemUser = systemUser;
     this.driver = driver;
     this.url = ownerUrl;
 
@@ -164,7 +159,7 @@ public class DbsmTest {
       ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(), getPassword());
     }
 
-    if (systemds == null) {
+    if (systemds == null && getSystemUser() != null && getSystemPassword() != null) {
       systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
           getSystemPassword());
     }
@@ -205,8 +200,6 @@ public class DbsmTest {
               jsonDb.getString("sid"), //
               jsonDb.getString("user"), //
               jsonDb.getString("password"), //
-              jsonDb.getString("systemUser"), //
-              jsonDb.getString("systemPassword"), //
               dbName });
     }
 
@@ -260,11 +253,11 @@ public class DbsmTest {
   }
 
   protected String getSystemPassword() {
-    return systemPassword;
+    return null;
   }
 
   protected String getSystemUser() {
-    return systemUser;
+    return null;
   }
 
   protected String getDriver() {
