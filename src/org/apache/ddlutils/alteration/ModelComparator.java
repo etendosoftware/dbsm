@@ -197,7 +197,7 @@ public class ModelComparator {
       Function targetFunction = targetModel.getFunction(fnIdx);
       Function sourceFunction = findCorrespondingFunction(sourceModel, targetFunction);
 
-      if (sourceFunction == null) {
+      if (sourceFunction == null || sourceFunction.isRecreationRequired()) {
         if (_log.isDebugEnabled()) {
           _log.debug("Processing Function " + targetFunction + " (created for the database "
               + sourceModel.getName() + ")");

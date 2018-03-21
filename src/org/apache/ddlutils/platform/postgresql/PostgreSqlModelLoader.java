@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -422,7 +422,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     _stmt_paramtypes = _connection.prepareStatement("SELECT pg_catalog.format_type(?, NULL)");
 
-    _stmt_oids_funcs = _connection.prepareStatement("SELECT oid FROM pg_proc WHERE proname = ?");
+    _stmt_oids_funcs = _connection
+        .prepareStatement("SELECT oid, proconfig FROM pg_proc WHERE proname = ?");
 
     _stmt_comments_funcs = _connection.prepareStatement("SELECT obj_description(?,'pg_proc')");
 
@@ -450,6 +451,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   Vector<String> paramsNVARCHAR = new Vector<String>();
   int oidFunc;
   String comment = "";
+  Array configs = null;
 
   @Override
   protected Function readFunction(String name) throws SQLException {
@@ -471,8 +473,24 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     fillList(_stmt_oids_funcs, new RowFiller() {
       public void fillRow(ResultSet r) throws SQLException {
         oidFunc = r.getInt(1);
+        configs = r.getArray(2);
       }
     });
+
+    boolean hasSearchPath = false;
+    if (configs != null && configs.getArray() instanceof String[]) {
+      String[] confs = (String[]) configs.getArray();
+      for (String conf : confs) {
+        hasSearchPath = conf != null && conf.startsWith("search_path=");
+        if (hasSearchPath) {
+          break;
+        }
+      }
+    }
+    // If function in DB has no search path, force recreation to include it.
+    // If it already has it, don't do it: it could be it already has set by DBSM or it was manually
+    // set, in this case don't overwrite
+    f.setRecreationRequired(!hasSearchPath);
 
     _stmt_comments_funcs.setInt(1, oidFunc);
     fillList(_stmt_comments_funcs, new RowFiller() {
