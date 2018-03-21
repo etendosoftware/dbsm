@@ -47,6 +47,7 @@ public class Function implements StructureObject, Cloneable {
   private String _originalBody;
   /** The translation object of the function */
   private Translation _translation = new NullTranslation();
+  private boolean recreationRequired = false;
 
   /** Creates a new instance of Function */
   public Function() {
@@ -375,7 +376,6 @@ public class Function implements StructureObject, Cloneable {
       Function other = (Function) obj;
 
       int typeCode2 = _typeCode;
-
       int othertypeCode2 = other._typeCode;
 
       /*
@@ -414,7 +414,6 @@ public class Function implements StructureObject, Cloneable {
    * @throws Exception
    */
   public boolean equalsIgnoreCase(Function otherFunction) {
-
     int typeCode2 = _typeCode;
 
     int othertypeCode2 = otherFunction._typeCode;
@@ -494,5 +493,15 @@ public class Function implements StructureObject, Cloneable {
     result.append("]");
 
     return result.toString();
+  }
+
+  /** Sets whether recreation is required even no other changes are detected */
+  public void setRecreationRequired(boolean recreationRequired) {
+    this.recreationRequired = recreationRequired;
+  }
+
+  /** Is recreation required even no other changes are detected */
+  public boolean isRecreationRequired() {
+    return recreationRequired;
   }
 }

@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -429,6 +429,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
         b = true;
       }
     }
+
     if (!comment.equals("--OBTG:")) {
       print("COMMENT ON FUNCTION " + function.getName() + " ");
 
@@ -446,6 +447,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
       }
       println(" IS '" + comment + "--';");
     }
+
+    writeSearchPath(function);
+
     String sLastDefault = function.getParameterCount() == 0 ? null : getDefaultValue(function
         .getParameter(function.getParameterCount() - 1));
     if (sLastDefault != null && !sLastDefault.equals("")) {
@@ -470,9 +474,28 @@ public class PostgreSqlBuilder extends SqlBuilder {
       } catch (CloneNotSupportedException e) {
         // Will not happen
       }
-    } else {
-      // System.out.println("funcion "+function.getName()+" doesn't have defaults");
     }
+  }
+
+  private void writeSearchPath(Function function) throws IOException {
+    StringBuilder paramTypes = new StringBuilder();
+    int paramNum = 0;
+    for (int idx = 0; idx < function.getParameterCount(); idx++) {
+      Parameter param = function.getParameter(idx);
+      if (param.getModeCode() == Parameter.MODE_OUT) {
+        continue;
+      }
+
+      if (paramNum > 0) {
+        paramTypes.append(", ");
+      }
+      paramTypes.append(getSqlType(param.getTypeCode()));
+      paramNum += 1;
+    }
+
+    println("ALTER FUNCTION " + function.getName() + "(" + paramTypes.toString()
+        + ") SET search_path from current;");
+    printEndOfStatement();
   }
 
   /**
