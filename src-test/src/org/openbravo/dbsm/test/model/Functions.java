@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -12,12 +12,20 @@
 
 package org.openbravo.dbsm.test.model;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Array;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
@@ -53,6 +61,59 @@ public class Functions extends DbsmTest {
           equalTo("p1"));
       assertThat("2nd param in function " + function.getName(), function.getParameter(1).getName(),
           equalTo("p2"));
+    }
+  }
+
+  /** see issue #38179 */
+  @Test
+  public void searchPathIsAddedToNewFunctionsInPG() throws SQLException {
+    assumeThat("not executing in Oracle", getRdbms(), is(Rdbms.PG));
+
+    resetDB();
+    updateDatabase("functions/SIMPLE_FUNCTION.xml");
+    assertThat(getSearchPath("test1"),
+        allOf(containsString("search_path"), containsString("public")));
+  }
+
+  /** see issue #38179 */
+  @Test
+  public void searchPathIsAddedToOldFunctionsInPG() throws SQLException {
+    assumeThat("not executing in Oracle", getRdbms(), is(Rdbms.PG));
+
+    resetDB();
+    createFunctionWithoutSearchPath();
+
+    updateDatabase("functions/SIMPLE_FUNCTION.xml");
+    assertThat(getSearchPath("test1"),
+        allOf(containsString("search_path"), containsString("public")));
+  }
+
+  private String getSearchPath(String functionName) throws SQLException {
+    try (Connection cn = getDataSource().getConnection();
+        PreparedStatement st = cn.prepareStatement("select proconfig from pg_proc where proname=?")) {
+      st.setString(1, functionName);
+
+      ResultSet rs = st.executeQuery();
+
+      rs.next();
+      Array config = rs.getArray(1);
+      if (config == null) {
+        return null;
+      }
+      return ((String[]) config.getArray())[0];
+    }
+  }
+
+  private void createFunctionWithoutSearchPath() throws SQLException {
+    String code = "CREATE OR REPLACE FUNCTION TEST1(p1 IN NUMERIC) RETURNS NUMERIC\n" + //
+        "\n" + //
+        "AS $BODY$ DECLARE \n" + //
+        "BEGIN\n" + //
+        "  RETURN NULL;\n" + //
+        "END ; $BODY$ LANGUAGE plpgsql;";
+    try (Connection cn = getDataSource().getConnection();
+        PreparedStatement st = cn.prepareStatement(code)) {
+      st.execute();
     }
   }
 }

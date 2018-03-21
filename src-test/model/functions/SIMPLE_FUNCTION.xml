@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+  <database name="test">
+    <function name="TEST1" type="NUMERIC">
+      <parameter name="p1" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[BEGIN
+  RETURN NULL;
+END TEST1
+]]></body>
+    </function>
+  </database>
