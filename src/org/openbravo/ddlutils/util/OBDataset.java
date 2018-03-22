@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2010 Openbravo S.L.U.
+ * Copyright (C) 2010-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -170,16 +170,17 @@ public class OBDataset {
           sql += " AND " + table.getSecondarywhereclause() + " ";
         }
         sql += " AND UPDATED>(SELECT LAST_DBUPDATE FROM AD_SYSTEM_INFO)";
-        PreparedStatement ps = connection.prepareStatement(sql);
-        ps.execute();
-        ResultSet rs = ps.getResultSet();
-        rs.next();
-        if (rs.getInt(1) > 0) {
-          log.warn("Change detected in table: " + table.getName());
-          if (modifiedTables != null) {
-            modifiedTables.add(table.getName());
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+          ps.execute();
+          ResultSet rs = ps.getResultSet();
+          rs.next();
+          if (rs.getInt(1) > 0) {
+            log.warn("Change detected in table: " + table.getName());
+            if (modifiedTables != null) {
+              modifiedTables.add(table.getName());
+            }
+            hasChanges = true;
           }
-          hasChanges = true;
         }
       } catch (Exception e) {
         // We do nothing if the select fails in one table. This can happen if a new table has been

@@ -723,17 +723,17 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         // PG does not store sequence details in catalog but in a pseudo-table named with the
         // sequence name, let's query them to get the details
         String sql = "select min_value, increment_by from " + sequenceName;
-        PreparedStatement stmtCurrentSequence = _connection.prepareStatement(sql);
-        readList(stmtCurrentSequence, new RowConstructor() {
-          @Override
-          public Object getRow(ResultSet seqDetails) throws SQLException {
-            sequence.setStart(seqDetails.getInt(1));
-            sequence.setIncrement(seqDetails.getInt(2));
-            return sequence;
-          }
-        });
 
-        stmtCurrentSequence.close();
+        try (PreparedStatement stmtCurrentSequence = _connection.prepareStatement(sql)) {
+          readList(stmtCurrentSequence, new RowConstructor() {
+            @Override
+            public Object getRow(ResultSet seqDetails) throws SQLException {
+              sequence.setStart(seqDetails.getInt(1));
+              sequence.setIncrement(seqDetails.getInt(2));
+              return sequence;
+            }
+          });
+        }
 
         return sequence;
       }
@@ -996,9 +996,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
    */
   private String getOperatorClassName(String operatorClassOid) {
     String operatorClassName = null;
-    try {
-      PreparedStatement st = _connection
-          .prepareStatement("select opcname from PG_OPCLASS where oid = ?");
+    try (PreparedStatement st = _connection
+        .prepareStatement("select opcname from PG_OPCLASS where oid = ?")) {
       st.setInt(1, Integer.parseInt(operatorClassOid));
       ResultSet rs = st.executeQuery();
       if (rs.next()) {

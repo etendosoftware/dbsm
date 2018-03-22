@@ -1819,8 +1819,6 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       throws DatabaseOperationException {
     if (statement != null) {
       try {
-        Connection connection = statement.getConnection();
-
         int[] results = statement.executeBatch();
 
         closeStatement(statement);
@@ -3405,9 +3403,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
       return true;
     }
 
-    try {
-      PreparedStatement st = connection.prepareStatement("SELECT (" + onCreateDefault + ") FROM "
-          + table.getName() + limitOneRow());
+    try (PreparedStatement st = connection.prepareStatement("SELECT (" + onCreateDefault
+        + ") FROM " + table.getName() + limitOneRow())) {
       st.executeQuery();
     } catch (Exception e) {
       return false;

@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -410,11 +410,9 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String getIndexOperatorClass(String indexName, String indexColumnName) {
     String operatorClass = null;
-    try {
+    try (PreparedStatement st = _connection
+        .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?")) {
       String tableName = getTableNameFromIndexName(indexName);
-      PreparedStatement st = null;
-      st = _connection
-          .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?");
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       String commentText = null;
@@ -445,12 +443,10 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String getIndexWhereClause(String indexName) {
     String whereClause = null;
-    try {
+    try (PreparedStatement st = _connection
+        .prepareStatement("SELECT comments FROM user_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?")) {
       String tableName = getTableNameFromIndexName(indexName);
       String columnName = getFirstColumnNameFromTableIndex(tableName, indexName);
-      PreparedStatement st = null;
-      st = _connection
-          .prepareStatement("SELECT comments FROM user_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?");
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();
@@ -481,10 +477,8 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String getTableNameFromIndexName(String indexName) {
     String tableName = null;
-    try {
-      PreparedStatement st = null;
-      st = _connection
-          .prepareStatement("SELECT table_name FROM USER_INDEXES U WHERE INDEX_NAME = ?");
+    try (PreparedStatement st = _connection
+        .prepareStatement("SELECT table_name FROM USER_INDEXES U WHERE INDEX_NAME = ?")) {
       st.setString(1, indexName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
@@ -508,10 +502,8 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String getFirstColumnNameFromTableIndex(String tableName, String indexName) {
     String columnName = null;
-    try {
-      PreparedStatement st = null;
-      st = _connection
-          .prepareStatement("SELECT column_name FROM USER_IND_COLUMNS U WHERE INDEX_NAME = ? AND TABLE_NAME = ? AND COLUMN_POSITION = 1");
+    try (PreparedStatement st = _connection
+        .prepareStatement("SELECT column_name FROM USER_IND_COLUMNS U WHERE INDEX_NAME = ? AND TABLE_NAME = ? AND COLUMN_POSITION = 1")) {
       st.setString(1, indexName.toUpperCase());
       st.setString(2, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();

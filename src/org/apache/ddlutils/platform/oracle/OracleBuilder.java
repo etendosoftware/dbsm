@@ -1072,27 +1072,15 @@ public class OracleBuilder extends SqlBuilder {
    */
   private String getCommentOfTable(String tableName) {
     String tableComment = null;
-    Connection con = null;
-    try {
-      PreparedStatement st = null;
-      con = getPlatform().getDataSource().getConnection();
-
-      st = con
-          .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?");
+    try (Connection con = getPlatform().getDataSource().getConnection();
+        PreparedStatement st = con
+            .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?")) {
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
         tableComment = rs.getString(1);
       }
     } catch (SQLException e) {
-    } finally {
-      if (con != null) {
-        try {
-          con.close();
-        } catch (SQLException e) {
-          _log.error("Error while closing the connection", e);
-        }
-      }
     }
     return tableComment;
   }
@@ -1108,13 +1096,9 @@ public class OracleBuilder extends SqlBuilder {
    */
   private String getCommentOfColumn(String tableName, String columnName) {
     String tableComment = null;
-    Connection con = null;
-    try {
-      PreparedStatement st = null;
-      con = getPlatform().getDataSource().getConnection();
-
-      st = con
-          .prepareStatement("SELECT comments FROM user_col_comments WHERE table_name = ? AND column_name = ?");
+    try (Connection con = getPlatform().getDataSource().getConnection();
+        PreparedStatement st = con
+            .prepareStatement("SELECT comments FROM user_col_comments WHERE table_name = ? AND column_name = ?")) {
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();
@@ -1122,14 +1106,6 @@ public class OracleBuilder extends SqlBuilder {
         tableComment = rs.getString(1);
       }
     } catch (SQLException e) {
-    } finally {
-      if (con != null) {
-        try {
-          con.close();
-        } catch (SQLException e) {
-          _log.error("Error while closing the connection", e);
-        }
-      }
     }
     return tableComment;
   }
