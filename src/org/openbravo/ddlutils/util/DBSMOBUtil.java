@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -268,40 +268,6 @@ public class DBSMOBUtil {
     return value;
   }
 
-  public static String getDBRevision(Platform platform) {
-    final String sql = "SELECT * FROM AD_SYSTEM_INFO";
-
-    final Connection connection = platform.borrowConnection();
-    ResultSet resultSet = null;
-    try {
-      final PreparedStatement statement = connection.prepareStatement(sql);
-      statement.execute();
-      resultSet = statement.getResultSet();
-    } catch (final Exception e) {
-      System.out.println(e.getMessage());
-      throw new BuildException("Code revision id not found in database");
-    }
-    try {
-      if (resultSet.next()) {
-      } else {
-        throw new BuildException("Code revision id not found in database");
-      }
-    } catch (final Exception e) {
-      throw new BuildException("Code revision id not found in database");
-    }
-    String databaseRevision = "0";
-    try {
-      databaseRevision = resultSet.getString("CODE_REVISION");
-    } catch (final Exception e) {
-      try {
-        databaseRevision = resultSet.getString("code_revision");
-      } catch (final Exception er) {
-        System.out.println("Error while trying to fetch code revision id from database.");
-      }
-    }
-    return databaseRevision;
-  }
-
   public static Map<String, String> getModulesVersion(Platform platform) {
     final String sql = "SELECT ad_module_id AS moduleid, version AS version FROM ad_module";
     final Connection connection = platform.borrowConnection();
@@ -322,26 +288,6 @@ public class DBSMOBUtil {
       platform.returnConnection(connection);
     }
     return moduleVersionMap;
-  }
-
-  public static void verifyRevision(Platform platform, String codeRevision, Logger _log) {
-    String databaseRevision = getDBRevision(platform);
-
-    _log.info("Database code revision id: " + databaseRevision);
-
-    _log.info("Source code revision id: " + codeRevision);
-    if (codeRevision.equals("0")) {
-      _log.info("Mercurial code revision id not found.");
-    } else if (!filterRevision(codeRevision).equals(filterRevision(databaseRevision))) {
-      throw new BuildException(
-          "Database revision id differs from the source code revision id. A hg update to your previous revision ID should be performed before exporting: hg update -r REV");
-    }
-  }
-
-  private static String filterRevision(String revision) {
-    if (revision.charAt(revision.length() - 1) == '+')
-      return revision.substring(0, revision.length() - 1);
-    return revision;
   }
 
   public static Vector<File> loadFilesFromFolder(String folders) {

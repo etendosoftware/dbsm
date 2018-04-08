@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -96,7 +96,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
         getLog()
             .error(
                 "A file was modified in the database folder (this can happen if you update your repository or modify the files, and don't do update.database). Eliminate the differences (by either reverting the changes in the files, or reverting to the old revision of sources), and try to export again.");
-        getLog().info("Mercurial revision in database: " + DBSMOBUtil.getDBRevision(platform));
         throw new BuildException("Found modifications in files when exporting");
       }
     }
