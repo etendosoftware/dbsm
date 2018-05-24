@@ -150,6 +150,12 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
       }
     }
 
+    // Special functions created in pre-script
+    append(new ReplacePatTranslation("(?i)AD_Enable_Triggers[\\s]*\\(",
+        "PERFORM AD_Enable_Triggers("));
+    append(new ReplacePatTranslation("(?i)AD_Disable_Triggers[\\s]*\\(",
+        "PERFORM AD_Disable_Triggers("));
+
     // Miscellaneous translations
     append(new ChangeFunction2Translation());
 

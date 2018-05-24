@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2008-2017 Openbravo S.L.U.
+ * Copyright (C) 2008-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -98,14 +98,18 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
     append(new ReplacePatTranslation("[Tt][Oo]_[Dd][Aa][Tt][Ee]\\([Nn][Oo][Ww]\\(\\)\\)", "now()"));
 
     for (int i = 0; i < database.getFunctionCount(); i++) {
-
       if (database.getFunction(i).getTypeCode() == Types.NULL) {
         append(new ReplacePatTranslation("[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
             + generateStringPat(database.getFunction(i).getName()) + "[\\s]*\\(", database
             .getFunction(i).getName() + "("));
       }
-
     }
+
+    // Special functions created in pre-script
+    append(new ReplacePatTranslation("(?i)perform[\\s|\\t]*AD_Enable_Triggers[\\s]*\\(",
+        "AD_Enable_Triggers("));
+    append(new ReplacePatTranslation("(?i)perform[\\s|\\t]*AD_Disable_Triggers[\\s]*\\(",
+        "AD_Disable_Triggers("));
 
     // The next translations are the translations corresponding to the
     // ChangeFunction2Translation class
