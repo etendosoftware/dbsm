@@ -168,6 +168,7 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
   }
 
   public static void generateOutPatterns(Database database) {
+    patternsOutFunctions = new Vector<>();
     for (int i = 0; i < database.getFunctionCount(); i++) {
       Function f = database.getFunction(i);
       boolean paramsOutExist = false;

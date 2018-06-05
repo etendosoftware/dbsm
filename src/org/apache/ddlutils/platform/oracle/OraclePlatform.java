@@ -380,8 +380,8 @@ public class OraclePlatform extends PlatformImplBase {
   public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
     List<StructureObject> inconsistentObjects = new ArrayList<>();
     PostgrePLSQLStandarization.generateOutPatterns(database);
+    PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
     for (int i = 0; i < database.getFunctionCount(); i++) {
-      PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
       int indF = -1;
       Function f = database.getFunction(i);
       for (int j = 0; indF == -1 && j < fullDatabase.getFunctionCount(); j++) {

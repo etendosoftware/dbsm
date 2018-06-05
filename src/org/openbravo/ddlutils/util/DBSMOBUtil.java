@@ -153,7 +153,7 @@ public class DBSMOBUtil {
   public void getModules(Platform platform, ExcludeFilter filterO) {
     getDependencies(platform);
     getInclusiveDependencies(platform);
-    final String sql = "SELECT * FROM AD_MODULE";
+    final String sql = "SELECT * FROM AD_MODULE ORDER BY NAME";
 
     Connection connection = platform.borrowConnection();
     ResultSet resultSet = null;
