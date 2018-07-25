@@ -63,6 +63,11 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     props.setProperty("log4j.logger.org.apache.commons", "WARN");
     props.setProperty("log4j.logger.org.hibernate", "WARN");
 
+    // Set the log level of the Hibernate connection pool as error as it is its default
+    // configuration. This way we are avoiding to display some warnings in the console when that
+    // pool is used by the classes extending this one.
+    props.setProperty("log4j.logger.org.hibernate.orm.connections.pooling", "ERROR");
+
     // Adding properties for log of Improved Upgrade Process
     props.setProperty("log4j.appender.O2", "org.openbravo.utils.OBRebuildAppender");
     props.setProperty("log4j.appender.O2.layout", "org.apache.log4j.PatternLayout");
