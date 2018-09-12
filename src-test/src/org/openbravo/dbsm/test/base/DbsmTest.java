@@ -754,18 +754,9 @@ public class DbsmTest {
     if (getRdbms() != Rdbms.PG) {
       return;
     }
-    Connection connection = null;
-    try {
-      connection = getDataSource().getConnection();
-      StringBuilder query = new StringBuilder();
-      query.append("CREATE EXTENSION IF NOT EXISTS \"pg_trgm\"");
-      PreparedStatement st = connection.prepareStatement(query.toString());
-      st.execute();
-    } catch (SQLException e) {
-      log.error("Error while creating pg_trgm extension");
-    } finally {
-      getPlatform().returnConnection(connection);
-    }
+
+    String sql = "CREATE EXTENSION IF NOT EXISTS \"pg_trgm\" /-- END";
+    getPlatform().evaluateBatchWithSystemUser(sql, false);
     configureExcludeFilter();
   }
 
@@ -787,18 +778,8 @@ public class DbsmTest {
     if (getRdbms() != Rdbms.PG) {
       return;
     }
-    Connection connection = null;
-    try {
-      connection = getDataSource().getConnection();
-      StringBuilder query = new StringBuilder();
-      query.append("DROP EXTENSION \"" + extensionName + "\" CASCADE");
-      PreparedStatement st = connection.prepareStatement(query.toString());
-      st.execute();
-    } catch (SQLException e) {
-      log.error("Error while deleting " + extensionName + " extension");
-    } finally {
-      getPlatform().returnConnection(connection);
-    }
+    String sql = "DROP EXTENSION \"" + extensionName + "\" CASCADE /-- END";
+    platform.evaluateBatchWithSystemUser(sql, false);
   }
 
   /** Represents a DB row with its values */

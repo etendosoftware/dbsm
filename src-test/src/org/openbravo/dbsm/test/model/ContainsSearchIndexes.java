@@ -199,4 +199,14 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     updateDatabase("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml");
     assertExport("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
   }
+
+  @Override
+  protected String getSystemUser() {
+    return "postgres";
+  }
+
+  @Override
+  protected String getSystemPassword() {
+    return "postgres";
+  }
 }
