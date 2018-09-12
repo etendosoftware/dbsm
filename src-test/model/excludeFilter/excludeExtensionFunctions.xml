@@ -21,11 +21,8 @@
     <excludedFunction name="SIMILARITY"/>
     <excludedFunction name="SIMILARITY_DIST"/>
     <excludedFunction name="SIMILARITY_OP"/>
-    <excludedFunction name="WORD_SIMILARITY"/>
-    <excludedFunction name="WORD_SIMILARITY_DIST_OP"/>
-    <excludedFunction name="WORD_SIMILARITY_DIST_COMMUTATOR_OP"/>
-    <excludedFunction name="WORD_SIMILARITY_OP"/>
-    <excludedFunction name="WORD_SIMILARITY_COMMUTATOR_OP"/>
+    <excludedFunction name="WORD_SIMILARITY%"/>
+    <excludedFunction name="STRICT_WORD_SIMILARITY%"/>
      <!-- PostgreSQL uuid functions -->
     <excludedFunction name="UUID\_%"/>
   </vector>
