@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2017 Openbravo SLU 
+ * All portions are Copyright (C) 2009-2018 Openbravo SLU
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -19,13 +19,8 @@
 
 package org.openbravo.ddlutils.task;
 
-import java.util.Properties;
-
 import org.apache.ddlutils.task.VerbosityLevel;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.openbravo.dal.core.DalInitializingTask;
 
 /**
@@ -52,28 +47,6 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
    * Initializes the logging.
    */
   protected void initLogging() {
-    final Properties props = new Properties();
-    final String level = (verbosity == null ? Level.INFO.toString() : verbosity.getValue())
-        .toUpperCase();
-    props.setProperty("log4j.rootCategory", level + ",A");
-    props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
-    props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-5r %-4p - %m%n");
-    // we don't want debug logging from Digester/Betwixt
-    props.setProperty("log4j.logger.org.apache.commons", "WARN");
-    props.setProperty("log4j.logger.org.hibernate", "WARN");
-
-    // Set the log level of the Hibernate connection pool as error as it is its default
-    // configuration. This way we are avoiding to display some warnings in the console when that
-    // pool is used by the classes extending this one.
-    props.setProperty("log4j.logger.org.hibernate.orm.connections.pooling", "ERROR");
-
-    // Adding properties for log of Improved Upgrade Process
-    props.setProperty("log4j.appender.O2", "org.openbravo.utils.OBRebuildAppender");
-    props.setProperty("log4j.appender.O2.layout", "org.apache.log4j.PatternLayout");
-    props.setProperty("log4j.appender.O2.layout.ConversionPattern", "%-4r [%t] %-5p %c - %m%n");
-    LogManager.resetConfiguration();
-    PropertyConfigurator.configure(props);
     log = Logger.getLogger(getClass());
   }
 

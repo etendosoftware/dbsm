@@ -16,7 +16,9 @@
 	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/commons-pool-1.2.jar"/>
 	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/dom4j-1.4.jar"/>
 	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/jakarta-oro-2.0.8.jar"/>
-	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/log4j-1.2.8.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/log4j-1.2-api-2.11.1.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/log4j-api-2.11.1.jar"/>
+	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/log4j-core-2.11.1.jar"/>
 	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/stax-api-1.0.1.jar"/>
 	<classpathentry kind="lib" path="/DBSourceManagerModularity/lib/wstx-asl-3.0.2.jar"/>
 	<classpathentry kind="lib" path="/openbravo/lib/test/hamcrest-all-1.3.jar" sourcepath="/home/alostale/src/hamcrest-1.3/hamcrest-all-1.3-sources.jar"/>

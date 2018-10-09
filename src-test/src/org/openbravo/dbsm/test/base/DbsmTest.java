@@ -12,31 +12,6 @@
 
 package org.openbravo.dbsm.test.base;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Set;
-import java.util.Vector;
-
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -55,10 +30,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.OracleStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.SQLBatchEvaluator;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -74,6 +46,18 @@ import org.openbravo.ddlutils.process.DBUpdater;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Date;
+
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Base class to for test cases for DBSM. Classes extending this one, should be run as
@@ -225,22 +209,6 @@ public class DbsmTest {
   }
 
   private void initLogging() {
-    final Properties props = new Properties();
-    final String level = Level.DEBUG.toString();
-
-    props.setProperty("log4j.rootCategory", level + ",A, T");
-    props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
-
-    props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%-4r %-5p %c - %m%n");
-
-    props.setProperty("log4j.appender.T", "org.openbravo.dbsm.test.base.TestLogAppender");
-
-    props.setProperty("log4j.logger.org.apache.commons", "WARN");
-    props.setProperty("log4j.logger.org.apache.ddlutils.util.JdbcSupport", "WARN");
-
-    LogManager.resetConfiguration();
-    PropertyConfigurator.configure(props);
     log = Logger.getLogger(getClass());
   }
 
