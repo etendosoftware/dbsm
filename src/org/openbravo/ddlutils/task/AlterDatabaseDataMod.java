@@ -193,7 +193,6 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       ada.setInput(input);
       ada.setObject(object);
       ada.setFailonerror(failonerror);
-      ada.setVerbosity(getVerbosity());
       ada.setBasedir(basedir);
       ada.setDirFilter(dirFilter);
       ada.setDatadir(datadir);

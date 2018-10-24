@@ -56,7 +56,6 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   private static final String MSG_ERROR = "There were serious problems while creating the database. Please review and fix them before continuing with the creation of the database.";
 
-  /** Creates a new instance of CreateDatabase */
   public CreateDatabase() {
     doOBRebuildAppender = false;
   }

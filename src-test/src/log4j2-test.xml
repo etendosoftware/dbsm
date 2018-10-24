@@ -12,13 +12,7 @@
       <AppenderRef ref="Console"/>
       <AppenderRef ref="TestLogAppender"/>
     </Root>
-    <Logger name="log4j.logger.org.apache.commons" level="WARN">
-      <AppenderRef ref="Console"/>
-      <AppenderRef ref="TestLogAppender"/>
-    </Logger>
-    <Logger name="log4j.logger.org.apache.ddlutils.util.JdbcSupport" level="WARN">
-      <AppenderRef ref="Console"/>
-      <AppenderRef ref="TestLogAppender"/>
-    </Logger>
+    <Logger name="log4j.logger.org.apache.commons" level="WARN"/>
+    <Logger name="log4j.logger.org.apache.ddlutils.util.JdbcSupport" level="WARN"/>
   </Loggers>
 </Configuration>

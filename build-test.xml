@@ -49,7 +49,6 @@
               password="${bbdd.password}" 
               stableDBdir="${stableDBdir}"
               testDBdir="${testDBdir}"
-              verbosity="${bbdd.verbosity}"
               userId="0" 
               propertiesFile="${pathOB}/config/Openbravo.properties"/>
 

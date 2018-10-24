@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2018 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -24,7 +24,6 @@ import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
-import org.apache.ddlutils.task.VerbosityLevel;
 import org.openbravo.ddlutils.process.DBUpdater;
 import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -147,8 +146,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
     task.setDatafilter("*/src-db/database/sourcedata");
     task.setForce(false);
     task.setFailonerror(false);
-
-    task.setVerbosity(new VerbosityLevel("DEBUG"));
 
     task.execute();
   }

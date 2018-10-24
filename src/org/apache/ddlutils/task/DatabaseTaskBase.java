@@ -21,16 +21,12 @@ package org.apache.ddlutils.task;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Properties;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Database;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
@@ -49,37 +45,6 @@ public abstract class DatabaseTaskBase extends Task {
   private PlatformConfiguration _platformConf = new PlatformConfiguration();
   /** The sub tasks to execute. */
   private ArrayList _commands = new ArrayList();
-  /**
-   * Whether to use simple logging (that the Ant task configures itself via the {@link #_verbosity}
-   * setting.
-   */
-  private boolean _simpleLogging = true;
-  /** The verbosity of the task's debug output. */
-  private VerbosityLevel _verbosity = null;
-
-  /**
-   * Specifies whether simple logging (configured by the task via the <code>verbosity</code>
-   * setting) shall be used, or whether logging is configured outside of the task (e.g. via a log4j
-   * properties file).
-   * 
-   * @param simpleLogging
-   *          Whether to use simple logging or not
-   * @ant.not-required Per default, simple logging is enabled.
-   */
-  public void setSimpleLogging(boolean simpleLogging) {
-    _simpleLogging = simpleLogging;
-  }
-
-  /**
-   * Specifies the verbosity of the task's debug output.
-   * 
-   * @param level
-   *          The verbosity level
-   * @ant.not-required Default is <code>INFO</code>.
-   */
-  public void setVerbosity(VerbosityLevel level) {
-    _verbosity = level;
-  }
 
   /**
    * Returns the database type.
@@ -284,22 +249,6 @@ public abstract class DatabaseTaskBase extends Task {
    * Initializes the logging.
    */
   private void initLogging() {
-    // For Ant, we're forcing DdlUtils to do logging via log4j to the
-    // console
-    Properties props = new Properties();
-    String level = (_verbosity == null ? Level.INFO.toString() : _verbosity.getValue())
-        .toUpperCase();
-
-    props.setProperty("log4j.rootCategory", level + ",A");
-    props.setProperty("log4j.appender.A", "org.apache.log4j.ConsoleAppender");
-    props.setProperty("log4j.appender.A.layout", "org.apache.log4j.PatternLayout");
-    props.setProperty("log4j.appender.A.layout.ConversionPattern", "%m%n");
-    // we don't want debug logging from Digester/Betwixt
-    props.setProperty("log4j.logger.org.apache.commons", "WARN");
-
-    LogManager.resetConfiguration();
-    PropertyConfigurator.configure(props);
-
     _log = LogFactory.getLog(getClass());
   }
 
@@ -327,9 +276,7 @@ public abstract class DatabaseTaskBase extends Task {
    * {@inheritDoc}
    */
   public void execute() throws BuildException {
-    if (_simpleLogging) {
-      initLogging();
-    }
+    initLogging();
 
     if (!hasCommands()) {
       _log.info("No sub tasks specified, so there is nothing to do.");

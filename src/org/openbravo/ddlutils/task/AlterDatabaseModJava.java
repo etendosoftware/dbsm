@@ -2,8 +2,6 @@ package org.openbravo.ddlutils.task;
 
 import java.io.File;
 
-import org.apache.ddlutils.task.VerbosityLevel;
-
 public class AlterDatabaseModJava {
 
   /**
@@ -22,18 +20,17 @@ public class AlterDatabaseModJava {
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
     ada.setFailonerror(new Boolean(args[9]).booleanValue());
-    ada.setVerbosity(new VerbosityLevel(args[10]));
-    ada.setBasedir(args[11]);
-    ada.setBaseConfig(args[12]);
-    ada.setDirFilter(args[13]);
-    ada.setDatadir(args[14]);
-    ada.setDatafilter(args[15]);
-    ada.setModule(args[16]);
-    String force = args[17];
+    ada.setBasedir(args[10]);
+    ada.setBaseConfig(args[11]);
+    ada.setDirFilter(args[12]);
+    ada.setDatadir(args[13]);
+    ada.setDatafilter(args[14]);
+    ada.setModule(args[15]);
+    String force = args[16];
     if (force.equalsIgnoreCase("yes"))
       force = "true";
     ada.setForce(new Boolean(force).booleanValue());
-    String strict = args[18];
+    String strict = args[17];
     if (strict.equalsIgnoreCase("yes"))
       strict = "true";
     ada.setStrict(new Boolean(strict).booleanValue());

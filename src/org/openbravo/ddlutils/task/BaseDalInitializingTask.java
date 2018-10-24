@@ -19,7 +19,6 @@
 
 package org.openbravo.ddlutils.task;
 
-import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.log4j.Logger;
 import org.openbravo.dal.core.DalInitializingTask;
 
@@ -37,7 +36,6 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
   private String password;
 
   protected Logger log;
-  private VerbosityLevel verbosity = null;
 
   /** Creates a new instance of CreateDatabase */
   public BaseDalInitializingTask() {
@@ -48,17 +46,6 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
    */
   protected void initLogging() {
     log = Logger.getLogger(getClass());
-  }
-
-  /**
-   * Specifies the verbosity of the task's debug output.
-   * 
-   * @param level
-   *          The verbosity level
-   * @ant.not-required Default is <code>INFO</code>.
-   */
-  public void setVerbosity(VerbosityLevel level) {
-    verbosity = level;
   }
 
   public Logger getLog() {
@@ -104,7 +91,4 @@ public abstract class BaseDalInitializingTask extends DalInitializingTask {
     this.log = log;
   }
 
-  public VerbosityLevel getVerbosity() {
-    return verbosity;
-  }
 }

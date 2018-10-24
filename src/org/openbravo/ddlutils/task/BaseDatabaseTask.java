@@ -19,8 +19,12 @@
 
 package org.openbravo.ddlutils.task;
 
-import org.apache.ddlutils.task.VerbosityLevel;
 import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.tools.ant.Task;
 
 /**
@@ -31,6 +35,8 @@ import org.apache.tools.ant.Task;
  */
 public abstract class BaseDatabaseTask extends Task {
 
+  private static final String OB_REBUILD_APPENDER_NAME = "OBRebuildAppender";
+
   private String driver;
   private String url;
   private String user;
@@ -39,7 +45,6 @@ public abstract class BaseDatabaseTask extends Task {
   private String systemPassword;
 
   protected Logger log;
-  private VerbosityLevel verbosity = null;
   protected boolean doOBRebuildAppender = true;
 
   public BaseDatabaseTask() {
@@ -49,7 +54,25 @@ public abstract class BaseDatabaseTask extends Task {
    * Initializes the logging.
    */
   protected void initLogging() {
+    setupRebuildAppender();
     log = Logger.getLogger(getClass());
+  }
+
+  private void setupRebuildAppender() {
+    if (!doOBRebuildAppender) {
+      final LoggerContext context = LoggerContext.getContext(false);
+      final Configuration config = context.getConfiguration();
+
+      Appender appender = config.getAppender(OB_REBUILD_APPENDER_NAME);
+
+      if (appender != null) {
+        LoggerConfig rootLoggerConfig = config.getRootLogger();
+        rootLoggerConfig.removeAppender(OB_REBUILD_APPENDER_NAME);
+
+        rootLoggerConfig.addAppender(appender, Level.OFF, null);
+        context.updateLoggers();
+      }
+    }
   }
 
   @Override
@@ -60,23 +83,6 @@ public abstract class BaseDatabaseTask extends Task {
 
   // Needs to be implemented subclass, does the real execute
   protected abstract void doExecute();
-
-  /**
-   * Specifies the verbosity of the task's debug output.
-   * 
-   * @param level
-   *          The verbosity level
-   * @ant.not-required Default is <code>INFO</code>.
-   */
-  @Deprecated
-  public void setVerbosity(VerbosityLevel level) {
-    verbosity = level;
-  }
-
-  @Deprecated
-  public VerbosityLevel getVerbosity() {
-    return verbosity;
-  }
 
   public Logger getLog() {
     if (log == null) {

@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2017 Openbravo SLU 
+ * All portions are Copyright (C) 2017-2018 Openbravo SLU
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -19,8 +19,6 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
-
-import org.apache.ddlutils.task.VerbosityLevel;
 
 public class AlterDatabaseJava {
 
@@ -40,42 +38,41 @@ public class AlterDatabaseJava {
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
     ada.setFailonerror(Boolean.parseBoolean(args[9]));
-    ada.setVerbosity(new VerbosityLevel(args[10]));
-    ada.setBasedir(args[11]);
-    ada.setDirFilter(args[12]);
-    ada.setDatadir(args[13]);
-    ada.setDatafilter(args[14]);
-    String force = args[15];
+    ada.setBasedir(args[10]);
+    ada.setDirFilter(args[11]);
+    ada.setDatadir(args[12]);
+    ada.setDatafilter(args[13]);
+    String force = args[14];
     if (force.equalsIgnoreCase("yes"))
       force = "true";
     ada.setForce(Boolean.parseBoolean(force));
-    String strict = args[16];
+    String strict = args[15];
     if (strict.equalsIgnoreCase("yes"))
       strict = "true";
 
     ada.setStrict(Boolean.parseBoolean(strict));
 
-    if (args.length > 17) {
-      ada.setForcedRecreation(args[17]);
+    if (args.length > 16) {
+      ada.setForcedRecreation(args[16]);
     }
-    if (args.length > 18) {
-      ada.setExecuteModuleScripts("yes".equals(args[18]) || "true".equals(args[18])
-          || "on".equals(args[18]));
+    if (args.length > 17) {
+      ada.setExecuteModuleScripts("yes".equals(args[17]) || "true".equals(args[17])
+          || "on".equals(args[17]));
     }
 
-    if (args.length > 19) {
+    if (args.length > 18) {
       int maxThreads;
       try {
-        maxThreads = Integer.parseInt(args[19]);
+        maxThreads = Integer.parseInt(args[18]);
       } catch (NumberFormatException e) {
         maxThreads = -1;
       }
       ada.setThreads(maxThreads);
     }
 
-    if (args.length > 21) {
-      ada.setSystemUser(args[20]);
-      ada.setSystemPassword(args[21]);
+    if (args.length > 20) {
+      ada.setSystemUser(args[19]);
+      ada.setSystemPassword(args[20]);
     }
 
     ada.execute();
