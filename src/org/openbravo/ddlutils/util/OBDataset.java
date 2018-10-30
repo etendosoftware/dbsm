@@ -25,7 +25,7 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 public class OBDataset {
   Vector<OBDatasetTable> tables = new Vector<OBDatasetTable>();
@@ -175,7 +175,9 @@ public class OBDataset {
           ResultSet rs = ps.getResultSet();
           rs.next();
           if (rs.getInt(1) > 0) {
-            log.warn("Change detected in table: " + table.getName());
+            if (log != null) {
+              log.warn("Change detected in table: " + table.getName());
+            }
             if (modifiedTables != null) {
               modifiedTables.add(table.getName());
             }
@@ -189,6 +191,22 @@ public class OBDataset {
       }
     }
     return hasChanges;
+  }
+
+  /**
+   * @deprecated Use with log4j2 logger: hasChanged(Connection, org.apache.logging.log4j.Logger)
+   */
+  @Deprecated
+  public boolean hasChanged(Connection connection, org.apache.log4j.Logger log) {
+    return hasChanged(connection, (Logger) null, null);
+  }
+
+  /**
+   * @deprecated Use with log4j2 logger: hasChanged(Connection, org.apache.logging.log4j.Logger, List<String>)
+   */
+  @Deprecated
+  public boolean hasChanged(Connection connection, org.apache.log4j.Logger log, List<String> modifiedTables) {
+    return hasChanged(connection, (Logger) null, modifiedTables);
   }
 
   public void setTables(Vector<OBDatasetTable> tables2) {
