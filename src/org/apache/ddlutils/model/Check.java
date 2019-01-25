@@ -55,6 +55,7 @@ public class Check implements ConstraintObject, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -114,6 +115,7 @@ public class Check implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
 
     Check result = (Check) super.clone();
@@ -127,14 +129,15 @@ public class Check implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
 
     if (obj instanceof Check) {
       Check otherCC = (Check) obj;
 
       // Note that this compares case sensitive
-      return new EqualsBuilder().append(_name, otherCC._name).append(_condition.toUpperCase(),
-          otherCC._condition.toUpperCase()).isEquals();
+      return new EqualsBuilder().append(_name, otherCC._name)
+          .append(_condition.toUpperCase(), otherCC._condition.toUpperCase()).isEquals();
     } else {
       return false;
     }
@@ -148,14 +151,14 @@ public class Check implements ConstraintObject, Cloneable {
    * @return <code>true</code> if this check is equal (ignoring case) to the given one
    */
   public boolean equalsIgnoreCase(Check otherCheck) {
-    return UtilsCompare.equalsIgnoreCase(_name, otherCheck._name)
-        && new EqualsBuilder()
-            .append(_condition.toUpperCase(), otherCheck._condition.toUpperCase()).isEquals();
+    return UtilsCompare.equalsIgnoreCase(_name, otherCheck._name) && new EqualsBuilder()
+        .append(_condition.toUpperCase(), otherCheck._condition.toUpperCase()).isEquals();
   }
 
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_condition.toUpperCase()).toHashCode();
   }
@@ -163,6 +166,7 @@ public class Check implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

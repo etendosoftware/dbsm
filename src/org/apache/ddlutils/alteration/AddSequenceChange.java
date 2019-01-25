@@ -50,6 +50,7 @@ public class AddSequenceChange implements ModelChange {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     try {
       database.addSequence((Sequence) _newSequence.clone());

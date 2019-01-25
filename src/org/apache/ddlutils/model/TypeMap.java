@@ -172,7 +172,8 @@ public abstract class TypeMap {
 
     // only available in JDK 1.4 and above:
     if (Jdbc3Utils.supportsJava14JdbcTypes()) {
-      registerJdbcType(Jdbc3Utils.determineBooleanTypeCode(), BOOLEAN, JdbcTypeCategoryEnum.NUMERIC);
+      registerJdbcType(Jdbc3Utils.determineBooleanTypeCode(), BOOLEAN,
+          JdbcTypeCategoryEnum.NUMERIC);
       registerJdbcType(Jdbc3Utils.determineDatalinkTypeCode(), DATALINK,
           JdbcTypeCategoryEnum.SPECIAL);
     }

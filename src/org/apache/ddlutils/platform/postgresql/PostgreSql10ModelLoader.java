@@ -31,6 +31,7 @@ public class PostgreSql10ModelLoader extends PostgreSqlModelLoader {
   @Override
   protected Collection readSequences() throws SQLException {
     return readList(_stmt_listsequences, new RowConstructor() {
+      @Override
       public Object getRow(ResultSet r) throws SQLException {
         String sequenceName = r.getString(1);
         Object oid = r.getObject(2);

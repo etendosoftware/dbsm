@@ -112,8 +112,8 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     }
 
     getLog().info("Comparing data models");
-    final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+    final DataComparator dataComparator = new DataComparator(
+        platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
     dataComparator.compare(dbDataStable, dbDataTest);
 
     getLog().info("Validating model API");
@@ -143,7 +143,7 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
   /**
    * Returns a filtered model containing only the database objects belonging to the specified
    * modules
-   * */
+   */
   private Database getDatabaseForModules(Database dbModelStable, DatabaseData databaseData,
       String[] modulePackages) {
     Database db = new Database();
@@ -167,8 +167,8 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
    * information and retrieving the needed dbprefixes from there
    */
   private ExcludeFilter getFilterForModule(DatabaseData dbDataTest, String modulePackage) {
-    ExcludeFilter filterForModule = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(getTestDBdir().getAbsolutePath()));
+    ExcludeFilter filterForModule = DBSMOBUtil.getInstance()
+        .getExcludeFilter(new File(getTestDBdir().getAbsolutePath()));
 
     Vector<DynaBean> moduleDbs = dbDataTest.getRowsFromTable("AD_MODULE");
     for (DynaBean module : moduleDbs) {
@@ -185,7 +185,8 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     return filterForModule;
   }
 
-  private Database readModelRecursiveHelper(Platform platform, File erpBaseDir, File modulesBaseDir) {
+  private Database readModelRecursiveHelper(Platform platform, File erpBaseDir,
+      File modulesBaseDir) {
     String modelFilter = "*/src-db/database/model";
     File modelFolder = new File(erpBaseDir, "src-db/database/model");
     String basedir = modulesBaseDir + "/modules/";

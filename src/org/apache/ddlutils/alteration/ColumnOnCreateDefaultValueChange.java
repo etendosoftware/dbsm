@@ -25,7 +25,8 @@ public class ColumnOnCreateDefaultValueChange extends TableChangeImplBase implem
    * @param newOnCreateDefaultValue
    *          The new onCreateDefault value
    */
-  public ColumnOnCreateDefaultValueChange(Table table, Column column, String newonCreateDefaultValue) {
+  public ColumnOnCreateDefaultValueChange(Table table, Column column,
+      String newonCreateDefaultValue) {
     super(table);
     _column = column;
     _newonCreateDefaultValue = newonCreateDefaultValue;
@@ -36,6 +37,7 @@ public class ColumnOnCreateDefaultValueChange extends TableChangeImplBase implem
    * 
    * @return The column
    */
+  @Override
   public Column getChangedColumn() {
     return _column;
   }
@@ -52,6 +54,7 @@ public class ColumnOnCreateDefaultValueChange extends TableChangeImplBase implem
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = database.findTable(getChangedTable().getName(), caseSensitive);
     Column column = table.findColumn(_column.getName(), caseSensitive);

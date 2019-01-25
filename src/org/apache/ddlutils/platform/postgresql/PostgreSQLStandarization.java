@@ -71,7 +71,8 @@ public class PostgreSQLStandarization extends CombinedTranslation {
     // '::date', '::bpchar', '::timestamp', '::\"unknown\"' , '::timestamp with time zone'
     // '::timestamp without time zone'
     append(new ReplacePatTranslation(
-        "::[A-Za-z\"]*( varying)?( with time zone)?( without time zone)?( precision)?(\\[\\])?", ""));
+        "::[A-Za-z\"]*( varying)?( with time zone)?( without time zone)?( precision)?(\\[\\])?",
+        ""));
 
     // sql "in" sentence and "not in"
     append(new ReplacePatTranslation(

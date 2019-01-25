@@ -23,8 +23,8 @@ public class TestLogAppender extends AbstractAppender {
   }
 
   @PluginFactory
-  public static TestLogAppender createAppender(
-      @PluginAttribute("name") String name, @PluginElement("Filter") Filter filter) {
+  public static TestLogAppender createAppender(@PluginAttribute("name") String name,
+      @PluginElement("Filter") Filter filter) {
     return new TestLogAppender(name, filter);
   }
 

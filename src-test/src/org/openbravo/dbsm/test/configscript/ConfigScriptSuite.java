@@ -23,9 +23,9 @@ import org.junit.runners.Suite.SuiteClasses;
  */
 @RunWith(Suite.class)
 @SuiteClasses({ //
-ConfigScriptColumnDataChange.class, //
+    ConfigScriptColumnDataChange.class, //
     ConfigScriptColumnSizeChange.class, //
-    ConfigScriptColumnRequiredChange.class,//
+    ConfigScriptColumnRequiredChange.class, //
     ConfigScriptRemoveCheckChange.class, //
     ConfigScriptRemoveIndexChange.class, //
     ConfigScriptRemoveTriggerChange.class })

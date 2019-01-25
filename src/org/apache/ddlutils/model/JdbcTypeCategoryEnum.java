@@ -54,7 +54,8 @@ public class JdbcTypeCategoryEnum extends ValuedEnum {
   public static final JdbcTypeCategoryEnum TEXTUAL = new JdbcTypeCategoryEnum("textual",
       VALUE_TEXTUAL);
   /** The enum value for binary jdbc types. */
-  public static final JdbcTypeCategoryEnum BINARY = new JdbcTypeCategoryEnum("binary", VALUE_BINARY);
+  public static final JdbcTypeCategoryEnum BINARY = new JdbcTypeCategoryEnum("binary",
+      VALUE_BINARY);
   /** The enum value for special jdbc types. */
   public static final JdbcTypeCategoryEnum SPECIAL = new JdbcTypeCategoryEnum("special",
       VALUE_SPECIAL);

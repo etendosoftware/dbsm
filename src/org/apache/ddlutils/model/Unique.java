@@ -39,6 +39,7 @@ public class Unique implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -119,6 +120,7 @@ public class Unique implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Unique) {
       Unique other = (Unique) obj;
@@ -154,6 +156,7 @@ public class Unique implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_columns).toHashCode();
   }
@@ -161,6 +164,7 @@ public class Unique implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 
@@ -193,6 +197,7 @@ public class Unique implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Unique result = new Unique();
 

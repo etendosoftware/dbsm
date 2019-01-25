@@ -171,8 +171,9 @@ public class Database implements Serializable, Cloneable {
       }
     }
 
-    for (Table table : toRemove)
+    for (Table table : toRemove) {
       _modifiedTables.remove(table);
+    }
   }
 
   /**
@@ -763,8 +764,8 @@ public class Database implements Serializable, Cloneable {
         Column column = curTable.getColumn(idx);
 
         if ((column.getName() == null) || (column.getName().length() == 0)) {
-          throw new ModelException("The column nr. " + idx + " in table " + curTable.getName()
-              + " has no name");
+          throw new ModelException(
+              "The column nr. " + idx + " in table " + curTable.getName() + " has no name");
         }
         if (namesOfProcessedColumns.contains(column.getName())) {
           throw new ModelException("There are multiple column with the name " + column.getName()
@@ -773,8 +774,8 @@ public class Database implements Serializable, Cloneable {
         namesOfProcessedColumns.add(column.getName());
 
         if ((column.getType() == null) || (column.getType().length() == 0)) {
-          throw new ModelException("The column nr. " + idx + " in table " + curTable.getName()
-              + " has no type");
+          throw new ModelException(
+              "The column nr. " + idx + " in table " + curTable.getName() + " has no type");
         }
         if ((column.getTypeCode() == Types.OTHER) && !"OTHER".equalsIgnoreCase(column.getType())) {
           throw new ModelException("The column nr. " + idx + " in table " + curTable.getName()
@@ -817,16 +818,16 @@ public class Database implements Serializable, Cloneable {
             Column localColumn = curTable.findColumn(ref.getLocalColumnName(), true);
 
             if (localColumn == null) {
-              throw new ModelException("The foreignkey " + fkDesc + " in table "
-                  + curTable.getName() + " references the undefined local column "
-                  + ref.getLocalColumnName());
+              throw new ModelException(
+                  "The foreignkey " + fkDesc + " in table " + curTable.getName()
+                      + " references the undefined local column " + ref.getLocalColumnName());
             } else {
               ref.setLocalColumn(localColumn);
             }
           }
           if (ref.getForeignColumn() == null) {
-            Column foreignColumn = fk.getForeignTable()
-                .findColumn(ref.getForeignColumnName(), true);
+            Column foreignColumn = fk.getForeignTable().findColumn(ref.getForeignColumnName(),
+                true);
 
             if (foreignColumn == null) {
               throw new ModelException("The foreignkey " + fkDesc + " in table "
@@ -884,7 +885,8 @@ public class Database implements Serializable, Cloneable {
           namesOfProcessedIndices.add(uniqueName);
         }
 
-        for (int uniqueColumnIdx = 0; uniqueColumnIdx < unique.getColumnCount(); uniqueColumnIdx++) {
+        for (int uniqueColumnIdx = 0; uniqueColumnIdx < unique
+            .getColumnCount(); uniqueColumnIdx++) {
           IndexColumn uniqueColumn = unique.getColumn(uniqueColumnIdx);
           Column column = curTable.findColumn(uniqueColumn.getName(), true);
 
@@ -902,8 +904,8 @@ public class Database implements Serializable, Cloneable {
         Check check = curTable.getCheck(idx);
 
         if ((check.getName() == null) || (check.getName().length() == 0)) {
-          throw new ModelException("The check nr. " + idx + " in table " + curTable.getName()
-              + " has no name");
+          throw new ModelException(
+              "The check nr. " + idx + " in table " + curTable.getName() + " has no name");
         }
         if (namesOfProcessedChecks.contains(check.getName())) {
           throw new ModelException("There are multiple checks with the name " + check.getName()
@@ -928,8 +930,8 @@ public class Database implements Serializable, Cloneable {
         throw new ModelException("The sequence nr. " + sequenceIdx + "has no name");
       }
       if (namesOfProcessedSequences.contains(curSequence.getName())) {
-        throw new ModelException("There are multiple sequences with the name "
-            + curSequence.getName());
+        throw new ModelException(
+            "There are multiple sequences with the name " + curSequence.getName());
       }
       namesOfProcessedSequences.add(curSequence.getName());
     }
@@ -964,8 +966,8 @@ public class Database implements Serializable, Cloneable {
         throw new ModelException("The function nr. " + functionIdx + "has no name");
       }
       if (namesOfProcessedFunctions.contains(curFunction.getNotation())) {
-        throw new ModelException("There are multiple functions with the same notation "
-            + curFunction.getNotation());
+        throw new ModelException(
+            "There are multiple functions with the same notation " + curFunction.getNotation());
       }
       namesOfProcessedFunctions.add(curFunction.getNotation());
 
@@ -985,9 +987,9 @@ public class Database implements Serializable, Cloneable {
             }
           }
         } catch (Exception e) {
-          throw new ModelException("There was a problem reading the parameters of function "
-              + curFunction.getName()
-              + ". Check that all the parameters have a valid name and data type.");
+          throw new ModelException(
+              "There was a problem reading the parameters of function " + curFunction.getName()
+                  + ". Check that all the parameters have a valid name and data type.");
         }
       }
     }
@@ -1002,8 +1004,8 @@ public class Database implements Serializable, Cloneable {
         throw new ModelException("The trigger nr. " + triggerIdx + "has no name");
       }
       if (namesOfProcessedTriggers.contains(curTrigger.getName())) {
-        throw new ModelException("There are multiple triggers with the name "
-            + curTrigger.getName());
+        throw new ModelException(
+            "There are multiple triggers with the name " + curTrigger.getName());
       }
       namesOfProcessedTriggers.add(curTrigger.getName());
 
@@ -1209,12 +1211,14 @@ public class Database implements Serializable, Cloneable {
             int i = 0;
             Parameter[] params2 = function.getParameters();
             while (eqPara && i < params.length) {
-              if (!params[i].equals(params2[i]))
+              if (!params[i].equals(params2[i])) {
                 eqPara = false;
+              }
               i++;
             }
-            if (eqPara)
+            if (eqPara) {
               return function;
+            }
           }
         }
       } else {
@@ -1374,23 +1378,29 @@ public class Database implements Serializable, Cloneable {
     result._sequences = new ArrayList();
     result._modifiedTables = new ArrayList();
     Iterator it = _tables.iterator();
-    while (it.hasNext())
+    while (it.hasNext()) {
       result._tables.add(((Table) it.next()).clone());
+    }
     it = _views.iterator();
-    while (it.hasNext())
+    while (it.hasNext()) {
       result._views.add(((View) it.next()).clone());
+    }
     it = _functions.iterator();
-    while (it.hasNext())
+    while (it.hasNext()) {
       result._functions.add(((Function) it.next()).clone());
+    }
     it = _triggers.iterator();
-    while (it.hasNext())
+    while (it.hasNext()) {
       result._triggers.add(((Trigger) it.next()).clone());
+    }
     it = _sequences.iterator();
-    while (it.hasNext())
+    while (it.hasNext()) {
       result._sequences.add(((Sequence) it.next()).clone());
+    }
     it = _modifiedTables.iterator();
-    while (it.hasNext())
+    while (it.hasNext()) {
       result._modifiedTables.add(((Table) it.next()).clone());
+    }
 
     return result;
   }
@@ -1590,8 +1600,9 @@ public class Database implements Serializable, Cloneable {
     _triggers = new ArrayList();
     for (int i = 0; i < oldTriggers.size(); i++) {
       Trigger trigger = (Trigger) oldTriggers.get(i);
-      if (findTable(trigger.getTable()) != null)
+      if (findTable(trigger.getTable()) != null) {
         _triggers.add(trigger);
+      }
     }
     // _functions=new ArrayList();
     _sequences = new ArrayList();
@@ -1605,9 +1616,9 @@ public class Database implements Serializable, Cloneable {
         Column c = t.getColumn(j);
         if (c.getTypeCode() == Types.OTHER || c.getSizeAsInt() < 0
             || (c.getSizeAsInt() == 0 && c.getTypeCode() == Types.VARCHAR)) {
-          throw new SQLException("Unsupported column data type for column " + c.getName()
-              + " in table " + t.getName()
-              + ". You need to change the type of the column to a supported one to continue.");
+          throw new SQLException(
+              "Unsupported column data type for column " + c.getName() + " in table " + t.getName()
+                  + ". You need to change the type of the column to a supported one to continue.");
         }
       }
     }

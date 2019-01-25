@@ -22,6 +22,7 @@ public final class NullTranslation implements Translation {
   public NullTranslation() {
   }
 
+  @Override
   public String exec(String s) {
     return s;
   }

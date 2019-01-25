@@ -60,6 +60,7 @@ public class AddForeignKeyChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     ForeignKey newFK = null;
 
@@ -74,17 +75,18 @@ public class AddForeignKeyChange extends TableChangeImplBase {
     }
     Table table = database.findTable(getChangedTable().getName());
     boolean previousFK = false;
-    for (int i = 0; i < table.getForeignKeyCount(); i++)
-      if (table.getForeignKey(i).getName().equalsIgnoreCase(newFK.getName()))
+    for (int i = 0; i < table.getForeignKeyCount(); i++) {
+      if (table.getForeignKey(i).getName().equalsIgnoreCase(newFK.getName())) {
         previousFK = true;
-    if (previousFK)
-      System.out
-          .println("Foreign Key "
-              + newFK.getName()
-              + " wasn't added as a previous Foreign Key with the same name is already present in the table "
-              + table.getName());
-    else
+      }
+    }
+    if (previousFK) {
+      System.out.println("Foreign Key " + newFK.getName()
+          + " wasn't added as a previous Foreign Key with the same name is already present in the table "
+          + table.getName());
+    } else {
       table.addForeignKey(newFK);
+    }
   }
 
   @Override

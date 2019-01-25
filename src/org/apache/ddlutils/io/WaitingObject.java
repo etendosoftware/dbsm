@@ -111,6 +111,7 @@ public class WaitingObject {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

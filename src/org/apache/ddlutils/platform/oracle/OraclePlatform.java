@@ -139,6 +139,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String getCreateTablesSqlScript(Database model, boolean dropTablesFirst,
       boolean continueOnError) {
     return "SET DEFINE OFF\n/\n" + getCreateTablesSql(model, dropTablesFirst, continueOnError);
@@ -147,6 +148,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String getName() {
     return DATABASENAME;
   }
@@ -160,6 +162,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void disableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
     Table table = null;
@@ -205,6 +208,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean enableAllFK(Connection connection, Database model, boolean continueOnError)
       throws DatabaseOperationException {
 
@@ -230,6 +234,7 @@ public class OraclePlatform extends PlatformImplBase {
     }
   }
 
+  @Override
   public boolean enableAllFkForTable(Connection connection, Database model, Table table,
       boolean continueOnError) throws DatabaseOperationException {
     String current = null;
@@ -265,6 +270,7 @@ public class OraclePlatform extends PlatformImplBase {
     return "SELECT 'ALTER TRIGGER'|| ' ' || TRIGGER_NAME || ' ' || 'ENABLE' SQL_STR FROM USER_TRIGGERS";
   }
 
+  @Override
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -287,6 +293,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void enableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -309,6 +316,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void disableAllTriggers(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -330,6 +338,7 @@ public class OraclePlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void enableAllTriggers(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -377,7 +386,8 @@ public class OraclePlatform extends PlatformImplBase {
   }
 
   @Override
-  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+  public List<StructureObject> checkTranslationConsistency(Database database,
+      Database fullDatabase) {
     List<StructureObject> inconsistentObjects = new ArrayList<>();
     PostgrePLSQLStandarization.generateOutPatterns(fullDatabase);
     PostgrePLSQLFunctionTranslation funcTrans = new PostgrePLSQLFunctionTranslation(fullDatabase);
@@ -418,7 +428,8 @@ public class OraclePlatform extends PlatformImplBase {
     }
 
     for (int i = 0; i < database.getTriggerCount(); i++) {
-      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(fullDatabase);
+      PostgrePLSQLTriggerTranslation triggerTrans = new PostgrePLSQLTriggerTranslation(
+          fullDatabase);
       int indF = -1;
       Trigger trg = database.getTrigger(i);
       for (int j = 0; indF == -1 && j < fullDatabase.getTriggerCount(); j++) {

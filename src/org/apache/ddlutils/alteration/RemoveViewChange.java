@@ -54,6 +54,7 @@ public class RemoveViewChange implements ModelChange {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     View view = database.findView(_view.getName(), caseSensitive);
 

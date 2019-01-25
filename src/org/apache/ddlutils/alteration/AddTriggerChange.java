@@ -25,44 +25,46 @@ import org.apache.ddlutils.model.Trigger;
 
 public class AddTriggerChange implements ModelChange {
 
-    /** The new trigger. */
-    private Trigger _newTrigger;
+  /** The new trigger. */
+  private Trigger _newTrigger;
 
-    /**
-     * Creates a new change object.
-     * 
-     * @param newTrigger
-     *            The new trigger
-     */
-    public AddTriggerChange(Trigger newTrigger) {
-        _newTrigger = newTrigger;
-    }
+  /**
+   * Creates a new change object.
+   * 
+   * @param newTrigger
+   *          The new trigger
+   */
+  public AddTriggerChange(Trigger newTrigger) {
+    _newTrigger = newTrigger;
+  }
 
-    /**
-     * Returns the new trigger.
-     * 
-     * @return The new trigger
-     */
-    public Trigger getNewTrigger() {
-        return _newTrigger;
-    }
+  /**
+   * Returns the new trigger.
+   * 
+   * @return The new trigger
+   */
+  public Trigger getNewTrigger() {
+    return _newTrigger;
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void apply(Database database, boolean caseSensitive) {
-        try {
-            Trigger oldTrigger = database.findTrigger(_newTrigger.getName());
-            if (oldTrigger != null)
-                database.removeTrigger(oldTrigger);
-            database.addTrigger((Trigger) _newTrigger.clone());
-        } catch (CloneNotSupportedException ex) {
-            throw new DdlUtilsException(ex);
-        }
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void apply(Database database, boolean caseSensitive) {
+    try {
+      Trigger oldTrigger = database.findTrigger(_newTrigger.getName());
+      if (oldTrigger != null) {
+        database.removeTrigger(oldTrigger);
+      }
+      database.addTrigger((Trigger) _newTrigger.clone());
+    } catch (CloneNotSupportedException ex) {
+      throw new DdlUtilsException(ex);
     }
+  }
 
-    @Override
-    public String toString() {
-        return "AddTriggerChange. Name: " + _newTrigger.getName();
-    }
+  @Override
+  public String toString() {
+    return "AddTriggerChange. Name: " + _newTrigger.getName();
+  }
 }

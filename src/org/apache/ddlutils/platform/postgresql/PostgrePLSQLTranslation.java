@@ -37,12 +37,12 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
     // append(............
     // Numeric Type
     append(new ReplaceStrTranslation(" NUMBER,", " NUMERIC,"));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "(\\s)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)+", "$1NUMERIC$2")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(\\s)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)+", "$1NUMERIC$2")));
     append(new ReplaceStrTranslation(" NUMBER(", " NUMERIC("));
     append(new ReplaceStrTranslation(" NUMBER)", " NUMERIC)"));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "(\\s)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)*$", "$1NUMERIC$2")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(\\s)+[Nn][Uu][Mm][Bb][Ee][Rr](\\s|\\t)*$", "$1NUMERIC$2")));
     append(new ReplaceStrTranslation(" NUMBER;", " NUMERIC;"));
     append(new ReplaceStrTranslation(" NUMBER:", " NUMERIC:"));
     append(new ReplaceStrTranslation("'NUMBER'", "'NUMERIC'"));
@@ -67,10 +67,10 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
 
     // TimeStamp Type
     append(new ReplaceStrTranslation(" DATE,", " TIMESTAMP,"));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s)+[Dd][Aa][Tt][Ee](\\s|\\t)+",
-        "$1TIMESTAMP$2")));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s)+[Dd][Aa][Tt][Ee](\\s|\\t)*$",
-        "$1TIMESTAMP$2")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(\\s)+[Dd][Aa][Tt][Ee](\\s|\\t)+", "$1TIMESTAMP$2")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(\\s)+[Dd][Aa][Tt][Ee](\\s|\\t)*$", "$1TIMESTAMP$2")));
     append(new ReplaceStrTranslation("TO_DATE", "TO_DATE"));
     append(new ReplaceStrTranslation(" DATE;", " TIMESTAMP;"));
     append(new ReplaceStrTranslation("'DATE'", "'TIMESTAMP'"));
@@ -89,9 +89,9 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
     // append(new ReplaceStrTranslation("'", "''"));
     // append(new ByLineTranslation(new
     // ReplacePatTranslation("^(AS|IS)([\\s|\\t]*)$", "AS '")));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "^([\\s\\t]*)(.+?)rowcount(\\s|\\t)*:=(\\s|\\t)*SQL%ROWCOUNT;",
-        "$1GET DIAGNOSTICS $3$2rowcount:=ROW_COUNT;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("^([\\s\\t]*)(.+?)rowcount(\\s|\\t)*:=(\\s|\\t)*SQL%ROWCOUNT;",
+            "$1GET DIAGNOSTICS $3$2rowcount:=ROW_COUNT;")));
     // append(new RemoveTranslation("COMMIT;"));
     // append(new RemoveTranslation("ROLLBACK;"));
 
@@ -161,6 +161,7 @@ public class PostgrePLSQLTranslation extends CombinedTranslation {
 
     // Remove procedure name after last END
     append(new Translation() {
+      @Override
       public String exec(String s) {
         int i = s.lastIndexOf("END ");
         return i >= 0 ? s.substring(0, i + 4) : s;

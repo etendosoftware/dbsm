@@ -26,7 +26,8 @@ import org.apache.tools.ant.BuildException;
 
 /**
  * Sub task for dropping the target database. Note that this is only supported on some database
- * platforms. See the database support documentation for details on which platforms support this.<br/>
+ * platforms. See the database support documentation for details on which platforms support
+ * this.<br/>
  * This sub task does not require schema files. Therefore the <code>fileset</code> subelement and
  * the <code>schemaFile</code> attribute of the enclosing task can be omitted.
  * 
@@ -37,6 +38,7 @@ public class DropDatabaseCommand extends DatabaseCommand {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean isRequiringModel() {
     return false;
   }
@@ -44,6 +46,7 @@ public class DropDatabaseCommand extends DatabaseCommand {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void execute(DatabaseTaskBase task, Database model) throws BuildException {
     BasicDataSource dataSource = getDataSource();
 
@@ -54,8 +57,8 @@ public class DropDatabaseCommand extends DatabaseCommand {
     Platform platform = getPlatform();
 
     try {
-      platform.dropDatabase(dataSource.getDriverClassName(), dataSource.getUrl(), dataSource
-          .getUsername(), dataSource.getPassword());
+      platform.dropDatabase(dataSource.getDriverClassName(), dataSource.getUrl(),
+          dataSource.getUsername(), dataSource.getPassword());
 
       _log.info("Dropped database");
     } catch (UnsupportedOperationException ex) {

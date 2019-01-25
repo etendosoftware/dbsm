@@ -77,8 +77,8 @@ public class DBUpdater {
     log.info("Max threads " + platform.getMaxThreads());
 
     if (updateCheckSums) {
-      DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
-          .getAbsolutePath());
+      DBSMOBUtil
+          .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
     }
 
     Connection connection = null;
@@ -220,8 +220,8 @@ public class DBUpdater {
     DatabaseData dbData = new DatabaseData(db);
     if (baseSrcAD != null) {
       String modulesBaseDir = basedir == null ? null : basedir + "../modules/";
-      DBSMOBUtil.getInstance()
-          .loadDataStructures(dbData, db, modulesBaseDir, datafilter, baseSrcAD);
+      DBSMOBUtil.getInstance().loadDataStructures(dbData, db, modulesBaseDir, datafilter,
+          baseSrcAD);
     }
     dbData.setStrictMode(strict);
     return dbData;
@@ -241,10 +241,12 @@ public class DBUpdater {
     }
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
     if (hasBeenModified) {
-      if (force)
-        log.info("Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-      else {
-        log.error("Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
+      if (force) {
+        log.info(
+            "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+      } else {
+        log.error(
+            "Database has local changes. Update.database will not be done. You should export your changed modules before doing update.database, so that your Application Dictionary changes are preserved.");
         throw new BuildException("Database has local changes. Update.database not done.");
       }
     }
@@ -285,8 +287,8 @@ public class DBUpdater {
   private DataComparator compareData(Database db, DatabaseData newData, OBDataset ad)
       throws SQLException {
     log.info("Comparing databases to find data differences...");
-    final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+    final DataComparator dataComparator = new DataComparator(
+        platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
     dataComparator.compareToUpdate(db, platform, newData, ad, null);
     return dataComparator;
   }
@@ -296,8 +298,8 @@ public class DBUpdater {
     if (!checkFormalChanges) {
       return;
     }
-    final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
-        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+    final DataComparator dataComparator2 = new DataComparator(
+        platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
     dataComparator2.compare(db, db, platform, newData, ad, null);
     Vector<Change> finalChanges = new Vector<Change>();
     Vector<Change> notExportedChanges = new Vector<Change>();
@@ -312,13 +314,16 @@ public class DBUpdater {
   private void checkErrors(boolean postscriptCorrect, boolean fksEnabled, boolean triggersEnabled)
       throws Exception {
     if (!triggersEnabled) {
-      log.error("Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct. If that is the case, please remove/uninstall its module, or recover the sources backup and initiate the rebuild again");
+      log.error(
+          "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct. If that is the case, please remove/uninstall its module, or recover the sources backup and initiate the rebuild again");
     }
     if (!fksEnabled) {
-      log.error("Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references, or recover the backup of your sources.");
+      log.error(
+          "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references, or recover the backup of your sources.");
     }
     if (!postscriptCorrect) {
-      log.error("Not all the commands in the final update step were executed correctly. This likely means at least one foreign key was not activated successfully. Please review which one, and fix the missing references, or recover the backup of your sources.");
+      log.error(
+          "Not all the commands in the final update step were executed correctly. This likely means at least one foreign key was not activated successfully. Please review which one, and fix the missing references, or recover the backup of your sources.");
     }
     if (!triggersEnabled || !fksEnabled || !postscriptCorrect) {
       throw new Exception(

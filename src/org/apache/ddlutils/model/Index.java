@@ -46,6 +46,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -156,6 +157,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Index) {
       Index other = (Index) obj;
@@ -274,6 +276,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_containsSearch)
         .append(_whereClause).append(_columns).toHashCode();
@@ -282,6 +285,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 
@@ -326,6 +330,7 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Index result = new Index();
 

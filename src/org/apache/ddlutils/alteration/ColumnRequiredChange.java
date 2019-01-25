@@ -58,6 +58,7 @@ public class ColumnRequiredChange extends TableChangeImplBase implements ColumnC
    * 
    * @return The column
    */
+  @Override
   public Column getChangedColumn() {
     return _column;
   }
@@ -104,6 +105,7 @@ public class ColumnRequiredChange extends TableChangeImplBase implements ColumnC
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = database.findTable(_tableName != null ? _tableName : getChangedTable().getName(),
         caseSensitive);

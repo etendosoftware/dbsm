@@ -86,9 +86,8 @@ public class ModelBasedResultSetIterator implements Iterator {
    *          Whether to close the statement and connection after finishing the iteration, upon on
    *          exception, or when this iterator is garbage collected
    */
-  public ModelBasedResultSetIterator(PlatformImplBase platform, Database model,
-      ResultSet resultSet, Table[] queryHints, boolean cleanUpAfterFinish)
-      throws DatabaseOperationException {
+  public ModelBasedResultSetIterator(PlatformImplBase platform, Database model, ResultSet resultSet,
+      Table[] queryHints, boolean cleanUpAfterFinish) throws DatabaseOperationException {
     if (resultSet != null) {
       _platform = platform;
       _resultSet = resultSet;
@@ -135,8 +134,8 @@ public class ModelBasedResultSetIterator implements Iterator {
         // not enough info in the meta data of the result set, lets try
         // the
         // user-supplied query hints
-        table = (Table) _preparedQueryHints.get(_caseSensitive ? columnName : columnName
-            .toLowerCase());
+        table = (Table) _preparedQueryHints
+            .get(_caseSensitive ? columnName : columnName.toLowerCase());
         tableOfColumn = (table == null ? null : table.getName());
       }
       if (tableName == null) {
@@ -198,6 +197,7 @@ public class ModelBasedResultSetIterator implements Iterator {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean hasNext() throws DatabaseOperationException {
     advanceIfNecessary();
     return !_isAtEnd;
@@ -206,6 +206,7 @@ public class ModelBasedResultSetIterator implements Iterator {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object next() throws DatabaseOperationException {
     advanceIfNecessary();
     if (_isAtEnd) {
@@ -228,8 +229,8 @@ public class ModelBasedResultSetIterator implements Iterator {
           Table curTable = table;
 
           if (curTable == null) {
-            curTable = (Table) _preparedQueryHints.get(_caseSensitive ? columnName : columnName
-                .toLowerCase());
+            curTable = (Table) _preparedQueryHints
+                .get(_caseSensitive ? columnName : columnName.toLowerCase());
           }
 
           Object value = _platform.getObjectFromResultSet(_resultSet, columnName, curTable);
@@ -282,6 +283,7 @@ public class ModelBasedResultSetIterator implements Iterator {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void remove() throws DatabaseOperationException {
     try {
       _resultSet.deleteRow();
@@ -315,6 +317,7 @@ public class ModelBasedResultSetIterator implements Iterator {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected void finalize() throws Throwable {
     cleanUp();
   }

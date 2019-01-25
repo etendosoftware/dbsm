@@ -54,6 +54,7 @@ public class RemoveFunctionChange implements ModelChange {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Function function = database.findFunction(_function.getName(), caseSensitive);
 

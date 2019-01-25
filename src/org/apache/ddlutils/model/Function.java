@@ -66,6 +66,7 @@ public class Function implements StructureObject, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -357,6 +358,7 @@ public class Function implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Function result = (Function) super.clone();
 
@@ -371,6 +373,7 @@ public class Function implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Function) {
       Function other = (Function) obj;
@@ -422,12 +425,9 @@ public class Function implements StructureObject, Cloneable {
           && new EqualsBuilder().append(_parameters, otherFunction._parameters)
               .append(_body, otherFunction._body).append(typeCode2, othertypeCode2).isEquals();
     } catch (Exception e) {
-      throw new RuntimeException(
-          "Error while comparing functions "
-              + this._name
-              + " and "
-              + otherFunction._name
-              + ". Check that the parameters of both functions are correctly defined in the database and in the XML files (check that the parameters are named, and have a correct datatype",
+      throw new RuntimeException("Error while comparing functions " + this._name + " and "
+          + otherFunction._name
+          + ". Check that the parameters of both functions are correctly defined in the database and in the XML files (check that the parameters are named, and have a correct datatype",
           e);
     }
   }
@@ -474,6 +474,7 @@ public class Function implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     // TODO: For now we ignore catalog and schema (type should be irrelevant
     // anyways)
@@ -484,6 +485,7 @@ public class Function implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

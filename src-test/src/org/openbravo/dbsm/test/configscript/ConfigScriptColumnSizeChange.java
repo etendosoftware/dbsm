@@ -89,8 +89,7 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
     updateDatabase(BASE_MODEL, DATA_DIRECTORY_SIZE, Arrays.asList(TEST_TABLE), true,
         Arrays.asList(CONFIG_SCRIPT_INSTALL));
 
-    assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(),
+    assertEquals("Data changes applied by Configuration Script", getColumnDataChangesColumnValues(),
         getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 
@@ -100,8 +99,9 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   private void assertIsColumnSizeChangeApplied(Database db, String tableName, String columnName) {
     Table table = db.findTable(tableName);
     Column column = table.findColumn(columnName);
-    assertEquals("Size of the column " + columnName + " was 60 and now is " + column.getSize()
-        + ".", 70, column.getSizeAsInt());
+    assertEquals(
+        "Size of the column " + columnName + " was 60 and now is " + column.getSize() + ".", 70,
+        column.getSizeAsInt());
   }
 
   private static Set<String> getColumnDataChangesColumnNames() {

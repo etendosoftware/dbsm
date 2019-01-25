@@ -73,8 +73,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   @Override
   public void execute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(model.getAbsolutePath() + "/../../../"));
+    excludeFilter = DBSMOBUtil.getInstance()
+        .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../"));
 
     initLogging();
     super.execute();
@@ -86,16 +86,14 @@ public class ExportDatabase extends BaseDalInitializingTask {
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     platform.setMaxThreads(threads);
 
-    if (!DBSMOBUtil.verifyCheckSum(new File(model.getAbsolutePath() + "/../../../")
-        .getAbsolutePath())) {
+    if (!DBSMOBUtil
+        .verifyCheckSum(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath())) {
       if (force) {
-        getLog()
-            .warn(
-                "A file was modified in the database folder, but as the export.database command was forced, it will be run anyway.");
+        getLog().warn(
+            "A file was modified in the database folder, but as the export.database command was forced, it will be run anyway.");
       } else {
-        getLog()
-            .error(
-                "A file was modified in the database folder (this can happen if you update your repository or modify the files, and don't do update.database). Eliminate the differences (by either reverting the changes in the files, or reverting to the old revision of sources), and try to export again.");
+        getLog().error(
+            "A file was modified in the database folder (this can happen if you update your repository or modify the files, and don't do update.database). Eliminate the differences (by either reverting the changes in the files, or reverting to the old revision of sources), and try to export again.");
         throw new BuildException("Found modifications in files when exporting");
       }
     }
@@ -103,9 +101,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeFilter);
       if (util.getActiveModuleCount() == 0) {
-        getLog()
-            .info(
-                "No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
+        getLog().info(
+            "No active modules. For a module to be exported, it needs to be set as 'InDevelopment'");
         return;
       }
       Database db;
@@ -133,7 +130,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
           long t = System.currentTimeMillis();
           List<StructureObject> inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
           if (inconsistentObjects.size() > 0) {
-            log.warn("Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
+            log.warn(
+                "Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
             for (int numObj = 0; numObj < inconsistentObjects.size(); numObj++) {
               log.warn(inconsistentObjects.get(numObj).toString());
             }
@@ -161,8 +159,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
           validateAPIForModel(platform, dbI, dbXML, ad);
         }
 
-        if (validateModel)
+        if (validateModel) {
           validateDatabaseForModule(util.getActiveModule(i).idMod, dbI);
+        }
 
         getLog().info("Path: " + path);
         io.writeToDir(dbI, path);
@@ -170,13 +169,15 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
       final Vector<String> datasets = new Vector<String>();
       String[] datasetArray = datasetList.split(",");
-      for (String dataset : datasetArray)
+      for (String dataset : datasetArray) {
         datasets.add(dataset);
+      }
 
       int datasetI = 0;
       for (final String dataSetCode : datasets) {
-        if (dataSetCode.equalsIgnoreCase("ADRD") && !rd)
+        if (dataSetCode.equalsIgnoreCase("ADRD") && !rd) {
           continue;
+        }
         OBDataset dataset = new OBDataset(databaseOrgData, dataSetCode);
         final Vector<OBDatasetTable> tableList = dataset.getTableList();
         for (int i = 0; i < util.getActiveModuleCount(); i++) {
@@ -186,10 +187,12 @@ public class ExportDatabase extends BaseDalInitializingTask {
           File path;
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
             path = output;
-            if (dataSetCode.equalsIgnoreCase("ADRD"))
+            if (dataSetCode.equalsIgnoreCase("ADRD")) {
               path = new File(path, "referencedData");
+            }
           } else {
-            path = new File(moduledir, util.getActiveModule(i).dir + "/src-db/database/sourcedata/");
+            path = new File(moduledir,
+                util.getActiveModule(i).dir + "/src-db/database/sourcedata/");
           }
 
           if (testAPI) {
@@ -207,8 +210,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
               // "+dataFiles.get(i).getAbsolutePath());
               try {
                 dataReader.getSink().start();
-                final String tablename = dataFiles.get(j).getName()
-                    .substring(0, dataFiles.get(j).getName().length() - 4);
+                final String tablename = dataFiles.get(j).getName().substring(0,
+                    dataFiles.get(j).getName().length() - 4);
                 final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
                     .getVector();
                 dataReader.parse(dataFiles.get(j));
@@ -219,8 +222,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
               }
             }
 
-            final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-                .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+            final DataComparator dataComparator = new DataComparator(
+                platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
             getLog().info("Comparing models");
             dataComparator.compare(db, db, platform, databaseXMLData, ad,
                 util.getActiveModule(i).idMod);
@@ -248,28 +251,27 @@ public class ExportDatabase extends BaseDalInitializingTask {
             if (datasetI == 0) {
               final File[] filestodelete = path.listFiles();
               for (final File filedelete : filestodelete) {
-                if (!filedelete.isDirectory())
+                if (!filedelete.isDirectory()) {
                   filedelete.delete();
+                }
               }
             }
             for (final OBDatasetTable table : tableList) {
               try {
                 final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
                 final OutputStream out = new FileOutputStream(tableFile);
-                final boolean b = dbdio.writeDataForTableToXML(platform, dbXML, dataToExport,
-                    table, out, getEncoding(), util.getActiveModule(i).idMod);
+                final boolean b = dbdio.writeDataForTableToXML(platform, dbXML, dataToExport, table,
+                    out, getEncoding(), util.getActiveModule(i).idMod);
                 if (!b) {
                   tableFile.delete();
                 } else {
-                  getLog().info(
-                      "Exported table: " + table.getName() + " to module "
-                          + util.getActiveModule(i).name);
+                  getLog().info("Exported table: " + table.getName() + " to module "
+                      + util.getActiveModule(i).name);
                 }
                 out.flush();
               } catch (Exception e) {
-                getLog().error(
-                    "Error while exporting table" + table.getName() + " to module "
-                        + util.getActiveModule(i).name);
+                getLog().error("Error while exporting table" + table.getName() + " to module "
+                    + util.getActiveModule(i).name);
               }
             }
           }
@@ -277,8 +279,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
         datasetI++;
       }
       getLog().info("Writing checksum info");
-      DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
-          .getAbsolutePath());
+      DBSMOBUtil
+          .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
       DBSMOBUtil.getInstance().updateCRC();
     } catch (Exception e) {
       throw new BuildException(e);
@@ -288,8 +290,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private void validateDatabaseForModule(String moduleId, Database dbI) {
     getLog().info("Validating Module...");
     final Module moduleToValidate = OBDal.getInstance().get(Module.class, moduleId);
-    final SystemValidationResult result = SystemService.getInstance().validateDatabase(
-        moduleToValidate, dbI);
+    final SystemValidationResult result = SystemService.getInstance()
+        .validateDatabase(moduleToValidate, dbI);
     SystemService.getInstance().logValidationResult(log, result);
     if (result.getErrors().size() > 0) {
       throw new OBException(

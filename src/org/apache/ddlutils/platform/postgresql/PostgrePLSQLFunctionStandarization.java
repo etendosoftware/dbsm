@@ -8,8 +8,8 @@ public class PostgrePLSQLFunctionStandarization extends PostgrePLSQLStandarizati
   public PostgrePLSQLFunctionStandarization(Database database, int numFunction) {
     super(database);
 
-    append(new ReplacePatTranslation("\\s*END\\s*$", "\nEND "
-        + database.getFunction(numFunction).getName()));
+    append(new ReplacePatTranslation("\\s*END\\s*$",
+        "\nEND " + database.getFunction(numFunction).getName()));
 
     for (int i = 0; i < patternsOutFunctions.size(); i++) {
       // if(body.contains(outFunctions.get(i)))

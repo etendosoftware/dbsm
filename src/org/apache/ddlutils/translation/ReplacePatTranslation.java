@@ -35,6 +35,7 @@ public class ReplacePatTranslation implements Translation {
     _replaceStr = replaceStr;
   }
 
+  @Override
   public String exec(String s) {
 
     Matcher m = _p.matcher(s);

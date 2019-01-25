@@ -62,11 +62,10 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(model.getAbsolutePath() + "/../../../"));
-    getLog().info(
-        "Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
-            + getSystemUser());
+    excludeFilter = DBSMOBUtil.getInstance()
+        .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../"));
+    getLog().info("Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
+        + getSystemUser());
     final Platform platform = getPlatformInstance();
     try {
       executeSystemPreScript(platform);
@@ -128,8 +127,8 @@ public class CreateDatabase extends BaseDatabaseTask {
       }
 
       getLog().info("Writing checksum info");
-      DBSMOBUtil.writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../")
-          .getAbsolutePath());
+      DBSMOBUtil
+          .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
 
       // Now we insert sourcedata into the database first we load the data files
       final String folders = getInput();
@@ -140,8 +139,9 @@ public class CreateDatabase extends BaseDatabaseTask {
           getLog().info("Basedir not specified, will insert just Core data files.");
           final String folder = strTokFol.nextToken();
           final File[] fileArray = DatabaseUtils.readFileArray(new File(folder));
-          for (int i = 0; i < fileArray.length; i++)
+          for (int i = 0; i < fileArray.length; i++) {
             files.add(fileArray[i]);
+          }
         } else {
           final String token = strTokFol.nextToken();
           final DirectoryScanner dirScanner = new DirectoryScanner();
@@ -187,18 +187,17 @@ public class CreateDatabase extends BaseDatabaseTask {
       DatabaseData dbData = new DatabaseData(db);
       DatabaseUtils.readDataModuleInfo(db, dbData, basedir);
       for (String template : DBSMOBUtil.getInstance().getSortedTemplates(dbData)) {
-        File configScript = new File(new File(modulesDir), template
-            + "/src-db/database/configScript.xml");
-        getLog().info(
-            "Loading config script for module from path " + configScript.getAbsolutePath());
+        File configScript = new File(new File(modulesDir),
+            template + "/src-db/database/configScript.xml");
+        getLog()
+            .info("Loading config script for module from path " + configScript.getAbsolutePath());
         if (configScript.exists()) {
           final DatabaseIO dbIO = new DatabaseIO();
           final Vector<Change> changesConfigScript = dbIO.readChanges(configScript);
           platform.applyConfigScript(db, changesConfigScript);
         } else {
-          getLog().error(
-              "Error. We couldn't find configuration script for template " + configScript.getName()
-                  + ". Path: " + configScript.getAbsolutePath());
+          getLog().error("Error. We couldn't find configuration script for template "
+              + configScript.getName() + ". Path: " + configScript.getAbsolutePath());
         }
       }
 
@@ -219,14 +218,12 @@ public class CreateDatabase extends BaseDatabaseTask {
       executePostScript(platform);
 
       if (!triggersEnabled) {
-        getLog()
-            .error(
-                "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct.");
+        getLog().error(
+            "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct.");
       }
       if (!fksEnabled) {
-        getLog()
-            .error(
-                "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references.");
+        getLog().error(
+            "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references.");
       }
       if (!triggersEnabled || !fksEnabled) {
         throw new Exception(MSG_ERROR);

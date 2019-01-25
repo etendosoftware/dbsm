@@ -5,6 +5,7 @@ public class ExceptionRow implements Cloneable {
   public String name2;
   public String type;
 
+  @Override
   public Object clone() {
     try {
       return super.clone();

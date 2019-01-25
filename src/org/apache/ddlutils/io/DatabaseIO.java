@@ -146,8 +146,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().getConfiguration()
           .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
-      writer.getBindingConfiguration().setValueSuppressionStrategy(
-          new DBSMValueSuppressionStrategy());
+      writer.getBindingConfiguration()
+          .setValueSuppressionStrategy(new DBSMValueSuppressionStrategy());
       writer.enablePrettyPrint();
       // always use linux style line endings
       writer.setEndOfLine("\n");
@@ -175,8 +175,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().getConfiguration()
           .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
-      writer.getBindingConfiguration().setValueSuppressionStrategy(
-          new DBSMValueSuppressionStrategy());
+      writer.getBindingConfiguration()
+          .setValueSuppressionStrategy(new DBSMValueSuppressionStrategy());
       writer.enablePrettyPrint();
       // always use linux style line endings
       writer.setEndOfLine("\n");
@@ -296,11 +296,11 @@ public class DatabaseIO {
       ArrayList<File> fileslist = new ArrayList<File>();
 
       File[] directoryfiles = f.listFiles(new FileFilter() {
+        @Override
         public boolean accept(File pathname) {
-          return !pathname.isHidden()
-              && (pathname.isDirectory() || (pathname.isFile()
-                  && pathname.getName().endsWith(".xml") && !pathname.getName().equals(
-                  "excludeFilter.xml")));
+          return !pathname.isHidden() && (pathname.isDirectory()
+              || (pathname.isFile() && pathname.getName().endsWith(".xml")
+                  && !pathname.getName().equals("excludeFilter.xml")));
         }
       });
 

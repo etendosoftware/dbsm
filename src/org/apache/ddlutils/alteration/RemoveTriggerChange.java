@@ -83,9 +83,10 @@ public class RemoveTriggerChange implements ModelChange {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
-    Trigger trigger = database.findTrigger(
-        _triggerName != null ? _triggerName : _trigger.getName(), caseSensitive);
+    Trigger trigger = database.findTrigger(_triggerName != null ? _triggerName : _trigger.getName(),
+        caseSensitive);
 
     database.removeTrigger(trigger);
   }

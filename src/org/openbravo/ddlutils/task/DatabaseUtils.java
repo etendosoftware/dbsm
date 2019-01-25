@@ -111,10 +111,9 @@ public class DatabaseUtils {
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData dbDataPartialModel = new DatabaseData(d);
     readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
-    DBSMOBUtil.getInstance()
-        .applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
-            config.getBasedir() + "/modules/", config.isStrict(),
-            config.applyConfigScriptDataChanges());
+    DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
+        config.getBasedir() + "/modules/", config.isStrict(),
+        config.applyConfigScriptDataChanges());
     return d;
   }
 
@@ -298,8 +297,9 @@ public class DatabaseUtils {
       DatabaseIO dbIO = new DatabaseIO();
       dbIO.setValidateXml(false);
       Database db = dbIO.readplain(f);
-      if (f.getAbsolutePath().contains("modifiedTables"))
+      if (f.getAbsolutePath().contains("modifiedTables")) {
         db.moveTablesToModified();
+      }
       return db;
     }
   }
@@ -377,18 +377,21 @@ public class DatabaseUtils {
   }
 
   private static class XMLFiles implements FileFilter {
+    @Override
     public boolean accept(File pathname) {
       return pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(".xml"));
     }
   }
 
   private static class CopyFiles implements FileFilter {
+    @Override
     public boolean accept(File pathname) {
       return pathname.isDirectory() || (pathname.isFile() && pathname.getName().endsWith(".copy"));
     }
   }
 
   private static class FilesComparator implements Comparator<File> {
+    @Override
     public int compare(File a, File b) {
 
       if (a.isDirectory() && !b.isDirectory()) {

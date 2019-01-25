@@ -57,13 +57,13 @@ public class DynaSqlCreateRule extends Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void begin(String namespace, String name, Attributes attributes) throws Exception {
     Object instance = _model.createDynaBeanFor(_table);
 
     if (digester.getLogger().isDebugEnabled()) {
-      digester.getLogger().debug(
-          "[DynaSqlCreateRule]{" + digester.getMatch() + "} New dyna bean '" + _table.getName()
-              + "' created");
+      digester.getLogger().debug("[DynaSqlCreateRule]{" + digester.getMatch() + "} New dyna bean '"
+          + _table.getName() + "' created");
     }
     digester.push(instance);
   }
@@ -71,6 +71,7 @@ public class DynaSqlCreateRule extends Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void end(String namespace, String name) throws Exception {
     DynaBean top = (DynaBean) digester.pop();
 

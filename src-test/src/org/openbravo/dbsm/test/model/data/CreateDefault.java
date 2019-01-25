@@ -93,8 +93,8 @@ public class CreateDefault extends DbsmTest {
 
   @Test
   public void nonMandatoryDefault_NM1() throws SQLException {
-    assumeThat("AD data does not get defaulted with default, it requires onCreateDefault",
-        dataMode, is(DataMode.instance));
+    assumeThat("AD data does not get defaulted with default, it requires onCreateDefault", dataMode,
+        is(DataMode.instance));
     assertDefaults("NM1", equalTo("A"));
   }
 
@@ -120,8 +120,8 @@ public class CreateDefault extends DbsmTest {
 
   @Test
   public void mandatoryDefault_M1() throws SQLException {
-    assumeThat("AD data does not get defaulted with default, it requires onCreateDefault",
-        dataMode, is(DataMode.instance));
+    assumeThat("AD data does not get defaulted with default, it requires onCreateDefault", dataMode,
+        is(DataMode.instance));
     assertDefaults("M1", equalTo("A"));
   }
 
@@ -157,28 +157,29 @@ public class CreateDefault extends DbsmTest {
     Row oldRow = null;
     String pk = "";
     switch (dataMode) {
-    case instance:
-      originalModel = updateDatabase(originalModelName);
-      break;
-    case ADAfterUpdate:
-    case ADAddInUpdate:
-      originalModel = updateDatabase(originalModelName);
-      break;
-    case ADupdateExisting:
-      originalModel = updateDatabase(originalModelName, "data/createDefault", Arrays.asList("TEST"));
+      case instance:
+        originalModel = updateDatabase(originalModelName);
+        break;
+      case ADAfterUpdate:
+      case ADAddInUpdate:
+        originalModel = updateDatabase(originalModelName);
+        break;
+      case ADupdateExisting:
+        originalModel = updateDatabase(originalModelName, "data/createDefault",
+            Arrays.asList("TEST"));
     }
 
     switch (dataMode) {
-    case instance:
-      generateRow(originalModel, TEST_TABLE_NAME);
-    case ADAfterUpdate:
-      newModel = updateDatabase("createDefault/" + columnName + ".xml");
-      break;
-    case ADAddInUpdate:
-    case ADupdateExisting:
-      newModel = updateDatabase("createDefault/" + columnName + ".xml", "data/createDefault",
-          Arrays.asList("TEST"));
-      break;
+      case instance:
+        generateRow(originalModel, TEST_TABLE_NAME);
+      case ADAfterUpdate:
+        newModel = updateDatabase("createDefault/" + columnName + ".xml");
+        break;
+      case ADAddInUpdate:
+      case ADupdateExisting:
+        newModel = updateDatabase("createDefault/" + columnName + ".xml", "data/createDefault",
+            Arrays.asList("TEST"));
+        break;
     }
 
     if (dataMode == DataMode.ADAfterUpdate) {

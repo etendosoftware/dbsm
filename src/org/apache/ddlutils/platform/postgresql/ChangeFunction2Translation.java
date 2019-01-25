@@ -31,6 +31,7 @@ public class ChangeFunction2Translation implements Translation {
   public ChangeFunction2Translation() {
   }
 
+  @Override
   public String exec(String s) {
 
     BufferedReader br = new BufferedReader(new StringReader(s));
@@ -40,8 +41,8 @@ public class ChangeFunction2Translation implements Translation {
     int recCount = 0;
     int i = 1;
     int j = 1;
-    String varname[] = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-        "", "", "", "", "", "", "" };
+    String varname[] = { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "" };
 
     try {
       while ((inputStr = br.readLine()) != null) {
@@ -255,10 +256,12 @@ public class ChangeFunction2Translation implements Translation {
               + (matcher6.group(5) != null ? matcher6.group(5) : "") + " FOR");
           // } else if (matcher14.find()) {
           // bw.write(matcher14.group(1) + matcher14.group(7) +
-          // ":= "+matcher14.group(2)+"("+matcher14.group(4)+","+matcher14.group(5)+","+matcher14.group(6)+");");
+          // ":=
+          // "+matcher14.group(2)+"("+matcher14.group(4)+","+matcher14.group(5)+","+matcher14.group(6)+");");
           // } else if (matcher15.find()) {
           // bw.write(matcher15.group(1) + matcher15.group(7) +
-          // ":= "+matcher15.group(2)+"("+matcher15.group(4)+","+matcher15.group(5)+","+matcher15.group(6)+");");
+          // ":=
+          // "+matcher15.group(2)+"("+matcher15.group(4)+","+matcher15.group(5)+","+matcher15.group(6)+");");
           // } else if (matcher16.find()) {
           // bw.write(matcher16.group(1) + matcher16.group(6) +
           // ":= "+matcher16.group(2)+"("+matcher16.group(4)+","+matcher16.group(5)+");");
@@ -271,17 +274,20 @@ public class ChangeFunction2Translation implements Translation {
           // } else if (matcher19.find()) {
           // bw.write("SELECT * INTO "+matcher19.group(6) + ","+
           // matcher19.group(7)
-          // +" FROM "+matcher19.group(1)+"("+matcher19.group(3)+","+matcher19.group(4)+","+matcher19.group(5)+");");
+          // +" FROM
+          // "+matcher19.group(1)+"("+matcher19.group(3)+","+matcher19.group(4)+","+matcher19.group(5)+");");
           // } else if (matcher20.find()) {
           // bw.write(matcher20.group(7) +
-          // ":= "+matcher20.group(1)+"("+matcher20.group(3)+","+matcher20.group(4)+","+matcher20.group(5)+","+matcher20.group(6)+","+matcher20.group(8)+");");
+          // ":=
+          // "+matcher20.group(1)+"("+matcher20.group(3)+","+matcher20.group(4)+","+matcher20.group(5)+","+matcher20.group(6)+","+matcher20.group(8)+");");
           // } else if (matcher21.find()) {
           // bw.write("SELECT * INTO "+matcher21.group(5) + ","+
           // matcher21.group(6)
           // +" FROM "+matcher21.group(1)+"("+matcher21.group(3)+","+matcher21.group(4)+");");
           // } else if (matcher21a.find()) {
           // bw.write("SELECT * INTO "+matcher21a.group(7)
-          // +" FROM "+matcher21a.group(1)+"("+matcher21a.group(3)+","+matcher21a.group(4)+","+matcher21a.group(5)+","+matcher21a.group(6)+");");
+          // +" FROM
+          // "+matcher21a.group(1)+"("+matcher21a.group(3)+","+matcher21a.group(4)+","+matcher21a.group(5)+","+matcher21a.group(6)+");");
 
         } else if (matcher22.find()) {
           bw.write(matcher22.group(1) + matcher22.group(2) + " NOT FOUND " + matcher22.group(4)
@@ -299,12 +305,15 @@ public class ChangeFunction2Translation implements Translation {
               + matcher25.group(6));
         } else if (matcher26.find()) {
           bw.write(matcher26.group(1) + "Array[" + matcher26.group(3) + "]" + matcher26.group(5));
-        } else if (matcher33.find()) {// System.out.println(matcher33.group(1)+" - "+matcher33.group(4));
+        } else if (matcher33.find()) {// System.out.println(matcher33.group(1)+" -
+                                      // "+matcher33.group(4));
           bw.write(matcher33.group(1) + "FOR UPDATE" + matcher33.group(3) + matcher33.group(4)
               + " --OBTG:" + matcher33.group(2) + "--");
-        } else if (matcher34.find()) {// System.out.println(matcher34.group(1)+" - "+matcher34.group(4));
+        } else if (matcher34.find()) {// System.out.println(matcher34.group(1)+" -
+                                      // "+matcher34.group(4));
           bw.write(matcher34.group(1) + "RAISE EXCEPTION '%','Rollback';");
-        } else if (matcher35.find()) {// System.out.println(matcher35.group(1)+" - "+matcher35.group(4));
+        } else if (matcher35.find()) {// System.out.println(matcher35.group(1)+" -
+                                      // "+matcher35.group(4));
           bw.write(matcher35.group(1) + " --OBTG:" + matcher35.group(2) + "--");
         } else if (matcher36.find()) {// System.out.println(36);System.out.println("1:"+matcher36.group(1)+"2:"+matcher36.group(2)+"3:"+matcher36.group(3)+"4:"+matcher36.group(4)+"5:"+matcher36.group(5));
           bw.write(matcher36.group(1) + matcher36.group(2) + matcher36.group(4) + "('"

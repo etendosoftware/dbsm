@@ -58,8 +58,8 @@ public class PlatformFactory {
       }
       return platform;
     } catch (SQLException ex) {
-      throw new DatabaseOperationException("Error while reading the database metadata: "
-          + ex.getMessage(), ex);
+      throw new DatabaseOperationException(
+          "Error while reading the database metadata: " + ex.getMessage(), ex);
     }
   }
 

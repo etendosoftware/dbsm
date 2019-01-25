@@ -57,6 +57,7 @@ public class RemoveColumnChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = database.findTable(getChangedTable().getName(), caseSensitive);
     Column column = table.findColumn(_column.getName(), caseSensitive);

@@ -25,7 +25,8 @@ public class ColumnDataChange implements DataChange {
     this._pkRow = pkRow;
   }
 
-  public ColumnDataChange(Table table, Column column, String oldValue, String newValue, Object pkRow) {
+  public ColumnDataChange(Table table, Column column, String oldValue, String newValue,
+      Object pkRow) {
     _table = table;
     _column = column;
     _oldValue = oldValue;
@@ -36,19 +37,25 @@ public class ColumnDataChange implements DataChange {
 
   }
 
+  @Override
   public boolean apply(DatabaseData databaseData, boolean caseSensitive) {
-    if (_table == null)
+    if (_table == null) {
       _table = databaseData.getDatabase().findTable(_tablename);
-    if (_column == null)
+    }
+    if (_column == null) {
       _column = _table.findColumn(_columnname);
+    }
     return (databaseData.changeRow(_table, _column, new Object[] { _pkRow }, _oldValue, _newValue));
   }
 
+  @Override
   public boolean applyInReverse(DatabaseData databaseData, boolean caseSensitive) {
-    if (_table == null)
+    if (_table == null) {
       _table = databaseData.getDatabase().findTable(_tablename);
-    if (_column == null)
+    }
+    if (_column == null) {
       _column = _table.findColumn(_columnname);
+    }
     return (databaseData.changeRowInReverse(_table, _column, _pkRow, _oldValue, _newValue));
   }
 

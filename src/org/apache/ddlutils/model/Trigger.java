@@ -74,6 +74,7 @@ public class Trigger implements StructureObject, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -294,6 +295,7 @@ public class Trigger implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Trigger result = (Trigger) super.clone();
 
@@ -312,6 +314,7 @@ public class Trigger implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Trigger) {
       Trigger other = (Trigger) obj;
@@ -319,10 +322,10 @@ public class Trigger implements StructureObject, Cloneable {
       // Note that this compares case sensitive
       // TODO: For now we ignore catalog and schema (type should be
       // irrelevant anyways)
-      return new EqualsBuilder().append(_name, other._name).append(_table, other._table).append(
-          _firesCode, other._firesCode).append(_insert, other._insert).append(_update,
-          other._update).append(_delete, other._delete).append(_foreachCode, other._foreachCode)
-          .append(_body, other._body).isEquals();
+      return new EqualsBuilder().append(_name, other._name).append(_table, other._table)
+          .append(_firesCode, other._firesCode).append(_insert, other._insert)
+          .append(_update, other._update).append(_delete, other._delete)
+          .append(_foreachCode, other._foreachCode).append(_body, other._body).isEquals();
     } else {
       return false;
     }
@@ -337,11 +340,11 @@ public class Trigger implements StructureObject, Cloneable {
    */
   public boolean equalsIgnoreCase(Trigger otherTrigger) {
 
-    return UtilsCompare.equalsIgnoreCase(_name, otherTrigger._name)
-        && new EqualsBuilder().append(_table, otherTrigger._table).append(_firesCode,
-            otherTrigger._firesCode).append(_insert, otherTrigger._insert).append(_update,
-            otherTrigger._update).append(_delete, otherTrigger._delete).append(_foreachCode,
-            otherTrigger._foreachCode).append(_body, otherTrigger._body).isEquals();
+    return UtilsCompare.equalsIgnoreCase(_name, otherTrigger._name) && new EqualsBuilder()
+        .append(_table, otherTrigger._table).append(_firesCode, otherTrigger._firesCode)
+        .append(_insert, otherTrigger._insert).append(_update, otherTrigger._update)
+        .append(_delete, otherTrigger._delete).append(_foreachCode, otherTrigger._foreachCode)
+        .append(_body, otherTrigger._body).isEquals();
   }
 
   /**
@@ -358,16 +361,19 @@ public class Trigger implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     // TODO: For now we ignore catalog and schema (type should be irrelevant
     // anyways)
-    return new HashCodeBuilder(17, 37).append(_name).append(_table).append(_firesCode).append(
-        _insert).append(_update).append(_delete).append(_foreachCode).append(_body).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name).append(_table).append(_firesCode)
+        .append(_insert).append(_update).append(_delete).append(_foreachCode).append(_body)
+        .toHashCode();
   }
 
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

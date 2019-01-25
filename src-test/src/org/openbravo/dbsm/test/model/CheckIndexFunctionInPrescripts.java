@@ -45,8 +45,8 @@ import org.junit.runners.Parameterized;
 public class CheckIndexFunctionInPrescripts extends IndexBaseTest {
 
   public CheckIndexFunctionInPrescripts(String rdbms, String driver, String url, String sid,
-      String user, String password, String name, TestType testType) throws FileNotFoundException,
-      IOException {
+      String user, String password, String name, TestType testType)
+      throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name, testType);
   }
 

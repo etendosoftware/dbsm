@@ -97,8 +97,8 @@ public class Sequences extends DbsmTest {
     assertThat(exportedSequence.exists(), is(true));
 
     String exportedContents = FileUtils.readFileToString(exportedSequence);
-    String originalContents = FileUtils.readFileToString(new File("model",
-        "sequences/TESTSEQ-update.xml"));
+    String originalContents = FileUtils
+        .readFileToString(new File("model", "sequences/TESTSEQ-update.xml"));
 
     assertThat(exportedContents, equalTo(originalContents));
   }

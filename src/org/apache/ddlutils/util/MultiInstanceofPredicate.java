@@ -43,6 +43,7 @@ public class MultiInstanceofPredicate implements Predicate {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean evaluate(Object obj) {
     if ((_typesToCheck == null) || (_typesToCheck.length == 0)) {
       return true;

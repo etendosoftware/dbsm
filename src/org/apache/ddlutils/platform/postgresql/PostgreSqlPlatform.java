@@ -130,6 +130,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String getName() {
     return DATABASENAME;
   }
@@ -157,8 +158,8 @@ public class PostgreSqlPlatform extends PlatformImplBase {
       int slashPos = connectionUrl.lastIndexOf('/');
 
       if (slashPos < 0) {
-        throw new DatabaseOperationException("Cannot parse the given connection url "
-            + connectionUrl);
+        throw new DatabaseOperationException(
+            "Cannot parse the given connection url " + connectionUrl);
       }
 
       int paramPos = connectionUrl.lastIndexOf('?');
@@ -185,8 +186,8 @@ public class PostgreSqlPlatform extends PlatformImplBase {
         }
       }
       if (getLog().isDebugEnabled()) {
-        getLog().debug(
-            "About to create database via " + baseDb + " using this SQL: " + sql.toString());
+        getLog()
+            .debug("About to create database via " + baseDb + " using this SQL: " + sql.toString());
       }
       try {
         Class.forName(jdbcDriverClassName);
@@ -223,8 +224,8 @@ public class PostgreSqlPlatform extends PlatformImplBase {
    */
   @Override
   public void createDatabase(String jdbcDriverClassName, String connectionUrl, String username,
-      String password, Map parameters) throws DatabaseOperationException,
-      UnsupportedOperationException {
+      String password, Map parameters)
+      throws DatabaseOperationException, UnsupportedOperationException {
     // With PostgreSQL, you create a database by executing "CREATE DATABASE"
     // in an existing database (usually
     // the template1 database because it usually exists)
@@ -253,10 +254,12 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     Object value = dynaBean.get(property.getName());
 
     // Downgrade typecode
-    if (typeCode == ExtTypes.NCHAR)
+    if (typeCode == ExtTypes.NCHAR) {
       typeCode = Types.CHAR;
-    if (typeCode == ExtTypes.NVARCHAR)
+    }
+    if (typeCode == ExtTypes.NVARCHAR) {
       typeCode = Types.VARCHAR;
+    }
 
     // PostgreSQL doesn't like setNull for BYTEA columns
     if (value == null) {
@@ -349,6 +352,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
   }
 
+  @Override
   public boolean enableAllFkForTable(Connection connection, Database model, Table table,
       boolean continueOnError) throws DatabaseOperationException {
     try {
@@ -375,6 +379,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     return "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'ENABLE TRIGGER USER;' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
   }
 
+  @Override
   public void disableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -397,6 +402,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void enableAllFK(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -419,6 +425,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void disableAllTriggers(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -440,6 +447,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void enableAllTriggers(Database model, boolean continueOnError, Writer writer)
       throws DatabaseOperationException {
 
@@ -459,7 +467,8 @@ public class PostgreSqlPlatform extends PlatformImplBase {
   }
 
   @Override
-  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase) {
+  public List<StructureObject> checkTranslationConsistency(Database database,
+      Database fullDatabase) {
     List<PostgrePLSQLConsistencyChecker> tasks = new ArrayList<>();
     for (int i = 0; i < database.getFunctionCount(); i++) {
       tasks.add(new PostgrePLSQLConsistencyChecker(fullDatabase, database.getFunction(i)));
@@ -491,6 +500,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     return inconsistentObjects;
   }
 
+  @Override
   public void disableNOTNULLColumns(Database database, OBDataset dataset) {
 
     Connection connection = borrowConnection();
@@ -503,6 +513,7 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
   }
 
+  @Override
   public void enableNOTNULLColumns(Database database, OBDataset dataset) {
 
     Connection connection = borrowConnection();
@@ -529,15 +540,15 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     } catch (SQLException e) {
       getLog().error("Error while handling a failed batch execution ins postgreSql.");
     }
-    getLog()
-        .info(
-            "Batch statement failed. Rolling back and retrying all the statements in a non-batched connection.");
+    getLog().info(
+        "Batch statement failed. Rolling back and retrying all the statements in a non-batched connection.");
     // The batch failed. We will execute all commands again using the old method
     return evaluateBatch(connection, sql, continueOnError);
   }
 
-  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
-      throws DatabaseOperationException {
+  @Override
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql,
+      boolean continueOnError) throws DatabaseOperationException {
     try {
       connection.setAutoCommit(false);
     } catch (SQLException e) {

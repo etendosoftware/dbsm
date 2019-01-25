@@ -109,6 +109,7 @@ public class AddColumnChange extends TableChangeImplBase implements ColumnChange
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Column newColumn = null;
 

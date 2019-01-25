@@ -172,6 +172,7 @@ public class Reference implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Reference result = (Reference) super.clone();
 
@@ -184,12 +185,13 @@ public class Reference implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Reference) {
       Reference other = (Reference) obj;
 
-      return new EqualsBuilder().append(_localColumnName, other._localColumnName).append(
-          _foreignColumnName, other._foreignColumnName).isEquals();
+      return new EqualsBuilder().append(_localColumnName, other._localColumnName)
+          .append(_foreignColumnName, other._foreignColumnName).isEquals();
     } else {
       return false;
     }
@@ -210,6 +212,7 @@ public class Reference implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_localColumnName).append(_foreignColumnName)
         .toHashCode();
@@ -218,6 +221,7 @@ public class Reference implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

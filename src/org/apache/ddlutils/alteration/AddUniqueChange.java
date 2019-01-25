@@ -58,6 +58,7 @@ public class AddUniqueChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Unique newUnique = null;
 
@@ -67,8 +68,9 @@ public class AddUniqueChange extends TableChangeImplBase {
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);
     }
-    if (table.findUnique(newUnique.getName()) != null)
+    if (table.findUnique(newUnique.getName()) != null) {
       table.removeUnique(table.findUnique(newUnique.getName()));
+    }
     table.addUnique(newUnique);
   }
 

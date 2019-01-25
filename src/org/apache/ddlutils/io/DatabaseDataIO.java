@@ -372,8 +372,8 @@ public class DatabaseDataIO implements DataSetTableExporter {
     return result;
   }
 
-  public void readRowsIntoDatabaseData(Platform platform, Database model,
-      DatabaseData databaseData, OBDataset dataset, String moduleID) {
+  public void readRowsIntoDatabaseData(Platform platform, Database model, DatabaseData databaseData,
+      OBDataset dataset, String moduleID) {
     for (OBDatasetTable dsTable : dataset.getTableList()) {
       Connection con = platform.borrowConnection();
       Table table = model.findTable(dsTable.getName());
@@ -407,8 +407,8 @@ public class DatabaseDataIO implements DataSetTableExporter {
     return anyRecordsHaveBeenExported;
   }
 
-  private boolean streamDataForTableToXML(Platform platform, Database model,
-      OBDatasetTable dsTable, OutputStream output, String xmlEncoding, String moduleID) {
+  private boolean streamDataForTableToXML(Platform platform, Database model, OBDatasetTable dsTable,
+      OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
@@ -431,7 +431,8 @@ public class DatabaseDataIO implements DataSetTableExporter {
         nExportedRows++;
       }
       if (nExportedRows > 0) {
-        _log.info("  " + nExportedRows + " records have been exported from table " + table.getName());
+        _log.info(
+            "  " + nExportedRows + " records have been exported from table " + table.getName());
       }
     } catch (SQLException ex) {
       _log.error("SQL command to read rows from table failed: " + sqlstatement, ex);
@@ -542,7 +543,8 @@ public class DatabaseDataIO implements DataSetTableExporter {
    * @param inputs
    *          The input streams for the XML data
    */
-  public void writeDataToDatabase(Platform platform, InputStream[] inputs) throws DdlUtilsException {
+  public void writeDataToDatabase(Platform platform, InputStream[] inputs)
+      throws DdlUtilsException {
     writeDataToDatabase(platform, platform.readModelFromDatabase("unnamed"), inputs);
   }
 
@@ -803,6 +805,7 @@ public class DatabaseDataIO implements DataSetTableExporter {
       this.pkName = pkName;
     }
 
+    @Override
     public int compare(Object o1, Object o2) {
       if (!(o1 instanceof DynaBean) || !(o2 instanceof DynaBean)) {
         return 0;

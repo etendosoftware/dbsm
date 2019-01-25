@@ -209,6 +209,7 @@ public class DataToDatabaseSink implements DataSink {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void end() throws DataSinkException {
     purgeBatchQueue();
     try {
@@ -246,6 +247,7 @@ public class DataToDatabaseSink implements DataSink {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void start() throws DataSinkException {
     _fkTables.clear();
     // _mergedTables.clear();
@@ -269,6 +271,7 @@ public class DataToDatabaseSink implements DataSink {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void addBean(DynaBean bean) throws DataSinkException {
     Table table = _model.getDynaClassFor(bean).getTable();
     Identity origIdentity = buildIdentityFromPKs(table, bean);

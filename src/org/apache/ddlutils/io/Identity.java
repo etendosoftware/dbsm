@@ -111,6 +111,7 @@ public class Identity {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof Identity)) {
       return false;
@@ -145,6 +146,7 @@ public class Identity {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return toString().hashCode();
   }
@@ -152,6 +154,7 @@ public class Identity {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer buffer = new StringBuffer();
 

@@ -15,16 +15,19 @@ import org.apache.ddlutils.model.Database;
 public class DataToArraySink implements DataSink {
   Vector<DynaBean> beanArray;
 
+  @Override
   public void addBean(DynaBean bean) throws DataSinkException {
     beanArray.add(bean);
     // System.out.println(bean);
 
   }
 
+  @Override
   public void end() throws DataSinkException {
 
   }
 
+  @Override
   public void start() throws DataSinkException {
     beanArray = new Vector<DynaBean>();
 
@@ -35,8 +38,9 @@ public class DataToArraySink implements DataSink {
   }
 
   public static void sortArray(Database database, Vector<DynaBean> beanVector) {
-    if (beanVector == null || beanVector.size() == 0)
+    if (beanVector == null || beanVector.size() == 0) {
       return;
+    }
 
     DynaBean firstBean = beanVector.get(0);
     SqlDynaClass dynaClass = database.getDynaClassFor(firstBean);
@@ -55,6 +59,7 @@ public class DataToArraySink implements DataSink {
 
   private static class BaseOBIDHexComparator implements Comparator<Object> {
 
+    @Override
     public int compare(Object o1, Object o2) {
       final String bob1 = o1.toString();
       final String bob2 = o2.toString();

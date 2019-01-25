@@ -58,6 +58,7 @@ public class AddIndexChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Index newIndex = null;
 
@@ -67,8 +68,9 @@ public class AddIndexChange extends TableChangeImplBase {
     } catch (CloneNotSupportedException ex) {
       throw new DdlUtilsException(ex);
     }
-    if (table.findIndex(newIndex.getName()) != null)
+    if (table.findIndex(newIndex.getName()) != null) {
       table.removeIndex(table.findIndex(newIndex.getName()));
+    }
     table.addIndex(newIndex);
   }
 

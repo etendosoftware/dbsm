@@ -54,6 +54,7 @@ public class ExcludeFilter implements Cloneable {
 
   private Logger log4j = Logger.getLogger(getClass());
 
+  @Override
   public String toString() {
     StringBuffer sb = new StringBuffer();
     sb.append("***Filtered tables: " + "\n");
@@ -79,6 +80,7 @@ public class ExcludeFilter implements Cloneable {
     return sb.toString();
   }
 
+  @Override
   public ExcludeFilter clone() {
     ExcludeFilter filter = new ExcludeFilter();
 
@@ -203,24 +205,28 @@ public class ExcludeFilter implements Cloneable {
 
   // does case-insensitive matching on name, so case of name can be arbitrary
   public boolean compliesWithNamingRuleObject(String name) {
-    if (isInOthersExceptionsObject(name))
+    if (isInOthersExceptionsObject(name)) {
       return false;
+    }
 
     for (String prefix : prefixes) {
-      if (hasPrefix(name, prefix))
+      if (hasPrefix(name, prefix)) {
         return true;
+      }
     }
     // It doesn't comply with naming rule. We'll check exceptions table
     return isInExceptionsObject(name);
   }
 
   public boolean compliesWithNamingRuleTableObject(String name, String tableName) {
-    if (isInOthersExceptionsTableObject(name, tableName))
+    if (isInOthersExceptionsTableObject(name, tableName)) {
       return false;
+    }
 
     for (String prefix : prefixes) {
-      if (hasPrefix(name, prefix))
+      if (hasPrefix(name, prefix)) {
         return true;
+      }
     }
     // It doesn't comply with naming rule. We'll check exceptions table
     return isInExceptionsTableObject(name, tableName);
@@ -247,25 +253,30 @@ public class ExcludeFilter implements Cloneable {
 
   public boolean isDependant(String name) {
     for (String prefix : prefixDependencies.get(modName)) {
-      if (hasPrefix(name, prefix))
+      if (hasPrefix(name, prefix)) {
         return true;
+      }
     }
     return false;
   }
 
   public boolean compliesWithExternalPrefix(String name, String tableName) {
-    if (isInOthersExceptionsTableObject(name, tableName))
+    if (isInOthersExceptionsTableObject(name, tableName)) {
       return true;
+    }
     return hasPrefix(name, externalPrefix);
   }
 
   public boolean compliesWithExternalNamingRule(String name, String tableName) {
-    if (isInExceptionsTableObject(name, tableName))
+    if (isInExceptionsTableObject(name, tableName)) {
       return true;
+    }
 
-    for (String prefix : prefixes)
-      if (hasPrefix(name, externalPrefix + "_" + prefix))
+    for (String prefix : prefixes) {
+      if (hasPrefix(name, externalPrefix + "_" + prefix)) {
         return true;
+      }
+    }
     return false;
   }
 
@@ -282,30 +293,38 @@ public class ExcludeFilter implements Cloneable {
   }
 
   public boolean isInOthersExceptionsObject(String objectName) {
-    for (ExceptionRow row : othersexceptions)
-      if (objectName.equalsIgnoreCase(row.name1))
+    for (ExceptionRow row : othersexceptions) {
+      if (objectName.equalsIgnoreCase(row.name1)) {
         return true;
+      }
+    }
     return false;
   }
 
   public boolean isInExceptionsObject(String objectName) {
-    for (ExceptionRow row : exceptions)
-      if (objectName.equalsIgnoreCase(row.name1))
+    for (ExceptionRow row : exceptions) {
+      if (objectName.equalsIgnoreCase(row.name1)) {
         return true;
+      }
+    }
     return false;
   }
 
   public boolean isInExceptionsTableObject(String objectName, String tableName) {
-    for (ExceptionRow row : exceptions)
-      if (objectName.equalsIgnoreCase(row.name1) && tableName.equalsIgnoreCase(row.name2))
+    for (ExceptionRow row : exceptions) {
+      if (objectName.equalsIgnoreCase(row.name1) && tableName.equalsIgnoreCase(row.name2)) {
         return true;
+      }
+    }
     return false;
   }
 
   public boolean isInOthersExceptionsTableObject(String objectName, String tableName) {
-    for (ExceptionRow row : othersexceptions)
-      if (objectName.equalsIgnoreCase(row.name1) && tableName.equalsIgnoreCase(row.name2))
+    for (ExceptionRow row : othersexceptions) {
+      if (objectName.equalsIgnoreCase(row.name1) && tableName.equalsIgnoreCase(row.name2)) {
         return true;
+      }
+    }
     return false;
   }
 
@@ -341,8 +360,8 @@ public class ExcludeFilter implements Cloneable {
       List<String> nonWildcardExcludedObjects = getNonWildcardExcludedObjects(excludedObjects);
       List<String> wildcardExcludedObjects = getWildcardExcludedObjects(excludedObjects);
       if (!nonWildcardExcludedObjects.isEmpty()) {
-        whereClause.append(buildNonWildcardExcludeFilterWhereClause(fieldIdentifier,
-            nonWildcardExcludedObjects));
+        whereClause.append(
+            buildNonWildcardExcludeFilterWhereClause(fieldIdentifier, nonWildcardExcludedObjects));
       }
       if (!wildcardExcludedObjects.isEmpty()) {
         if (!nonWildcardExcludedObjects.isEmpty()) {

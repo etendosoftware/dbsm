@@ -56,8 +56,7 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
     List<String> adTableNames = Arrays.asList(TEST_TABLE);
     List<String> configScripts = Arrays.asList(CONFIG_SCRIPT);
     applyConfigurationScripts(BASE_MODEL, adTableNames, configScripts);
-    assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(),
+    assertEquals("Data changes applied by Configuration Script", getColumnDataChangesColumnValues(),
         getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 
@@ -70,8 +69,7 @@ public class ConfigScriptColumnDataChange extends ConfigScriptBaseTest {
   public void isConfigurationScriptApplied() {
     List<String> adTableNames = Arrays.asList(TEST_TABLE);
     applyConfigurationScript(BASE_MODEL, adTableNames, CONFIG_SCRIPT);
-    assertEquals("Data changes applied by Configuration Script",
-        getColumnDataChangesColumnValues(),
+    assertEquals("Data changes applied by Configuration Script", getColumnDataChangesColumnValues(),
         getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
   }
 

@@ -44,11 +44,14 @@ public class PostgrePLSQLTriggerTranslation extends PostgrePLSQLTranslation {
 
     // Add return for trigger
     append(new Translation() {
+      @Override
       public String exec(String s) {
         int i = s.lastIndexOf("END ");
-        return i >= 0 ? s.substring(0, i)
-            + "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\r"
-            + s.substring(i, s.length()) : s;
+        return i >= 0
+            ? s.substring(0, i)
+                + "IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; \n\r"
+                + s.substring(i, s.length())
+            : s;
       }
     });
   }

@@ -109,8 +109,8 @@ public class ConverterConfiguration {
    * @return The converter
    */
   public SqlTypeConverter getRegisteredConverter(Table table, Column column) {
-    SqlTypeConverter result = (SqlTypeConverter) _convertersPerPath.get(table.getName() + "/"
-        + column.getName());
+    SqlTypeConverter result = (SqlTypeConverter) _convertersPerPath
+        .get(table.getName() + "/" + column.getName());
 
     if (result == null) {
       result = (SqlTypeConverter) _convertersPerType.get(new Integer(column.getTypeCode()));

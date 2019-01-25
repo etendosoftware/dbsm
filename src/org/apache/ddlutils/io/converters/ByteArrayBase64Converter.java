@@ -30,6 +30,7 @@ public class ByteArrayBase64Converter implements SqlTypeConverter {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object convertFromString(String textRep, int sqlTypeCode) throws ConversionException {
     try {
       return textRep == null ? null : Base64.decodeBase64(textRep.getBytes());
@@ -41,6 +42,7 @@ public class ByteArrayBase64Converter implements SqlTypeConverter {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String convertToString(Object obj, int sqlTypeCode) throws ConversionException {
     try {
       return obj == null ? null : new String(Base64.encodeBase64((byte[]) obj));

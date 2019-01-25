@@ -164,10 +164,11 @@ public class OracleBuilder extends SqlBuilder {
       for (int i = 0; i < lengthoncreate; i++) {
         String tchar = oncreatedefaultp.substring(0, 1);
         oncreatedefaultp = oncreatedefaultp.substring(1);
-        if (tchar.equals("'"))
+        if (tchar.equals("'")) {
           oncreatedefault += "''";
-        else
+        } else {
           oncreatedefault += tchar;
+        }
       }
       comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--$";
     }
@@ -184,8 +185,8 @@ public class OracleBuilder extends SqlBuilder {
         comment += transformInOracleComment(commentFromDatabase);
       }
     }
-    println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
-        + "'");
+    println(
+        "COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment + "'");
     printEndOfStatement();
   }
 
@@ -217,6 +218,7 @@ public class OracleBuilder extends SqlBuilder {
    * @param column
    *          The column
    */
+  @Override
   protected void createAutoIncrementSequence(Table table, Column column) throws IOException {
     print("CREATE SEQUENCE ");
     printIdentifier(getConstraintName("seq", table, column.getName(), null));
@@ -231,6 +233,7 @@ public class OracleBuilder extends SqlBuilder {
    * @param column
    *          The column
    */
+  @Override
   protected void createAutoIncrementTrigger(Table table, Column column) throws IOException {
     String columnName = getColumnName(column);
     String triggerName = getConstraintName("trg", table, column.getName(), null);
@@ -293,6 +296,7 @@ public class OracleBuilder extends SqlBuilder {
    * @param column
    *          The column
    */
+  @Override
   protected void dropAutoIncrementSequence(Table table, Column column) throws IOException {
     print("DROP SEQUENCE ");
     printIdentifier(getConstraintName("seq", table, column.getName(), null));
@@ -307,6 +311,7 @@ public class OracleBuilder extends SqlBuilder {
    * @param column
    *          The column
    */
+  @Override
   protected void dropAutoIncrementTrigger(Table table, Column column) throws IOException {
     print("DROP TRIGGER ");
     printIdentifier(getConstraintName("trg", table, column.getName(), null));
@@ -378,11 +383,10 @@ public class OracleBuilder extends SqlBuilder {
    */
   @Override
   protected String getNativeDefaultValue(ValueObject column) {
-    if ((column.getTypeCode() == Types.BIT)
-        || (Jdbc3Utils.supportsJava14JdbcTypes() && (column.getTypeCode() == Jdbc3Utils
-            .determineBooleanTypeCode()))) {
-      return getDefaultValueHelper().convert(column.getDefaultValue(), column.getTypeCode(),
-          Types.SMALLINT).toString();
+    if ((column.getTypeCode() == Types.BIT) || (Jdbc3Utils.supportsJava14JdbcTypes()
+        && (column.getTypeCode() == Jdbc3Utils.determineBooleanTypeCode()))) {
+      return getDefaultValueHelper()
+          .convert(column.getDefaultValue(), column.getTypeCode(), Types.SMALLINT).toString();
     }
     // Oracle does not accept ISO formats, so we have to convert an ISO spec
     // if we find one
@@ -428,8 +432,8 @@ public class OracleBuilder extends SqlBuilder {
         if (idx > 0) {
           result.append(",");
         }
-        result.append(getDelimitedIdentifier(getConstraintName("seq", table,
-            columns[idx].getName(), null)));
+        result.append(
+            getDelimitedIdentifier(getConstraintName("seq", table, columns[idx].getName(), null)));
         result.append(".currval");
       }
       result.append(" FROM dual");
@@ -449,6 +453,7 @@ public class OracleBuilder extends SqlBuilder {
    * @param change
    *          The change object
    */
+  @Override
   protected void processChange(Database currentModel, Database desiredModel,
       RemovePrimaryKeyChange change) throws IOException {
     print("ALTER TABLE ");
@@ -627,7 +632,8 @@ public class OracleBuilder extends SqlBuilder {
       return;
     }
 
-    print("ALTER TABLE " + deferredDefault.getChangedTable().getName() + " MODIFY " + col.getName());
+    print(
+        "ALTER TABLE " + deferredDefault.getChangedTable().getName() + " MODIFY " + col.getName());
     String dafaultValue = getDefaultValue(col);
 
     if (dafaultValue != null) {
@@ -778,8 +784,8 @@ public class OracleBuilder extends SqlBuilder {
       if (columnComments.containsKey(columnName)) {
         currentColumnComment = columnComments.get(columnName);
       } else {
-        String commentFromDatabase = transformInOracleComment(getCommentOfColumn(table.getName(),
-            firstIndexColumn.getName()));
+        String commentFromDatabase = transformInOracleComment(
+            getCommentOfColumn(table.getName(), firstIndexColumn.getName()));
         currentColumnComment = commentFromDatabase != null ? commentFromDatabase : "";
       }
       StringBuilder updatedColumnComment = new StringBuilder();
@@ -886,12 +892,12 @@ public class OracleBuilder extends SqlBuilder {
       updatedComment = currentComments + index.getName() + ".whereClause="
           + transformInOracleComment(newWhereClause) + "$";
     } else if (newWhereClause == null) {
-      updatedComment = currentComments.replace(index.getName() + ".whereClause="
-          + transformInOracleComment(oldWhereClause) + "$", "");
+      updatedComment = currentComments.replace(
+          index.getName() + ".whereClause=" + transformInOracleComment(oldWhereClause) + "$", "");
     } else {
-      updatedComment = currentComments.replace(index.getName() + ".whereClause="
-          + transformInOracleComment(oldWhereClause), index.getName() + ".whereClause="
-          + transformInOracleComment(newWhereClause));
+      updatedComment = currentComments.replace(
+          index.getName() + ".whereClause=" + transformInOracleComment(oldWhereClause),
+          index.getName() + ".whereClause=" + transformInOracleComment(newWhereClause));
     }
 
     onCreateDefaultComment = getOnCreateDefaultComment(columnName);
@@ -928,7 +934,8 @@ public class OracleBuilder extends SqlBuilder {
       return;
     }
     for (String column : _columnsWithUpdatedComments.keySet()) {
-      print("COMMENT ON COLUMN " + column + " IS '" + _columnsWithUpdatedComments.get(column) + "'");
+      print(
+          "COMMENT ON COLUMN " + column + " IS '" + _columnsWithUpdatedComments.get(column) + "'");
       printEndOfStatement();
     }
     _columnsWithUpdatedComments.clear();
@@ -960,8 +967,8 @@ public class OracleBuilder extends SqlBuilder {
       updatedComments = currentComments + index.getName() + "." + DBSMContants.CONTAINS_SEARCH
           + "$";
     } else {
-      updatedComments = currentComments.replace(index.getName() + "."
-          + DBSMContants.CONTAINS_SEARCH + "$", "");
+      updatedComments = currentComments
+          .replace(index.getName() + "." + DBSMContants.CONTAINS_SEARCH + "$", "");
     }
     _tablesWithUpdatedComments.put(tableName, updatedComments);
   }
@@ -999,7 +1006,8 @@ public class OracleBuilder extends SqlBuilder {
       List<Index> indexesWithOperatorClass) throws IOException {
     if (!indexesWithOperatorClass.isEmpty()) {
       String currentComments = getCommentOfTable(tableName);
-      List<String> commentLines = new ArrayList<String>(Arrays.asList(currentComments.split("\\$")));
+      List<String> commentLines = new ArrayList<String>(
+          Arrays.asList(currentComments.split("\\$")));
       for (Index index : indexesWithOperatorClass) {
         for (IndexColumn indexColumn : index.getColumns()) {
           // Find the line that corresponds with the deleted indexColumn, that is, the line that
@@ -1041,10 +1049,11 @@ public class OracleBuilder extends SqlBuilder {
         if (columnComments.containsKey(columnName)) {
           currentComments = columnComments.get(columnName);
         } else {
-          currentComments = transformInOracleComment(getCommentOfColumn(tableName, firstColumnName));
+          currentComments = transformInOracleComment(
+              getCommentOfColumn(tableName, firstColumnName));
         }
-        List<String> commentLines = new ArrayList<String>(Arrays.asList(currentComments
-            .split("\\$")));
+        List<String> commentLines = new ArrayList<String>(
+            Arrays.asList(currentComments.split("\\$")));
         for (String commentLine : commentLines) {
           if (commentLine.startsWith(index.getName() + ".whereClause")) {
             commentLines.remove(commentLine);
@@ -1073,8 +1082,8 @@ public class OracleBuilder extends SqlBuilder {
   private String getCommentOfTable(String tableName) {
     String tableComment = null;
     try (Connection con = getPlatform().getDataSource().getConnection();
-        PreparedStatement st = con
-            .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?")) {
+        PreparedStatement st = con.prepareStatement(
+            "SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?")) {
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
@@ -1097,8 +1106,8 @@ public class OracleBuilder extends SqlBuilder {
   private String getCommentOfColumn(String tableName, String columnName) {
     String tableComment = null;
     try (Connection con = getPlatform().getDataSource().getConnection();
-        PreparedStatement st = con
-            .prepareStatement("SELECT comments FROM user_col_comments WHERE table_name = ? AND column_name = ?")) {
+        PreparedStatement st = con.prepareStatement(
+            "SELECT comments FROM user_col_comments WHERE table_name = ? AND column_name = ?")) {
       st.setString(1, tableName.toUpperCase());
       st.setString(2, columnName.toUpperCase());
       ResultSet rs = st.executeQuery();
@@ -1175,8 +1184,8 @@ public class OracleBuilder extends SqlBuilder {
   }
 
   @Override
-  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
-      throws IOException {
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnSizeChange change) throws IOException {
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     printColumnTypeChange(currentModel, change);
   }

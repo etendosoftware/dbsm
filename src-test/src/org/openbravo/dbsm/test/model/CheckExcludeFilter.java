@@ -108,8 +108,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TABLES.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeTableWithWildcardsAndNonWildcards.xml"));
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeTableWithWildcardsAndNonWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/tables/NOT_EXCLUDED_TABLE.xml");
@@ -182,8 +182,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_VIEWS.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeViewWithWildcardsAndNonWildcards.xml"));
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeViewWithWildcardsAndNonWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/views/NOT_EXCLUDED_VIEW.xml");
@@ -235,8 +235,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TRIGGERS.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeTriggerWithMultipleWildcards.xml"));
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeTriggerWithMultipleWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/triggers/NOT_EXCLUDED_TRIGGER.xml");
@@ -256,8 +256,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_TRIGGERS.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeTriggerWithWildcardsAndNonWildcards.xml"));
+    excludeFilter.fillFromFile(
+        new File("model/excludeFilter/excludeTriggerWithWildcardsAndNonWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/triggers/NOT_EXCLUDED_TRIGGER.xml");
@@ -309,8 +309,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_FUNCTIONS.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeFunctionWithMultipleWildcards.xml"));
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeFunctionWithMultipleWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/functions/NOT_EXCLUDED_FUNCTION.xml");
@@ -330,8 +330,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_FUNCTIONS.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeFunctionWithWildcardsAndNonWildcards.xml"));
+    excludeFilter.fillFromFile(
+        new File("model/excludeFilter/excludeFunctionWithWildcardsAndNonWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/functions/NOT_EXCLUDED_FUNCTION.xml");
@@ -383,8 +383,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_SEQUENCES.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeSequenceWithMultipleWildcards.xml"));
+    excludeFilter
+        .fillFromFile(new File("model/excludeFilter/excludeSequenceWithMultipleWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");
@@ -404,8 +404,8 @@ public class CheckExcludeFilter extends DbsmTest {
     resetDB();
     updateDatabase("excludeFilter/BASE_MODEL_WITH_SEVERAL_EXCLUDED_SEQUENCES.xml");
     ExcludeFilter excludeFilter = new ExcludeFilter();
-    excludeFilter.fillFromFile(new File(
-        "model/excludeFilter/excludeSequenceWithWildcardsAndNonWildcards.xml"));
+    excludeFilter.fillFromFile(
+        new File("model/excludeFilter/excludeSequenceWithWildcardsAndNonWildcards.xml"));
     setExcludeFilter(excludeFilter);
     exportDatabase(EXPORT_DIR);
     File notExcludedFile = new File(EXPORT_DIR + "/sequences/NOT_EXCLUDED_SEQUENCE.xml");

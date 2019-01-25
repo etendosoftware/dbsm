@@ -39,9 +39,11 @@ public class ValidateAPIData extends ValidateAPI {
     this.changes = changes;
   }
 
+  @Override
   public void execute() {
-    for (Change change : changes)
+    for (Change change : changes) {
       checkChange(change);
+    }
   }
 
   private void checkChange(Change change) {
@@ -53,11 +55,8 @@ public class ValidateAPIData extends ValidateAPI {
       allowedChange |= "AD_MODULE_DEPENDENCY".equalsIgnoreCase(tableName);
 
       if (!allowedChange) {
-        errors.add("Removed row from table "
-            + c.getTable().getName()
-            + " - ID: "
-            + c.getRow().get(
-                ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
+        errors.add("Removed row from table " + c.getTable().getName() + " - ID: " + c.getRow().get(
+            ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
       }
     } else if (change instanceof ColumnDataChange) {
       ColumnDataChange c = (ColumnDataChange) change;
@@ -65,33 +64,26 @@ public class ValidateAPIData extends ValidateAPI {
       String columnName = c.getColumnname();
       boolean error = (tableName.equals("AD_TABLE") && (columnName.equals("CLASSNAME")
           || columnName.equals("TABLENAME") || columnName.equals("AD_PACKAGE_ID")));
-      error = error
-          || (tableName.equals("AD_COLUMN") && (columnName.equals("NAME") || columnName
-              .equals("COLUMNNAME")));
+      error = error || (tableName.equals("AD_COLUMN")
+          && (columnName.equals("NAME") || columnName.equals("COLUMNNAME")));
       error = error || (tableName.equals("AD_ELEMENT") && columnName.equals("COLUMNNAME"));
       error = error || (tableName.equals("AD_MESSAGE") && columnName.equals("VALUE"));
-      error = error
-          || (tableName.equals("AD_MODULE") && (columnName.equals("NAME")
-              || columnName.equals("JAVAPACKAGE") || columnName.equals("TYPE")));
+      error = error || (tableName.equals("AD_MODULE") && (columnName.equals("NAME")
+          || columnName.equals("JAVAPACKAGE") || columnName.equals("TYPE")));
       error = error || (tableName.equals("AD_MODULE_DBPREFIX"));
       error = error || (tableName.equals("AD_PACKAGE") && columnName.equals("JAVAPACKAGE"));
-      error = error
-          || (tableName.equals("AD_PROCESS_PARA") && (columnName.equals("COLUMNNAME") || columnName
-              .equals("ISRANGE")));
+      error = error || (tableName.equals("AD_PROCESS_PARA")
+          && (columnName.equals("COLUMNNAME") || columnName.equals("ISRANGE")));
       error = error || (tableName.equals("AD_REF_LIST") && columnName.equals("VALUE"));
-      error = error
-          || (tableName.equals("AD_REF_SEARCH") && (columnName.equals("AD_TABLE_ID") || columnName
-              .equals("AD_COLUMN_ID")));
-      error = error
-          || (tableName.equals("AD_REF_TABLE") && (columnName.equals("AD_TABLE_ID") || columnName
-              .equals("AD_KEY")));
+      error = error || (tableName.equals("AD_REF_SEARCH")
+          && (columnName.equals("AD_TABLE_ID") || columnName.equals("AD_COLUMN_ID")));
+      error = error || (tableName.equals("AD_REF_TABLE")
+          && (columnName.equals("AD_TABLE_ID") || columnName.equals("AD_KEY")));
       error = error || (tableName.equals("AD_REFERENCE") && columnName.equals("VALIDATIONTYPE"));
-      error = error
-          || (tableName.equals("AD_TAB") && (columnName.equals("AD_TABLE_ID") || columnName
-              .equals("AD_WINDOW_ID")));
-      error = error
-          || (tableName.equals("AD_COLUMN") && columnName.equals("ISMANDATORY")
-              && c.getOldValue().equals("N") && c.getNewValue().equals("Y"));
+      error = error || (tableName.equals("AD_TAB")
+          && (columnName.equals("AD_TABLE_ID") || columnName.equals("AD_WINDOW_ID")));
+      error = error || (tableName.equals("AD_COLUMN") && columnName.equals("ISMANDATORY")
+          && c.getOldValue().equals("N") && c.getNewValue().equals("Y"));
       if (error) {
         errors.add("Changed column value " + tableName + "." + columnName + " -ID:" + c.getPkRow()
             + " from [" + c.getOldValue() + "] to [" + c.getNewValue() + "]");
@@ -107,10 +99,8 @@ public class ValidateAPIData extends ValidateAPI {
               + ") as they are related to newly added process(" + processId + ")");
           return;
         }
-        errors.add("Not Allowed insertions in "
-            + c.getTable().getName()
-            + " table. ID: "
-            + c.getRow().get(
+        errors.add(
+            "Not Allowed insertions in " + c.getTable().getName() + " table. ID: " + c.getRow().get(
                 ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
       }
     }

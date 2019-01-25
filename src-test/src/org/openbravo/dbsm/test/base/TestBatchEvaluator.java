@@ -44,8 +44,8 @@ public class TestBatchEvaluator implements SQLBatchEvaluator {
   }
 
   @Override
-  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
-      throws DatabaseOperationException {
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql,
+      boolean continueOnError) throws DatabaseOperationException {
     return evaluateBatch(connection, sql, continueOnError, 0);
   }
 

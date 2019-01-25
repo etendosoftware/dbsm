@@ -32,6 +32,7 @@ public class CombinedTranslation implements Translation {
     return this;
   }
 
+  @Override
   public final String exec(String s) {
     String translatedCode = s;
     String initialComments = "";

@@ -157,13 +157,14 @@ public class DataSetTableQueryGenerator {
       DataSetTableQueryGeneratorExtraProperties extraProperties) {
   }
 
-  private String buildAdditionalWhereClause(List<WhereClauseSimpleExpression> additionalWhereClauses) {
+  private String buildAdditionalWhereClause(
+      List<WhereClauseSimpleExpression> additionalWhereClauses) {
     StringBuilder additionalWhereClause = new StringBuilder();
     Iterator<WhereClauseSimpleExpression> iterator = additionalWhereClauses.iterator();
     while (iterator.hasNext()) {
       WhereClauseSimpleExpression expression = iterator.next();
-      additionalWhereClause.append(expression.getColumnName() + " " + expression.getOperator()
-          + " " + expression.getValue());
+      additionalWhereClause.append(expression.getColumnName() + " " + expression.getOperator() + " "
+          + expression.getValue());
       if (iterator.hasNext()) {
         additionalWhereClause.append(" AND ");
       }
@@ -171,7 +172,8 @@ public class DataSetTableQueryGenerator {
     return additionalWhereClause.toString();
   }
 
-  private String joinWhereClausesWithOrOperator(List<OBDatasetTable> dataSetTables, String moduleId) {
+  private String joinWhereClausesWithOrOperator(List<OBDatasetTable> dataSetTables,
+      String moduleId) {
     StringBuilder whereClauseBuilder = new StringBuilder();
     for (OBDatasetTable dataSetTable : dataSetTables) {
       String whereClause = getWhereClause(dataSetTable, moduleId);

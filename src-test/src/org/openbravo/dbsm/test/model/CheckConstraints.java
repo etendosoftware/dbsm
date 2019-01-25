@@ -41,38 +41,26 @@ public class CheckConstraints {
   static {
     contrains = new ArrayList<CheckConstraintType>();
 
-    contrains
-        .add(new CheckConstraintType(
-            "AD_MODULE_TYPE_CHK",
-            "TYPE IN ('M', 'P', 'T')",
-            "((type)::text = ANY ((ARRAY['M'::character varying, 'P'::character varying, 'T'::character varying])::text[]))",
-            "((type)::text = ANY (ARRAY[('M'::character varying)::text, ('P'::character varying)::text, ('T'::character varying)::text]))"));
-    contrains
-        .add(new CheckConstraintType(
-            "S_TIMEEXPENSE_PROCESSED_CHK",
-            "PROCESSED IN ('Y', 'N')",
-            "((processed)::text = ANY ((ARRAY['Y'::character varying, 'N'::character varying])::text[]))",
-            "((processed)::text = ANY (ARRAY[('Y'::character varying)::text, ('N'::character varying)::text]))"));
-    contrains
-        .add(new CheckConstraintType(
-            "MA_WRPHASEPRODUCT_PRODUCTI_CHK",
-            "PRODUCTIONTYPE IN ('+', '-')",
-            "((productiontype)::text = ANY ((ARRAY['+'::character varying, '-'::character varying])::text[]))",
-            "((productiontype)::text = ANY (ARRAY[('+'::character varying)::text, ('-'::character varying)::text]))"));
+    contrains.add(new CheckConstraintType("AD_MODULE_TYPE_CHK", "TYPE IN ('M', 'P', 'T')",
+        "((type)::text = ANY ((ARRAY['M'::character varying, 'P'::character varying, 'T'::character varying])::text[]))",
+        "((type)::text = ANY (ARRAY[('M'::character varying)::text, ('P'::character varying)::text, ('T'::character varying)::text]))"));
+    contrains.add(new CheckConstraintType("S_TIMEEXPENSE_PROCESSED_CHK", "PROCESSED IN ('Y', 'N')",
+        "((processed)::text = ANY ((ARRAY['Y'::character varying, 'N'::character varying])::text[]))",
+        "((processed)::text = ANY (ARRAY[('Y'::character varying)::text, ('N'::character varying)::text]))"));
+    contrains.add(new CheckConstraintType("MA_WRPHASEPRODUCT_PRODUCTI_CHK",
+        "PRODUCTIONTYPE IN ('+', '-')",
+        "((productiontype)::text = ANY ((ARRAY['+'::character varying, '-'::character varying])::text[]))",
+        "((productiontype)::text = ANY (ARRAY[('+'::character varying)::text, ('-'::character varying)::text]))"));
 
     // following cases didn't change after export + dump, testing them just because are more complex
-    contrains
-        .add(new CheckConstraintType(
-            "C_INVOICELINE_CHECK3",
-            "(((((ISDEFERRED = 'Y') AND (C_PERIOD_ID IS NOT NULL)) AND (DEFPLANTYPE IS NOT NULL)) AND (M_PRODUCT_ID IS NOT NULL)) AND (PERIODNUMBER IS NOT NULL)) OR (ISDEFERRED = 'N')",
-            "((((((isdeferred = 'Y'::bpchar) AND (c_period_id IS NOT NULL)) AND (defplantype IS NOT NULL)) AND (m_product_id IS NOT NULL)) AND (periodnumber IS NOT NULL)) OR (isdeferred = 'N'::bpchar))",
-            "((((((isdeferred = 'Y'::bpchar) AND (c_period_id IS NOT NULL)) AND (defplantype IS NOT NULL)) AND (m_product_id IS NOT NULL)) AND (periodnumber IS NOT NULL)) OR (isdeferred = 'N'::bpchar))"));
-    contrains
-        .add(new CheckConstraintType(
-            "C_DEBT_PAYMENT_ISVALID_CHK1",
-            "(((ISVALID = 'Y') AND (((C_SETTLEMENT_GENERATE_ID IS NULL) AND (GENERATE_PROCESSED = 'N')) OR ((C_SETTLEMENT_GENERATE_ID IS NOT NULL) AND (GENERATE_PROCESSED = 'Y')))) OR (((ISVALID = 'N') AND (C_SETTLEMENT_GENERATE_ID IS NOT NULL)) AND (GENERATE_PROCESSED = 'N'))) OR ((ISVALID = 'N') AND (ISAUTOMATICGENERATED = 'N'))",
-            "((((isvalid = 'Y'::bpchar) AND (((c_settlement_generate_id IS NULL) AND (generate_processed = 'N'::bpchar)) OR ((c_settlement_generate_id IS NOT NULL) AND (generate_processed = 'Y'::bpchar)))) OR (((isvalid = 'N'::bpchar) AND (c_settlement_generate_id IS NOT NULL)) AND (generate_processed = 'N'::bpchar))) OR ((isvalid = 'N'::bpchar) AND (isautomaticgenerated = 'N'::bpchar)))",
-            "((((isvalid = 'Y'::bpchar) AND (((c_settlement_generate_id IS NULL) AND (generate_processed = 'N'::bpchar)) OR ((c_settlement_generate_id IS NOT NULL) AND (generate_processed = 'Y'::bpchar)))) OR (((isvalid = 'N'::bpchar) AND (c_settlement_generate_id IS NOT NULL)) AND (generate_processed = 'N'::bpchar))) OR ((isvalid = 'N'::bpchar) AND (isautomaticgenerated = 'N'::bpchar)))"));
+    contrains.add(new CheckConstraintType("C_INVOICELINE_CHECK3",
+        "(((((ISDEFERRED = 'Y') AND (C_PERIOD_ID IS NOT NULL)) AND (DEFPLANTYPE IS NOT NULL)) AND (M_PRODUCT_ID IS NOT NULL)) AND (PERIODNUMBER IS NOT NULL)) OR (ISDEFERRED = 'N')",
+        "((((((isdeferred = 'Y'::bpchar) AND (c_period_id IS NOT NULL)) AND (defplantype IS NOT NULL)) AND (m_product_id IS NOT NULL)) AND (periodnumber IS NOT NULL)) OR (isdeferred = 'N'::bpchar))",
+        "((((((isdeferred = 'Y'::bpchar) AND (c_period_id IS NOT NULL)) AND (defplantype IS NOT NULL)) AND (m_product_id IS NOT NULL)) AND (periodnumber IS NOT NULL)) OR (isdeferred = 'N'::bpchar))"));
+    contrains.add(new CheckConstraintType("C_DEBT_PAYMENT_ISVALID_CHK1",
+        "(((ISVALID = 'Y') AND (((C_SETTLEMENT_GENERATE_ID IS NULL) AND (GENERATE_PROCESSED = 'N')) OR ((C_SETTLEMENT_GENERATE_ID IS NOT NULL) AND (GENERATE_PROCESSED = 'Y')))) OR (((ISVALID = 'N') AND (C_SETTLEMENT_GENERATE_ID IS NOT NULL)) AND (GENERATE_PROCESSED = 'N'))) OR ((ISVALID = 'N') AND (ISAUTOMATICGENERATED = 'N'))",
+        "((((isvalid = 'Y'::bpchar) AND (((c_settlement_generate_id IS NULL) AND (generate_processed = 'N'::bpchar)) OR ((c_settlement_generate_id IS NOT NULL) AND (generate_processed = 'Y'::bpchar)))) OR (((isvalid = 'N'::bpchar) AND (c_settlement_generate_id IS NOT NULL)) AND (generate_processed = 'N'::bpchar))) OR ((isvalid = 'N'::bpchar) AND (isautomaticgenerated = 'N'::bpchar)))",
+        "((((isvalid = 'Y'::bpchar) AND (((c_settlement_generate_id IS NULL) AND (generate_processed = 'N'::bpchar)) OR ((c_settlement_generate_id IS NOT NULL) AND (generate_processed = 'Y'::bpchar)))) OR (((isvalid = 'N'::bpchar) AND (c_settlement_generate_id IS NOT NULL)) AND (generate_processed = 'N'::bpchar))) OR ((isvalid = 'N'::bpchar) AND (isautomaticgenerated = 'N'::bpchar)))"));
 
   }
 
@@ -82,8 +70,8 @@ public class CheckConstraints {
    * Checks constraint formatted as in pg9.3 after install sources is properly translated
    */
   @Test
-  public void installSourceIsProperlyTranslated() throws NoSuchFieldException,
-      IllegalAccessException {
+  public void installSourceIsProperlyTranslated()
+      throws NoSuchFieldException, IllegalAccessException {
     for (CheckConstraintType contraint : contrains) {
       assertThat(contraint.contraintName + " is not properly tranlsated",
           translate(contraint.installSource), is(equalTo(contraint.translated)));
@@ -96,16 +84,16 @@ public class CheckConstraints {
    * Checks constraint formatted as in pg9.3 after pg_dump + pg_restore is properly translated
    */
   @Test
-  public void dumpedAndRestoredPgDbIsProperlyTranslated() throws NoSuchFieldException,
-      IllegalAccessException {
+  public void dumpedAndRestoredPgDbIsProperlyTranslated()
+      throws NoSuchFieldException, IllegalAccessException {
     for (CheckConstraintType contraint : contrains) {
       assertThat(contraint.contraintName + " is not properly tranlsated",
           translate(contraint.dumpRestore), is(equalTo(contraint.translated)));
     }
   }
 
-  public static String translate(String checkConstraint) throws NoSuchFieldException,
-      IllegalAccessException {
+  public static String translate(String checkConstraint)
+      throws NoSuchFieldException, IllegalAccessException {
     return translate(checkConstraint, new PostgreSqlCheckTranslation());
   }
 

@@ -119,8 +119,8 @@ public class DbsmTest {
     }
   };
 
-  public DbsmTest(String rdbms, String driver, String url, String sid, String user,
-      String password, String name) throws FileNotFoundException, IOException {
+  public DbsmTest(String rdbms, String driver, String url, String sid, String user, String password,
+      String name) throws FileNotFoundException, IOException {
     initLogging();
 
     String workingDir = System.getProperty("user.dir");
@@ -177,8 +177,8 @@ public class DbsmTest {
    */
   @Parameters(name = "DB: {6}")
   public static Collection<String[]> params() throws IOException, JSONException {
-    JSONObject config = new JSONObject(FileUtils.readFileToString(
-        new File("config/db-config.json"), "utf-8"));
+    JSONObject config = new JSONObject(
+        FileUtils.readFileToString(new File("config/db-config.json"), "utf-8"));
 
     List<String[]> configs = new ArrayList<String[]>();
     JSONArray dbs = config.getJSONArray("testDBs");
@@ -187,16 +187,17 @@ public class DbsmTest {
       if (jsonDb.has("skip") && jsonDb.getBoolean("skip")) {
         continue;
       }
-      String dbName = jsonDb.has("name") ? jsonDb.getString("name") : (jsonDb.getString("rdbms")
-          + " " + jsonDb.getString("url") + " - " + jsonDb.getString("user"));
-      configs.add(new String[] {//
+      String dbName = jsonDb.has("name") ? jsonDb.getString("name")
+          : (jsonDb.getString("rdbms") + " " + jsonDb.getString("url") + " - "
+              + jsonDb.getString("user"));
+      configs.add(new String[] { //
           jsonDb.getString("rdbms"), //
-              jsonDb.getString("driver"), //
-              jsonDb.getString("url"), //
-              jsonDb.getString("sid"), //
-              jsonDb.getString("user"), //
-              jsonDb.getString("password"), //
-              dbName });
+          jsonDb.getString("driver"), //
+          jsonDb.getString("url"), //
+          jsonDb.getString("sid"), //
+          jsonDb.getString("user"), //
+          jsonDb.getString("password"), //
+          dbName });
     }
 
     return configs;
@@ -496,8 +497,8 @@ public class DbsmTest {
     }
     platform.setMaxThreads(threads);
 
-    Database originalDB = platform
-        .loadModelFromDatabase(getExcludeFilter(), doPlSqlStandardization);
+    Database originalDB = platform.loadModelFromDatabase(getExcludeFilter(),
+        doPlSqlStandardization);
     io.writeToDir(originalDB, new File(path));
   }
 
@@ -523,8 +524,8 @@ public class DbsmTest {
     Map<Change, Boolean> allChanges = new HashMap<Change, Boolean>();
     try {
       log.info("Comparing models");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      final DataComparator dataComparator = new DataComparator(
+          platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       OBDataset ad = new OBDataset(databaseOrgData);
       dataComparator.compare(xmlModel, currentDB, platform, databaseOrgData, ad, null);
       Vector<Change> changes = new Vector<Change>();
@@ -559,12 +560,12 @@ public class DbsmTest {
     platform.setSystemDataSource(getSystemDataSource());
     if (evaluator == null) {
       switch (rdbms) {
-      case PG:
-        evaluator = new PGStandardBatchEvaluator(platform);
-        break;
-      case ORA:
-        evaluator = new OracleStandardBatchEvaluator(platform);
-        break;
+        case PG:
+          evaluator = new PGStandardBatchEvaluator(platform);
+          break;
+        case ORA:
+          evaluator = new OracleStandardBatchEvaluator(platform);
+          break;
       }
     }
     platform.setBatchEvaluator(evaluator);
@@ -713,8 +714,8 @@ public class DbsmTest {
 
       Statement st = cn.createStatement();
 
-      ResultSet rs = st.executeQuery("select *  from " + tableName + " where " + tableName
-          + "_id='" + pk + "'");
+      ResultSet rs = st
+          .executeQuery("select *  from " + tableName + " where " + tableName + "_id='" + pk + "'");
       ResultSetMetaData md = rs.getMetaData();
       rs.next();
       Row row = new Row();

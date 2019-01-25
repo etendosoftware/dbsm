@@ -44,8 +44,9 @@ public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
         Arrays.asList(CONFIG_SCRIPT_INSTALL));
     Table table = database.findTable(TEST_TABLE);
     Column column = table.findColumn(TEST_COLUMN);
-    assertEquals("Required property of column " + TEST_COLUMN
-        + " changed by the configuration script", true, column.isRequired());
+    assertEquals(
+        "Required property of column " + TEST_COLUMN + " changed by the configuration script", true,
+        column.isRequired());
   }
 
   @Test
@@ -58,11 +59,13 @@ public class ConfigScriptColumnRequiredChange extends ConfigScriptBaseTest {
   /**
    * Check if column required is changed in the database
    */
-  private void assertIsColumnRequiredChangeApplied(Database db, String tableName, String columnName) {
+  private void assertIsColumnRequiredChangeApplied(Database db, String tableName,
+      String columnName) {
     Table table = db.findTable(tableName);
     Column column = table.findColumn(columnName);
-    assertEquals("Required property of column " + columnName
-        + " changed by the configuration script", true, column.isRequired());
+    assertEquals(
+        "Required property of column " + columnName + " changed by the configuration script", true,
+        column.isRequired());
   }
 
 }

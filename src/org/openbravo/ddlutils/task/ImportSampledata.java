@@ -215,7 +215,8 @@ public class ImportSampledata extends BaseDatabaseTask {
       // Do not update the checksum if the db structure has been modified right before executing
       // import.sample.data task manually
       if (isDatabaseModifiedPreviously) {
-        log.info("Detected database changes before importing the sample data. Checksum will not be updated.");
+        log.info(
+            "Detected database changes before importing the sample data. Checksum will not be updated.");
       } else {
         // Update checksum in order to handle properly the case when a module script modified the
         // database structure.
@@ -265,10 +266,9 @@ public class ImportSampledata extends BaseDatabaseTask {
       String values = br.readLine();
       clientId = values.substring(0, values.indexOf(","));
     } catch (Exception e) {
-      getLog()
-          .error(
-              "Error while tring to obtain the client id from file "
-                  + clientFileCopy.getAbsolutePath(), e);
+      getLog().error(
+          "Error while tring to obtain the client id from file " + clientFileCopy.getAbsolutePath(),
+          e);
     }
     return clientId;
   }
@@ -276,8 +276,8 @@ public class ImportSampledata extends BaseDatabaseTask {
   /**
    * Parses a single sourcedata style database and returns it as a list of DynaBeans
    */
-  private static Vector<DynaBean> readOneDataXml(Database db, File file) throws IOException,
-      SAXException {
+  private static Vector<DynaBean> readOneDataXml(Database db, File file)
+      throws IOException, SAXException {
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
 

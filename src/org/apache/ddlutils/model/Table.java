@@ -129,6 +129,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -452,6 +453,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
    */
   public Index[] getNonUniqueIndices() {
     Collection nonUniqueIndices = CollectionUtils.select(_indices, new Predicate() {
+      @Override
       public boolean evaluate(Object input) {
         return !((Index) input).isUnique();
       }
@@ -467,6 +469,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
    */
   public Index[] getUniqueIndices() {
     Collection uniqueIndices = CollectionUtils.select(_indices, new Predicate() {
+      @Override
       public boolean evaluate(Object input) {
         return ((Index) input).isUnique();
       }
@@ -762,6 +765,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
    */
   public Column[] getPrimaryKeyColumns() {
     Collection pkColumns = CollectionUtils.select(_columns, new Predicate() {
+      @Override
       public boolean evaluate(Object input) {
         return ((Column) input).isPrimaryKey();
       }
@@ -778,6 +782,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
    */
   public Column[] getAutoIncrementColumns() {
     Collection autoIncrColumns = CollectionUtils.select(_columns, new Predicate() {
+      @Override
       public boolean evaluate(Object input) {
         return ((Column) input).isAutoIncrement();
       }
@@ -797,6 +802,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
       final Collator collator = Collator.getInstance();
 
       Collections.sort(_foreignKeys, new Comparator() {
+        @Override
         public int compare(Object obj1, Object obj2) {
           String fk1Name = ((ForeignKey) obj1).getName();
           String fk2Name = ((ForeignKey) obj2).getName();
@@ -817,6 +823,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
       final Collator collator = Collator.getInstance();
 
       Collections.sort(_checks, new Comparator() {
+        @Override
         public int compare(Object obj1, Object obj2) {
           String ch1Name = ((Check) obj1).getName();
           String ch2Name = ((Check) obj2).getName();
@@ -837,6 +844,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
       final Collator collator = Collator.getInstance();
 
       Collections.sort(_indices, new Comparator() {
+        @Override
         public int compare(Object obj1, Object obj2) {
           String i1Name = ((Index) obj1).getName();
           String i2Name = ((Index) obj2).getName();
@@ -1019,6 +1027,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Table result = (Table) super.clone();
 
@@ -1028,20 +1037,25 @@ public class Table implements StructureObject, Serializable, Cloneable {
     result._primaryKey = _primaryKey;
     result._type = _type;
     result._columns = new ArrayList();
-    for (int i = 0; i < _columns.size(); i++)
+    for (int i = 0; i < _columns.size(); i++) {
       result._columns.add(((Column) _columns.get(i)).clone());
+    }
     result._foreignKeys = new ArrayList();
-    for (int i = 0; i < _foreignKeys.size(); i++)
+    for (int i = 0; i < _foreignKeys.size(); i++) {
       result._foreignKeys.add(((ForeignKey) _foreignKeys.get(i)).clone());
+    }
     result._indices = new ArrayList();
-    for (int i = 0; i < _indices.size(); i++)
+    for (int i = 0; i < _indices.size(); i++) {
       result._indices.add(((Index) _indices.get(i)).clone());
+    }
     result._uniques = new ArrayList();
-    for (int i = 0; i < _uniques.size(); i++)
+    for (int i = 0; i < _uniques.size(); i++) {
       result._uniques.add(((Unique) _uniques.get(i)).clone());
+    }
     result._checks = new ArrayList();
-    for (int i = 0; i < _checks.size(); i++)
+    for (int i = 0; i < _checks.size(); i++) {
       result._checks.add(((Check) _checks.get(i)).clone());
+    }
 
     return result;
   }
@@ -1049,6 +1063,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Table) {
       Table other = (Table) obj;
@@ -1070,6 +1085,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     // TODO: For now we ignore catalog and schema (type should be irrelevant
     // anyways)
@@ -1081,6 +1097,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 
@@ -1147,18 +1164,21 @@ public class Table implements StructureObject, Serializable, Cloneable {
         this._foreignKeys.add(((ForeignKey) table._foreignKeys.get(i)).clone());
       }
       for (int i = 0; i < table._indices.size(); i++) {
-        if (findIndex(((Index) table._indices.get(i)).getName()) != null)
+        if (findIndex(((Index) table._indices.get(i)).getName()) != null) {
           removeIndex(findIndex(((Index) table._indices.get(i)).getName()));
+        }
         this._indices.add(((Index) table._indices.get(i)).clone());
       }
       for (int i = 0; i < table._uniques.size(); i++) {
-        if (findUnique(((Unique) table._uniques.get(i)).getName()) != null)
+        if (findUnique(((Unique) table._uniques.get(i)).getName()) != null) {
           removeUnique(findUnique(((Unique) table._uniques.get(i)).getName()));
+        }
         this._uniques.add(((Unique) table._uniques.get(i)).clone());
       }
       for (int i = 0; i < table._checks.size(); i++) {
-        if (findCheck(((Check) table._checks.get(i)).getName()) != null)
+        if (findCheck(((Check) table._checks.get(i)).getName()) != null) {
           removeCheck(findCheck(((Check) table._checks.get(i)).getName()));
+        }
         this._checks.add(((Check) table._checks.get(i)).clone());
       }
     } catch (CloneNotSupportedException e) {
@@ -1216,7 +1236,8 @@ public class Table implements StructureObject, Serializable, Cloneable {
         }
       }
       for (int i = 0; i < _foreignKeys.size(); i++) {
-        if (filter.compliesWithExternalPrefix(((ForeignKey) _foreignKeys.get(i)).getName(), _name)) {
+        if (filter.compliesWithExternalPrefix(((ForeignKey) _foreignKeys.get(i)).getName(),
+            _name)) {
           _foreignKeys.remove(i);
           i--;
         }

@@ -87,9 +87,8 @@ public class CheckTriggerDisablement extends DbsmTest {
 
   private void insertRowManually(String id) throws SQLException {
     try (Connection cn = getDataSource().getConnection();
-        PreparedStatement st = cn
-            .prepareStatement("INSERT INTO test(test_id, trigger_was_invoked) values ('" + id
-                + "', 0)");) {
+        PreparedStatement st = cn.prepareStatement(
+            "INSERT INTO test(test_id, trigger_was_invoked) values ('" + id + "', 0)");) {
       st.execute();
     }
   }

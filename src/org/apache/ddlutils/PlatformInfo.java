@@ -1177,7 +1177,8 @@ public class PlatformInfo {
    *          The jdbc type corresponding to the native type (e.g. when reading the model from the
    *          database)
    */
-  public void addNativeTypeMapping(String jdbcTypeName, String nativeType, String targetJdbcTypeName) {
+  public void addNativeTypeMapping(String jdbcTypeName, String nativeType,
+      String targetJdbcTypeName) {
     try {
       Field sourceType = Types.class.getField(jdbcTypeName);
       Field targetType = Types.class.getField(targetJdbcTypeName);

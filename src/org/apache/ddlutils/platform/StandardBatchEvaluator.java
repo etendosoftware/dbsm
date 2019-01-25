@@ -100,8 +100,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
         } catch (SQLException ex) {
           if (command.contains("SCRIPT OPTIONS (CRITICAL = TRUE)")) {
             throw new DatabaseOperationException(
-                "Error while executing a critical SQL to recreate a database table: "
-                    + command
+                "Error while executing a critical SQL to recreate a database table: " + command
                     + ".\nYou should recover a backup of the database if possible. If it's not, take into account that there is an auxiliary table which still contains the original data, which can be recovered from it. If a update.database or smartbuild is done, this auxiliary table will be deleted, and all its data will be lost forever. For more information, visit the page: http://wiki.openbravo.com/wiki/Update_Tips",
                 ex);
           }
@@ -210,8 +209,7 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
         }
       }
       if (!aForcedCommands.isEmpty()) {
-        String error = "There are still "
-            + aForcedCommands.size()
+        String error = "There are still " + aForcedCommands.size()
             + " forced commands not executed sucessfully (likely related to failed view statements).";
         if (_ignoreWarns) {
           _log.info(error);
@@ -248,8 +246,8 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
   }
 
   @Override
-  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
-      throws DatabaseOperationException {
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql,
+      boolean continueOnError) throws DatabaseOperationException {
     Statement statement = null;
     int errors = 0;
     int commandCount = 0;

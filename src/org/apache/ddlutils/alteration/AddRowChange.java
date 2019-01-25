@@ -15,17 +15,20 @@ public class AddRowChange implements DataChange {
     _row = row;
   }
 
+  @Override
   public boolean apply(DatabaseData databaseData, boolean caseSensitive) {
     SqlDynaClass dynaClass = (SqlDynaClass) _row.getDynaClass();
     dynaClass.resetDynaClass(databaseData.getDatabase().findTable(_table.getName()));
     return (databaseData.addRow(_table, _row, false));
   }
 
+  @Override
   public boolean applyInReverse(DatabaseData databaseData, boolean caseSensitive) {
     // Not implemented, as a configuration script cannot contain this kind of change
     return false;
   }
 
+  @Override
   public String toString() {
     return "New row in table [" + _table.getName() + "]: <" + _row + ">";
   }

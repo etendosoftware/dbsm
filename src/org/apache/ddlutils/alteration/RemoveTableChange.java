@@ -41,6 +41,7 @@ public class RemoveTableChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = database.findTable(getChangedTable().getName(), caseSensitive);
 

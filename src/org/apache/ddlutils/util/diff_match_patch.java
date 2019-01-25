@@ -109,8 +109,8 @@ public class diff_match_patch {
 
   /**
    * The data structure representing a diff is a Linked list of Diff objects:
-   * {Diff(Operation.DELETE, "Hello"), Diff(Operation.INSERT, "Goodbye"), Diff(Operation.EQUAL,
-   * " world.")} which means: delete "Hello", add "Goodbye" and keep " world."
+   * {Diff(Operation.DELETE, "Hello"), Diff(Operation.INSERT, "Goodbye"), Diff(Operation.EQUAL, "
+   * world.")} which means: delete "Hello", add "Goodbye" and keep " world."
    */
   public enum Operation {
     DELETE, INSERT, EQUAL
@@ -450,7 +450,8 @@ public class diff_match_patch {
             footsteps.put(footstep, d);
           }
         }
-        while (!done && x < text1_length && y < text2_length && text1.charAt(x) == text2.charAt(y)) {
+        while (!done && x < text1_length && y < text2_length
+            && text1.charAt(x) == text2.charAt(y)) {
           x++;
           y++;
           if (doubleEnd) {
@@ -511,10 +512,10 @@ public class diff_match_patch {
           if (done) {
             // Reverse path ran over front path.
             v_map1 = v_map1.subList(0, footsteps.get(footstep) + 1);
-            LinkedList<Diff> a = diff_path1(v_map1, text1.substring(0, text1_length - x), text2
-                .substring(0, text2_length - y));
-            a.addAll(diff_path2(v_map2, text1.substring(text1_length - x), text2
-                .substring(text2_length - y)));
+            LinkedList<Diff> a = diff_path1(v_map1, text1.substring(0, text1_length - x),
+                text2.substring(0, text2_length - y));
+            a.addAll(diff_path2(v_map2, text1.substring(text1_length - x),
+                text2.substring(text2_length - y)));
             return a;
           }
         }
@@ -599,9 +600,8 @@ public class diff_match_patch {
           if (last_op == Operation.DELETE) {
             path.getLast().text += text1.charAt(text1.length() - x - 1);
           } else {
-            path.addLast(new Diff(Operation.DELETE, text1.substring(text1.length() - x - 1, text1
-                .length()
-                - x)));
+            path.addLast(new Diff(Operation.DELETE,
+                text1.substring(text1.length() - x - 1, text1.length() - x)));
           }
           last_op = Operation.DELETE;
           break;
@@ -610,22 +610,21 @@ public class diff_match_patch {
           if (last_op == Operation.INSERT) {
             path.getLast().text += text2.charAt(text2.length() - y - 1);
           } else {
-            path.addLast(new Diff(Operation.INSERT, text2.substring(text2.length() - y - 1, text2
-                .length()
-                - y)));
+            path.addLast(new Diff(Operation.INSERT,
+                text2.substring(text2.length() - y - 1, text2.length() - y)));
           }
           last_op = Operation.INSERT;
           break;
         } else {
           x--;
           y--;
-          assert (text1.charAt(text1.length() - x - 1) == text2.charAt(text2.length() - y - 1)) : "No diagonal.  Can't happen. (diff_path2)";
+          assert (text1.charAt(text1.length() - x - 1) == text2
+              .charAt(text2.length() - y - 1)) : "No diagonal.  Can't happen. (diff_path2)";
           if (last_op == Operation.EQUAL) {
             path.getLast().text += text1.charAt(text1.length() - x - 1);
           } else {
-            path.addLast(new Diff(Operation.EQUAL, text1.substring(text1.length() - x - 1, text1
-                .length()
-                - x)));
+            path.addLast(new Diff(Operation.EQUAL,
+                text1.substring(text1.length() - x - 1, text1.length() - x)));
           }
           last_op = Operation.EQUAL;
         }
@@ -1039,9 +1038,8 @@ public class diff_match_patch {
          * <ins>A</ins>X<ins>C</ins><del>D</del> <ins>A</ins><del>B</del>X<ins>C</ins>
          * <ins>A</del>X<ins>C</ins><del>D</del> <ins>A</ins><del>B</del>X<del>C</del>
          */
-        if (lastequality != null
-            && ((pre_ins && pre_del && post_ins && post_del) || ((lastequality.length() < Diff_EditCost / 2) && ((pre_ins ? 1
-                : 0)
+        if (lastequality != null && ((pre_ins && pre_del && post_ins && post_del)
+            || ((lastequality.length() < Diff_EditCost / 2) && ((pre_ins ? 1 : 0)
                 + (pre_del ? 1 : 0) + (post_ins ? 1 : 0) + (post_del ? 1 : 0)) == 3))) {
           // System.out.println("Splitting: '" + lastequality + "'");
           // Walk back to offending equality.
@@ -1390,8 +1388,8 @@ public class diff_match_patch {
       switch (aDiff.operation) {
       case INSERT:
         try {
-          text.append("+").append(URLEncoder.encode(aDiff.text, "UTF-8").replace('+', ' ')).append(
-              "\t");
+          text.append("+").append(URLEncoder.encode(aDiff.text, "UTF-8").replace('+', ' '))
+              .append("\t");
         } catch (UnsupportedEncodingException e) {
           // Not likely on modern system.
           throw new Error("This system does not support UTF-8.", e);
@@ -1481,8 +1479,8 @@ public class diff_match_patch {
         break;
       default:
         // Anything else is an error.
-        throw new IllegalArgumentException("Invalid diff operation in diff_fromDelta: "
-            + token.charAt(0));
+        throw new IllegalArgumentException(
+            "Invalid diff operation in diff_fromDelta: " + token.charAt(0));
       }
     }
     if (pointer != text1.length()) {
@@ -1536,7 +1534,8 @@ public class diff_match_patch {
    * @return Best match index or -1.
    */
   protected int match_bitap(String text, String pattern, int loc) {
-    assert (Match_MaxBits == 0 || pattern.length() <= Match_MaxBits) : "Pattern too long for this application.";
+    assert (Match_MaxBits == 0
+        || pattern.length() <= Match_MaxBits) : "Pattern too long for this application.";
 
     // Initialise the alphabet.
     Map<Character, Integer> s = match_alphabet(pattern);
@@ -1692,8 +1691,8 @@ public class diff_match_patch {
     while (text.indexOf(pattern) != text.lastIndexOf(pattern)
         && pattern.length() < Match_MaxBits - Patch_Margin - Patch_Margin) {
       padding += Patch_Margin;
-      pattern = text.substring(Math.max(0, patch.start2 - padding), Math.min(text.length(),
-          patch.start2 + patch.length1 + padding));
+      pattern = text.substring(Math.max(0, patch.start2 - padding),
+          Math.min(text.length(), patch.start2 + patch.length1 + padding));
     }
     // Add one chunk for good luck.
     padding += Patch_Margin;
@@ -1704,8 +1703,8 @@ public class diff_match_patch {
       patch.diffs.addFirst(new Diff(Operation.EQUAL, prefix));
     }
     // Add the suffix.
-    String suffix = text.substring(patch.start2 + patch.length1, Math.min(text.length(),
-        patch.start2 + patch.length1 + padding));
+    String suffix = text.substring(patch.start2 + patch.length1,
+        Math.min(text.length(), patch.start2 + patch.length1 + padding));
     if (suffix.length() != 0) {
       patch.diffs.addLast(new Diff(Operation.EQUAL, suffix));
     }
@@ -1764,6 +1763,7 @@ public class diff_match_patch {
    * @return LinkedList of Patch objects.
    * @deprecated Prefer patch_make(String text1, LinkedList<Diff> diffs).
    */
+  @Deprecated
   public LinkedList<Patch> patch_make(String text1, String text2, LinkedList<Diff> diffs) {
     return patch_make(text1, diffs);
   }
@@ -1966,9 +1966,8 @@ public class diff_match_patch {
                       + text.substring(start_loc + index2);
                 } else if (aDiff.operation == Operation.DELETE) {
                   // Deletion
-                  text = text.substring(0, start_loc + index2)
-                      + text
-                          .substring(start_loc + diff_xIndex(diffs, index1 + aDiff.text.length()));
+                  text = text.substring(0, start_loc + index2) + text
+                      .substring(start_loc + diff_xIndex(diffs, index1 + aDiff.text.length()));
                 }
               }
               if (aDiff.operation != Operation.DELETE) {
@@ -2105,8 +2104,8 @@ public class diff_match_patch {
             bigpatch.diffs.removeFirst();
           } else {
             // Deletion or equality. Only take as much as we can stomach.
-            diff_text = diff_text.substring(0, Math.min(diff_text.length(), patch_size
-                - patch.length1 - Patch_Margin));
+            diff_text = diff_text.substring(0,
+                Math.min(diff_text.length(), patch_size - patch.length1 - Patch_Margin));
             patch.length1 += diff_text.length();
             start1 += diff_text.length();
             if (diff_type == Operation.EQUAL) {
@@ -2119,8 +2118,8 @@ public class diff_match_patch {
             if (diff_text.equals(bigpatch.diffs.getFirst().text)) {
               bigpatch.diffs.removeFirst();
             } else {
-              bigpatch.diffs.getFirst().text = bigpatch.diffs.getFirst().text.substring(diff_text
-                  .length());
+              bigpatch.diffs.getFirst().text = bigpatch.diffs.getFirst().text
+                  .substring(diff_text.length());
             }
           }
         }
@@ -2289,6 +2288,7 @@ public class diff_match_patch {
      * 
      * @return text version.
      */
+    @Override
     public String toString() {
       String prettyText = this.text.replace('\n', '\u00b6');
       return "Diff(" + this.operation + ",\"" + prettyText + "\")";
@@ -2301,6 +2301,7 @@ public class diff_match_patch {
      *          Another Diff to compare against.
      * @return true or false.
      */
+    @Override
     public boolean equals(Object d) {
       try {
         return (((Diff) d).operation == this.operation) && (((Diff) d).text.equals(this.text));
@@ -2333,6 +2334,7 @@ public class diff_match_patch {
      * 
      * @return The GNU diff string.
      */
+    @Override
     public String toString() {
       String coords1, coords2;
       if (this.length1 == 0) {
@@ -2389,8 +2391,8 @@ public class diff_match_patch {
    */
   private static String unescapeForEncodeUriCompatability(String str) {
     return str.replace("%21", "!").replace("%7E", "~").replace("%27", "'").replace("%28", "(")
-        .replace("%29", ")").replace("%3B", ";").replace("%2F", "/").replace("%3F", "?").replace(
-            "%3A", ":").replace("%40", "@").replace("%26", "&").replace("%3D", "=").replace("%2B",
-            "+").replace("%24", "$").replace("%2C", ",").replace("%23", "#");
+        .replace("%29", ")").replace("%3B", ";").replace("%2F", "/").replace("%3F", "?")
+        .replace("%3A", ":").replace("%40", "@").replace("%26", "&").replace("%3D", "=")
+        .replace("%2B", "+").replace("%24", "$").replace("%2C", ",").replace("%23", "#");
   }
 }

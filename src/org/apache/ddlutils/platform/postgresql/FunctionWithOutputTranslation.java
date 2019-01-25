@@ -78,7 +78,7 @@ public class FunctionWithOutputTranslation extends ReplacePatTranslation {
     strReplace.append(strParams);
     strReplace.append(")");
     _replaceStr = strReplace.toString();
-    //        
+    //
     // System.out.println(_p);
     // System.out.println(_replaceStr);
 

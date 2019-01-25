@@ -38,8 +38,8 @@ public class PreventConstraintDeletion extends DbsmTest {
   private static final String TABLE2_FK_NAME = "TABLE2_FK";
   private static final String TABLE4_FK_NAME = "TABLE4_FK";
 
-  public PreventConstraintDeletion(String rdbms, String driver, String url, String sid,
-      String user, String password, String name) throws FileNotFoundException, IOException {
+  public PreventConstraintDeletion(String rdbms, String driver, String url, String sid, String user,
+      String password, String name) throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
@@ -217,8 +217,8 @@ public class PreventConstraintDeletion extends DbsmTest {
     String oid = "";
     try (Connection cn = getDataSource().getConnection()) {
       PreparedStatement st = null;
-      st = cn
-          .prepareStatement("SELECT to_char(last_change, 'DD:MM:YYYY HH24:MI:SS') FROM USER_CONSTRAINTS WHERE upper(constraint_name) =  upper(?)");
+      st = cn.prepareStatement(
+          "SELECT to_char(last_change, 'DD:MM:YYYY HH24:MI:SS') FROM USER_CONSTRAINTS WHERE upper(constraint_name) =  upper(?)");
       st.setString(1, fk);
       ResultSet rs = st.executeQuery();
       rs.next();

@@ -71,8 +71,9 @@ public class RemoveCheckChange extends TableChangeImplBase {
 
   public void setCheck(Database model) {
     Table table = model.findTable(_tableName);
-    if (table != null)
+    if (table != null) {
       _check = table.findCheck(_checkName);
+    }
   }
 
   public void setCheck(Check check) {
@@ -82,13 +83,15 @@ public class RemoveCheckChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = null;
 
-    if (_tableName == null)
+    if (_tableName == null) {
       table = database.findTable(getChangedTable().getName(), caseSensitive);
-    else
+    } else {
       table = database.findTable(_tableName);
+    }
 
     // We will not try to apply the change if the table doesn't exist in the model
     // This could happen in update.database.mod if a configuration script has this change
@@ -99,26 +102,28 @@ public class RemoveCheckChange extends TableChangeImplBase {
 
     Check check = null;
 
-    if (_checkName == null)
+    if (_checkName == null) {
       check = table.findCheck(_check.getName(), caseSensitive);
-    else
+    } else {
       check = table.findCheck(_checkName);
+    }
 
     table.removeCheck(check);
   }
 
   public void applyInReverse(Database database, boolean caseSensitive) {
     if (_check == null) {
-      System.out
-          .println("Error while applying a RemoveCheckChange (the check wasn't found in the configuration script). Exporting the configuration script again should fix this problem.");
+      System.out.println(
+          "Error while applying a RemoveCheckChange (the check wasn't found in the configuration script). Exporting the configuration script again should fix this problem.");
       return;
     }
     Table table = null;
 
-    if (_tableName == null)
+    if (_tableName == null) {
       table = database.findTable(getChangedTable().getName(), caseSensitive);
-    else
+    } else {
       table = database.findTable(_tableName);
+    }
 
     // We will not try to apply the change if the table doesn't exist in the model
     // This could happen in update.database.mod if a configuration script has this change

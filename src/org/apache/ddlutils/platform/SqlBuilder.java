@@ -510,7 +510,8 @@ public abstract class SqlBuilder {
       createdTables.add(table.getName());
 
       createTable(database, table, params == null ? null : params.getParametersFor(table));
-      writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
+      writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(),
+          table.getPrimaryKeyColumns());
       writeExternalIndicesCreateStmt(table);
     }
 
@@ -555,8 +556,8 @@ public abstract class SqlBuilder {
   public void alterDatabase(Database currentModel, Database desiredModel, CreationParameters params)
       throws IOException {
 
-    ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
-        .isDelimitedIdentifierModeOn());
+    ModelComparator comparator = new ModelComparator(getPlatformInfo(),
+        getPlatform().isDelimitedIdentifierModeOn());
     List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
 
     alterDatabase(currentModel, desiredModel, params, changes);
@@ -580,8 +581,8 @@ public abstract class SqlBuilder {
    */
   public void prepareDatabaseForAlter(Database currentModel, Database desiredModel,
       CreationParameters params) throws IOException {
-    ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
-        .isDelimitedIdentifierModeOn());
+    ModelComparator comparator = new ModelComparator(getPlatformInfo(),
+        getPlatform().isDelimitedIdentifierModeOn());
     List<ModelChange> changes = comparator.compare(currentModel, desiredModel);
     prepareDatabaseForAlter(currentModel, desiredModel, params, changes);
   }
@@ -606,22 +607,24 @@ public abstract class SqlBuilder {
    */
   public void prepareDatabaseForAlter(Database currentModel, Database desiredModel,
       CreationParameters params, List<ModelChange> changes) throws IOException {
-    CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
-        Database.class, Database.class, CreationParameters.class, null }, new Object[] {
-        currentModel, desiredModel, params, null });
+    CallbackClosure callbackClosure = new CallbackClosure(this, "processChange",
+        new Class[] { Database.class, Database.class, CreationParameters.class, null },
+        new Object[] { currentModel, desiredModel, params, null });
     removeExternalConstraintsIndexesAndViews(currentModel, changes, callbackClosure);
   }
 
-  public void alterDatabase(Database currentModel, Database desiredModel,
-      CreationParameters params, List<ModelChange> changes) throws IOException {
+  public void alterDatabase(Database currentModel, Database desiredModel, CreationParameters params,
+      List<ModelChange> changes) throws IOException {
     _PLSQLFunctionTranslation = createPLSQLFunctionTranslation(desiredModel);
     _PLSQLTriggerTranslation = createPLSQLTriggerTranslation(desiredModel);
     _SQLTranslation = createSQLTranslation(desiredModel);
 
-    for (int i = 0; i < desiredModel.getFunctionCount(); i++)
+    for (int i = 0; i < desiredModel.getFunctionCount(); i++) {
       desiredModel.getFunction(i).setTranslation(_PLSQLFunctionTranslation);
-    for (int i = 0; i < desiredModel.getTriggerCount(); i++)
+    }
+    for (int i = 0; i < desiredModel.getTriggerCount(); i++) {
       desiredModel.getTrigger(i).setTranslation(_PLSQLTriggerTranslation);
+    }
     processChanges(currentModel, desiredModel, changes, params, false);
   }
 
@@ -677,8 +680,8 @@ public abstract class SqlBuilder {
         for (int j = 0; j < fksTable.length; j++) {
           ForeignKey fk = fksTable[j];
           Table parentTable = fk.getForeignTable();
-          if ((!onlyOnDeleteCascade || (fk.getOnDelete() != null && fk.getOnDelete().contains(
-              "cascade")))) {
+          if ((!onlyOnDeleteCascade
+              || (fk.getOnDelete() != null && fk.getOnDelete().contains("cascade")))) {
             ArrayList<String> localColumns = new ArrayList<String>();
             for (int k = 0; k < table.getColumnCount(); k++) {
               if (fk.hasLocalColumn(table.getColumn(k))) {
@@ -741,8 +744,8 @@ public abstract class SqlBuilder {
   public List alterDatabaseRecreatePKs(Database currentModel, Database desiredModel,
       CreationParameters params) throws IOException {
 
-    ModelComparator comparator = new ModelComparator(getPlatformInfo(), getPlatform()
-        .isDelimitedIdentifierModeOn());
+    ModelComparator comparator = new ModelComparator(getPlatformInfo(),
+        getPlatform().isDelimitedIdentifierModeOn());
     List changes = comparator.compare(currentModel, desiredModel);
     Predicate predicate = new MultiInstanceofPredicate(new Class[] { RemovePrimaryKeyChange.class,
         AddPrimaryKeyChange.class, PrimaryKeyChange.class, RemoveColumnChange.class,
@@ -771,8 +774,9 @@ public abstract class SqlBuilder {
       }
       recreated = willBeRecreated(desiredModel.getTable(i), changesOfTable);
       if (recreated && !recreatedPKs.contains(desiredModel.getTable(i).getName())) {
-        writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i), desiredModel.getTable(i)
-            .getPrimaryKey(), desiredModel.getTable(i).getPrimaryKeyColumns());
+        writeExternalPrimaryKeysCreateStmt(desiredModel.getTable(i),
+            desiredModel.getTable(i).getPrimaryKey(),
+            desiredModel.getTable(i).getPrimaryKeyColumns());
         writeExternalIndicesCreateStmt(desiredModel.getTable(i));
         recreatedPKs.add(desiredModel.getTable(i).getName());
       }
@@ -849,7 +853,8 @@ public abstract class SqlBuilder {
             // We have the full model. We will activate foreign keys pointing to recreated tables
             Table recreatedTable = desiredModel.getTable(i);
             for (int idxTable = 0; idxTable < fullModel.getTableCount(); idxTable++) {
-              for (int idxFk = 0; idxFk < fullModel.getTable(idxTable).getForeignKeyCount(); idxFk++) {
+              for (int idxFk = 0; idxFk < fullModel.getTable(idxTable)
+                  .getForeignKeyCount(); idxFk++) {
                 ForeignKey fk = fullModel.getTable(idxTable).getForeignKey(idxFk);
                 if (currentTable.getName().equalsIgnoreCase(fk.getForeignTableName())
                     && !recreatedFKs.contains(fk.getName())) {
@@ -982,8 +987,9 @@ public abstract class SqlBuilder {
     Column[] pks1 = table.getPrimaryKeyColumns();
     if (recreated) {
       for (int i = 0; i < pks1.length; i++) {
-        if (i > 0)
+        if (i > 0) {
           pk += " AND ";
+        }
         pk += "TO_CHAR(" + table.getName() + "." + pks1[i].getName() + ")=TO_CHAR("
             + tempTable.getName() + "." + pks1[i].getName() + ")";
       }
@@ -1019,6 +1025,7 @@ public abstract class SqlBuilder {
     // returns true, and for these filtered objects we invoke the given
     // closure
     CollectionUtils.filter(changes, new Predicate() {
+      @Override
       public boolean evaluate(Object obj) {
         if (predicate.evaluate(obj)) {
           closure.execute(obj);
@@ -1103,9 +1110,9 @@ public abstract class SqlBuilder {
   protected void processChanges(Database currentModel, Database desiredModel,
       List<ModelChange> changes, CreationParameters params, boolean createConstraints)
       throws IOException {
-    CallbackClosure callbackClosure = new CallbackClosure(this, "processChange", new Class[] {
-        Database.class, Database.class, CreationParameters.class, null }, new Object[] {
-        currentModel, desiredModel, params, null });
+    CallbackClosure callbackClosure = new CallbackClosure(this, "processChange",
+        new Class[] { Database.class, Database.class, CreationParameters.class, null },
+        new Object[] { currentModel, desiredModel, params, null });
 
     // 2nd pass: removing tables and views and functions and triggers
     applyForSelectedChanges(changes, new Class[] { RemoveViewChange.class }, callbackClosure);
@@ -1325,7 +1332,8 @@ public abstract class SqlBuilder {
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
-  private void putRemovedIndex(Map<String, List<Index>> removedIndexesMap, RemoveIndexChange change) {
+  private void putRemovedIndex(Map<String, List<Index>> removedIndexesMap,
+      RemoveIndexChange change) {
     String tableName = change.getChangedTable().getName();
     List<Index> indexList = removedIndexesMap.get(tableName);
     if (indexList == null) {
@@ -1850,10 +1858,10 @@ public abstract class SqlBuilder {
   protected void processTableStructureChanges(Database currentModel, Database desiredModel,
       String tableName, Map parameters, List<TableChange> changes, Set<String> unchangedtriggers)
       throws IOException {
-    Table sourceTable = currentModel.findTable(tableName, getPlatform()
-        .isDelimitedIdentifierModeOn());
-    Table targetTable = desiredModel.findTable(tableName, getPlatform()
-        .isDelimitedIdentifierModeOn());
+    Table sourceTable = currentModel.findTable(tableName,
+        getPlatform().isDelimitedIdentifierModeOn());
+    Table targetTable = desiredModel.findTable(tableName,
+        getPlatform().isDelimitedIdentifierModeOn());
 
     processTableStructureChanges(currentModel, desiredModel, sourceTable, targetTable, parameters,
         changes);
@@ -2001,8 +2009,8 @@ public abstract class SqlBuilder {
     disableAllNOTNULLColumns(table, recreatedTables, database);
   }
 
-  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls, Database database)
-      throws IOException {
+  protected void disableAllNOTNULLColumns(Table table, List<String> recreatedTbls,
+      Database database) throws IOException {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
 
@@ -2019,7 +2027,8 @@ public abstract class SqlBuilder {
 
   private boolean shouldDisableNotNull(Table table, Column column, List<String> recreatedTbls,
       Database database) {
-    if (!(column.isRequired() && !column.isPrimaryKey() && !recreatedTbls.contains(table.getName()))) {
+    if (!(column.isRequired() && !column.isPrimaryKey()
+        && !recreatedTbls.contains(table.getName()))) {
       return false;
     }
 
@@ -2058,8 +2067,8 @@ public abstract class SqlBuilder {
         if (getSqlType(column).equalsIgnoreCase("CLOB")) {
           // In the case of CLOB columns in oracle, it is wrong to specify the type when changing
           // the null/not null constraint
-          println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column)
-              + " NOT NULL");
+          println(
+              "ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " NOT NULL");
         } else {
           println("ALTER TABLE " + table.getName() + " MODIFY " + getColumnName(column) + " "
               + getSqlType(column) + " NOT NULL");
@@ -2255,8 +2264,8 @@ public abstract class SqlBuilder {
 
     for (int idx = 0; idx < sourceTable.getColumnCount(); idx++) {
       Column sourceColumn = sourceTable.getColumn(idx);
-      Column targetColumn = targetTable.findColumn(sourceColumn.getName(), getPlatform()
-          .isDelimitedIdentifierModeOn());
+      Column targetColumn = targetTable.findColumn(sourceColumn.getName(),
+          getPlatform().isDelimitedIdentifierModeOn());
 
       if (targetColumn != null) {
         columns.put(sourceColumn, targetColumn);
@@ -2333,7 +2342,8 @@ public abstract class SqlBuilder {
 
   protected void processChange(Database currentModel, Database desiredModel,
       ColumnOnCreateDefaultValueChange change) throws IOException {
-    writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn(), false);
+    writeColumnCommentStmt(currentModel, change.getChangedTable(), change.getChangedColumn(),
+        false);
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -2434,7 +2444,8 @@ public abstract class SqlBuilder {
     writeTableCreationStmtEnding(table, parameters);
 
     if (!getPlatformInfo().isPrimaryKeyEmbedded()) {
-      writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(), table.getPrimaryKeyColumns());
+      writeExternalPrimaryKeysCreateStmt(table, table.getPrimaryKey(),
+          table.getPrimaryKeyColumns());
     }
     if (!getPlatformInfo().isIndicesEmbedded()) {
       writeExternalUniquesCreateStmt(table);
@@ -2770,8 +2781,8 @@ public abstract class SqlBuilder {
         if (genPlaceholders) {
           buffer.append("?");
         } else {
-          buffer.append(column == null ? entry.getValue() : getValueAsString(column,
-              entry.getValue()));
+          buffer.append(
+              column == null ? entry.getValue() : getValueAsString(column, entry.getValue()));
         }
         addSep = true;
       }
@@ -2897,7 +2908,8 @@ public abstract class SqlBuilder {
 
     result.append(name.substring(0, startCut));
     if (((startCut == 0) || (name.charAt(startCut - 1) != '_'))
-        && ((startCut + delta + 1 == originalLength) || (name.charAt(startCut + delta + 1) != '_'))) {
+        && ((startCut + delta + 1 == originalLength)
+            || (name.charAt(startCut + delta + 1) != '_'))) {
       // just to make sure that there isn't already a '_' right before or
       // right
       // after the cutting place (which would look odd with an aditional
@@ -3221,9 +3233,8 @@ public abstract class SqlBuilder {
    * @return <code>true</code> if the default value spec is valid
    */
   protected boolean isValidDefaultValue(String defaultSpec, int typeCode) {
-    return (defaultSpec != null)
-        && ((defaultSpec.length() > 0) || (!TypeMap.isNumericType(typeCode) && !TypeMap
-            .isDateTimeType(typeCode)));
+    return (defaultSpec != null) && ((defaultSpec.length() > 0)
+        || (!TypeMap.isNumericType(typeCode) && !TypeMap.isDateTimeType(typeCode)));
   }
 
   /**
@@ -3319,8 +3330,7 @@ public abstract class SqlBuilder {
     // desired type, in order to avoid repeated altering of a perfectly
     // valid column
     if ((getPlatformInfo().getTargetJdbcType(desiredColumn.getTypeCode()) != currentColumn
-        .getTypeCode())
-        || (desiredColumn.isRequired() != currentColumn.isRequired())
+        .getTypeCode()) || (desiredColumn.isRequired() != currentColumn.isRequired())
         || (sizeMatters && !StringUtils.equals(desiredColumn.getSize(), currentColumn.getSize()))
         || !defaultsEqual) {
       return true;
@@ -4232,8 +4242,8 @@ public abstract class SqlBuilder {
    * Gets the return reserved identifier for a function.
    */
   protected String getFunctionReturn(Function function) {
-    return function.getTypeCode() == Types.NULL ? "" : "RETURN "
-        + getSqlType(function.getTypeCode());
+    return function.getTypeCode() == Types.NULL ? ""
+        : "RETURN " + getSqlType(function.getTypeCode());
   }
 
   /**
@@ -4348,7 +4358,8 @@ public abstract class SqlBuilder {
         return null;
       } else {
         if (!getPlatformInfo().isDefaultValuesForLongTypesSupported()
-            && ((identifier.getTypeCode() == Types.LONGVARBINARY) || (identifier.getTypeCode() == Types.LONGVARCHAR))) {
+            && ((identifier.getTypeCode() == Types.LONGVARBINARY)
+                || (identifier.getTypeCode() == Types.LONGVARCHAR))) {
           throw new ModelException(
               "The platform does not support default values for LONGVARCHAR or LONGVARBINARY columns");
         }
@@ -4777,8 +4788,9 @@ public abstract class SqlBuilder {
     HashMap result = new HashMap();
 
     Column[] columns = table.getColumns();
-    for (int i = 0; i < columns.length; i++)
+    for (int i = 0; i < columns.length; i++) {
       result.put(columns[i].getName(), db.get(columns[i].getName()));
+    }
     println(getInsertSql(table, result, false));
     printEndOfStatement();
   }
@@ -4798,15 +4810,16 @@ public abstract class SqlBuilder {
   }
 
   /** Checks whether table requires recreation base on the changes that require */
-  private boolean requiresRecreation(Table table, List<TableChange> changes, boolean logRecreation) {
+  private boolean requiresRecreation(Table table, List<TableChange> changes,
+      boolean logRecreation) {
     if (changes == null || changes.isEmpty()) {
       return false;
     }
 
     if (isRecreationForced(table)) {
       if (logRecreation) {
-        _log.info("Table " + table.getName()
-            + " will be recreated because it is forced by parameter");
+        _log.info(
+            "Table " + table.getName() + " will be recreated because it is forced by parameter");
       }
       return true;
     }
@@ -5108,8 +5121,8 @@ public abstract class SqlBuilder {
     // no default implementation
   }
 
-  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
-      throws IOException {
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnSizeChange change) throws IOException {
     // no default implementation
   }
 

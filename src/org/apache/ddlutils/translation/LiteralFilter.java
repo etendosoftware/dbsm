@@ -35,8 +35,9 @@ public class LiteralFilter {
       String code = "##OBTGC" + j;
       String rep = literals.get(code);
       if (rep.equals("") || rep.equals("%") || rep.equals("RBack") || rep.equals("UPDATE")
-          || rep.equals("DELETE") || rep.equals("INSERT"))
+          || rep.equals("DELETE") || rep.equals("INSERT")) {
         body = body.replaceFirst(code, rep);
+      }
     }
 
     return body;

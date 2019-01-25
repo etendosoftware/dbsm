@@ -56,6 +56,7 @@ public class SetColumnPropertyFromSubElementRule extends Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void begin(String namespace, String name, Attributes attributes) throws Exception {
     for (int idx = 0; idx < attributes.getLength(); idx++) {
       String attrName = attributes.getLocalName(idx);
@@ -74,6 +75,7 @@ public class SetColumnPropertyFromSubElementRule extends Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void end(String namespace, String name) throws Exception {
     _usesBase64 = false;
   }
@@ -81,6 +83,7 @@ public class SetColumnPropertyFromSubElementRule extends Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void body(String namespace, String name, String text) throws Exception {
     String attrValue = text;// .trim();
 
@@ -88,13 +91,13 @@ public class SetColumnPropertyFromSubElementRule extends Rule {
       attrValue = new String(Base64.decodeBase64(attrValue.getBytes()));
     }
 
-    Object propValue = (_converter != null ? _converter.convertFromString(attrValue, _column
-        .getTypeCode()) : attrValue);
+    Object propValue = (_converter != null
+        ? _converter.convertFromString(attrValue, _column.getTypeCode())
+        : attrValue);
 
     if (digester.getLogger().isDebugEnabled()) {
-      digester.getLogger().debug(
-          "[SetColumnPropertyFromSubElementRule]{" + digester.getMatch() + "} Setting property '"
-              + _column.getName() + "' to '" + propValue + "'");
+      digester.getLogger().debug("[SetColumnPropertyFromSubElementRule]{" + digester.getMatch()
+          + "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
     }
 
     PropertyUtils.setProperty(digester.peek(), _column.getName(), propValue);

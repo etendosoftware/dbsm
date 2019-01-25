@@ -76,6 +76,7 @@ public class ForeignKey implements ConstraintObject, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -373,6 +374,7 @@ public class ForeignKey implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     ForeignKey result = (ForeignKey) super.clone();
 
@@ -392,6 +394,7 @@ public class ForeignKey implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof ForeignKey) {
       ForeignKey otherFk = (ForeignKey) obj;
@@ -406,9 +409,9 @@ public class ForeignKey implements ConstraintObject, Cloneable {
           && (otherFk._name.length() > 0)) {
         builder.append(_name, otherFk._name);
       }
-      return builder.append(_foreignTableName, otherFk._foreignTableName).append(_onUpdate,
-          otherFk._onUpdate).append(_onDelete, otherFk._onDelete).append(_references,
-          otherFk._references).isEquals();
+      return builder.append(_foreignTableName, otherFk._foreignTableName)
+          .append(_onUpdate, otherFk._onUpdate).append(_onDelete, otherFk._onDelete)
+          .append(_references, otherFk._references).isEquals();
     } else {
       return false;
     }
@@ -457,6 +460,7 @@ public class ForeignKey implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_foreignTableName).append(_onUpdate)
         .append(_onDelete).append(_references).toHashCode();
@@ -465,6 +469,7 @@ public class ForeignKey implements ConstraintObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

@@ -119,6 +119,7 @@ public class Parameter extends ValueObject implements Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Parameter result = (Parameter) super.clone();
 
@@ -131,6 +132,7 @@ public class Parameter extends ValueObject implements Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Parameter) {
       Parameter other = (Parameter) obj;
@@ -161,9 +163,9 @@ public class Parameter extends ValueObject implements Cloneable {
          */
       }
 
-      return new EqualsBuilder().append(_name.toLowerCase(), other._name.toLowerCase()).append(
-          typeCode2, othertypeCode2).append(modeCode2, otherModeCode2).append(_defaultValueT,
-          _otherDefaultValueT).isEquals();
+      return new EqualsBuilder().append(_name.toLowerCase(), other._name.toLowerCase())
+          .append(typeCode2, othertypeCode2).append(modeCode2, otherModeCode2)
+          .append(_defaultValueT, _otherDefaultValueT).isEquals();
     } else {
       return false;
     }
@@ -172,14 +174,16 @@ public class Parameter extends ValueObject implements Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_typeCode).append(_modeCode).append(
-        _defaultValue).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name).append(_typeCode).append(_modeCode)
+        .append(_defaultValue).toHashCode();
   }
 
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

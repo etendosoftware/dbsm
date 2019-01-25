@@ -55,8 +55,9 @@ public abstract class ValidateAPI {
   }
 
   public void printErrors(Logger log) {
-    if (errors.size() == 0)
+    if (errors.size() == 0) {
       return;
+    }
     if (log != null) {
       log.error("\n");
       log.error("+++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -71,15 +72,17 @@ public abstract class ValidateAPI {
       System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
     for (String error : errors) {
-      if (log != null)
+      if (log != null) {
         log.error("  " + error);
-      else
+      } else {
         System.out.println("  " + error);
+      }
     }
-    if (log != null)
+    if (log != null) {
       log.error("\n");
-    else
+    } else {
       System.out.println("");
+    }
   }
 
   public void printWarnings() {
@@ -87,8 +90,9 @@ public abstract class ValidateAPI {
   }
 
   public void printWarnings(Logger log) {
-    if (warnings.size() == 0)
+    if (warnings.size() == 0) {
       return;
+    }
     if (log != null) {
       log.warn("\n");
       log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -103,20 +107,23 @@ public abstract class ValidateAPI {
       System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
     for (String warn : warnings) {
-      if (log != null)
+      if (log != null) {
         log.warn("  " + warn);
-      else
+      } else {
         System.out.println("  " + warn);
+      }
     }
-    if (log != null)
+    if (log != null) {
       log.warn("\n");
-    else
+    } else {
       System.out.println("");
+    }
   }
 
   public void printInfos(Logger log) {
-    if (infos.size() == 0)
+    if (infos.size() == 0) {
       return;
+    }
     if (log != null) {
       log.info("\n");
       log.info("+++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -131,15 +138,17 @@ public abstract class ValidateAPI {
       System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
     }
     for (String info : infos) {
-      if (log != null)
+      if (log != null) {
         log.info("  " + info);
-      else
+      } else {
         System.out.println("  " + info);
+      }
     }
-    if (log != null)
+    if (log != null) {
       log.info("\n");
-    else
+    } else {
       System.out.println("");
+    }
 
   }
 

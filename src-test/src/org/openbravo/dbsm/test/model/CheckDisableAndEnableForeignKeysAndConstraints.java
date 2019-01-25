@@ -39,8 +39,8 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
 
   public CheckDisableAndEnableForeignKeysAndConstraints(String rdbms, String driver, String url,
-      String sid, String user, String password, String name) throws FileNotFoundException,
-      IOException {
+      String sid, String user, String password, String name)
+      throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
@@ -125,8 +125,8 @@ public class CheckDisableAndEnableForeignKeysAndConstraints extends DbsmTest {
     try {
       cn = getDataSource().getConnection();
       PreparedStatement st = null;
-      st = cn
-          .prepareStatement("SELECT count(*) FROM user_constraints WHERE upper(constraint_name) = upper(?) and status = 'ENABLED'");
+      st = cn.prepareStatement(
+          "SELECT count(*) FROM user_constraints WHERE upper(constraint_name) = upper(?) and status = 'ENABLED'");
       st.setString(1, constraintName);
       ResultSet rs = st.executeQuery();
       if (rs.next()) {

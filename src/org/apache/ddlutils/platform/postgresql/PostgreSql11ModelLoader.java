@@ -27,22 +27,9 @@ public class PostgreSql11ModelLoader extends PostgreSql10ModelLoader {
     _stmt_functiondefaults.close();
     _stmt_functiondefaults0.close();
 
-    _stmt_functionparams = _connection.prepareStatement("  SELECT "
-        + "         pg_proc.prorettype," + "         pg_proc.proargtypes,"
-        + "         pg_proc.proallargtypes," + "         pg_proc.proargmodes,"
-        + "         pg_proc.proargnames," + "         pg_proc.prosrc"
-        + "    FROM pg_catalog.pg_proc" + "         JOIN pg_catalog.pg_namespace"
-        + "         ON (pg_proc.pronamespace = pg_namespace.oid)"
-        + "   WHERE pg_proc.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype"
-        + "     AND (pg_proc.proargtypes[0] IS NULL"
-        + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
-        + "     AND pg_proc.prokind <> 'a'"
-        + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
-        + "     AND pg_proc.proname = ?"
-        + "         ORDER BY pg_proc.pronargs DESC, length(pg_proc.prosrc) DESC");
-
-    _stmt_functiondefaults = _connection.prepareStatement("  SELECT " + "         pg_proc.proname,"
+    _stmt_functionparams = _connection.prepareStatement("  SELECT " + "         pg_proc.prorettype,"
         + "         pg_proc.proargtypes," + "         pg_proc.proallargtypes,"
+        + "         pg_proc.proargmodes," + "         pg_proc.proargnames,"
         + "         pg_proc.prosrc" + "    FROM pg_catalog.pg_proc"
         + "         JOIN pg_catalog.pg_namespace"
         + "         ON (pg_proc.pronamespace = pg_namespace.oid)"
@@ -50,20 +37,32 @@ public class PostgreSql11ModelLoader extends PostgreSql10ModelLoader {
         + "     AND (pg_proc.proargtypes[0] IS NULL"
         + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
         + "     AND pg_proc.prokind <> 'a'"
-        + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
-        + "     AND pg_proc.proname = ? ORDER BY pg_proc.pronargs ASC");
+        + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)" + "     AND pg_proc.proname = ?"
+        + "         ORDER BY pg_proc.pronargs DESC, length(pg_proc.prosrc) DESC");
 
-    _stmt_functiondefaults0 = _connection.prepareStatement("  SELECT "
-        + "         pg_proc.proname," + "         pg_proc.proargtypes,"
-        + "         pg_proc.proallargtypes," + "         pg_proc.prosrc"
-        + "    FROM pg_catalog.pg_proc" + "         JOIN pg_catalog.pg_namespace"
-        + "         ON (pg_proc.pronamespace = pg_namespace.oid)"
-        + "   WHERE pg_proc.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype"
-        + "     AND (pg_proc.proargtypes[0] IS NULL"
-        + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
-        + "     AND pg_proc.prokind <> 'a'"
-        + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
-        + "     AND pg_proc.proname = ? ORDER BY pg_proc.proargtypes ASC");
+    _stmt_functiondefaults = _connection.prepareStatement(
+        "  SELECT " + "         pg_proc.proname," + "         pg_proc.proargtypes,"
+            + "         pg_proc.proallargtypes," + "         pg_proc.prosrc"
+            + "    FROM pg_catalog.pg_proc" + "         JOIN pg_catalog.pg_namespace"
+            + "         ON (pg_proc.pronamespace = pg_namespace.oid)"
+            + "   WHERE pg_proc.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype"
+            + "     AND (pg_proc.proargtypes[0] IS NULL"
+            + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
+            + "     AND pg_proc.prokind <> 'a'"
+            + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
+            + "     AND pg_proc.proname = ? ORDER BY pg_proc.pronargs ASC");
+
+    _stmt_functiondefaults0 = _connection.prepareStatement(
+        "  SELECT " + "         pg_proc.proname," + "         pg_proc.proargtypes,"
+            + "         pg_proc.proallargtypes," + "         pg_proc.prosrc"
+            + "    FROM pg_catalog.pg_proc" + "         JOIN pg_catalog.pg_namespace"
+            + "         ON (pg_proc.pronamespace = pg_namespace.oid)"
+            + "   WHERE pg_proc.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype"
+            + "     AND (pg_proc.proargtypes[0] IS NULL"
+            + "      OR pg_proc.proargtypes[0] <> 'pg_catalog.cstring'::pg_catalog.regtype)"
+            + "     AND pg_proc.prokind <> 'a'"
+            + "     AND pg_catalog.pg_function_is_visible(pg_proc.oid)"
+            + "     AND pg_proc.proname = ? ORDER BY pg_proc.proargtypes ASC");
   }
 
 }

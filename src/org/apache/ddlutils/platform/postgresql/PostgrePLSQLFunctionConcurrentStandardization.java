@@ -59,8 +59,9 @@ class PostgrePLSQLFunctionConcurrentStandardization implements Runnable {
     standardizedBody = litFilter.restoreLiterals(standardizedBody);
 
     while (standardizedBody.charAt(standardizedBody.length() - 1) == '\n'
-        || standardizedBody.charAt(standardizedBody.length() - 1) == ' ')
+        || standardizedBody.charAt(standardizedBody.length() - 1) == ' ') {
       standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
+    }
     f.setBody(standardizedBody + "\n");
     log.debug("  ...standardized function: " + f.getName());
   }

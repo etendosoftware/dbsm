@@ -50,6 +50,7 @@ public abstract class TableChangeImplBase implements TableChange {
    * 
    * @return The table
    */
+  @Override
   public Table getChangedTable() {
     return _table;
   }

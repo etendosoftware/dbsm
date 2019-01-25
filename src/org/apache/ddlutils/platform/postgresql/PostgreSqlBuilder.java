@@ -200,15 +200,16 @@ public class PostgreSqlBuilder extends SqlBuilder {
       for (int i = 0; i < lengthoncreate; i++) {
         String tchar = oncreatedefaultp.substring(0, 1);
         oncreatedefaultp = oncreatedefaultp.substring(1);
-        if (tchar.equals("'"))
+        if (tchar.equals("'")) {
           oncreatedefault += "''";
-        else
+        } else {
           oncreatedefault += tchar;
+        }
       }
       comment += "--OBTG:ONCREATEDEFAULT:" + oncreatedefault + "--";
     }
-    println("COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment
-        + "';");
+    println(
+        "COMMENT ON COLUMN " + table.getName() + "." + column.getName() + " IS '" + comment + "';");
     printEndOfStatement();
   }
 
@@ -234,6 +235,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
    * @param column
    *          The column
    */
+  @Override
   protected void createAutoIncrementSequence(Table table, Column column) throws IOException {
     print("CREATE SEQUENCE ");
     printIdentifier(getConstraintName(null, table, column.getName(), "seq"));
@@ -251,8 +253,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
     for (int i = 0; i < table.getColumnCount(); i++) {
       Column column = table.getColumn(i);
       if (column.isRequired()) {
-        println("ALTER TABLE " + table.getName() + " ALTER " + getColumnName(column)
-            + " SET NOT NULL");
+        println(
+            "ALTER TABLE " + table.getName() + " ALTER " + getColumnName(column) + " SET NOT NULL");
         printEndOfStatement();
       }
     }
@@ -279,6 +281,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
    * @param column
    *          The column
    */
+  @Override
   protected void dropAutoIncrementSequence(Table table, Column column) throws IOException {
     print("DROP SEQUENCE ");
     printIdentifier(getConstraintName(null, table, column.getName(), "seq"));
@@ -423,8 +426,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
     for (int i = 0; i < function.getParameterCount(); i++) {
       Parameter p = function.getParameter(i);
       if (p.getTypeCode() == ExtTypes.NVARCHAR) {
-        if (b)
+        if (b) {
           comment += ",";
+        }
         comment += p.getName() + "=" + "NVARCHAR";
         b = true;
       }
@@ -450,8 +454,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
     writeSearchPath(function);
 
-    String sLastDefault = function.getParameterCount() == 0 ? null : getDefaultValue(function
-        .getParameter(function.getParameterCount() - 1));
+    String sLastDefault = function.getParameterCount() == 0 ? null
+        : getDefaultValue(function.getParameter(function.getParameterCount() - 1));
     if (sLastDefault != null && !sLastDefault.equals("")) {
       try {
         Function f = (Function) function.clone();
@@ -504,8 +508,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
   @Override
   protected void dropFunction(Function function) throws IOException {
 
-    String sLastDefault = function.getParameterCount() == 0 ? null : function.getParameter(
-        function.getParameterCount() - 1).getDefaultValue();
+    String sLastDefault = function.getParameterCount() == 0 ? null
+        : function.getParameter(function.getParameterCount() - 1).getDefaultValue();
     if (sLastDefault != null && !sLastDefault.equals("")) {
       try {
         Function f = (Function) function.clone();
@@ -628,6 +632,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printEndOfStatement(getStructureObjectName(trigger));
   }
 
+  @Override
   protected void dropView(View view) throws IOException {
 
     if (getPlatformInfo().isViewsSupported()) {
@@ -865,24 +870,27 @@ public class PostgreSqlBuilder extends SqlBuilder {
     String pk = "";
     Column[] pks1 = table.getPrimaryKeyColumns();
     for (int i = 0; i < pks1.length; i++) {
-      if (i > 0)
+      if (i > 0) {
         pk += " AND ";
+      }
       pk += table.getName() + "." + pks1[i].getName() + "::text=" + tempTable.getName() + "."
           + pks1[i].getName() + "::text";
     }
     String oncreatedefault = col.getOnCreateDefault();
     if (oncreatedefault != null && !oncreatedefault.equals("")) {
-      if (recreated)
+      if (recreated) {
         println("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
             + ") WHERE EXISTS (SELECT 1 FROM " + tempTable.getName() + " WHERE " + pk + ") AND "
             + col.getName() + " IS NULL");
-      else
-        println("UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault
-            + ")");
+      } else {
+        println(
+            "UPDATE " + table.getName() + " SET " + col.getName() + "=(" + oncreatedefault + ")");
+      }
       printEndOfStatement();
     }
   }
 
+  @Override
   protected void writeCastExpression(Column sourceColumn, Column targetColumn) throws IOException {
     if (sourceColumn.isOfTextType() && targetColumn.isOfNumericType()) {
       print("TO_NUMBER(");
@@ -913,8 +921,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
             boolean first = true;
             for (int k = 0; k < table.getColumnCount(); k++) {
               if (fk.hasLocalColumn(table.getColumn(k))) {
-                if (!first)
+                if (!first) {
                   col1 += (",");
+                }
                 first = false;
                 col1 += (table.getColumn(k).getName());
               }
@@ -923,8 +932,9 @@ public class PostgreSqlBuilder extends SqlBuilder {
             first = true;
             for (int k = 0; k < parentTable.getColumnCount(); k++) {
               if (fk.hasForeignColumn(parentTable.getColumn(k))) {
-                if (!first)
+                if (!first) {
                   print(",");
+                }
                 first = false;
                 print(parentTable.getColumn(k).getName());
               }
@@ -942,6 +952,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
     }
   }
 
+  @Override
   protected void disableAllChecks(Table table) throws IOException {
 
     for (int i = 0; i < table.getCheckCount(); i++) {
@@ -952,6 +963,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   }
 
+  @Override
   protected void enableAllChecks(Table table) throws IOException {
 
     for (int i = 0; i < table.getCheckCount(); i++) {
@@ -1131,8 +1143,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
   }
 
   @Override
-  protected void processChange(Database currentModel, Database desiredModel, ColumnSizeChange change)
-      throws IOException {
+  protected void processChange(Database currentModel, Database desiredModel,
+      ColumnSizeChange change) throws IOException {
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
     Table table = currentModel.findTable(change.getChangedTable().getName());
     Column column = table.findColumn(change.getChangedColumn().getName());

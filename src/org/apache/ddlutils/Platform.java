@@ -319,7 +319,8 @@ public interface Platform {
    * Creates the database specified by the given parameters. Please note that this method does not
    * use a data source set via {@link #setDataSource(DataSource)} because it is not possible to
    * retrieve the connection information from it without establishing a connection.<br/>
-   * The given connection url is the url that you'd use to connect to the already-created database.<br/>
+   * The given connection url is the url that you'd use to connect to the already-created
+   * database.<br/>
    * On some platforms, this method suppurts additional parameters. These are documented in the
    * manual section for the individual platforms.
    * 
@@ -335,8 +336,8 @@ public interface Platform {
    *          Additional parameters relevant to database creation (which are platform specific)
    */
   public void createDatabase(String jdbcDriverClassName, String connectionUrl, String username,
-      String password, Map parameters) throws DatabaseOperationException,
-      UnsupportedOperationException;
+      String password, Map parameters)
+      throws DatabaseOperationException, UnsupportedOperationException;
 
   /**
    * Drops the database specified by the given parameters. Please note that this method does not use
@@ -396,7 +397,8 @@ public interface Platform {
    *          Whether to continue executing the sql commands when an error occurred
    * @return The SQL statements
    */
-  public String getCreateTablesSql(Database model, boolean dropTablesFirst, boolean continueOnError);
+  public String getCreateTablesSql(Database model, boolean dropTablesFirst,
+      boolean continueOnError);
 
   public String getCreateTablesSqlScript(Database model, boolean dropTablesFirst,
       boolean continueOnError);
@@ -662,9 +664,8 @@ public interface Platform {
    * @param continueOnError
    *          Whether to continue with the next sql statement when an error occurred
    */
-  public void alterTables(Connection connection, String catalog, String schema,
-      String[] tableTypes, Database desiredDb, boolean continueOnError)
-      throws DatabaseOperationException;
+  public void alterTables(Connection connection, String catalog, String schema, String[] tableTypes,
+      Database desiredDb, boolean continueOnError) throws DatabaseOperationException;
 
   /**
    * Returns the SQL for altering the database schema so that it match the given model.
@@ -708,8 +709,8 @@ public interface Platform {
    * @param continueOnError
    *          Whether to continue with the next sql statement when an error occurred
    */
-  public void alterTables(Connection connection, String catalog, String schema,
-      String[] tableTypes, Database desiredDb, CreationParameters params, boolean continueOnError)
+  public void alterTables(Connection connection, String catalog, String schema, String[] tableTypes,
+      Database desiredDb, CreationParameters params, boolean continueOnError)
       throws DatabaseOperationException;
 
   /**
@@ -1352,7 +1353,8 @@ public interface Platform {
   public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
       Set<String> tablesWithRemovedRecords, boolean continueOnError);
 
-  public void deleteInvalidConstraintRows(Database model, OBDataset dataset, boolean continueOnError);
+  public void deleteInvalidConstraintRows(Database model, OBDataset dataset,
+      boolean continueOnError);
 
   public void deleteInvalidConstraintRows(Connection connection, Database model, OBDataset dataset,
       Set<String> tablesWithRemovedRecords, boolean continueOnError);
@@ -1414,7 +1416,8 @@ public interface Platform {
 
   public void executeOnCreateDefaultForMandatoryColumns(Database database, OBDataset ad);
 
-  public List<StructureObject> checkTranslationConsistency(Database database, Database fullDatabase);
+  public List<StructureObject> checkTranslationConsistency(Database database,
+      Database fullDatabase);
 
   public String disableNOTNULLColumnsSql(Database database, OBDataset dataset);
 

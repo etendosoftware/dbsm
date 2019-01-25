@@ -89,6 +89,7 @@ public class ValidateAPIModel extends ValidateAPI {
   /**
    * Executes the comparation
    */
+  @Override
   @SuppressWarnings("unchecked")
   public void execute() {
     ModelComparator modelComparator = new ModelComparator(platform.getPlatformInfo(),
@@ -109,8 +110,9 @@ public class ValidateAPIModel extends ValidateAPI {
         boolean foundViewWithSameName = false;
         int i = 0;
         while (i < targetModel.getViewCount() && !foundViewWithSameName) {
-          if (targetModel.getView(i).getName().equalsIgnoreCase(sourceView.getName()))
+          if (targetModel.getView(i).getName().equalsIgnoreCase(sourceView.getName())) {
             foundViewWithSameName = true;
+          }
           i++;
         }
         changes.add(new RemoveViewChange(sourceView));
@@ -157,25 +159,25 @@ public class ValidateAPIModel extends ValidateAPI {
 
       if (change instanceof AddColumnChange) {
         AddColumnChange c = (AddColumnChange) change;
-        Column oldCol = validDB.findTable(c.getChangedTable().getName()).findColumn(
-            c.getNewColumn().getName());
+        Column oldCol = validDB.findTable(c.getChangedTable().getName())
+            .findColumn(c.getNewColumn().getName());
         if (oldCol == null && c.getNewColumn().isRequired()
             && c.getNewColumn().getOnCreateDefault() == null
             && c.getNewColumn().getDefaultValue() == null) {
           // it is a real creation, not a re-creation
-          errors.add("Added mandatory column without default or onCreateDefault: " + tablename
-              + "." + c.getNewColumn().getName());
+          errors.add("Added mandatory column without default or onCreateDefault: " + tablename + "."
+              + c.getNewColumn().getName());
         }
         if (oldCol == null && c.getNewColumn().isRequired()
             && c.getNewColumn().getOnCreateDefault() == null && isADTable(tablename)) {
-          errors
-              .add("Added mandatory column without onCreateDefault in a table contained in the AD dataset: "
+          errors.add(
+              "Added mandatory column without onCreateDefault in a table contained in the AD dataset: "
                   + tablename + "." + c.getNewColumn().getName());
         }
         if ("ad_module".equalsIgnoreCase(tablename) && c.getNewColumn().isRequired()) {
           // Check if the column has been added to ad_module_install
-          Column adModuleInstallColumn = testDB.findTable("ad_module_install", false).findColumn(
-              c.getNewColumn().getName(), false);
+          Column adModuleInstallColumn = testDB.findTable("ad_module_install", false)
+              .findColumn(c.getNewColumn().getName(), false);
           if (adModuleInstallColumn == null) {
             errors.add("A mandatory column (" + c.getNewColumn().getName()
                 + ") has been added to ad_module but not to ad_module_install");
@@ -214,8 +216,8 @@ public class ValidateAPIModel extends ValidateAPI {
         }
       } else if (change instanceof RemovePrimaryKeyChange) {
         RemovePrimaryKeyChange c = (RemovePrimaryKeyChange) change;
-        warnings.add("Removed Primary Key: table: " + tablename + " - Columns: "
-            + c.getPrimaryKeyColumns());
+        warnings.add(
+            "Removed Primary Key: table: " + tablename + " - Columns: " + c.getPrimaryKeyColumns());
       } else if (change instanceof AddCheckChange) {
         // A change in a check is a removal and an addition, it must be checked
         AddCheckChange c = (AddCheckChange) change;
@@ -288,8 +290,8 @@ public class ValidateAPIModel extends ValidateAPI {
         if (originalUnique == null) {
           // New constraint, it only can have new columns in the model
           for (IndexColumn cols : newUnique.getColumns()) {
-            if (!(validDB.findTable(tablename) == null || validDB.findTable(tablename).findColumn(
-                cols.getName()) == null)) {
+            if (!(validDB.findTable(tablename) == null
+                || validDB.findTable(tablename).findColumn(cols.getName()) == null)) {
               // error only in case the constraint is for an already existent table/column
               errors.add("Unique constraint added: table: " + tablename + " - Unique constraint: "
                   + newUnique.getName());
@@ -326,8 +328,9 @@ public class ValidateAPIModel extends ValidateAPI {
           for (Column col : originalPKCols) {
             boolean found = false;
             for (int i = 0; i < testPKCols.length
-                && !(found = (col.getName().equals(testPKCols[i].getName()))); i++)
+                && !(found = (col.getName().equals(testPKCols[i].getName()))); i++) {
               ;
+            }
             fail = !found;
           }
         }
@@ -351,12 +354,10 @@ public class ValidateAPIModel extends ValidateAPI {
           } else if (originalType != Types.TIMESTAMP && testType == Types.TIMESTAMP) {
             errors.add("Column type change from " + c.getChangedColumn().getType() + " to DATE");
           } else if (originalType != testType) {
-            warnings.add("Column type change from "
-                + originalColumn.getType()
-                + " to "
+            warnings.add("Column type change from " + originalColumn.getType() + " to "
                 + testDB.findTable(c.getChangedTable().getName())
-                    .findColumn(c.getChangedColumn().getName()).getType() + ": column:"
-                + tableColumn);
+                    .findColumn(c.getChangedColumn().getName()).getType()
+                + ": column:" + tableColumn);
           }
         } else if (change instanceof ColumnAutoIncrementChange) {
           errors.add("Column changed to auto increment: column" + tableColumn);
@@ -383,8 +384,8 @@ public class ValidateAPIModel extends ValidateAPI {
         }
       } else if (change instanceof RemoveColumnChange) {
         RemoveColumnChange c = (RemoveColumnChange) change;
-        errors.add("Removed column: " + c.getChangedTable().getName() + "."
-            + c.getColumn().getName());
+        errors.add(
+            "Removed column: " + c.getChangedTable().getName() + "." + c.getColumn().getName());
       } else if (change instanceof RemoveTableChange) {
         RemoveTableChange c = (RemoveTableChange) change;
         errors.add("Removed table: " + c.getChangedTable().getName());
@@ -430,8 +431,9 @@ public class ValidateAPIModel extends ValidateAPI {
   }
 
   private String getColsNames(Column[] c) {
-    if (c == null)
+    if (c == null) {
       return "";
+    }
     String rt = "";
 
     for (Column col : c) {

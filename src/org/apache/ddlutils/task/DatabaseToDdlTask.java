@@ -28,7 +28,8 @@ import org.apache.tools.ant.BuildException;
 /**
  * Task for getting structural info and data from a live database. Eg. it has sub tasks for writing
  * the schema of the live database or the data currently in it to an XML file, for creating the DTDs
- * for these data files, and for generating SQL to creating a schema in the database to a file. <br/>
+ * for these data files, and for generating SQL to creating a schema in the database to a file.
+ * <br/>
  * Example:<br/>
  * 
  * <pre>
@@ -63,7 +64,8 @@ public class DatabaseToDdlTask extends DatabaseTaskBase {
   /**
    * Specifies the table types to be processed. More precisely, all tables that are of a type not in
    * this list, will be ignored by the task and its sub tasks. For details and typical table types
-   * see <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
+   * see <a href=
+   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
    * >java.sql.DatabaseMetaData#getTables</a>.
    * 
    * @param tableTypes
@@ -164,6 +166,7 @@ public class DatabaseToDdlTask extends DatabaseTaskBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected Database readModel() {
     if (getDataSource() == null) {
       throw new BuildException("No database specified.");
@@ -174,8 +177,8 @@ public class DatabaseToDdlTask extends DatabaseTaskBase {
           getPlatformConfiguration().getCatalogPattern(),
           getPlatformConfiguration().getSchemaPattern(), getTableTypes());
     } catch (Exception ex) {
-      throw new BuildException("Could not read the schema from the specified database: "
-          + ex.getLocalizedMessage(), ex);
+      throw new BuildException(
+          "Could not read the schema from the specified database: " + ex.getLocalizedMessage(), ex);
     }
   }
 }

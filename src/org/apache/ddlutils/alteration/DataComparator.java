@@ -52,21 +52,23 @@ public class DataComparator {
   }
 
   private class ChangeComparator implements Comparator<Change> {
+    @Override
     public int compare(Change o1, Change o2) {
-      if (o1 instanceof RemoveRowChange && o2 instanceof AddRowChange)
+      if (o1 instanceof RemoveRowChange && o2 instanceof AddRowChange) {
         return -1;
-      else if (o1 instanceof AddRowChange && o2 instanceof RemoveRowChange)
+      } else if (o1 instanceof AddRowChange && o2 instanceof RemoveRowChange) {
         return 1;
-      else if (o1 instanceof RemoveRowChange && o2 instanceof ColumnDataChange)
+      } else if (o1 instanceof RemoveRowChange && o2 instanceof ColumnDataChange) {
         return -1;
-      else if (o1 instanceof AddRowChange && o2 instanceof ColumnDataChange)
+      } else if (o1 instanceof AddRowChange && o2 instanceof ColumnDataChange) {
         return 1;
-      else if (o1 instanceof ColumnDataChange && o2 instanceof RemoveRowChange)
+      } else if (o1 instanceof ColumnDataChange && o2 instanceof RemoveRowChange) {
         return 1;
-      else if (o1 instanceof ColumnDataChange && o2 instanceof AddRowChange)
+      } else if (o1 instanceof ColumnDataChange && o2 instanceof AddRowChange) {
         return -1;
-      else
+      } else {
         return 0;
+      }
     }
   }
 
@@ -95,8 +97,9 @@ public class DataComparator {
       Vector<DynaBean> rowsOldData = oldData.getRowsFromTable(table.getName());
       compareTablesToUpdate(currentdb, table, dsTable, rowsOldData, rowsNewData);
       try {
-        if (!connection.isClosed())
+        if (!connection.isClosed()) {
           connection.close();
+        }
       } catch (Exception ex) {
         // _log.error(ex.getLocalizedMessage());
       }
@@ -127,8 +130,9 @@ public class DataComparator {
       Vector<DynaBean> rowsNewData = newData.getRowsFromTable(table.getName());
       compareTablesToUpdate(currentdb, table, dsTable, rowsOldData, rowsNewData);
       try {
-        if (!connection.isClosed())
+        if (!connection.isClosed()) {
           connection.close();
+        }
       } catch (Exception ex) {
         // _log.error(ex.getLocalizedMessage());
       }
@@ -139,12 +143,15 @@ public class DataComparator {
 
   private void compareTablesToUpdate(Database model, Table table, OBDatasetTable dsTable,
       Vector<DynaBean> rowsOrg, Vector<DynaBean> rowsNew) {
-    if (rowsOrg == null && rowsNew == null)
+    if (rowsOrg == null && rowsNew == null) {
       return;
-    if (rowsOrg == null)
+    }
+    if (rowsOrg == null) {
       rowsOrg = new Vector<DynaBean>();
-    if (rowsNew == null)
+    }
+    if (rowsNew == null) {
       rowsNew = new Vector<DynaBean>();
+    }
 
     int indOrg = 0;
     int indNew = 0;
@@ -174,13 +181,15 @@ public class DataComparator {
     if (indNew < rowsNew.size() && indOrg >= rowsOrg.size()) {
       // There are rows in the target tables, but not in the original tables. We have
       // to insert them
-      while (indNew < rowsNew.size())
+      while (indNew < rowsNew.size()) {
         dataChanges.add(new AddRowChange(table, rowsNew.get(indNew++)));
+      }
     } else if (indNew >= rowsNew.size() && indOrg < rowsOrg.size()) {
       // No rows remaining in the target table files. We will remove all the
       // remaining rows of the original table.
-      while (indOrg < rowsOrg.size())
+      while (indOrg < rowsOrg.size()) {
         dataChanges.add(new RemoveRowChange(table, rowsOrg.get(indOrg++)));
+      }
     }
 
   }
@@ -197,15 +206,17 @@ public class DataComparator {
         Object v1 = db1.get(nonprimaryKeys[i].getName());
         Object v2 = db2.get(nonprimaryKeys[i].getName());
         String val1;
-        if (v1 == null)
+        if (v1 == null) {
           val1 = null;
-        else
+        } else {
           val1 = v1.toString();
+        }
         String val2;
-        if (v2 == null)
+        if (v2 == null) {
           val2 = null;
-        else
+        } else {
           val2 = v2.toString();
+        }
         if ((val1 == null && val2 != null) || (val1 != null && val2 == null)
             || (val1 != null && val2 != null && !val1.equals(val2))) {
           dataChanges.add(new ColumnDataChange(dynaClass.getTable(), nonprimaryKeys[i].getColumn(),
@@ -230,15 +241,17 @@ public class DataComparator {
       if ((v1 == null && v2 != null) || (v1 != null && v2 == null)
           || (v1 != null && v2 != null && !v1.equals(v2))) {
         String val1;
-        if (v1 == null)
+        if (v1 == null) {
           val1 = null;
-        else
+        } else {
           val1 = v1.toString();
+        }
         String val2;
-        if (v2 == null)
+        if (v2 == null) {
           val2 = null;
-        else
+        } else {
           val2 = v2.toString();
+        }
         dataChanges.add(new ColumnDataChange(dynaClass.getTable(), nonprimaryKeys[i].getColumn(),
             val1, val2, pkVal));
         // System.out.println("Column change:
@@ -257,27 +270,33 @@ public class DataComparator {
       if (databaseNew.findTable(tablesOrg[i].getName()) == null) {
         // Table has been removed. We remove its data.
         Vector<DynaBean> rows = databaseDataOrg.getRowsFromTable(tablesOrg[i].getName());
-        if (rows == null)
+        if (rows == null) {
           rows = new Vector<DynaBean>();
-        for (DynaBean bean : rows)
+        }
+        for (DynaBean bean : rows) {
           dataChanges.add(new RemoveRowChange(tablesOrg[i], bean));
-      } else
+        }
+      } else {
         commonTables.add(tablesOrg[i]);
+      }
     }
 
     for (int i = 0; i < tablesNew.length; i++) {
       if (databaseOrg.findTable(tablesNew[i].getName()) == null) {
         // Table has been added. We add its data.
         Vector<DynaBean> rows = databaseDataNew.getRowsFromTable(tablesNew[i].getName());
-        if (rows == null)
+        if (rows == null) {
           rows = new Vector<DynaBean>();
-        for (DynaBean bean : rows)
+        }
+        for (DynaBean bean : rows) {
           dataChanges.add(new AddRowChange(tablesNew[i], bean));
+        }
       }
     }
 
-    for (Table table : commonTables)
+    for (Table table : commonTables) {
       compareTables(databaseDataOrg, databaseDataNew, table.getName());
+    }
 
     Collections.sort(dataChanges, new ChangeComparator());
   }
@@ -290,12 +309,15 @@ public class DataComparator {
     Vector<DynaBean> rowsOrg = databaseDataOrg.getRowsFromTable(tablename);
     Vector<DynaBean> rowsNew = databaseDataNew.getRowsFromTable(tablename);
 
-    if (rowsOrg == null && rowsNew == null)
+    if (rowsOrg == null && rowsNew == null) {
       return;
-    if (rowsOrg == null)
+    }
+    if (rowsOrg == null) {
       rowsOrg = new Vector<DynaBean>();
-    if (rowsNew == null)
+    }
+    if (rowsNew == null) {
       rowsNew = new Vector<DynaBean>();
+    }
 
     int indOrg = 0;
     int indNew = 0;
@@ -317,8 +339,8 @@ public class DataComparator {
         dataChanges.add(new AddRowChange(tableNew, rowsNew.get(indNew)));
         indNew++;
       } else if (comp == -2) {
-        _log.error("Error: problem while comparing primary key in table " + tableOrg.getName()
-            + ".");
+        _log.error(
+            "Error: problem while comparing primary key in table " + tableOrg.getName() + ".");
         return;
       }
     }
@@ -326,13 +348,15 @@ public class DataComparator {
     if (indNew < rowsNew.size() && indOrg >= rowsOrg.size()) {
       // There are rows in the target tables, but not in the original tables. We have
       // to insert them
-      while (indNew < rowsNew.size())
+      while (indNew < rowsNew.size()) {
         dataChanges.add(new AddRowChange(tableNew, rowsNew.get(indNew++)));
+      }
     } else if (indNew >= rowsNew.size() && indOrg < rowsOrg.size()) {
       // No rows remaining in the target table files. We will remove all the
       // remaining rows of the original table.
-      while (indOrg < rowsOrg.size())
+      while (indOrg < rowsOrg.size()) {
         dataChanges.add(new RemoveRowChange(tableOrg, rowsOrg.get(indOrg++)));
+      }
     }
   }
 
@@ -342,8 +366,9 @@ public class DataComparator {
       String pk1 = db1.get(tableOrg.getPrimaryKeyColumns()[0].getName()).toString();
       String pk2 = db2.get(tableOrg.getPrimaryKeyColumns()[0].getName()).toString();
       int c = comparator.compare(pk1, pk2.toString());
-      if (c != 0)
+      if (c != 0) {
         return c;
+      }
     }
     return 0;
 
@@ -355,8 +380,9 @@ public class DataComparator {
       String pk1 = db1.get(table.getPrimaryKeyColumns()[0].getName()).toString();
       String pk2 = db2.get(table.getPrimaryKeyColumns()[0].getName()).toString();
       int c = comparator.compare(pk1, pk2.toString());
-      if (c != 0)
+      if (c != 0) {
         return c;
+      }
     }
     return 0;
 
@@ -364,6 +390,7 @@ public class DataComparator {
 
   private static class BaseOBIDHexComparator implements Comparator<Object> {
 
+    @Override
     public int compare(Object o1, Object o2) {
       final String bob1 = o1.toString();
       final String bob2 = (String) o2;
@@ -388,10 +415,11 @@ public class DataComparator {
           Object v2 = db2.get(tableOrg.getColumn(i).getName());
           String vs1 = v1 == null ? null : v1.toString();
           String vs2 = v2 == null ? null : v2.toString();
-          if (!(vs1 == null && vs2 == null)
-              && ((vs1 == null && vs2 != null) || (vs1 != null && vs2 == null) || !vs1.equals(vs2)))
-            dataChanges.add(new ColumnDataChange(tableOrg, tableOrg.getColumn(i), vs1, vs2, db1
-                .get(tableOrg.getPrimaryKeyColumns()[0].getName())));
+          if (!(vs1 == null && vs2 == null) && ((vs1 == null && vs2 != null)
+              || (vs1 != null && vs2 == null) || !vs1.equals(vs2))) {
+            dataChanges.add(new ColumnDataChange(tableOrg, tableOrg.getColumn(i), vs1, vs2,
+                db1.get(tableOrg.getPrimaryKeyColumns()[0].getName())));
+          }
         } else {
           // Column doesn't exist in new table
         }
@@ -403,11 +431,11 @@ public class DataComparator {
         if (tableOrg.findColumn(tableNew.getColumn(i).getName()) != null) {
           // Column exists in both, so it was taken into account in the previous loop
         } else {
-          String vs2 = db2.get(tableNew.getColumn(i).getName()) == null ? null : db2.get(
-              tableNew.getColumn(i).getName()).toString();
+          String vs2 = db2.get(tableNew.getColumn(i).getName()) == null ? null
+              : db2.get(tableNew.getColumn(i).getName()).toString();
           // Column doesn't exist. We'll add its values.
-          dataChanges.add(new ColumnDataChange(tableNew, tableNew.getColumn(i), null, vs2, db2
-              .get(tableNew.getPrimaryKeyColumns()[0].getName())));
+          dataChanges.add(new ColumnDataChange(tableNew, tableNew.getColumn(i), null, vs2,
+              db2.get(tableNew.getPrimaryKeyColumns()[0].getName())));
         }
       }
     }
@@ -454,11 +482,12 @@ public class DataComparator {
     // check exportable data changes
     Vector<Change> dataChangesL = new Vector<Change>();
     dataChangesL.addAll(dataChanges);
-    for (final Change change : dataChanges)
+    for (final Change change : dataChanges) {
       if (change instanceof ColumnDataChange) {
         finalChanges.add((change));
         dataChangesL.remove(change);
       }
+    }
 
     notExportedChanges.addAll(dataChangesL);
   }

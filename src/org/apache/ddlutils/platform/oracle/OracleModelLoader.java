@@ -59,92 +59,91 @@ public class OracleModelLoader extends ModelLoaderBase {
     String escapeClause = "ESCAPE '\\'";
     _stmt_listtables = _connection.prepareStatement("SELECT TABLE_NAME FROM USER_TABLES "
         + _filter.getExcludeFilterWhereClause("TABLE_NAME", _filter.getExcludedTables(),
-            firstExpressionInWhereClause, escapeClause) + " ORDER BY TABLE_NAME");
-    _stmt_pkname = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ?");
-    _stmt_pkname_prefix = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ? AND (upper(CONSTRAINT_NAME) LIKE 'EM_"
+            firstExpressionInWhereClause, escapeClause)
+        + " ORDER BY TABLE_NAME");
+    _stmt_pkname = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ?");
+    _stmt_pkname_prefix = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ? AND (upper(CONSTRAINT_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(CONSTRAINT_NAME)||UPPER(TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "')))");
-    _stmt_pkname_noprefix = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\'");
-    _stmt_listcolumns = _connection
-        .prepareStatement("SELECT COLUMN_NAME, DATA_TYPE, CHAR_LENGTH, DATA_LENGTH ,DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? ORDER BY COLUMN_ID");
-    _stmt_listcolumns_prefix = _connection
-        .prepareStatement("SELECT COLUMN_NAME, DATA_TYPE, CHAR_LENGTH, DATA_LENGTH ,DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? AND (upper(COLUMN_NAME) LIKE 'EM_"
+    _stmt_pkname_noprefix = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\'");
+    _stmt_listcolumns = _connection.prepareStatement(
+        "SELECT COLUMN_NAME, DATA_TYPE, CHAR_LENGTH, DATA_LENGTH ,DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? ORDER BY COLUMN_ID");
+    _stmt_listcolumns_prefix = _connection.prepareStatement(
+        "SELECT COLUMN_NAME, DATA_TYPE, CHAR_LENGTH, DATA_LENGTH ,DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? AND (upper(COLUMN_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(COLUMN_NAME)||UPPER(TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "'))) ORDER BY COLUMN_ID");
-    _stmt_listcolumns_noprefix = _connection
-        .prepareStatement("SELECT COLUMN_NAME, DATA_TYPE, CHAR_LENGTH, DATA_LENGTH ,DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? AND upper(COLUMN_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY COLUMN_ID");
-    _stmt_pkcolumns = _connection
-        .prepareStatement("SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
-    _stmt_listchecks = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? ORDER BY CONSTRAINT_NAME");
-    _stmt_listchecks_prefix = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? AND (upper(CONSTRAINT_NAME) LIKE 'EM_"
+    _stmt_listcolumns_noprefix = _connection.prepareStatement(
+        "SELECT COLUMN_NAME, DATA_TYPE, CHAR_LENGTH, DATA_LENGTH ,DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? AND upper(COLUMN_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY COLUMN_ID");
+    _stmt_pkcolumns = _connection.prepareStatement(
+        "SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
+    _stmt_listchecks = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? ORDER BY CONSTRAINT_NAME");
+    _stmt_listchecks_prefix = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? AND (upper(CONSTRAINT_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(CONSTRAINT_NAME)||UPPER(TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "'))) ORDER BY CONSTRAINT_NAME");
-    _stmt_listchecks_noprefix = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
+    _stmt_listchecks_noprefix = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME, SEARCH_CONDITION FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'C' AND GENERATED = 'USER NAME' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
 
     sql = "SELECT C.CONSTRAINT_NAME, C2.TABLE_NAME, C.DELETE_RULE, 'NO ACTION', C.R_CONSTRAINT_NAME FROM USER_CONSTRAINTS C, USER_CONSTRAINTS C2 WHERE C.R_CONSTRAINT_NAME = C2.CONSTRAINT_NAME AND C.CONSTRAINT_TYPE = 'R' AND C.TABLE_NAME = ?";
     _stmt_listfks = _connection.prepareStatement(sql + " ORDER BY C.CONSTRAINT_NAME");
-    _stmt_listfks_prefix = _connection
-        .prepareStatement(sql
-            + " AND (upper(C.CONSTRAINT_NAME) LIKE 'EM_"
-            + _prefix
-            + "\\_%' ESCAPE '\\' OR (upper(C.CONSTRAINT_NAME)||UPPER(C2.TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
-            + _moduleId + "'))) ORDER BY C.CONSTRAINT_NAME");
+    _stmt_listfks_prefix = _connection.prepareStatement(sql
+        + " AND (upper(C.CONSTRAINT_NAME) LIKE 'EM_" + _prefix
+        + "\\_%' ESCAPE '\\' OR (upper(C.CONSTRAINT_NAME)||UPPER(C2.TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+        + _moduleId + "'))) ORDER BY C.CONSTRAINT_NAME");
     _stmt_listfks_noprefix = _connection.prepareStatement(sql
         + " AND upper(C.CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY C.CONSTRAINT_NAME");
 
-    _stmt_fkcolumns = _connection
-        .prepareStatement("SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONS_COLUMNS C2 WHERE C.CONSTRAINT_NAME = ? and C2.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
+    _stmt_fkcolumns = _connection.prepareStatement(
+        "SELECT C.COLUMN_NAME, C2.COLUMN_NAME FROM USER_CONS_COLUMNS C, USER_CONS_COLUMNS C2 WHERE C.CONSTRAINT_NAME = ? and C2.CONSTRAINT_NAME = ? and c.position = c2.position ORDER BY C.POSITION");
 
-    _stmt_listindexes = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
-    _stmt_listindexes_prefix = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
+    _stmt_listindexes = _connection.prepareStatement(
+        "SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) ORDER BY INDEX_NAME");
+    _stmt_listindexes_prefix = _connection.prepareStatement(
+        "SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND (upper(U.INDEX_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(U.INDEX_NAME)||UPPER(U.TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "'))) ORDER BY U.INDEX_NAME");
-    _stmt_listindexes_noprefix = _connection
-        .prepareStatement("SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
-    _stmt_indexcolumns = _connection
-        .prepareStatement(" SELECT column_name, column_expression FROM USER_IND_COLUMNS i left join USER_IND_EXPRESSIONS e on e.index_name = i.index_name and i.column_position = e.column_position\n"
+    _stmt_listindexes_noprefix = _connection.prepareStatement(
+        "SELECT U.INDEX_NAME, U.UNIQUENESS, U.TABLE_OWNER FROM USER_INDEXES U WHERE U.TABLE_NAME = ? AND (U.INDEX_TYPE = 'NORMAL' OR U.INDEX_TYPE = 'FUNCTION-BASED NORMAL') AND NOT EXISTS (SELECT 1 FROM USER_CONSTRAINTS WHERE TABLE_NAME = U.TABLE_NAME AND INDEX_NAME = U.INDEX_NAME AND CONSTRAINT_TYPE IN ('U', 'P')) AND upper(U.INDEX_NAME) NOT LIKE 'EM_%'  ORDER BY U.INDEX_NAME");
+    _stmt_indexcolumns = _connection.prepareStatement(
+        " SELECT column_name, column_expression FROM USER_IND_COLUMNS i left join USER_IND_EXPRESSIONS e on e.index_name = i.index_name and i.column_position = e.column_position\n"
             + " WHERE i.INDEX_NAME = ? ORDER BY i.COLUMN_POSITION");
 
-    _stmt_listuniques = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? ORDER BY CONSTRAINT_NAME");
-    _stmt_listuniques_prefix = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND (upper(CONSTRAINT_NAME) LIKE 'EM_"
+    _stmt_listuniques = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? ORDER BY CONSTRAINT_NAME");
+    _stmt_listuniques_prefix = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND (upper(CONSTRAINT_NAME) LIKE 'EM_"
             + _prefix
             + "\\_%' ESCAPE '\\' OR (upper(CONSTRAINT_NAME)||UPPER(TABLE_NAME) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
             + _moduleId + "'))) ORDER BY CONSTRAINT_NAME");
-    _stmt_listuniques_noprefix = _connection
-        .prepareStatement("SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
-    _stmt_uniquecolumns = _connection
-        .prepareStatement("SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
+    _stmt_listuniques_noprefix = _connection.prepareStatement(
+        "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
+    _stmt_uniquecolumns = _connection.prepareStatement(
+        "SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
     firstExpressionInWhereClause = true;
-    sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS "
-        + _filter.getExcludeFilterWhereClause("VIEW_NAME", _filter.getExcludedViews(),
-            firstExpressionInWhereClause, escapeClause);
-    if (_prefix != null)
-      sql += " AND (UPPER(VIEW_NAME) LIKE '"
-          + _prefix
+    sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS " + _filter.getExcludeFilterWhereClause(
+        "VIEW_NAME", _filter.getExcludedViews(), firstExpressionInWhereClause, escapeClause);
+    if (_prefix != null) {
+      sql += " AND (UPPER(VIEW_NAME) LIKE '" + _prefix
           + "\\_%' ESCAPE '\\' OR (upper(VIEW_NAME) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
+    }
     _stmt_listviews = _connection.prepareStatement(sql);
     firstExpressionInWhereClause = true;
     sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES "
         + _filter.getExcludeFilterWhereClause("SEQUENCE_NAME", _filter.getExcludedSequences(),
             firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
-      if (!sql.contains("WHERE"))
+      if (!sql.contains("WHERE")) {
         sql += " WHERE 1=1";
+      }
       sql += " AND UPPER(SEQUENCE_NAME) LIKE '" + _prefix + "\\_%' ESCAPE '\\'";
     }
     _stmt_listsequences = _connection.prepareStatement(sql);
@@ -153,10 +152,10 @@ public class OracleModelLoader extends ModelLoaderBase {
         + _filter.getExcludeFilterWhereClause("TRIGGER_NAME", _filter.getExcludedTriggers(),
             firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
-      if (!sql.contains("WHERE"))
+      if (!sql.contains("WHERE")) {
         sql += " WHERE 1=1";
-      sql += " AND (UPPER(TRIGGER_NAME) LIKE '"
-          + _prefix
+      }
+      sql += " AND (UPPER(TRIGGER_NAME) LIKE '" + _prefix
           + "\\_%' ESCAPE '\\' OR (upper(TRIGGER_NAME) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     }
@@ -166,17 +165,17 @@ public class OracleModelLoader extends ModelLoaderBase {
     sql = "SELECT DISTINCT NAME FROM USER_SOURCE WHERE (TYPE = 'PROCEDURE' OR TYPE = 'FUNCTION') "
         + _filter.getExcludeFilterWhereClause("NAME", _filter.getExcludedFunctions(),
             firstExpressionInWhereClause, escapeClause);
-    if (_prefix != null)
-      sql += " AND (UPPER(NAME) LIKE '"
-          + _prefix
+    if (_prefix != null) {
+      sql += " AND (UPPER(NAME) LIKE '" + _prefix
           + "\\_%' ESCAPE '\\' OR (upper(NAME) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
+    }
     _stmt_listfunctions = _connection.prepareStatement(sql);
 
     _stmt_functioncode = _connection
         .prepareStatement("SELECT TEXT FROM USER_SOURCE WHERE NAME = ? ORDER BY LINE");
-    _stmt_comments_tables = _connection
-        .prepareStatement("SELECT COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME= ? AND COLUMN_NAME= ?");
+    _stmt_comments_tables = _connection.prepareStatement(
+        "SELECT COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME= ? AND COLUMN_NAME= ?");
   }
 
   @Override
@@ -210,10 +209,11 @@ public class OracleModelLoader extends ModelLoaderBase {
             i++;
           }
         }
-        if (sunescaped.length() == 0)
+        if (sunescaped.length() == 0) {
           return null;
-        else
+        } else {
           return sunescaped.toString();
+        }
       } else {
         return value;
       }
@@ -298,6 +298,7 @@ public class OracleModelLoader extends ModelLoaderBase {
       _stmt_comments_tables.setString(1, tablename);
       _stmt_comments_tables.setString(2, t.getColumn(i).getName());
       fillList(_stmt_comments_tables, new RowFiller() {
+        @Override
         public void fillRow(ResultSet r) throws SQLException {
           commentCol = r.getString(1);
         }
@@ -333,6 +334,7 @@ public class OracleModelLoader extends ModelLoaderBase {
 
     _stmt_indexcolumns.setString(1, indexRealName);
     fillList(_stmt_indexcolumns, new RowFiller() {
+      @Override
       public void fillRow(ResultSet r) throws SQLException {
         String columnName = r.getString(1);
         IndexColumn inxcol = null;
@@ -380,7 +382,8 @@ public class OracleModelLoader extends ModelLoaderBase {
     return indexColumn;
   }
 
-  private String removeDatabaseOwnerFromIndexExpression(String indexExpression, String databaseOwner) {
+  private String removeDatabaseOwnerFromIndexExpression(String indexExpression,
+      String databaseOwner) {
     if (databaseOwner == null) {
       return indexExpression;
     }
@@ -443,8 +446,8 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String getIndexWhereClause(String indexName) {
     String whereClause = null;
-    try (PreparedStatement st = _connection
-        .prepareStatement("SELECT comments FROM user_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?")) {
+    try (PreparedStatement st = _connection.prepareStatement(
+        "SELECT comments FROM user_col_comments WHERE UPPER(table_name) = ? AND UPPER(column_name) = ?")) {
       String tableName = getTableNameFromIndexName(indexName);
       String columnName = getFirstColumnNameFromTableIndex(tableName, indexName);
       st.setString(1, tableName.toUpperCase());
@@ -502,8 +505,8 @@ public class OracleModelLoader extends ModelLoaderBase {
    */
   private String getFirstColumnNameFromTableIndex(String tableName, String indexName) {
     String columnName = null;
-    try (PreparedStatement st = _connection
-        .prepareStatement("SELECT column_name FROM USER_IND_COLUMNS U WHERE INDEX_NAME = ? AND TABLE_NAME = ? AND COLUMN_POSITION = 1")) {
+    try (PreparedStatement st = _connection.prepareStatement(
+        "SELECT column_name FROM USER_IND_COLUMNS U WHERE INDEX_NAME = ? AND TABLE_NAME = ? AND COLUMN_POSITION = 1")) {
       st.setString(1, indexName.toUpperCase());
       st.setString(2, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
@@ -538,6 +541,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     _stmt_fkcolumns.setString(1, fkRealName);
     _stmt_fkcolumns.setString(2, r_fkName);
     fillList(_stmt_fkcolumns, new RowFiller() {
+      @Override
       public void fillRow(ResultSet r) throws SQLException {
         Reference ref = new Reference();
         ref.setLocalColumnName(r.getString(1));

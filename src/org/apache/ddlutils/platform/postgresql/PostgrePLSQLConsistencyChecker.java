@@ -60,8 +60,8 @@ class PostgrePLSQLConsistencyChecker implements Callable<StructureObject> {
       body = ((Trigger) plObject).getBody();
       translator = new PostgrePLSQLTriggerTranslation(fullDatabase);
     } else {
-      throw new IllegalArgumentException("Expected a Function or a Trigger got a "
-          + plObject.getClass().getName());
+      throw new IllegalArgumentException(
+          "Expected a Function or a Trigger got a " + plObject.getClass().getName());
     }
 
     if (originalBody == null) {

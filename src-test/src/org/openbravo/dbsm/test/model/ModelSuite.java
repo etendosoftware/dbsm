@@ -34,7 +34,7 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
  */
 @RunWith(Suite.class)
 @SuiteClasses({ //
-CheckConstraints.class, //
+    CheckConstraints.class, //
     Pg95SqlStandardization.class, //
     PgSystemPreScriptTest.class, //
     Sequences.class, //
@@ -52,16 +52,16 @@ CheckConstraints.class, //
     CheckPlSqlStandardizationOnModelLoad.class, //
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
-    Functions.class,//
-    Views.class,//
+    Functions.class, //
+    Views.class, //
 
-    AddDropConstraints.class,//
+    AddDropConstraints.class, //
     TypeChangeSuite.class, //
     OtherDefaults.class, //
     SQLCommands.class, //
     OtherRecreations.class, //
     PreventConstraintDeletion.class, //
-    PreventCascadeRowDeletion.class,//
+    PreventCascadeRowDeletion.class, //
     PLCode.class,
 
     ColumnSizeChangesWithDependentViews.class })

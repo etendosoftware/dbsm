@@ -70,13 +70,12 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
   protected DBUpdater getDBUpdater() {
     if (dbUpdater == null) {
-      getLog().info(
-          "Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
-              + getSystemUser());
+      getLog().info("Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
+          + getSystemUser());
       dbUpdater = new DBUpdater();
       dbUpdater.setLog(getLog());
-      dbUpdater.setExcludeFilter(DBSMOBUtil.getInstance().getExcludeFilter(
-          new File(model.getAbsolutePath() + "/../../../")));
+      dbUpdater.setExcludeFilter(DBSMOBUtil.getInstance()
+          .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../")));
       dbUpdater.setPlatform(getPlatformInstance());
       dbUpdater.setModel(model);
       dbUpdater.setBasedir(basedir);

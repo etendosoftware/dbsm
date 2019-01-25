@@ -37,8 +37,8 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
         "(\\s|\\(|')+[Nn][Uu][Mm][Ee][Rr][Ii][Cc](\\s|\\t|:|,|\\|')+", "$1NUMBER$2")));
     append(new ReplaceStrTranslation(" NUMERIC(", " NUMBER("));
     append(new ReplaceStrTranslation(" NUMERIC)", " NUMBER)"));
-    append(new ByLineTranslation(
-        new ReplacePatTranslation("(\\s)+NUMERIC(\\s|\\t)*$", "$1NUMBER$2")));
+    append(
+        new ByLineTranslation(new ReplacePatTranslation("(\\s)+NUMERIC(\\s|\\t)*$", "$1NUMBER$2")));
     append(new ReplaceStrTranslation(" NUMERIC;", " NUMBER;"));
     append(new ReplaceStrTranslation(" NUMERIC:", " NUMBER:"));
     append(new ReplaceStrTranslation("'NUMERIC'", "'NUMBER'"));
@@ -49,30 +49,31 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
     // TimeStamp Type
     append(new ReplaceStrTranslation(" TIMESTAMP,", " DATE,"));
-    append(new ByLineTranslation(new ReplacePatTranslation("(\\s)+TIMESTAMP(\\s|\\t)+", "$1DATE$2")));
-    append(new ByLineTranslation(
-        new ReplacePatTranslation("(\\s)+TIMESTAMP(\\s|\\t)*$", "$1DATE$2")));
+    append(
+        new ByLineTranslation(new ReplacePatTranslation("(\\s)+TIMESTAMP(\\s|\\t)+", "$1DATE$2")));
+    append(
+        new ByLineTranslation(new ReplacePatTranslation("(\\s)+TIMESTAMP(\\s|\\t)*$", "$1DATE$2")));
     append(new ReplaceStrTranslation("TO_DATE", "TO_DATE"));
     append(new ReplaceStrTranslation(" TIMESTAMP;", " DATE;"));
     append(new ReplaceStrTranslation("'TIMESTAMP'", "'DATE'"));
 
     // TEXT BLOBS!!!!!!!!!
 
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "^([\\s\\t]*)GET DIAGNOSTICS (\\s|\\t)*(.+?)rowcount:=ROW_COUNT;",
-        "$1$3rowcount:=SQL%ROWCOUNT;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("^([\\s\\t]*)GET DIAGNOSTICS (\\s|\\t)*(.+?)rowcount:=ROW_COUNT;",
+            "$1$3rowcount:=SQL%ROWCOUNT;")));
     append(new ReplaceStrTranslation("-- COMMIT;", "COMMIT;"));
     append(new ReplaceStrTranslation("-- ROLLBACK;", "ROLLBACK;"));
-    append(new ByLineTranslation(new ReplacePatTranslation(" --OBTG:SAVEPOINT(.*);--",
-        "SAVEPOINT$1;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation(" --OBTG:SAVEPOINT(.*);--", "SAVEPOINT$1;")));
 
     append(new ReplaceStrTranslation("DATA_EXCEPTION", "NO_DATA_FOUND"));
     append(new ReplaceStrTranslation("INTERNAL_ERROR", "Not_Fully_Qualified"));
     append(new ReplaceStrTranslation("RAISE_EXCEPTION", "OB_exception"));
 
     append(new ReplaceStrTranslation("SQLSTATE", "SQLCODE"));
-    append(new ByLineTranslation(new ReplacePatTranslation("RECORD(.*) --OBTG:(.*)--",
-        "$2%ROWTYPE$1")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("RECORD(.*) --OBTG:(.*)--", "$2%ROWTYPE$1")));
 
     append(new ReplacePatTranslation("-- <<", "<<"));
     append(new ReplaceStrTranslation("REFCURSOR", "REF CURSOR"));
@@ -83,8 +84,8 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
         "(NEW.Updated-NEW.Created)"));
 
     append(new ReplacePatTranslation("OPEN (.+?) FOR EXECUTE (.+?);", "OPEN$1FOR$2;"));
-    append(new ByLineTranslation(new ReplacePatTranslation("^([^\\-]+)EXECUTE",
-        "$1EXECUTE IMMEDIATE")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("^([^\\-]+)EXECUTE", "$1EXECUTE IMMEDIATE")));
 
     append(new ReplacePatTranslation("TYPE_Ref ", "TYPE TYPE_Ref IS "));
     append(new ReplacePatTranslation(
@@ -99,9 +100,10 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
     for (int i = 0; i < database.getFunctionCount(); i++) {
       if (database.getFunction(i).getTypeCode() == Types.NULL) {
-        append(new ReplacePatTranslation("[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
-            + generateStringPat(database.getFunction(i).getName()) + "[\\s]*\\(", database
-            .getFunction(i).getName() + "("));
+        append(new ReplacePatTranslation(
+            "[Pp][Ee][Rr][Ff][Oo][Rr][Mm][\\s|\\t]*"
+                + generateStringPat(database.getFunction(i).getName()) + "[\\s]*\\(",
+            database.getFunction(i).getName() + "("));
       }
     }
 
@@ -120,31 +122,32 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
     // we don't delete them yet.
     append(new ByLineTranslation(new ReplacePatTranslation(
         "RAISE NOTICE '%',(.*)([^\\s]+)([\\s|\\t]*);", "DBMS_OUTPUT.PUT_LINE($1$2)$3;")));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "RAISE EXCEPTION '%',(.*)([^\\s]+)([\\s|\\t]*); --OBTG:(.*)--",
-        "RAISE_APPLICATION_ERROR($4,$1$2)$3;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("RAISE EXCEPTION '%',(.*)([^\\s]+)([\\s|\\t]*); --OBTG:(.*)--",
+            "RAISE_APPLICATION_ERROR($4,$1$2)$3;")));
 
-    append(new ByLineTranslation(new ReplacePatTranslation("DECLARE (.*) CURSOR (.*) FOR",
-        "CURSOR $1 $2IS")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("DECLARE (.*) CURSOR (.*) FOR", "CURSOR $1 $2IS")));
     append(new ByLineTranslation(new ReplacePatTranslation(
         "^(.+?)([\\s|\\t|\\(]+?) NOT FOUND (.+?) --OBTG:(.*)--", "$1$2$4%NOTFOUND$3")));
 
     append(new ByLineTranslation(new ReplacePatTranslation(
         "RAISE EXCEPTION '%','RBack'; --OBTG:tosavepoint(.*)", "ROLLBACK TO SAVEPOINT $1;")));
-    append(new ByLineTranslation(new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*SQLERRM\\s*;",
-        "RAISE;")));
-    append(new ByLineTranslation(new ReplacePatTranslation(
-        "RAISE EXCEPTION '%',\\s*'Rollback'\\s*;", "RAISE;")));
-    append(new ByLineTranslation(new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*'';", "RAISE;")));
-    append(new ByLineTranslation(new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*(.*);",
-        "RAISE $1;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*SQLERRM\\s*;", "RAISE;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*'Rollback'\\s*;", "RAISE;")));
+    append(
+        new ByLineTranslation(new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*'';", "RAISE;")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("RAISE EXCEPTION '%',\\s*(.*);", "RAISE $1;")));
 
     append(new ByLineTranslation(new ReplacePatTranslation("--(.*) Exception;", "$1Exception;")));
-    append(new ByLineTranslation(new ReplacePatTranslation("--(.*)\\sPRAGMA EXCEPTION_INIT",
-        "$1PRAGMA EXCEPTION_INIT")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("--(.*)\\sPRAGMA EXCEPTION_INIT", "$1PRAGMA EXCEPTION_INIT")));
 
-    append(new ByLineTranslation(new ReplacePatTranslation("(.+?)Array\\[(.+?)\\](.+?)$",
-        "$1Array($2)$3")));
+    append(new ByLineTranslation(
+        new ReplacePatTranslation("(.+?)Array\\[(.+?)\\](.+?)$", "$1Array($2)$3")));
     // append(new ReplaceStrTranslation("Array[","Array("));
     // append(new ReplaceStrTranslation("]",")"));
 
@@ -158,12 +161,14 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
   private String generateStringPat(String in) {
     String out = "";
-    for (int i = 0; i < in.length(); i++)
-      if (in.charAt(i) == '_')
+    for (int i = 0; i < in.length(); i++) {
+      if (in.charAt(i) == '_') {
         out = out + "[" + in.charAt(i) + "]";
-      else
+      } else {
         out = out + "[" + in.substring(i, i + 1).toLowerCase()
             + in.substring(i, i + 1).toUpperCase() + "]";
+      }
+    }
     return out;
   }
 
@@ -185,14 +190,16 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
           Parameter p = f.getParameter(j);
           if (p.getModeCode() == Parameter.MODE_OUT) {
             paramsOutExist = true;
-            if (!paramsOut.equals(""))
+            if (!paramsOut.equals("")) {
               paramsOut += ",";
+            }
             paramsOut += "[\\s]*([^\\(\\s]+)[\\s]*";
             posParams[j] = numParamsOut;
             numParamsOut++;
           } else {
-            if (!paramsIn.equals(""))
+            if (!paramsIn.equals("")) {
               paramsIn += ",";
+            }
             paramsIn += "\\s*(.+?)\\s*";// "[\\s]*([^\\s]+)[\\s]*";
             posParams[j] = numParamsIn;
             numParamsIn++;
@@ -201,26 +208,31 @@ public class PostgrePLSQLStandarization extends CombinedTranslation {
 
         if (paramsOutExist) {
           String paramPos = "";
-          for (int j = 0; j <= defAct; j++)
-            if (f.getParameter(j).getModeCode() == Parameter.MODE_IN)
-              posParams[j] += numParamsOut + 1;
           for (int j = 0; j <= defAct; j++) {
-            if (j > 0)
+            if (f.getParameter(j).getModeCode() == Parameter.MODE_IN) {
+              posParams[j] += numParamsOut + 1;
+            }
+          }
+          for (int j = 0; j <= defAct; j++) {
+            if (j > 0) {
               paramPos += ", ";
+            }
             paramPos += "$" + (posParams[j] + 1);
           }
           String nameRegExp = "";
-          for (int ind = 0; ind < f.getName().length(); ind++)
+          for (int ind = 0; ind < f.getName().length(); ind++) {
             nameRegExp += "[" + f.getName().substring(ind, ind + 1).toUpperCase()
                 + f.getName().substring(ind, ind + 1).toLowerCase() + "]";
+          }
 
           String patternIn = "(?i)SELECT\\s*\\*\\s*INTO" + paramsOut + "FROM\\s*(" + nameRegExp
               + ")\\s*\\(" + paramsIn + "\\)";
           String patternOut = "$" + (numParamsOut + 1) + "(" + paramPos + ")";
-          if (!outFunctions.contains(f.getName()))
+          if (!outFunctions.contains(f.getName())) {
             outFunctions.add(f.getName());
-          patternsOutFunctions.add(new ByLineTranslation(new ReplaceOutFunctionParams(patternIn,
-              patternOut, f.getName())));
+          }
+          patternsOutFunctions.add(new ByLineTranslation(
+              new ReplaceOutFunctionParams(patternIn, patternOut, f.getName())));
 
         }
       } while (defAct > 0 && f.getParameter(defAct).getDefaultValue() != null);

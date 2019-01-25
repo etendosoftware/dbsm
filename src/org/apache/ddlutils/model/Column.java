@@ -333,6 +333,7 @@ public class Column extends ValueObject implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     Column result = (Column) super.clone();
 
@@ -354,6 +355,7 @@ public class Column extends ValueObject implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj instanceof Column) {
       Column other = (Column) obj;
@@ -392,6 +394,7 @@ public class Column extends ValueObject implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     HashCodeBuilder builder = new HashCodeBuilder(17, 37);
 
@@ -413,6 +416,7 @@ public class Column extends ValueObject implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

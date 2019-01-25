@@ -12,18 +12,21 @@ public class OBDatasetTable {
   boolean includeAllColumns;
   Vector<String> includedColumns = new Vector<String>();
 
+  @Override
   public String toString() {
     String cols = "";
-    for (String col : includedColumns)
+    for (String col : includedColumns) {
       cols += "           - " + col + "\n";
+    }
     return "   - Table " + name + ". Whereclause=" + whereclause + "|| Included cols: " + cols;
   }
 
   public boolean includesColumn(String column) {
     if (excludeAuditInfo) {
       if (column.equalsIgnoreCase("CREATED") || column.equalsIgnoreCase("UPDATED")
-          || column.equalsIgnoreCase("UPDATEDBY") || column.equalsIgnoreCase("CREATEDBY"))
+          || column.equalsIgnoreCase("UPDATEDBY") || column.equalsIgnoreCase("CREATEDBY")) {
         return false;
+      }
     }
     return includedColumns.contains(column);
   }
@@ -53,8 +56,9 @@ public class OBDatasetTable {
   }
 
   public String getWhereclause(String moduleId) {
-    if (whereclause == null)
+    if (whereclause == null) {
       return null;
+    }
     if (moduleId != null) {
       return "(" + whereclause.replace(":moduleid", "'" + moduleId + "'") + ")";
     } else {

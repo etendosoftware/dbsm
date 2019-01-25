@@ -85,6 +85,7 @@ public abstract class AbstractDatabaseFilter implements DynamicDatabaseFilter {
    * 
    * @return An array with a String for each table name
    */
+  @Override
   public final String[] getTableNames() {
     return m_tablefilters.keySet().toArray(new String[0]);
   }
@@ -96,6 +97,7 @@ public abstract class AbstractDatabaseFilter implements DynamicDatabaseFilter {
    *          The name of the table
    * @return An String with the SQL statement
    */
+  @Override
   public final String getTableFilter(String tablename) {
     return m_tablefilters.get(tablename);
   }

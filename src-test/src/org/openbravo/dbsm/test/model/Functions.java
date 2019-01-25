@@ -90,7 +90,8 @@ public class Functions extends DbsmTest {
 
   private String getSearchPath(String functionName) throws SQLException {
     try (Connection cn = getDataSource().getConnection();
-        PreparedStatement st = cn.prepareStatement("select proconfig from pg_proc where proname=?")) {
+        PreparedStatement st = cn
+            .prepareStatement("select proconfig from pg_proc where proname=?")) {
       st.setString(1, functionName);
 
       ResultSet rs = st.executeQuery();

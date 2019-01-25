@@ -50,8 +50,8 @@ public class TimeConverter implements SqlTypeConverter {
     PatternCompiler compiler = new Perl5Compiler();
 
     try {
-      _timePattern = compiler
-          .compile("(?:\\d{4}\\-\\d{2}\\-\\d{2}\\s)?(\\d{2})(?::(\\d{2}))?(?::(\\d{2}))?(?:\\..*)?");
+      _timePattern = compiler.compile(
+          "(?:\\d{4}\\-\\d{2}\\-\\d{2}\\s)?(\\d{2})(?::(\\d{2}))?(?::(\\d{2}))?(?:\\..*)?");
     } catch (MalformedPatternException ex) {
       throw new DdlUtilsException(ex);
     }
@@ -63,6 +63,7 @@ public class TimeConverter implements SqlTypeConverter {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object convertFromString(String textRep, int sqlTypeCode) throws ConversionException {
     if (sqlTypeCode != Types.TIME) {
       return textRep;
@@ -110,14 +111,14 @@ public class TimeConverter implements SqlTypeConverter {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String convertToString(Object obj, int sqlTypeCode) throws ConversionException {
     String result = null;
 
     if (obj != null) {
       if (!(obj instanceof Time)) {
-        throw new ConversionException(
-            "Expected object of type java.sql.Time, but instead received "
-                + obj.getClass().getName());
+        throw new ConversionException("Expected object of type java.sql.Time, but instead received "
+            + obj.getClass().getName());
       }
       result = obj.toString();
     }

@@ -55,7 +55,8 @@ public class DatabaseTestHelper extends Assert {
    * @param testedDbPlatform
    *          The second platform
    */
-  public void assertHasSameData(Database model, Platform origDbPlatform, Platform testedDbPlatform) {
+  public void assertHasSameData(Database model, Platform origDbPlatform,
+      Platform testedDbPlatform) {
     assertHasSameData(null, model, origDbPlatform, testedDbPlatform);
   }
 
@@ -82,11 +83,12 @@ public class DatabaseTestHelper extends Assert {
       Table table = model.getTable(idx);
       Column[] pkCols = table.getPrimaryKeyColumns();
 
-      for (Iterator it = origDbPlatform.query(model, buildQueryString(origDbPlatform, table, null,
-          null), new Table[] { table }); it.hasNext();) {
+      for (Iterator it = origDbPlatform.query(model,
+          buildQueryString(origDbPlatform, table, null, null), new Table[] { table }); it
+              .hasNext();) {
         DynaBean obj = (DynaBean) it.next();
-        Collection result = testedDbPlatform.fetch(model, buildQueryString(origDbPlatform, table,
-            pkCols, obj), new Table[] { table });
+        Collection result = testedDbPlatform.fetch(model,
+            buildQueryString(origDbPlatform, table, pkCols, obj), new Table[] { table });
 
         if (result.isEmpty()) {
           if (_log.isDebugEnabled()) {

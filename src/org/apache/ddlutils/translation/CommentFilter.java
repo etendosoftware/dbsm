@@ -43,8 +43,10 @@ public class CommentFilter {
       // System.out.println(code+";;"+rep);
       if (rep.startsWith("OBTG:") || rep.contains("COMMIT") || rep.contains("ROLLBACK")
           || (rep.contains("TYPE") && !rep.contains("ROWTYPE")) || rep.contains("<<")
-          || rep.contains("EXCEPTION") || rep.contains("PRAGMA") || rep.contains("INTERNAL_ERROR"))
+          || rep.contains("EXCEPTION") || rep.contains("PRAGMA")
+          || rep.contains("INTERNAL_ERROR")) {
         body = body.replaceFirst(code, rep);
+      }
     }
     return body;
   }

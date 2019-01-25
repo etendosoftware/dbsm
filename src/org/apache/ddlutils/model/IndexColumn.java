@@ -196,6 +196,7 @@ public class IndexColumn implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     IndexColumn result = (IndexColumn) super.clone();
 
@@ -207,6 +208,7 @@ public class IndexColumn implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
     PlatformInfo platformInfo = null;
     return equals(obj, platformInfo);
@@ -225,7 +227,8 @@ public class IndexColumn implements Cloneable, Serializable {
         boolean emptyStringIsNull = platformInfo.emptyStringIsNull();
         if (emptyStringIsNull) {
           transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
-          otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+          otherTransformedFunctionExpression = replaceEmptyStringWithNull(
+              otherTransformedFunctionExpression);
         }
       }
       EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name)
@@ -262,7 +265,8 @@ public class IndexColumn implements Cloneable, Serializable {
       boolean emptyStringIsNull = platformInfo.emptyStringIsNull();
       if (emptyStringIsNull) {
         transformedFunctionExpression = replaceEmptyStringWithNull(transformedFunctionExpression);
-        otherTransformedFunctionExpression = replaceEmptyStringWithNull(otherTransformedFunctionExpression);
+        otherTransformedFunctionExpression = replaceEmptyStringWithNull(
+            otherTransformedFunctionExpression);
       }
     }
     EqualsBuilder equalsBuilder = new EqualsBuilder()
@@ -286,6 +290,7 @@ public class IndexColumn implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_size).toHashCode();
   }
@@ -293,6 +298,7 @@ public class IndexColumn implements Cloneable, Serializable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

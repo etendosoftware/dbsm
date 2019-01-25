@@ -49,6 +49,7 @@ public class View implements StructureObject, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -85,6 +86,7 @@ public class View implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
 
     View result = (View) super.clone();
@@ -98,6 +100,7 @@ public class View implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
 
     if (obj instanceof View) {
@@ -107,8 +110,8 @@ public class View implements StructureObject, Cloneable {
       // Note also that we can simply compare the references regardless of
       // their order
       // (which is irrelevant for ccs) because they are contained in a set
-      return new EqualsBuilder().append(_name, otherView._name).append(_statement.trim(),
-          otherView._statement.trim()).isEquals();
+      return new EqualsBuilder().append(_name, otherView._name)
+          .append(_statement.trim(), otherView._statement.trim()).isEquals();
     } else {
       return false;
     }
@@ -130,6 +133,7 @@ public class View implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_statement).toHashCode();
   }
@@ -137,6 +141,7 @@ public class View implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

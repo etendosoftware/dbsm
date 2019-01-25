@@ -34,14 +34,15 @@ public class PGStandardBatchEvaluator extends StandardBatchEvaluator {
     } catch (SQLException e) {
       _log.error("Error while handling a failed batch execution ins postgreSql.");
     }
-    _log.info("Batch statement failed. Rolling back and retrying all the statements in a non-batched connection.");
+    _log.info(
+        "Batch statement failed. Rolling back and retrying all the statements in a non-batched connection.");
     // The batch failed. We will execute all commands again using the old method
     return evaluateBatch(connection, sql, continueOnError, 0);
   }
 
   @Override
-  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
-      throws DatabaseOperationException {
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql,
+      boolean continueOnError) throws DatabaseOperationException {
     try {
       connection.setAutoCommit(false);
     } catch (SQLException e) {

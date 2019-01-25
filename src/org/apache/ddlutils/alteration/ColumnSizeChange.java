@@ -73,6 +73,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
    * 
    * @return The column
    */
+  @Override
   public Column getChangedColumn() {
     return _column;
   }
@@ -98,6 +99,7 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = database.findTable(_tablename, caseSensitive);
 
@@ -108,32 +110,36 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
       return;
     }
     Column column = table.findColumn(_columnname, caseSensitive);
-    if (column != null)
+    if (column != null) {
       column.setSizeAndScale(_newSize, _newScale);
+    }
 
   }
 
   public void applyInReverse(Database database, boolean caseSensitive) {
     if (_oldSize == 0) {
-      System.out
-          .println("Error while applying a ColumnSizeChange in reverse (the old size of the column is 0). Exporting the configuration script again should fix this problem.");
+      System.out.println(
+          "Error while applying a ColumnSizeChange in reverse (the old size of the column is 0). Exporting the configuration script again should fix this problem.");
     }
     Table table = _table;
-    if (table == null)
+    if (table == null) {
       table = database.findTable(_tablename, caseSensitive);
+    }
     if (table == null) {
       System.out.println("Table wasn't found in database.");
       return;
     }
 
     Column column = _column;
-    if (column == null)
+    if (column == null) {
       column = table.findColumn(_columnname, caseSensitive);
-    if (column != null)
+    }
+    if (column != null) {
       column.setSizeAndScale(_oldSize, _oldScale);
-    else
+    } else {
       System.out.println("Column " + getChangedColumn().getName() + " of table "
           + getChangedTable().getName() + " wasn't found in the database.");
+    }
   }
 
   public String getTablename() {
@@ -163,10 +169,11 @@ public class ColumnSizeChange extends TableChangeImplBase implements ColumnChang
   @Override
   public String toString() {
     String name;
-    if (_column == null)
+    if (_column == null) {
       name = "null";
-    else
+    } else {
       name = _column.getName();
+    }
     return "ColumnSizeChange. Column: " + name;
   }
 

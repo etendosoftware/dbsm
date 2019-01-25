@@ -99,7 +99,8 @@ public class OperatorClassIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
-    List<String> commands = sqlStatmentsForUpdate("indexes/FUNCTION_INDEX_WITHOUT_OPERATOR_CLASS.xml");
+    List<String> commands = sqlStatmentsForUpdate(
+        "indexes/FUNCTION_INDEX_WITHOUT_OPERATOR_CLASS.xml");
     if (Rdbms.PG.equals(getRdbms())) {
       assertThat(commands, is(not(empty())));
     } else if (Rdbms.ORA.equals(getRdbms())) {

@@ -157,8 +157,8 @@ public class DataWriter {
   }
 
   /**
-   * Specifies if the output should contain <!-- primaryKeyValue --> in each line.
-   * Default value is true
+   * Specifies if the output should contain <!-- primaryKeyValue --> in each line. Default value is
+   * true
    */
   public void setWritePrimaryKeyComment(boolean _writePrimaryKeyComment) {
     this._writePrimaryKeyComment = _writePrimaryKeyComment;
@@ -249,8 +249,9 @@ public class DataWriter {
     Column[] pks = table.getPrimaryKeyColumns();
     String comment = "";
     for (int i = 0; i < pks.length; i++) {
-      if (i > 0)
+      if (i > 0) {
         comment += " ";
+      }
       comment += bean.get(pks[i].getName()).toString();
     }
 
@@ -369,8 +370,9 @@ public class DataWriter {
     Column[] pks = table.getPrimaryKeyColumns();
     String comment = "";
     for (int i = 0; i < pks.length; i++) {
-      if (i > 0)
+      if (i > 0) {
         comment += " ";
+      }
       comment += bean.get(pks[i].getName()).toString();
     }
 

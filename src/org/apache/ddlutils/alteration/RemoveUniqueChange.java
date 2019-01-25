@@ -57,6 +57,7 @@ public class RemoveUniqueChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Table table = database.findTable(getChangedTable().getName(), caseSensitive);
     Unique unique = table.findUnique(_unique.getName(), caseSensitive);

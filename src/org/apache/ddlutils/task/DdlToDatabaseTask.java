@@ -195,6 +195,7 @@ public class DdlToDatabaseTask extends DatabaseTaskBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected Database readModel() {
     DatabaseIO reader = new DatabaseIO();
     Database model = null;
@@ -254,8 +255,8 @@ public class DdlToDatabaseTask extends DatabaseTaskBase {
         model = reader.read(schemaFile);
         _log.info("Read schema file " + schemaFile.getAbsolutePath());
       } catch (Exception ex) {
-        throw new BuildException("Could not read schema file " + schemaFile.getAbsolutePath()
-            + ": " + ex.getLocalizedMessage(), ex);
+        throw new BuildException("Could not read schema file " + schemaFile.getAbsolutePath() + ": "
+            + ex.getLocalizedMessage(), ex);
       }
     }
     return model;

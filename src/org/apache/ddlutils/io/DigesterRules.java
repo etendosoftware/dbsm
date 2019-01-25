@@ -56,6 +56,7 @@ public class DigesterRules extends RulesBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void add(String pattern, Rule rule) {
     super.add(_caseSensitive ? pattern : pattern.toLowerCase(), rule);
   }
@@ -63,6 +64,7 @@ public class DigesterRules extends RulesBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected List lookup(String namespaceURI, String pattern) {
     return super.lookup(namespaceURI, _caseSensitive ? pattern : pattern.toLowerCase());
   }

@@ -70,6 +70,7 @@ public class WriteDataToFileCommand extends ConvertingDatabaseCommand {
    *          Whether to try to find the table's schemas
    * @deprecated Will be removed once proper schema support is in place
    */
+  @Deprecated
   public void setDetermineSchema(boolean determineSchema) {
     _determineSchema = determineSchema;
   }
@@ -77,6 +78,7 @@ public class WriteDataToFileCommand extends ConvertingDatabaseCommand {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void execute(DatabaseTaskBase task, Database model) throws BuildException {
     try {
       getDataIO().setDetermineSchema(_determineSchema);

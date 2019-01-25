@@ -89,8 +89,8 @@ public abstract class DatabaseTaskBase extends Task {
 
   /**
    * Specifies a pattern that defines which database catalogs to use. For some more info on catalog
-   * patterns and JDBC, see <a href=
-   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html"
+   * patterns and JDBC, see
+   * <a href= "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html"
    * >java.sql.DatabaseMetaData</a>.
    * 
    * @param catalogPattern
@@ -105,8 +105,8 @@ public abstract class DatabaseTaskBase extends Task {
 
   /**
    * Specifies a pattern that defines which database schemas to use. For some more info on schema
-   * patterns and JDBC, see <a href=
-   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html"
+   * patterns and JDBC, see
+   * <a href= "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html"
    * >java.sql.DatabaseMetaData</a>.
    * 
    * @param schemaPattern
@@ -275,6 +275,7 @@ public abstract class DatabaseTaskBase extends Task {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void execute() throws BuildException {
     initLogging();
 

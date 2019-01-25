@@ -54,6 +54,7 @@ public class AddCheckChange extends TableChangeImplBase {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Check newCheck = null;
     Table table = database.findTable(getChangedTable().getName());

@@ -62,14 +62,14 @@ public class OBDataset {
     for (DynaBean dsTable : dsTables) {
       OBDatasetTable table = new OBDatasetTable();
       tables.add(table);
-      table.setWhereclause(dsTable.get("WHERECLAUSE") == null ? null : dsTable.get("WHERECLAUSE")
-          .toString());
-      table.setSecondarywhereclause(dsTable.get("SECONDARYWHERECLAUSE") == null ? null : dsTable
-          .get("SECONDARYWHERECLAUSE").toString());
+      table.setWhereclause(
+          dsTable.get("WHERECLAUSE") == null ? null : dsTable.get("WHERECLAUSE").toString());
+      table.setSecondarywhereclause(dsTable.get("SECONDARYWHERECLAUSE") == null ? null
+          : dsTable.get("SECONDARYWHERECLAUSE").toString());
       table.setIncludeAllColumns(dsTable.get("INCLUDEALLCOLUMNS").toString().equals("Y"));
       table.setExcludeAuditInfo(dsTable.get("EXCLUDEAUDITINFO").toString().equals("Y"));
-      DynaBean adTable = DatabaseData.searchDynaBean(adTables, dsTable.get("AD_TABLE_ID")
-          .toString(), "AD_TABLE_ID");
+      DynaBean adTable = DatabaseData.searchDynaBean(adTables,
+          dsTable.get("AD_TABLE_ID").toString(), "AD_TABLE_ID");
       table.setName(adTable.get("TABLENAME").toString());
       table.setDataSetTableId(dsTable.get("AD_DATASET_TABLE_ID").toString());
       if (table.isIncludeAllColumns()) {
@@ -87,7 +87,7 @@ public class OBDataset {
         for (DynaBean db : excludedCols) {
           String colName = searchDynaBeans("AD_COLUMN", readFromDb,
               db.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get(0).get("COLUMNNAME")
-              .toString();
+                  .toString();
           excludedColNames.add(colName.toUpperCase());
         }
         Table mTable = database.findTable(table.getName());
@@ -96,8 +96,9 @@ public class OBDataset {
         }
         for (int i = 0; i < mTable.getColumnCount(); i++) {
           String col = mTable.getColumn(i).getName();
-          if (!excludedColNames.contains(col))
+          if (!excludedColNames.contains(col)) {
             table.getIncludedColumns().add(col);
+          }
         }
       }
     }
@@ -149,6 +150,7 @@ public class OBDataset {
     return tables;
   }
 
+  @Override
   public String toString() {
     StringBuffer sb = new StringBuffer();
     for (OBDatasetTable table : tables) {
@@ -202,10 +204,12 @@ public class OBDataset {
   }
 
   /**
-   * @deprecated Use with log4j2 logger: hasChanged(Connection, org.apache.logging.log4j.Logger, List<String>)
+   * @deprecated Use with log4j2 logger: hasChanged(Connection, org.apache.logging.log4j.Logger,
+   *             List<String>)
    */
   @Deprecated
-  public boolean hasChanged(Connection connection, org.apache.log4j.Logger log, List<String> modifiedTables) {
+  public boolean hasChanged(Connection connection, org.apache.log4j.Logger log,
+      List<String> modifiedTables) {
     return hasChanged(connection, (Logger) null, modifiedTables);
   }
 

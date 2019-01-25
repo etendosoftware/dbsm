@@ -103,6 +103,7 @@ public class WriteSchemaSqlToFileCommand extends DatabaseCommandWithCreationPara
   /**
    * {@inheritDoc}
    */
+  @Override
   public void execute(DatabaseTaskBase task, Database model) throws BuildException {
     if (_outputFile == null) {
       throw new BuildException("No output file specified");
@@ -145,8 +146,9 @@ public class WriteSchemaSqlToFileCommand extends DatabaseCommandWithCreationPara
         }
       }
       if (shouldAlter) {
-        Database currentModel = (getCatalogPattern() != null) || (getSchemaPattern() != null) ? platform
-            .readModelFromDatabase("unnamed", getCatalogPattern(), getSchemaPattern(), null)
+        Database currentModel = (getCatalogPattern() != null) || (getSchemaPattern() != null)
+            ? platform.readModelFromDatabase("unnamed", getCatalogPattern(), getSchemaPattern(),
+                null)
             : platform.readModelFromDatabase("unnamed");
         platform.getSqlBuilder().prepareDatabaseForAlter(currentModel, model, params);
         platform.getSqlBuilder().alterDatabase(currentModel, model, params);

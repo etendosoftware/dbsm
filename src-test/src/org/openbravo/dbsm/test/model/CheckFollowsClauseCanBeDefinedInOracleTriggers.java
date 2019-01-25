@@ -43,8 +43,8 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 public class CheckFollowsClauseCanBeDefinedInOracleTriggers extends DbsmTest {
 
   public CheckFollowsClauseCanBeDefinedInOracleTriggers(String rdbms, String driver, String url,
-      String sid, String user, String password, String name) throws FileNotFoundException,
-      IOException {
+      String sid, String user, String password, String name)
+      throws FileNotFoundException, IOException {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
@@ -79,8 +79,8 @@ public class CheckFollowsClauseCanBeDefinedInOracleTriggers extends DbsmTest {
     try {
       cn = getDataSource().getConnection();
       PreparedStatement st = null;
-      st = cn
-          .prepareStatement("SELECT count(*) FROM user_triggers WHERE upper(trigger_name) = 'TEST_TRIGGER_SECOND' and UPPER(description) like '%FOLLOWS TEST_TRIGGER_FIRST%'");
+      st = cn.prepareStatement(
+          "SELECT count(*) FROM user_triggers WHERE upper(trigger_name) = 'TEST_TRIGGER_SECOND' and UPPER(description) like '%FOLLOWS TEST_TRIGGER_FIRST%'");
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
         int nRecords = rs.getInt(1);

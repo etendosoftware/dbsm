@@ -43,12 +43,14 @@ public class AlterDatabaseJava {
     ada.setDatadir(args[12]);
     ada.setDatafilter(args[13]);
     String force = args[14];
-    if (force.equalsIgnoreCase("yes"))
+    if (force.equalsIgnoreCase("yes")) {
       force = "true";
+    }
     ada.setForce(Boolean.parseBoolean(force));
     String strict = args[15];
-    if (strict.equalsIgnoreCase("yes"))
+    if (strict.equalsIgnoreCase("yes")) {
       strict = "true";
+    }
 
     ada.setStrict(Boolean.parseBoolean(strict));
 
@@ -56,8 +58,8 @@ public class AlterDatabaseJava {
       ada.setForcedRecreation(args[16]);
     }
     if (args.length > 17) {
-      ada.setExecuteModuleScripts("yes".equals(args[17]) || "true".equals(args[17])
-          || "on".equals(args[17]));
+      ada.setExecuteModuleScripts(
+          "yes".equals(args[17]) || "true".equals(args[17]) || "on".equals(args[17]));
     }
 
     if (args.length > 18) {

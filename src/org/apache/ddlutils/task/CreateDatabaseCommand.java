@@ -31,7 +31,8 @@ import org.apache.tools.ant.BuildException;
 
 /**
  * The sub task for creating the target database. Note that this is only supported on some database
- * platforms. See the database support documentation for details on which platforms support this.<br/>
+ * platforms. See the database support documentation for details on which platforms support
+ * this.<br/>
  * This sub task does not require schema files. Therefore the <code>fileset</code> subelement and
  * the <code>schemaFile</code> attribute of the enclosing task can be omitted.
  * 
@@ -55,6 +56,7 @@ public class CreateDatabaseCommand extends DatabaseCommand {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean isRequiringModel() {
     return false;
   }
@@ -62,6 +64,7 @@ public class CreateDatabaseCommand extends DatabaseCommand {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void execute(DatabaseTaskBase task, Database model) throws BuildException {
     BasicDataSource dataSource = getDataSource();
 
@@ -72,8 +75,9 @@ public class CreateDatabaseCommand extends DatabaseCommand {
     Platform platform = getPlatform();
 
     try {
-      platform.createDatabase(dataSource.getDriverClassName(), dataSource.getUrl(), dataSource
-          .getUsername(), dataSource.getPassword(), getFilteredParameters(platform.getName()));
+      platform.createDatabase(dataSource.getDriverClassName(), dataSource.getUrl(),
+          dataSource.getUsername(), dataSource.getPassword(),
+          getFilteredParameters(platform.getName()));
 
       _log.info("Created database");
     } catch (UnsupportedOperationException ex) {

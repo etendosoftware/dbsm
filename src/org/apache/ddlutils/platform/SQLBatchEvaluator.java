@@ -30,8 +30,8 @@ public interface SQLBatchEvaluator {
   public int evaluateBatch(Connection connection, List<String> sql, boolean continueOnError,
       long firstSqlCommandIndex) throws DatabaseOperationException;
 
-  public int evaluateBatchRealBatch(Connection connection, List<String> sql, boolean continueOnError)
-      throws DatabaseOperationException;
+  public int evaluateBatchRealBatch(Connection connection, List<String> sql,
+      boolean continueOnError) throws DatabaseOperationException;
 
   /** Should successful commands be logged */
   public void setLogInfoSucessCommands(boolean logInfoSucessCommands);

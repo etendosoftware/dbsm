@@ -139,7 +139,8 @@ public class DumpMetadataTask extends Task {
   }
 
   /**
-   * Specifies the table to be processed. For details see <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
+   * Specifies the table to be processed. For details see <a href=
+   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
    * >java.sql.DatabaseMetaData#getTables</a>.
    * 
    * @param tablePattern
@@ -151,7 +152,8 @@ public class DumpMetadataTask extends Task {
   }
 
   /**
-   * Specifies the procedures to be processed. For details and typical table types see <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getProcedures(java.lang.String,%20java.lang.String,%20java.lang.String)"
+   * Specifies the procedures to be processed. For details and typical table types see <a href=
+   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getProcedures(java.lang.String,%20java.lang.String,%20java.lang.String)"
    * >java.sql.DatabaseMetaData#getProcedures</a>.
    * 
    * @param procedurePattern
@@ -164,7 +166,8 @@ public class DumpMetadataTask extends Task {
   }
 
   /**
-   * Specifies the columns to be processed. For details and typical table types see <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getColumns(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
+   * Specifies the columns to be processed. For details and typical table types see <a href=
+   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getColumns(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
    * >java.sql.DatabaseMetaData#getColumns</a>.
    * 
    * @param columnPattern
@@ -177,7 +180,8 @@ public class DumpMetadataTask extends Task {
   }
 
   /**
-   * Specifies the table types to be processed. For details and typical table types see <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
+   * Specifies the table types to be processed. For details and typical table types see <a href=
+   * "http://java.sun.com/j2se/1.4.2/docs/api/java/sql/DatabaseMetaData.html#getTables(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String[])"
    * >java.sql.DatabaseMetaData#getTables</a>.
    * 
    * @param tableTypes
@@ -226,6 +230,7 @@ public class DumpMetadataTask extends Task {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void execute() throws BuildException {
     if (_dataSource == null) {
       log("No data source specified, so there is nothing to do.", Project.MSG_INFO);
@@ -275,7 +280,8 @@ public class DumpMetadataTask extends Task {
    *          The meta data
    */
   private void dumpMetaData(Element element, DatabaseMetaData metaData)
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, SQLException {
+      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
+      SQLException {
     // We rather iterate over the methods because most metadata properties
     // do not follow the bean naming standard
     Method[] methods = metaData.getClass().getMethods();
@@ -312,8 +318,8 @@ public class DumpMetadataTask extends Task {
    */
   private void dumpProperty(Element parent, Object obj, Method propGetter) {
     try {
-      addProperty(parent, getPropertyName(propGetter.getName()), propGetter.invoke(obj,
-          (Object[]) null));
+      addProperty(parent, getPropertyName(propGetter.getName()),
+          propGetter.invoke(obj, (Object[]) null));
     } catch (Throwable ex) {
       log("Could not dump property " + propGetter.getName() + " because of " + ex.getMessage(),
           Project.MSG_WARN);

@@ -146,8 +146,8 @@ public class PostgreSqlDatabaseDataIO implements DataSetTableExporter {
   private String getColumnNames(File file) {
     String columnNames = null;
     try (InputStream inputStream = new FileInputStream(file);
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream,
-            StandardCharsets.UTF_8));) {
+        BufferedReader br = new BufferedReader(
+            new InputStreamReader(inputStream, StandardCharsets.UTF_8));) {
       columnNames = br.readLine();
     } catch (Exception e) {
       log.error("Error while reading the column names of a .copy file", e);

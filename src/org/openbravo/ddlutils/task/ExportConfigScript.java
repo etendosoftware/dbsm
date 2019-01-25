@@ -65,8 +65,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
   @Override
   protected void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(model.getAbsolutePath() + "/../../../"));
+    excludeFilter = DBSMOBUtil.getInstance()
+        .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../"));
     try {
       if (industryTemplate == null) {
         throw new BuildException("No industry template was specified.");
@@ -113,8 +113,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-          final File dirF = new File(moduledir, util.getModule(j).dir
-              + "/src-db/database/sourcedata/");
+          final File dirF = new File(moduledir,
+              util.getModule(j).dir + "/src-db/database/sourcedata/");
           if (dirF.exists()) {
             dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
           }
@@ -127,8 +127,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
         // "+dataFiles.get(i).getAbsolutePath());
         try {
           dataReader.getSink().start();
-          final String tablename = dataFiles.get(i).getName()
-              .substring(0, dataFiles.get(i).getName().length() - 4);
+          final String tablename = dataFiles.get(i).getName().substring(0,
+              dataFiles.get(i).getName().length() - 4);
           final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
               .getVector();
           dataReader.parse(dataFiles.get(i));
@@ -157,10 +157,11 @@ public class ExportConfigScript extends BaseDatabaseTask {
         }
         try {
           dbI.applyNamingConventionFilter(util.getModule(i).filter);
-          if (databaseModel == null)
+          if (databaseModel == null) {
             databaseModel = dbI;
-          else
+          } else {
             databaseModel.mergeWith(dbI);
+          }
         } catch (final Exception e) {
           e.printStackTrace();
         }
@@ -179,10 +180,11 @@ public class ExportConfigScript extends BaseDatabaseTask {
         getLog().info("Loading configuration script: " + f.getAbsolutePath());
         Vector<Change> changes = dbIOs.readChanges(f);
         for (Change change : changes) {
-          if (change instanceof ModelChange)
+          if (change instanceof ModelChange) {
             ((ModelChange) change).apply(xmlModel, platform.isDelimitedIdentifierModeOn());
-          else if (change instanceof DataChange)
+          } else if (change instanceof DataChange) {
             ((DataChange) change).apply(databaseOrgData, platform.isDelimitedIdentifierModeOn());
+          }
           getLog().debug(change);
         }
       }
@@ -195,8 +197,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
       }
 
       OBDataset ad = new OBDataset(platform, currentdb, "AD");
-      final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      final DataComparator dataComparator = new DataComparator(
+          platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator.compare(xmlModel, databaseModel, platform, databaseOrgData, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();
@@ -211,8 +213,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       final DatabaseIO dbIO = new DatabaseIO();
 
-      final File configFile = new File(moduledir, industryTemplate
-          + "/src-db/database/configScript.xml");
+      final File configFile = new File(moduledir,
+          industryTemplate + "/src-db/database/configScript.xml");
       final File folder = new File(configFile.getParent());
 
       folder.mkdirs();
@@ -225,7 +227,8 @@ public class ExportConfigScript extends BaseDatabaseTask {
           ColumnDataChange change2 = (ColumnDataChange) change;
           ColumnDataChange changeToRemove = null;
           for (Change changeS : finalChanges) {
-            if (changeS instanceof ColumnDataChange && ((ColumnDataChange) changeS).equals(change2)) {
+            if (changeS instanceof ColumnDataChange
+                && ((ColumnDataChange) changeS).equals(change2)) {
               changeToRemove = (ColumnDataChange) changeS;
             }
           }
@@ -237,8 +240,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       dbIO.write(configFile, finalChanges);
       for (Change c : finalChanges) {
         if (c instanceof RemoveTriggerChange) {
-          log.info("The trigger "
-              + ((RemoveTriggerChange) c).getTriggerName()
+          log.info("The trigger " + ((RemoveTriggerChange) c).getTriggerName()
               + " has not been found in the database, and therefore a RemoveTriggerChange has been exported to the configuration script.");
         } else if (c instanceof ModelChange) {
           log.info(c);

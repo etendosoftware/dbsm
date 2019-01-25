@@ -179,8 +179,9 @@ public class ExportSampledata extends BaseDatabaseTask {
       path.mkdirs();
       final File[] filestodelete = path.listFiles();
       for (final File filedelete : filestodelete) {
-        if (!filedelete.isDirectory())
+        if (!filedelete.isDirectory()) {
           filedelete.delete();
+        }
       }
 
       // sort list of tables by name

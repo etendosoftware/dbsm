@@ -27,12 +27,14 @@ public class AlterDatabaseModJava {
     ada.setDatafilter(args[14]);
     ada.setModule(args[15]);
     String force = args[16];
-    if (force.equalsIgnoreCase("yes"))
+    if (force.equalsIgnoreCase("yes")) {
       force = "true";
+    }
     ada.setForce(new Boolean(force).booleanValue());
     String strict = args[17];
-    if (strict.equalsIgnoreCase("yes"))
+    if (strict.equalsIgnoreCase("yes")) {
       strict = "true";
+    }
     ada.setStrict(new Boolean(strict).booleanValue());
     ada.execute();
 

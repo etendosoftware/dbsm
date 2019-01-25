@@ -177,8 +177,9 @@ public abstract class ValueObject implements Cloneable {
    *          The default value
    */
   public void setDefaultValueAttr(String defaultValue) {
-    if (_defaultValue == null)
+    if (_defaultValue == null) {
       _defaultValue = defaultValue;
+    }
   }
 
   /**
@@ -218,6 +219,7 @@ public abstract class ValueObject implements Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
     ValueObject result = (ValueObject) super.clone();
 

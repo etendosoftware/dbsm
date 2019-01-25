@@ -161,7 +161,8 @@ public class JdbcModelReader {
 
   /**
    * Returns descriptors for the columns that shall be read from the result set when reading the
-   * meta data for table columns. Note that the columns are read in the order defined by this list.<br/>
+   * meta data for table columns. Note that the columns are read in the order defined by this
+   * list.<br/>
    * Redefine this method if you want more columns or a different order.
    * 
    * @return The map column name -> descriptor for the result set columns
@@ -179,8 +180,8 @@ public class JdbcModelReader {
     // filter manually
     result.add(new MetaDataColumnDescriptor("TABLE_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("COLUMN_NAME", Types.VARCHAR));
-    result.add(new MetaDataColumnDescriptor("DATA_TYPE", Types.INTEGER, new Integer(
-        java.sql.Types.OTHER)));
+    result.add(new MetaDataColumnDescriptor("DATA_TYPE", Types.INTEGER,
+        new Integer(java.sql.Types.OTHER)));
     result.add(new MetaDataColumnDescriptor("NUM_PREC_RADIX", Types.INTEGER, new Integer(10)));
     result.add(new MetaDataColumnDescriptor("DECIMAL_DIGITS", Types.INTEGER, new Integer(0)));
     result.add(new MetaDataColumnDescriptor("COLUMN_SIZE", Types.VARCHAR));
@@ -192,7 +193,8 @@ public class JdbcModelReader {
 
   /**
    * Returns descriptors for the columns that shall be read from the result set when reading the
-   * meta data for primary keys. Note that the columns are read in the order defined by this list.<br/>
+   * meta data for primary keys. Note that the columns are read in the order defined by this
+   * list.<br/>
    * Redefine this method if you want more columns or a different order.
    * 
    * @return The map column name -> descriptor for the result set columns
@@ -230,10 +232,10 @@ public class JdbcModelReader {
     result.add(new MetaDataColumnDescriptor("FK_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("PKCOLUMN_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("FKCOLUMN_NAME", Types.VARCHAR));
-    result.add(new MetaDataColumnDescriptor("DELETE_RULE", Types.TINYINT, new Short(
-        (short) DatabaseMetaData.importedKeyNoAction)));
-    result.add(new MetaDataColumnDescriptor("UPDATE_RULE", Types.TINYINT, new Short(
-        (short) DatabaseMetaData.importedKeyNoAction)));
+    result.add(new MetaDataColumnDescriptor("DELETE_RULE", Types.TINYINT,
+        new Short((short) DatabaseMetaData.importedKeyNoAction)));
+    result.add(new MetaDataColumnDescriptor("UPDATE_RULE", Types.TINYINT,
+        new Short((short) DatabaseMetaData.importedKeyNoAction)));
 
     return result;
   }
@@ -347,8 +349,8 @@ public class JdbcModelReader {
   }
 
   /**
-   * Sets the table types to recognize per default. Typical types are "TABLE", "VIEW",
-   * "SYSTEM TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
+   * Sets the table types to recognize per default. Typical types are "TABLE", "VIEW", "SYSTEM
+   * TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
    * 
    * @param types
    *          The table types
@@ -498,9 +500,8 @@ public class JdbcModelReader {
       metaData.setMetaData(_connection.getMetaData());
       metaData.setCatalog(catalog == null ? getDefaultCatalogPattern() : catalog);
       metaData.setSchemaPattern(schemaPattern == null ? getDefaultSchemaPattern() : schemaPattern);
-      metaData
-          .setTableTypes((tableTypes == null) || (tableTypes.length == 0) ? getDefaultTableTypes()
-              : tableTypes);
+      metaData.setTableTypes(
+          (tableTypes == null) || (tableTypes.length == 0) ? getDefaultTableTypes() : tableTypes);
 
       tableData = metaData.getTables(getDefaultTablePattern());
 
@@ -518,9 +519,10 @@ public class JdbcModelReader {
       final Collator collator = Collator.getInstance();
 
       Collections.sort(tables, new Comparator() {
+        @Override
         public int compare(Object obj1, Object obj2) {
-          return collator.compare(((Table) obj1).getName().toUpperCase(), ((Table) obj2).getName()
-              .toUpperCase());
+          return collator.compare(((Table) obj1).getName().toUpperCase(),
+              ((Table) obj2).getName().toUpperCase());
         }
       });
       return tables;
@@ -1149,8 +1151,8 @@ public class JdbcModelReader {
           while (found && columnData.next()) {
             values = readColumns(columnData, getColumnsForColumn());
 
-            if (table.findColumn((String) values.get("COLUMN_NAME"), getPlatform()
-                .isDelimitedIdentifierModeOn()) == null) {
+            if (table.findColumn((String) values.get("COLUMN_NAME"),
+                getPlatform().isDelimitedIdentifierModeOn()) == null) {
               found = false;
             }
           }

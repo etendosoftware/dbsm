@@ -79,15 +79,13 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
   @Override
   protected void doExecute() {
-    getLog()
-        .info(
-            "Note: this task doesn't work with modules with more than one dbprefix. You should be using the normal update.database task instead.");
+    getLog().info(
+        "Note: this task doesn't work with modules with more than one dbprefix. You should be using the normal update.database task instead.");
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
     if (module == null || module.equals("")) {
-      getLog()
-          .error(
-              "This task requires a module name to be passed as parameter. Example: ant update.database.mod -Dmodule=modulename");
+      getLog().error(
+          "This task requires a module name to be passed as parameter. Example: ant update.database.mod -Dmodule=modulename");
       throw new BuildException("No module name provided.");
     }
     final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
@@ -112,10 +110,11 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       final String[] incDirs = dirScanner.getIncludedDirectories();
       for (int j = 0; j < incDirs.length; j++) {
         final File dirF = new File(basedir, incDirs[j]);
-        if (dirF.exists())
+        if (dirF.exists()) {
           dirs.add(dirF);
-        else
+        } else {
           getLog().warn("Directory " + dirF.getAbsolutePath() + " doesn't exist.");
+        }
       }
       final File[] fileArray = new File[dirs.size()];
       for (int i = 0; i < dirs.size(); i++) {
@@ -131,14 +130,12 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     OBDataset ad = new OBDataset(databaseFullData, "AD");
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
     if (hasBeenModified) {
-      if (force)
-        getLog()
-            .info(
-                "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
-      else {
-        getLog()
-            .info(
-                "Database has local changes. Update.database will not be done. You should export your modules before doing update.database, so that your Application Dictionary changes are preserved. If you don't mind losing them, you can force the update.database by doing: ant update.database -Dforce=true");
+      if (force) {
+        getLog().info(
+            "Database was modified locally, but as update.database command is forced, the database will be updated anyway.");
+      } else {
+        getLog().info(
+            "Database has local changes. Update.database will not be done. You should export your modules before doing update.database, so that your Application Dictionary changes are preserved. If you don't mind losing them, you can force the update.database by doing: ant update.database -Dforce=true");
         throw new BuildException("Database has local changes. Update.database not done.");
       }
     }
@@ -149,8 +146,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     hd.setModulesVersionMap(DBSMOBUtil.getModulesVersion(platform));
 
     DBSMOBUtil.getInstance().moveModuleDataFromInstTables(platform, dbXML, module);
-    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(
-        new File(model.getAbsolutePath() + "/../../../"));
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance()
+        .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../"));
     DBSMOBUtil.getInstance().getModules(platform, excludeFilter);
 
     Database completedb = null;
@@ -171,15 +168,13 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
     boolean fullUpdate = false;
 
     if (module.toUpperCase().contains("CORE") || module.equals("%")) {
-      getLog()
-          .info(
-              "You've either specified a list that contains Core, or module specified is %. Complete update.database will be performed.");
+      getLog().info(
+          "You've either specified a list that contains Core, or module specified is %. Complete update.database will be performed.");
       fullUpdate = true;
     }
     if (DBSMOBUtil.getInstance().listDependsOnTemplate(module)) {
-      getLog()
-          .info(
-              "One of the modules you've specified either is an industry template or depends on an industry template. Complete update.database will be performed.");
+      getLog().info(
+          "One of the modules you've specified either is an industry template or depends on an industry template. Complete update.database will be performed.");
       fullUpdate = true;
     }
     if (fullUpdate) {
@@ -212,8 +207,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         getLog().info("Updating module: " + modName);
         final ModuleRow row = DBSMOBUtil.getInstance().getRowFromDir(modName);
         moduleRows.add(row);
-        if (row == null)
+        if (row == null) {
           throw new BuildException("Module " + modName + " not found in AD_MODULE table.");
+        }
         Database db = null;
         if (row.prefixes.size() == 0) {
           getLog().info("Module doesn't have dbprefix. We will not update database model.");
@@ -254,7 +250,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
               if (table != null) {
                 ForeignKey fk = null;
                 for (int j = 0; j < table.getForeignKeyCount() && fk == null; j++) {
-                  if (table.getForeignKey(j).getName().equals(change.getNewForeignKey().getName())) {
+                  if (table.getForeignKey(j).getName()
+                      .equals(change.getNewForeignKey().getName())) {
                     fk = table.getForeignKey(j);
                   }
                 }
@@ -282,17 +279,19 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         final Vector<File> files = new Vector<File>();
         final File fsourcedata = new File(basedir, "/" + row.dir + "/src-db/database/sourcedata/");
         final File[] datafiles = DatabaseUtils.readFileArray(fsourcedata);
-        for (int i = 0; i < datafiles.length; i++)
-          if (datafiles[i].exists() && datafiles[i].getName().endsWith(".xml"))
+        for (int i = 0; i < datafiles.length; i++) {
+          if (datafiles[i].exists() && datafiles[i].getName().endsWith(".xml")) {
             files.add(datafiles[i]);
+          }
+        }
 
         final DataReader dataReader = dbdio.getConfiguredCompareDataReader(dbAD);
         final DatabaseData databaseOrgData = new DatabaseData(dbAD);
         for (int i = 0; i < files.size(); i++) {
           try {
             dataReader.getSink().start();
-            final String tablename = files.get(i).getName()
-                .substring(0, files.get(i).getName().length() - 4);
+            final String tablename = files.get(i).getName().substring(0,
+                files.get(i).getName().length() - 4);
             final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
                 .getVector();
             dataReader.parse(files.get(i));
@@ -303,8 +302,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
           }
         }
 
-        final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-            .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+        final DataComparator dataComparator = new DataComparator(
+            platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
         dataComparator.compareToUpdate(dbXML, platform, databaseOrgData, ad, row.idMod);
         getLog().info("Comparing databases to find data differences");
         dataChanges.add(dataComparator.getChanges());
@@ -370,8 +369,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       DatabaseData databaseOrgData2 = new DatabaseData(dbAD);
       DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData2, dbAD, dbAD, basedir,
           datafilter, input);
-      final DataComparator dataComparator2 = new DataComparator(platform.getSqlBuilder()
-          .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+      final DataComparator dataComparator2 = new DataComparator(
+          platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator2.compare(dbXML, dbXML, platform, databaseOrgData2, ad, null);
       Vector<Change> finalChanges = new Vector<Change>();
       Vector<Change> notExportedChanges = new Vector<Change>();

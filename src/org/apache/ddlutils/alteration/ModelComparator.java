@@ -323,14 +323,14 @@ public class ModelComparator {
           && !targetIndex.isSameWhereClause(sourceIndex)) {
         // keep track of changes in the where clause of the indexes in order to update the partial
         // index information stored for platforms which does not support partial indexing.
-        changes.add(new PartialIndexInformationChange(sourceTable, sourceIndex, sourceIndex
-            .getWhereClause(), targetIndex.getWhereClause()));
+        changes.add(new PartialIndexInformationChange(sourceTable, sourceIndex,
+            sourceIndex.getWhereClause(), targetIndex.getWhereClause()));
       } else if (!_platformInfo.isContainsSearchIndexesSupported()
           && targetIndex.isContainsSearch() != sourceIndex.isContainsSearch()) {
         // keep track of changes in the containsSearch property in order to update the information
         // stored for platforms which does not support contains search indexes.
-        changes.add(new ContainsSearchIndexInformationChange(sourceTable, sourceIndex, targetIndex
-            .isContainsSearch()));
+        changes.add(new ContainsSearchIndexInformationChange(sourceTable, sourceIndex,
+            targetIndex.isContainsSearch()));
       }
     }
     for (int indexIdx = 0; indexIdx < targetTable.getIndexCount(); indexIdx++) {
@@ -411,10 +411,10 @@ public class ModelComparator {
         changePK = true;
       } else {
         for (int pkColumnIdx = 0; (pkColumnIdx < sourcePK.length) && !changePK; pkColumnIdx++) {
-          if ((_caseSensitive && !sourcePK[pkColumnIdx].getName().equals(
-              targetPK[pkColumnIdx].getName()))
-              || (!_caseSensitive && !sourcePK[pkColumnIdx].getName().equalsIgnoreCase(
-                  targetPK[pkColumnIdx].getName()))) {
+          if ((_caseSensitive
+              && !sourcePK[pkColumnIdx].getName().equals(targetPK[pkColumnIdx].getName()))
+              || (!_caseSensitive && !sourcePK[pkColumnIdx].getName()
+                  .equalsIgnoreCase(targetPK[pkColumnIdx].getName()))) {
             changePK = true;
           }
         }
@@ -423,8 +423,8 @@ public class ModelComparator {
         if (_log.isDebugEnabled()) {
           _log.debug("The primary key of table " + sourceTable.getName() + " will be changed");
         }
-        changes.add(new PrimaryKeyChange(sourceTable, targetTable.getPrimaryKey(), sourcePK,
-            targetPK));
+        changes.add(
+            new PrimaryKeyChange(sourceTable, targetTable.getPrimaryKey(), sourcePK, targetPK));
       }
     }
 
@@ -471,8 +471,8 @@ public class ModelComparator {
    *          The target column
    * @return The changes
    */
-  public List<ModelChange> compareColumns(Table sourceTable, Column sourceColumn,
-      Table targetTable, Column targetColumn) {
+  public List<ModelChange> compareColumns(Table sourceTable, Column sourceColumn, Table targetTable,
+      Column targetColumn) {
     List<ModelChange> changes = new ArrayList<>();
 
     // if (_platformInfo.getTargetJdbcType(targetColumn.getTypeCode()) !=
@@ -499,10 +499,10 @@ public class ModelComparator {
       changes.add(new ColumnSizeChange(sourceTable, sourceColumn, targetColumn.getSizeAsInt(),
           targetColumn.getScale()));
 
-    } else if (scaleMatters
-        && (!StringUtils.equals(sourceColumn.getSize(), targetColumn.getSize())
-            || (sourceColumn.getScale() == null && targetColumn.getScale() != null) || (sourceColumn
-            .getScale() != null && !sourceColumn.getScale().equals(targetColumn.getScale())))) {
+    } else if (scaleMatters && (!StringUtils.equals(sourceColumn.getSize(), targetColumn.getSize())
+        || (sourceColumn.getScale() == null && targetColumn.getScale() != null)
+        || (sourceColumn.getScale() != null
+            && !sourceColumn.getScale().equals(targetColumn.getScale())))) {
       if (_log.isDebugEnabled()) {
         _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the scale)");
@@ -520,20 +520,21 @@ public class ModelComparator {
         _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the default value)");
       }
-      changes.add(new ColumnDefaultValueChange(sourceTable, sourceColumn, targetColumn
-          .getDefaultValue()));
+      changes.add(
+          new ColumnDefaultValueChange(sourceTable, sourceColumn, targetColumn.getDefaultValue()));
     }
 
     String sourceOnCreateDefault = sourceColumn.getOnCreateDefault();
     String targetOnCreateDefault = targetColumn.getOnCreateDefault();
     if ((sourceOnCreateDefault == null && targetOnCreateDefault != null)
-        || ((sourceOnCreateDefault != null) && !sourceOnCreateDefault.equals(targetOnCreateDefault))) {
+        || ((sourceOnCreateDefault != null)
+            && !sourceOnCreateDefault.equals(targetOnCreateDefault))) {
       if (_log.isDebugEnabled()) {
         _log.debug("Processing Column " + sourceColumn.getName() + " of table "
             + sourceTable.getName() + " (changed because of the onCreateDefault value)");
       }
-      changes.add(new ColumnOnCreateDefaultValueChange(sourceTable, targetColumn, targetColumn
-          .getOnCreateDefault()));
+      changes.add(new ColumnOnCreateDefaultValueChange(sourceTable, targetColumn,
+          targetColumn.getOnCreateDefault()));
     }
 
     if (sourceColumn.isRequired() != targetColumn.isRequired()) {

@@ -53,6 +53,7 @@ public class Sequence implements StructureObject, Cloneable {
    * 
    * @return The name
    */
+  @Override
   public String getName() {
     return _name;
   }
@@ -108,6 +109,7 @@ public class Sequence implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object clone() throws CloneNotSupportedException {
 
     Sequence result = (Sequence) super.clone();
@@ -122,6 +124,7 @@ public class Sequence implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean equals(Object obj) {
 
     if (obj instanceof Sequence) {
@@ -131,8 +134,9 @@ public class Sequence implements StructureObject, Cloneable {
       // Note also that we can simply compare the references regardless of
       // their order
       // (which is irrelevant for ccs) because they are contained in a set
-      return new EqualsBuilder().append(_name, otherSequence._name).append(_start,
-          otherSequence._start).append(_increment, otherSequence._increment).isEquals();
+      return new EqualsBuilder().append(_name, otherSequence._name)
+          .append(_start, otherSequence._start).append(_increment, otherSequence._increment)
+          .isEquals();
     } else {
       return false;
     }
@@ -147,14 +151,15 @@ public class Sequence implements StructureObject, Cloneable {
    */
   public boolean equalsIgnoreCase(Sequence otherSequence) {
     return UtilsCompare.equalsIgnoreCase(_name, otherSequence._name)
-        && new EqualsBuilder().append(_start, otherSequence._start).append(_increment,
-            otherSequence._increment).isEquals();
+        && new EqualsBuilder().append(_start, otherSequence._start)
+            .append(_increment, otherSequence._increment).isEquals();
 
   }
 
   /**
    * {@inheritDoc}
    */
+  @Override
   public int hashCode() {
     return new HashCodeBuilder(17, 37).append(_name).append(_start).append(_increment).toHashCode();
   }
@@ -162,6 +167,7 @@ public class Sequence implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String toString() {
     StringBuffer result = new StringBuffer();
 

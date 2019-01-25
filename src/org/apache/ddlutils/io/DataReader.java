@@ -117,6 +117,7 @@ public class DataReader extends Digester {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected void configure() {
     if (_needsConfiguration) {
       if (_model == null) {
@@ -142,8 +143,8 @@ public class DataReader extends Digester {
           SqlTypeConverter converter = _converterConf.getRegisteredConverter(table, column);
 
           addRule(path, new SetColumnPropertyRule(column, converter, isCaseSensitive()));
-          addRule(path + "/" + column.getName(), new SetColumnPropertyFromSubElementRule(column,
-              converter));
+          addRule(path + "/" + column.getName(),
+              new SetColumnPropertyFromSubElementRule(column, converter));
         }
       }
       _needsConfiguration = false;

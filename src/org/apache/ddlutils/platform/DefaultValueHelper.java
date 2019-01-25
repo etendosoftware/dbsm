@@ -104,9 +104,8 @@ public class DefaultValueHelper {
       return defaultValue;
     }
 
-    if ((targetTypeCode == Types.BIT)
-        || (Jdbc3Utils.supportsJava14JdbcTypes() && (targetTypeCode == Jdbc3Utils
-            .determineBooleanTypeCode()))) {
+    if ((targetTypeCode == Types.BIT) || (Jdbc3Utils.supportsJava14JdbcTypes()
+        && (targetTypeCode == Jdbc3Utils.determineBooleanTypeCode()))) {
       result = value;
     } else if (TypeMap.isNumericType(targetTypeCode)) {
       result = (value.booleanValue() ? new Integer(1) : new Integer(0));

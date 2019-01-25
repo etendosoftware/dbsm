@@ -30,7 +30,7 @@ public class RuleProcessor {
   public RuleProcessor(String sql) {
 
     String field = "\\s*((.+?)(\\s+?[Aa][Ss]\\s+?(.+?))??)\\s*?((,)|(\\s[Ff][Rr][Oo][Mm]\\s+))";
-    Pattern p = Pattern.compile("^\\s*[Ss][Ee][Ll][Ee][Cc][Tt]\\s" + field); //  
+    Pattern p = Pattern.compile("^\\s*[Ss][Ee][Ll][Ee][Cc][Tt]\\s" + field); //
 
     Pattern pField = Pattern.compile("\\w+(\\.\\w+)?");
     Pattern pFieldas = Pattern.compile("\\w+");
@@ -138,6 +138,7 @@ public class RuleProcessor {
     }
   }
 
+  @Override
   public String toString() {
 
     StringBuffer result = new StringBuffer();

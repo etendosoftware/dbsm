@@ -70,8 +70,9 @@ public class DBSMOBUtil {
   private static DBSMOBUtil instance = null;
 
   public static DBSMOBUtil getInstance() {
-    if (instance == null)
+    if (instance == null) {
       instance = new DBSMOBUtil();
+    }
     return instance;
   }
 
@@ -89,9 +90,11 @@ public class DBSMOBUtil {
 
   public ModuleRow getTemplateModule(int i) {
     final String dirMod = dirTemplateModules.get(i);
-    for (final ModuleRow row : allModules)
-      if (row.dir.equalsIgnoreCase(dirMod))
+    for (final ModuleRow row : allModules) {
+      if (row.dir.equalsIgnoreCase(dirMod)) {
         return row;
+      }
+    }
     return null;
   }
 
@@ -120,12 +123,15 @@ public class DBSMOBUtil {
     while (st.hasMoreElements()) {
       String modDir = st.nextToken().trim();
       ModuleRow targetRow = getRowFromDir(modDir);
-      if (targetRow.type.equalsIgnoreCase("T"))
+      if (targetRow.type.equalsIgnoreCase("T")) {
         return true;
+      }
       for (ModuleRow row : allModules) {
-        if (row.type.equalsIgnoreCase("T"))
-          if (isDependant(row, targetRow))
+        if (row.type.equalsIgnoreCase("T")) {
+          if (isDependant(row, targetRow)) {
             return true;
+          }
+        }
       }
     }
     return false;
@@ -134,9 +140,11 @@ public class DBSMOBUtil {
   public boolean moduleDependsOnTemplate(String module) {
     ModuleRow targetRow = getRowFromDir(module);
     for (ModuleRow row : allModules) {
-      if (row.type.equalsIgnoreCase("T"))
-        if (isDependant(row, targetRow))
+      if (row.type.equalsIgnoreCase("T")) {
+        if (isDependant(row, targetRow)) {
           return true;
+        }
+      }
     }
     return false;
   }
@@ -144,9 +152,8 @@ public class DBSMOBUtil {
   @Deprecated
   public void getModules(Platform platform, String excludeobjects) {
     final ExcludeFilter filter = DatabaseUtils.getExcludeFilter(excludeobjects);
-    getLog()
-        .warn(
-            "The getModules(Platform, String) method is outdated and will not work with modules which add excluded filters to the model. The getModules(Platform, ExcludeFilter) method should be used instead.");
+    getLog().warn(
+        "The getModules(Platform, String) method is outdated and will not work with modules which add excluded filters to the model. The getModules(Platform, ExcludeFilter) method should be used instead.");
     getModules(platform, filter);
   }
 
@@ -163,7 +170,8 @@ public class DBSMOBUtil {
       resultSet = statement.getResultSet();
       if (resultSet.next()) {
       } else {
-        throw new BuildException("Module information not found in database: table AD_MODULE empty.");
+        throw new BuildException(
+            "Module information not found in database: table AD_MODULE empty.");
       }
     } catch (final Exception e) {
       platform.returnConnection(connection);
@@ -227,32 +235,37 @@ public class DBSMOBUtil {
 
       for (int i = 0; i < allModules.size(); i++) {
         final ExcludeFilter filter = filterO.clone();
-        for (final String s : allModules.get(i).prefixes)
+        for (final String s : allModules.get(i).prefixes) {
           filter.addPrefix(s);
+        }
         final Vector<String> otherMods = new Vector<String>();
         final Vector<String> otherActiveMods = new Vector<String>();
-        for (int j = 0; j < allModules.size(); j++)
+        for (int j = 0; j < allModules.size(); j++) {
           if (!allModules.get(j).dir.equalsIgnoreCase(allModules.get(i).dir)) {
             if (allModules.get(j).isInDevelopment != null
-                && allModules.get(j).isInDevelopment.equals("Y"))
+                && allModules.get(j).isInDevelopment.equals("Y")) {
               otherActiveMods.addAll(allModules.get(j).prefixes);
+            }
             otherMods.addAll(allModules.get(j).prefixes);
           }
+        }
         filter.addOthersPrefixes(otherMods);
         filter.addOtherActivePrefixes(otherActiveMods);
         filter.addDependencies(prefixDependencies);
         filter.setName(allModules.get(i).dir);
-        for (final ExceptionRow row : allModules.get(i).exceptions)
+        for (final ExceptionRow row : allModules.get(i).exceptions) {
           filter.addException(row);
-        for (final ExceptionRow row : allModules.get(i).othersexceptions)
+        }
+        for (final ExceptionRow row : allModules.get(i).othersexceptions) {
           filter.addOthersException(row);
+        }
         allModules.get(i).filter = filter;
       }
 
     } catch (final Exception e) {
       e.printStackTrace();
-      throw new BuildException("Error while trying to fetch module information from database: "
-          + e.getMessage());
+      throw new BuildException(
+          "Error while trying to fetch module information from database: " + e.getMessage());
     } finally {
       platform.returnConnection(connection);
     }
@@ -321,8 +334,9 @@ public class DBSMOBUtil {
   public void getModulesForIndustryTemplate(String templateDir, Vector<String> idList) {
     final String tempId = getId(templateDir);
     dirTemplateModules.add(templateDir);
-    if (!idList.contains(tempId))
+    if (!idList.contains(tempId)) {
       idList.add(tempId);
+    }
     if (incdependencies.get(tempId) != null) {
       for (final String id : incdependencies.get(tempId)) {
         if (!idList.contains(id)) {
@@ -334,8 +348,9 @@ public class DBSMOBUtil {
 
   public void getIncludedModulesInModule(String moduleDir, Vector<String> idList) {
     final ModuleRow row = getRowFromDir(moduleDir);
-    if (!idList.contains(row.idMod))
+    if (!idList.contains(row.idMod)) {
       idList.add(row.idMod);
+    }
     if (incdependencies.get(row.idMod) != null) {
       for (final String id : incdependencies.get(row.idMod)) {
         if (!idList.contains(id)) {
@@ -346,13 +361,16 @@ public class DBSMOBUtil {
   }
 
   public boolean isDependant(ModuleRow module, ModuleRow targetModule) {
-    if (dependencies.get(module.idMod) == null)
+    if (dependencies.get(module.idMod) == null) {
       return false;
-    if (dependencies.get(module.idMod).contains(targetModule.idMod))
+    }
+    if (dependencies.get(module.idMod).contains(targetModule.idMod)) {
       return true;
+    }
     for (String idDepMod : dependencies.get(module.idMod)) {
-      if (isDependant(getRow(idDepMod), targetModule))
+      if (isDependant(getRow(idDepMod), targetModule)) {
         return true;
+      }
     }
     return false;
   }
@@ -375,16 +393,19 @@ public class DBSMOBUtil {
     }
     for (final ModuleRow row : allModules) {
       if ("T".equals(row.type) && isDependant(rowT, row)) {
-        log.error("The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
+        log.error(
+            "The Industry Template being developed is not the last Industry Template in the hierarchy. An Industry Template can only be exported when no other Industry Templates depend on it.");
         System.exit(1);
       }
     }
   }
 
   public String getNameOfActiveIndustryTemplate() {
-    for (final ModuleRow row : allModules)
-      if (row.type.equals("T") && row.isInDevelopment.equals("Y"))
+    for (final ModuleRow row : allModules) {
+      if (row.type.equals("T") && row.isInDevelopment.equals("Y")) {
         return row.dir;
+      }
+    }
     return null;
   }
 
@@ -399,8 +420,9 @@ public class DBSMOBUtil {
       while (resultSet.next()) {
         final String ad_module_id = readStringFromRS(resultSet, "AD_MODULE_ID");
         final String ad_dependent_module_id = readStringFromRS(resultSet, "AD_DEPENDENT_MODULE_ID");
-        if (!dependencies.containsKey(ad_dependent_module_id))
+        if (!dependencies.containsKey(ad_dependent_module_id)) {
           dependencies.put(ad_dependent_module_id, new Vector<String>());
+        }
         dependencies.get(ad_dependent_module_id).add(ad_module_id);
       }
     } catch (final Exception e) {
@@ -420,8 +442,9 @@ public class DBSMOBUtil {
       while (resultSet.next()) {
         final String ad_module_id = readStringFromRS(resultSet, "AD_MODULE_ID");
         final String ad_dependent_module_id = readStringFromRS(resultSet, "AD_DEPENDENT_MODULE_ID");
-        if (!incdependencies.containsKey(ad_dependent_module_id))
+        if (!incdependencies.containsKey(ad_dependent_module_id)) {
           incdependencies.put(ad_dependent_module_id, new Vector<String>());
+        }
         incdependencies.get(ad_dependent_module_id).add(ad_module_id);
       }
     } catch (final Exception e) {
@@ -431,40 +454,46 @@ public class DBSMOBUtil {
   }
 
   public String getDir(String modId) {
-    for (final ModuleRow row : allModules)
-      if (row.idMod.equalsIgnoreCase(modId))
+    for (final ModuleRow row : allModules) {
+      if (row.idMod.equalsIgnoreCase(modId)) {
         return row.dir;
+      }
+    }
     return null;
   }
 
   public String getId(String dir) {
     for (final ModuleRow row : allModules) {
-      if (row.dir.equalsIgnoreCase(dir))
+      if (row.dir.equalsIgnoreCase(dir)) {
         return row.idMod;
+      }
     }
     return null;
   }
 
   public ModuleRow getRow(String modId) {
     for (final ModuleRow row : allModules) {
-      if (row.idMod.equalsIgnoreCase(modId))
+      if (row.idMod.equalsIgnoreCase(modId)) {
         return row;
+      }
     }
     return null;
   }
 
   public ModuleRow getRowFromName(String name) {
     for (final ModuleRow row : allModules) {
-      if (row.name.equalsIgnoreCase(name))
+      if (row.name.equalsIgnoreCase(name)) {
         return row;
+      }
     }
     return null;
   }
 
   public ModuleRow getRowFromDir(String dir) {
     for (final ModuleRow row : allModules) {
-      if (row.dir.equalsIgnoreCase(dir))
+      if (row.dir.equalsIgnoreCase(dir)) {
         return row;
+      }
     }
     return null;
   }
@@ -473,6 +502,7 @@ public class DBSMOBUtil {
    * @deprecated platform and updateCRC are not used at all. Replaced by
    *             {@link #hasBeenModified(OBDataset)} method.
    */
+  @Deprecated
   public boolean hasBeenModified(Platform platform, OBDataset dataset, boolean updateCRC) {
     return hasBeenModified(dataset);
   }
@@ -486,16 +516,17 @@ public class DBSMOBUtil {
       executeSessionConfigQuery(connection);
 
       getLog().info("Checking if database structure was modified locally.");
-      if (databaseHasChanges())
+      if (databaseHasChanges()) {
         return true;
+      }
 
       getLog().info("Checking if data has changed in the application dictionary.");
       return dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
 
     } catch (Exception e) {
       e.printStackTrace();
-      System.out
-          .println("There was a problem verifying the changes in the database. Updating the database anyway...");
+      System.out.println(
+          "There was a problem verifying the changes in the database. Updating the database anyway...");
     } finally {
       try {
         if (connection != null) {
@@ -511,6 +542,7 @@ public class DBSMOBUtil {
   /**
    * @deprecated platform it is not used at all. Replaced by {@link #updateCRC()} method.
    */
+  @Deprecated
   public void updateCRC(Platform platform) {
     updateCRC();
   }
@@ -554,8 +586,9 @@ public class DBSMOBUtil {
       ResultSet rs = statement.getResultSet();
       rs.next();
       String answer = rs.getString(1);
-      if (answer.equalsIgnoreCase("Y"))
+      if (answer.equalsIgnoreCase("Y")) {
         hasBeenChanges = true;
+      }
     } catch (Exception e) {
       getLog().error("There was a problem checking the CRC in the database.", e);
     } finally {
@@ -644,8 +677,9 @@ public class DBSMOBUtil {
         final StringTokenizer st = new StringTokenizer(modulePackages, ",");
         while (st.hasMoreElements()) {
           final String modPack = st.nextToken().trim();
-          if (!modPacks.equals(""))
+          if (!modPacks.equals("")) {
             modPacks += ",";
+          }
           modPacks += "'" + modPack + "'";
         }
         sqlmodule += "WHERE JAVAPACKAGE IN (" + modPacks + ")";
@@ -678,8 +712,8 @@ public class DBSMOBUtil {
       }
 
       for (SqlDynaBean moduleRow : moduleRows) {
-        ((SqlDynaClass) moduleRow.getDynaClass()).resetDynaClassWithoutMissingProperties(database
-            .findTable("AD_MODULE"));
+        ((SqlDynaClass) moduleRow.getDynaClass())
+            .resetDynaClassWithoutMissingProperties(database.findTable("AD_MODULE"));
         platform.updateinsert(connection, database, moduleRow);
       }
 
@@ -734,10 +768,11 @@ public class DBSMOBUtil {
     ds.setUrl(url);
     ds.setUsername(user);
     ds.setPassword(password);
-    if (driver.contains("Oracle"))
+    if (driver.contains("Oracle")) {
       ds.setValidationQuery("SELECT 1 FROM DUAL");
-    else
+    } else {
       ds.setValidationQuery("SELECT 1");
+    }
     ds.setTestOnBorrow(true);
     ds.setMaxWait(10000);
 
@@ -750,8 +785,8 @@ public class DBSMOBUtil {
           .prepareStatement("UPDATE ad_system_info SET system_status=?");
       ps.setString(1, "RB" + status);
       ps.executeUpdate();
-      PreparedStatement ps2 = connection
-          .prepareStatement("DELETE FROM ad_error_log where system_status=(select system_status from ad_system_info)");
+      PreparedStatement ps2 = connection.prepareStatement(
+          "DELETE FROM ad_error_log where system_status=(select system_status from ad_system_info)");
       ps2.executeUpdate();
     } catch (Exception e) {
       log.warn("Couldn't update system status");
@@ -792,8 +827,9 @@ public class DBSMOBUtil {
     for (DynaBean dep : moduleDepDBs) {
       final String ad_module_id = readPropertyFromDynaBean(dep, "AD_MODULE_ID");
       final String ad_dependent_module_id = readPropertyFromDynaBean(dep, "AD_DEPENDENT_MODULE_ID");
-      if (!dependencies.containsKey(ad_dependent_module_id))
+      if (!dependencies.containsKey(ad_dependent_module_id)) {
         dependencies.put(ad_dependent_module_id, new Vector<String>());
+      }
       dependencies.get(ad_dependent_module_id).add(ad_module_id);
     }
 
@@ -831,15 +867,15 @@ public class DBSMOBUtil {
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String modulesBaseDir, String datafilter, File input) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
-        input, false);
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter, input,
+        false);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
       Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict) {
-    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter,
-        input, strict, true);
+    loadDataStructures(platform, databaseOrgData, originaldb, db, modulesBaseDir, datafilter, input,
+        strict, true);
   }
 
   public void loadDataStructures(Platform platform, DatabaseData databaseOrgData,
@@ -880,7 +916,8 @@ public class DBSMOBUtil {
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
-  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData, List<File> files) {
+  public void readDataIntoDatabaseData(Database db, DatabaseData databaseOrgData,
+      List<File> files) {
 
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     dbdio.setEnsureFKOrder(false);
@@ -890,8 +927,8 @@ public class DBSMOBUtil {
       try {
         getLog().debug("Parsing file " + files.get(i).getAbsolutePath());
         dataReader.getSink().start();
-        final String tablename = files.get(i).getName()
-            .substring(0, files.get(i).getName().length() - 4);
+        final String tablename = files.get(i).getName().substring(0,
+            files.get(i).getName().length() - 4);
         final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
             .getVector();
         dataReader.parse(files.get(i));
@@ -917,8 +954,8 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      File configScript = new File(new File(modulesBaseDir), template
-          + "/src-db/database/configScript.xml");
+      File configScript = new File(new File(modulesBaseDir),
+          template + "/src-db/database/configScript.xml");
       applyConfigScript(configScript, platform, databaseOrgData, db, strict, applyConfigScriptData,
           isApplied);
     }
@@ -932,9 +969,8 @@ public class DBSMOBUtil {
 
   }
 
-  private void applyConfigScript(File configScript, Platform platform,
-      DatabaseData databaseOrgData, Database db, boolean strict, boolean applyConfigScriptData,
-      boolean isApplied) {
+  private void applyConfigScript(File configScript, Platform platform, DatabaseData databaseOrgData,
+      Database db, boolean strict, boolean applyConfigScriptData, boolean isApplied) {
     if (!configScript.exists()) {
       getLog().info(
           "Couldn't find configuration script for template: " + configScript.getAbsolutePath());
@@ -946,23 +982,20 @@ public class DBSMOBUtil {
     boolean isOldConfigScript = isOldConfigScript(changes);
     boolean isOB3 = isOB3(platform);
     for (Change change : changes) {
-      if (change instanceof ModelChange)
+      if (change instanceof ModelChange) {
         ((ModelChange) change).apply(db, platform.isDelimitedIdentifierModeOn());
-      else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
+      } else if (change instanceof DataChange && applyConfigScriptData && isApplied) {
         if (!isOldConfigScript || !isOB3 || isValidChange(change)) {
           boolean applied = ((DataChange) change).apply(databaseOrgData,
               platform.isDelimitedIdentifierModeOn());
           if (strict && !applied) {
-            throw new BuildException(
-                "Change "
-                    + change
-                    + " of the configuration script for the template "
-                    + configScript.getAbsolutePath()
-                    + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
+            throw new BuildException("Change " + change
+                + " of the configuration script for the template " + configScript.getAbsolutePath()
+                + " could't be applied, and as the configuration script is being applied in 'strict' mode, the process has been stopped. You can now either execute the task with '-Dstrict.template.application=no', or fix the configuration script (by either changing it manually or reexporting it with an updated environment).");
           }
         } else {
-          System.out.println("no -> " + change + " ->"
-              + (!isOldConfigScript || !isOB3 || isValidChange(change)));
+          System.out.println(
+              "no -> " + change + " ->" + (!isOldConfigScript || !isOB3 || isValidChange(change)));
         }
       }
       getLog().debug(change);
@@ -973,9 +1006,8 @@ public class DBSMOBUtil {
     Connection con = null;
     try {
       con = platform.borrowConnection();
-      PreparedStatement ps = con
-          .prepareStatement("SELECT ISCONFIGSCRIPTAPPLIED FROM AD_MODULE WHERE JAVAPACKAGE='"
-              + template + "'");
+      PreparedStatement ps = con.prepareStatement(
+          "SELECT ISCONFIGSCRIPTAPPLIED FROM AD_MODULE WHERE JAVAPACKAGE='" + template + "'");
       ps.execute();
       ResultSet rs = ps.getResultSet();
       rs.next();
@@ -996,7 +1028,8 @@ public class DBSMOBUtil {
     }
   }
 
-  public void removeSortedTemplates(Platform platform, DatabaseData databaseOrgData, String basedir) {
+  public void removeSortedTemplates(Platform platform, DatabaseData databaseOrgData,
+      String basedir) {
     for (int i = sortedTemplates.size() - 1; i >= 0; i--) {
       boolean isindevelopment = false;
       for (int j = 0; j < activeModules.size(); j++) {
@@ -1010,12 +1043,12 @@ public class DBSMOBUtil {
       if (!isApplied(platform, sortedTemplates.get(i))) {
         continue;
       }
-      File configScript = new File(new File(basedir), "/" + sortedTemplates.get(i)
-          + "/src-db/database/configScript.xml");
+      File configScript = new File(new File(basedir),
+          "/" + sortedTemplates.get(i) + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
         DatabaseIO dbIO = new DatabaseIO();
-        getLog().info(
-            "Reversing data part of configuration script: " + configScript.getAbsolutePath());
+        getLog()
+            .info("Reversing data part of configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
         boolean isOldConfigScript = isOldConfigScript(changes);
         boolean isOB3 = isOB3(platform);
@@ -1026,21 +1059,17 @@ public class DBSMOBUtil {
               boolean applied = ((ColumnDataChange) change).applyInReverse(databaseOrgData,
                   platform.isDelimitedIdentifierModeOn());
               if (!applied) {
-                throw new BuildException(
-                    "Reversing the change "
-                        + ((ColumnDataChange) change)
-                        + " in configuration script for template "
-                        + sortedTemplates.get(i)
-                        + " couldn't be applied, and therefore, the export.database couldn't be completed. Fix (or remove) the configuration script, and then try the export again.");
+                throw new BuildException("Reversing the change " + ((ColumnDataChange) change)
+                    + " in configuration script for template " + sortedTemplates.get(i)
+                    + " couldn't be applied, and therefore, the export.database couldn't be completed. Fix (or remove) the configuration script, and then try the export again.");
               }
               getLog().debug(change);
             }
           }
         }
       } else {
-        getLog().info(
-            "Couldn't find configuration script for template: " + sortedTemplates.get(i)
-                + " (file: " + configScript.getAbsolutePath() + ")");
+        getLog().info("Couldn't find configuration script for template: " + sortedTemplates.get(i)
+            + " (file: " + configScript.getAbsolutePath() + ")");
       }
     }
   }
@@ -1068,28 +1097,28 @@ public class DBSMOBUtil {
       if (!isApplied(platform, sortedTemplates.get(i))) {
         continue;
       }
-      File configScript = new File(new File(basedir), "/" + sortedTemplates.get(i)
-          + "/src-db/database/configScript.xml");
+      File configScript = new File(new File(basedir),
+          "/" + sortedTemplates.get(i) + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
         DatabaseIO dbIO = new DatabaseIO();
         getLog().info(
             "Reversing model part of configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
         for (Change change : changes) {
-          if (change instanceof RemoveCheckChange)
+          if (change instanceof RemoveCheckChange) {
             ((RemoveCheckChange) change).applyInReverse(database, false);
-          else if (change instanceof ColumnSizeChange)
+          } else if (change instanceof ColumnSizeChange) {
             ((ColumnSizeChange) change).applyInReverse(database, false);
-          else if (change instanceof ColumnRequiredChange)
+          } else if (change instanceof ColumnRequiredChange) {
             ((ColumnRequiredChange) change).applyInReverse(database, false);
-          else if (change instanceof RemoveIndexChange)
+          } else if (change instanceof RemoveIndexChange) {
             ((RemoveIndexChange) change).applyInReverse(database, false);
+          }
           getLog().debug(change);
         }
       } else {
-        getLog().info(
-            "Couldn't find configuration script for template: " + sortedTemplates.get(i)
-                + " (file: " + configScript.getAbsolutePath() + ")");
+        getLog().info("Couldn't find configuration script for template: " + sortedTemplates.get(i)
+            + " (file: " + configScript.getAbsolutePath() + ")");
       }
     }
   }
@@ -1170,8 +1199,8 @@ public class DBSMOBUtil {
     if (!(change instanceof ColumnDataChange)) {
       return true;
     }
-    return !(((ColumnDataChange) change).getColumnname().equals("SEQNO") && ((ColumnDataChange) change)
-        .getTablename().equalsIgnoreCase("AD_FIELD"));
+    return !(((ColumnDataChange) change).getColumnname().equals("SEQNO")
+        && ((ColumnDataChange) change).getTablename().equalsIgnoreCase("AD_FIELD"));
   }
 
   /**

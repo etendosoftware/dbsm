@@ -53,6 +53,7 @@ public class SequenceDefinitionChange implements ModelChange {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void apply(Database database, boolean caseSensitive) {
     Sequence sequence = database.findSequence(_sequence.getName(), caseSensitive);
 

@@ -88,6 +88,7 @@ public class OracleModelReader extends JdbcModelReader {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected Table readTable(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
     String tableName = (String) values.get("TABLE_NAME");
 
@@ -108,6 +109,7 @@ public class OracleModelReader extends JdbcModelReader {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected Column readColumn(DatabaseMetaDataWrapper metaData, Map values) throws SQLException {
     Column column = super.readColumn(metaData, values);
 
@@ -232,16 +234,16 @@ public class OracleModelReader extends JdbcModelReader {
     PreparedStatement prepStmt = null;
     String triggerName = getPlatform().getSqlBuilder().getConstraintName("trg", table,
         column.getName(), null);
-    String seqName = getPlatform().getSqlBuilder().getConstraintName("seq", table,
-        column.getName(), null);
+    String seqName = getPlatform().getSqlBuilder().getConstraintName("seq", table, column.getName(),
+        null);
 
     if (!getPlatform().isDelimitedIdentifierModeOn()) {
       triggerName = triggerName.toUpperCase();
       seqName = seqName.toUpperCase();
     }
     try {
-      prepStmt = getConnection().prepareStatement(
-          "SELECT * FROM user_triggers WHERE trigger_name = ?");
+      prepStmt = getConnection()
+          .prepareStatement("SELECT * FROM user_triggers WHERE trigger_name = ?");
       prepStmt.setString(1, triggerName);
 
       ResultSet resultSet = prepStmt.executeQuery();
@@ -252,8 +254,8 @@ public class OracleModelReader extends JdbcModelReader {
       // we have a trigger, so lets check the sequence
       prepStmt.close();
 
-      prepStmt = getConnection().prepareStatement(
-          "SELECT * FROM user_sequences WHERE sequence_name = ?");
+      prepStmt = getConnection()
+          .prepareStatement("SELECT * FROM user_sequences WHERE sequence_name = ?");
       prepStmt.setString(1, seqName);
 
       resultSet = prepStmt.executeQuery();
@@ -268,6 +270,7 @@ public class OracleModelReader extends JdbcModelReader {
   /**
    * {@inheritDoc}
    */
+  @Override
   protected Collection readIndices(DatabaseMetaDataWrapper metaData, String tableName)
       throws SQLException {
     // Oracle has a bug in the DatabaseMetaData#getIndexInfo method which
@@ -283,12 +286,12 @@ public class OracleModelReader extends JdbcModelReader {
 
     StringBuffer query = new StringBuffer();
 
-    query
-        .append("SELECT a.INDEX_NAME, a.INDEX_TYPE, a.UNIQUENESS, b.COLUMN_NAME, b.COLUMN_POSITION FROM USER_INDEXES a, USER_IND_COLUMNS b WHERE ");
-    query
-        .append("a.TABLE_NAME=? AND a.GENERATED=? AND a.TABLE_TYPE=? AND a.TABLE_NAME=b.TABLE_NAME AND a.INDEX_NAME=b.INDEX_NAME AND ");
-    query
-        .append("a.INDEX_NAME NOT IN (SELECT DISTINCT c.CONSTRAINT_NAME FROM USER_CONSTRAINTS c WHERE c.CONSTRAINT_TYPE=? AND c.TABLE_NAME=a.TABLE_NAME");
+    query.append(
+        "SELECT a.INDEX_NAME, a.INDEX_TYPE, a.UNIQUENESS, b.COLUMN_NAME, b.COLUMN_POSITION FROM USER_INDEXES a, USER_IND_COLUMNS b WHERE ");
+    query.append(
+        "a.TABLE_NAME=? AND a.GENERATED=? AND a.TABLE_TYPE=? AND a.TABLE_NAME=b.TABLE_NAME AND a.INDEX_NAME=b.INDEX_NAME AND ");
+    query.append(
+        "a.INDEX_NAME NOT IN (SELECT DISTINCT c.CONSTRAINT_NAME FROM USER_CONSTRAINTS c WHERE c.CONSTRAINT_TYPE=? AND c.TABLE_NAME=a.TABLE_NAME");
     if (metaData.getSchemaPattern() != null) {
       query.append(" AND c.OWNER LIKE ?) AND a.TABLE_OWNER LIKE ?");
     } else {
@@ -316,8 +319,8 @@ public class OracleModelReader extends JdbcModelReader {
       while (rs.next()) {
         values.put("INDEX_NAME", rs.getString(1));
         values.put("INDEX_TYPE", new Short(DatabaseMetaData.tableIndexOther));
-        values.put("NON_UNIQUE", "UNIQUE".equalsIgnoreCase(rs.getString(3)) ? Boolean.FALSE
-            : Boolean.TRUE);
+        values.put("NON_UNIQUE",
+            "UNIQUE".equalsIgnoreCase(rs.getString(3)) ? Boolean.FALSE : Boolean.TRUE);
         values.put("COLUMN_NAME", rs.getString(4));
         values.put("ORDINAL_POSITION", new Short(rs.getShort(5)));
 

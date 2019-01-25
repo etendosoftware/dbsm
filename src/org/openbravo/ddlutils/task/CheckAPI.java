@@ -83,8 +83,8 @@ public class CheckAPI extends BaseDatabaseTask {
     DatabaseData dbDataTest = readDatabaseData(dbModelTest, testData);
 
     getLog().info("Comparing data models");
-    final DataComparator dataComparator = new DataComparator(platform.getSqlBuilder()
-        .getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
+    final DataComparator dataComparator = new DataComparator(
+        platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
     dataComparator.compare(dbDataStable, dbDataTest);
 
     getLog().info("Validating model API");
@@ -125,8 +125,8 @@ public class CheckAPI extends BaseDatabaseTask {
 
       try {
         dataReader.getSink().start();
-        final String tablename = dataFiles.get(j).getName()
-            .substring(0, dataFiles.get(j).getName().length() - 4);
+        final String tablename = dataFiles.get(j).getName().substring(0,
+            dataFiles.get(j).getName().length() - 4);
         final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
             .getVector();
         dataReader.parse(dataFiles.get(j));

@@ -54,6 +54,7 @@ public class PostgreSqlCheckTranslation extends CombinedTranslation {
     append(new ReplacePatTranslation("([0-9\\.\\-]+?)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
 
     append(new Translation() {
+      @Override
       public String exec(String s) {
         return s.toUpperCase();
       }

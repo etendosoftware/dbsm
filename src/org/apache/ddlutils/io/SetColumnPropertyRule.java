@@ -57,6 +57,7 @@ public class SetColumnPropertyRule extends Rule {
   /**
    * {@inheritDoc}
    */
+  @Override
   public void begin(String namespace, String name, Attributes attributes) throws Exception {
     Object bean = digester.peek();
 
@@ -69,13 +70,13 @@ public class SetColumnPropertyRule extends Rule {
       if ((_caseSensitive && attrName.equals(_column.getName()))
           || (!_caseSensitive && attrName.equalsIgnoreCase(_column.getName()))) {
         String attrValue = attributes.getValue(idx);
-        Object propValue = (_converter != null ? _converter.convertFromString(attrValue, _column
-            .getTypeCode()) : attrValue);
+        Object propValue = (_converter != null
+            ? _converter.convertFromString(attrValue, _column.getTypeCode())
+            : attrValue);
 
         if (digester.getLogger().isDebugEnabled()) {
-          digester.getLogger().debug(
-              "[SetColumnPropertyRule]{" + digester.getMatch() + "} Setting property '"
-                  + _column.getName() + "' to '" + propValue + "'");
+          digester.getLogger().debug("[SetColumnPropertyRule]{" + digester.getMatch()
+              + "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
         }
 
         PropertyUtils.setProperty(bean, _column.getName(), propValue);

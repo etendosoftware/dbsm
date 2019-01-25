@@ -62,6 +62,7 @@ public class DateConverter implements SqlTypeConverter {
   /**
    * {@inheritDoc}
    */
+  @Override
   public Object convertFromString(String textRep, int sqlTypeCode) throws ConversionException {
     if (sqlTypeCode != Types.DATE) {
       return textRep;
@@ -107,14 +108,14 @@ public class DateConverter implements SqlTypeConverter {
   /**
    * {@inheritDoc}
    */
+  @Override
   public String convertToString(Object obj, int sqlTypeCode) throws ConversionException {
     String result = null;
 
     if (obj != null) {
       if (!(obj instanceof Date)) {
-        throw new ConversionException(
-            "Expected object of type java.sql.Date, but instead received "
-                + obj.getClass().getName());
+        throw new ConversionException("Expected object of type java.sql.Date, but instead received "
+            + obj.getClass().getName());
       }
       result = obj.toString();
     }
