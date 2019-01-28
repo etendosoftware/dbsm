@@ -45,13 +45,11 @@ import org.openbravo.service.system.SystemService;
 import org.openbravo.service.system.SystemValidationResult;
 
 /**
+ * Task in charge of exporting the database model to XML.
  * 
  * @author adrian
  */
 public class ExportDatabase extends BaseDalInitializingTask {
-
-  private String excludeobjects = "org.apache.ddlutils.platform.ExcludeFilter";
-  private String codeRevision;
 
   private File model;
   private File moduledir;
@@ -62,9 +60,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private boolean testAPI = false;
   private String datasetList;
   private boolean checkTranslationConsistency = true;
-
   private boolean rd;
-  private ExcludeFilter excludeFilter;
   private int threads = 0;
 
   /** Creates a new instance of ExportDatabase */
@@ -73,7 +69,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   @Override
   public void execute() {
-    excludeFilter = DBSMOBUtil.getInstance()
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance()
         .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../"));
 
     initLogging();
@@ -120,7 +116,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         try {
           dbI = (Database) db.clone();
         } catch (final Exception e) {
-          System.out.println("Error while cloning the database model" + e.getMessage());
+          getLog().error("Error while cloning the database model" + e.getMessage());
           return;
         }
         dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
@@ -129,7 +125,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
           log.info("Checking translation consistency");
           long t = System.currentTimeMillis();
           List<StructureObject> inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
-          if (inconsistentObjects.size() > 0) {
+          if (!inconsistentObjects.isEmpty()) {
             log.warn(
                 "Warning: Some of the functions and triggers which are being exported have been detected to change if they are inserted in a PostgreSQL database again. If you are working on an Oracle-only environment, you should not worry about this. If you are working with PostgreSQL, you should check that the functions and triggers are inserted in a correct way when applying the exported module. The affected objects are: ");
             for (int numObj = 0; numObj < inconsistentObjects.size(); numObj++) {
@@ -142,15 +138,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
         }
         getLog().info(db.toString());
         final DatabaseIO io = new DatabaseIO();
-        String strPath;
         File path;
 
         if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
-          strPath = model.getAbsolutePath();
           path = model;
         } else {
-          strPath = moduledir + "/" + util.getActiveModule(i).dir + "/src-db/database/model/";
-          path = new File(strPath);
+          path = new File(
+              moduledir + File.separator + util.getActiveModule(i).dir + "/src-db/database/model/");
         }
 
         if (testAPI) {
@@ -167,7 +161,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         io.writeToDir(dbI, path);
       }
 
-      final Vector<String> datasets = new Vector<String>();
+      final Vector<String> datasets = new Vector<>();
       String[] datasetArray = datasetList.split(",");
       for (String dataset : datasetArray) {
         datasets.add(dataset);
@@ -206,8 +200,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
             final DatabaseData databaseXMLData = new DatabaseData(db);
             for (int j = 0; j < dataFiles.size(); j++) {
-              // getLog().info("Loading data for module. Path:
-              // "+dataFiles.get(i).getAbsolutePath());
               try {
                 dataReader.getSink().start();
                 final String tablename = dataFiles.get(j).getName().substring(0,
@@ -218,7 +210,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
                 databaseXMLData.insertDynaBeansFromVector(tablename, vectorDynaBeans);
                 dataReader.getSink().end();
               } catch (final Exception e) {
-                e.printStackTrace();
+                getLog().error("Error reading database data for API testing: " + e.getMessage());
               }
             }
 
@@ -322,28 +314,12 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   }
 
-  public String getExcludeobjects() {
-    return excludeobjects;
-  }
-
-  public void setExcludeobjects(String excludeobjects) {
-    this.excludeobjects = excludeobjects;
-  }
-
   public File getModel() {
     return model;
   }
 
   public void setModel(File model) {
     this.model = model;
-  }
-
-  public String getCodeRevision() {
-    return codeRevision;
-  }
-
-  public void setCodeRevision(String rev) {
-    codeRevision = rev;
   }
 
   public File getModuledir() {
