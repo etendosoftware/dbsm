@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2013-2016 Openbravo S.L.U.
+ * Copyright (C) 2013-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -46,6 +46,7 @@ import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
+ * Task in charge of exporting the sample data of a given client.
  *
  * @author huehner
  */
@@ -88,13 +89,11 @@ public class ExportSampledata extends BaseDatabaseTask {
         return databaseDataIO;
       }
     }
-  };
+  }
 
   private String basedir;
 
   protected final String encoding = "UTF-8";
-
-  private ExcludeFilter excludeFilter;
 
   private String client;
   private String clientId;
@@ -103,7 +102,7 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
-  private Map<String, Integer> exportedTablesCount = new HashMap<String, Integer>();
+  private Map<String, Integer> exportedTablesCount = new HashMap<>();
 
   private int nThreads = 0;
 
@@ -116,7 +115,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
 
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
@@ -147,7 +146,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       // find client
       Vector<DynaBean> rowsNewData = findClient(platform, db);
-      if (rowsNewData.size() == 0) {
+      if (rowsNewData.isEmpty()) {
         log.error("Specified client: " + client + " not found.");
         System.exit(1);
       }
@@ -405,9 +404,8 @@ public class ExportSampledata extends BaseDatabaseTask {
 
     @Override
     public void run() {
-      try {
-        final OutputStream out = new FileOutputStream(file);
-        BufferedOutputStream bufOut = new BufferedOutputStream(out);
+      try (OutputStream out = new FileOutputStream(file);
+          BufferedOutputStream bufOut = new BufferedOutputStream(out)) {
         // reads table data directly from db
         boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
             dsTableExporterExtraParams, orderByTableId);
@@ -416,8 +414,6 @@ public class ExportSampledata extends BaseDatabaseTask {
         }
         bufOut.flush();
         out.flush();
-        bufOut.close();
-        out.close();
       } catch (Exception e) {
         log.error("Error while exporting table" + table.getName() + " to module " + moduleId, e);
       }
