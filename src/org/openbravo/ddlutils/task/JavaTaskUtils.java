@@ -26,6 +26,7 @@ import java.io.File;
 public class JavaTaskUtils {
 
   private static final String YES = "yes";
+  private static final String ON = "on";
 
   private JavaTaskUtils() {
   }
@@ -36,10 +37,11 @@ public class JavaTaskUtils {
    * @param booleanValue
    *          The string representation of a boolean value.
    * 
-   * @return the boolean value of the provided string representation.
+   * @return {@code true} if the string argument is equal, ignoring case, to the strings "true",
+   *         "yes" or "on". Otherwise, return {@code false}.
    */
   public static boolean getBooleanProperty(String booleanValue) {
-    if (YES.equalsIgnoreCase(booleanValue)) {
+    if (YES.equalsIgnoreCase(booleanValue) || ON.equalsIgnoreCase(booleanValue)) {
       return true;
     }
     return Boolean.parseBoolean(booleanValue);

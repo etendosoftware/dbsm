@@ -48,9 +48,9 @@ public class AlterDatabaseJava {
     if (args.length > 16) {
       ada.setForcedRecreation(args[16]);
     }
+
     if (args.length > 17) {
-      ada.setExecuteModuleScripts(
-          "yes".equals(args[17]) || "true".equals(args[17]) || "on".equals(args[17]));
+      ada.setExecuteModuleScripts(JavaTaskUtils.getBooleanProperty(args[17]));
     }
 
     if (args.length > 18) {
