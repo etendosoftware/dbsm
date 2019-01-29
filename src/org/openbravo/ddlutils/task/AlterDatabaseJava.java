@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2017-2018 Openbravo SLU
+ * All portions are Copyright (C) 2017-2019 Openbravo SLU
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -37,22 +37,13 @@ public class AlterDatabaseJava {
     // args[6] was 'filter' now unused
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
-    ada.setFailonerror(Boolean.parseBoolean(args[9]));
+    ada.setFailonerror(JavaTaskUtils.getBooleanProperty(args[9]));
     ada.setBasedir(args[10]);
     ada.setDirFilter(args[11]);
     ada.setDatadir(args[12]);
     ada.setDatafilter(args[13]);
-    String force = args[14];
-    if (force.equalsIgnoreCase("yes")) {
-      force = "true";
-    }
-    ada.setForce(Boolean.parseBoolean(force));
-    String strict = args[15];
-    if (strict.equalsIgnoreCase("yes")) {
-      strict = "true";
-    }
-
-    ada.setStrict(Boolean.parseBoolean(strict));
+    ada.setForce(JavaTaskUtils.getBooleanProperty(args[14]));
+    ada.setStrict(JavaTaskUtils.getBooleanProperty(args[15]));
 
     if (args.length > 16) {
       ada.setForcedRecreation(args[16]);
@@ -63,13 +54,7 @@ public class AlterDatabaseJava {
     }
 
     if (args.length > 18) {
-      int maxThreads;
-      try {
-        maxThreads = Integer.parseInt(args[18]);
-      } catch (NumberFormatException e) {
-        maxThreads = -1;
-      }
-      ada.setThreads(maxThreads);
+      ada.setThreads(JavaTaskUtils.getIntegerProperty(args[18]));
     }
 
     if (args.length > 20) {
