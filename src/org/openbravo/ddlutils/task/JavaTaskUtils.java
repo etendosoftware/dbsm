@@ -30,6 +30,14 @@ public class JavaTaskUtils {
   private JavaTaskUtils() {
   }
 
+  /**
+   * Transforms the string representation of a boolean into its corresponding boolean value.
+   * 
+   * @param booleanValue
+   *          The string representation of a boolean value.
+   * 
+   * @return the boolean value of the provided string representation.
+   */
   public static boolean getBooleanProperty(String booleanValue) {
     if (YES.equalsIgnoreCase(booleanValue)) {
       return true;
@@ -37,6 +45,15 @@ public class JavaTaskUtils {
     return Boolean.parseBoolean(booleanValue);
   }
 
+  /**
+   * Transforms the string representation of an integer into its corresponding int value.
+   * 
+   * @param intValue
+   *          The string representation of an integer value.
+   * 
+   * @return the integer value of the provided string representation or -1 if it is not possible to
+   *         parse the value.
+   */
   public static int getIntegerProperty(String intValue) {
     try {
       return Integer.parseInt(intValue);
@@ -45,6 +62,14 @@ public class JavaTaskUtils {
     }
   }
 
+  /**
+   * Returns a File whose path is passed as parameter.
+   * 
+   * @param file
+   *          The string representation of the file path.
+   * 
+   * @return File whose path is passed as parameter.
+   */
   public static File getFileProperty(String file) {
     return new File(file);
   }
