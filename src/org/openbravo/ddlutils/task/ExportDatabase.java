@@ -51,20 +51,47 @@ import org.openbravo.service.system.SystemValidationResult;
  */
 public class ExportDatabase extends BaseDalInitializingTask {
 
-  private File model;
-  private File moduledir;
-  private File output;
+  private static final String SYSTEM_USER_ID = "0";
+
+  private File model = new File("model");
+  private File output = new File("sourcedata");
+  private String datasetList = "AD,ADRD";
   private String encoding = "UTF-8";
+
+  private File moduledir;
   private boolean force = false;
   private boolean validateModel = true;
   private boolean testAPI = false;
-  private String datasetList;
   private boolean checkTranslationConsistency = true;
   private boolean rd;
   private int threads = 0;
 
   /** Creates a new instance of ExportDatabase */
   public ExportDatabase() {
+    setUserId(SYSTEM_USER_ID);
+    setAdminMode(true);
+  }
+
+  /** main method invoked from export.database.structure ant task */
+  public static void main(String[] args) {
+    createExportDatabase(args).execute();
+  }
+
+  private static ExportDatabase createExportDatabase(String[] args) {
+    ExportDatabase exportDatabase = new ExportDatabase();
+    exportDatabase.setDriver(args[0]);
+    exportDatabase.setUrl(args[1]);
+    exportDatabase.setUser(args[2]);
+    exportDatabase.setPassword(args[3]);
+    exportDatabase.setModuledir(JavaTaskUtils.getFileProperty(args[4]));
+    exportDatabase.setPropertiesFile(args[5]);
+    exportDatabase.setForce(JavaTaskUtils.getBooleanProperty(args[6]));
+    exportDatabase.setValidateModel(JavaTaskUtils.getBooleanProperty(args[7]));
+    exportDatabase.setTestAPI(JavaTaskUtils.getBooleanProperty(args[8]));
+    exportDatabase.setRd(JavaTaskUtils.getBooleanProperty(args[9]));
+    exportDatabase.setCheckTranslationConsistency(JavaTaskUtils.getBooleanProperty(args[10]));
+    exportDatabase.setThreads(JavaTaskUtils.getIntegerProperty(args[11]));
+    return exportDatabase;
   }
 
   @Override

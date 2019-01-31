@@ -93,8 +93,6 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   private String basedir;
 
-  protected final String encoding = "UTF-8";
-
   private String client;
   private String clientId;
   private String module;
@@ -102,11 +100,32 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
+  private static final String ENCODING = "UTF-8";
   private Map<String, Integer> exportedTablesCount = new HashMap<>();
 
   private int nThreads = 0;
 
   public ExportSampledata() {
+  }
+
+  /** main method invoked from export.sample.data ant task */
+  public static void main(String[] args) {
+    createExportSampledata(args).execute();
+  }
+
+  private static ExportSampledata createExportSampledata(String[] args) {
+    ExportSampledata exportSampledata = new ExportSampledata();
+    exportSampledata.setDriver(args[0]);
+    exportSampledata.setUrl(args[1]);
+    exportSampledata.setUser(args[2]);
+    exportSampledata.setPassword(args[3]);
+    exportSampledata.setRdbms(args[4]);
+    exportSampledata.setBasedir(args[5]);
+    exportSampledata.setClient(args[6]);
+    exportSampledata.setModule(args[7]);
+    exportSampledata.setExportFormat(args[8]);
+    exportSampledata.setThreads(JavaTaskUtils.getIntegerProperty(args[9]));
+    return exportSampledata;
   }
 
   public String getClientId() {
@@ -193,7 +212,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       Map<String, Object> dsTableExporterExtraParams = new HashMap<String, Object>();
       dsTableExporterExtraParams.put("platform", platform);
-      dsTableExporterExtraParams.put("xmlEncoding", encoding);
+      dsTableExporterExtraParams.put("xmlEncoding", ENCODING);
 
       ExecutorService es = Executors.newFixedThreadPool(platform.getMaxThreads());
 
