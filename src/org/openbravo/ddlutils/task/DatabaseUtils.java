@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -202,8 +202,8 @@ public class DatabaseUtils {
    * @param config
    *          it is used to store all needed configurations related with configScript.
    */
-  public static Database readDatabase(File[] f, ConfigScriptConfig config) {
-    return applyConfigScriptsIntoModel(getMergedDatabaseAndInitialize(f), config);
+  public static Database readDatabase(File[] file, ConfigScriptConfig config) {
+    return applyConfigScriptsIntoModel(getMergedDatabaseAndInitialize(file), config);
   }
 
   /**
@@ -213,8 +213,8 @@ public class DatabaseUtils {
    * @param file
    *          The file to be loaded as a database model.
    */
-  public static Database readDatabaseWithoutConfigScript(File[] f) {
-    return getMergedDatabaseAndInitialize(f);
+  public static Database readDatabaseWithoutConfigScript(File[] file) {
+    return getMergedDatabaseAndInitialize(file);
   }
 
   /**
