@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2013-2016 Openbravo S.L.U.
+ * Copyright (C) 2013-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -46,6 +46,7 @@ import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
+ * Task in charge of exporting the sample data of a given client.
  *
  * @author huehner
  */
@@ -88,13 +89,9 @@ public class ExportSampledata extends BaseDatabaseTask {
         return databaseDataIO;
       }
     }
-  };
+  }
 
   private String basedir;
-
-  protected final String encoding = "UTF-8";
-
-  private ExcludeFilter excludeFilter;
 
   private String client;
   private String clientId;
@@ -103,11 +100,32 @@ public class ExportSampledata extends BaseDatabaseTask {
   private ExportFormat exportFormat;
   private String rdbms;
   private static final String POSTGRE_RDBMS = "POSTGRE";
-  private Map<String, Integer> exportedTablesCount = new HashMap<String, Integer>();
+  private static final String ENCODING = "UTF-8";
+  private Map<String, Integer> exportedTablesCount = new HashMap<>();
 
   private int nThreads = 0;
 
   public ExportSampledata() {
+  }
+
+  /** main method invoked from export.sample.data ant task */
+  public static void main(String[] args) {
+    createExportSampledata(args).execute();
+  }
+
+  private static ExportSampledata createExportSampledata(String[] args) {
+    ExportSampledata exportSampledata = new ExportSampledata();
+    exportSampledata.setDriver(args[0]);
+    exportSampledata.setUrl(args[1]);
+    exportSampledata.setUser(args[2]);
+    exportSampledata.setPassword(args[3]);
+    exportSampledata.setRdbms(args[4]);
+    exportSampledata.setBasedir(args[5]);
+    exportSampledata.setClient(args[6]);
+    exportSampledata.setModule(args[7]);
+    exportSampledata.setExportFormat(args[8]);
+    exportSampledata.setThreads(JavaTaskUtils.getIntegerProperty(args[9]));
+    return exportSampledata;
   }
 
   public String getClientId() {
@@ -116,7 +134,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance().getExcludeFilter(new File(basedir));
 
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
 
@@ -147,7 +165,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       // find client
       Vector<DynaBean> rowsNewData = findClient(platform, db);
-      if (rowsNewData.size() == 0) {
+      if (rowsNewData.isEmpty()) {
         log.error("Specified client: " + client + " not found.");
         System.exit(1);
       }
@@ -194,7 +212,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
       Map<String, Object> dsTableExporterExtraParams = new HashMap<String, Object>();
       dsTableExporterExtraParams.put("platform", platform);
-      dsTableExporterExtraParams.put("xmlEncoding", encoding);
+      dsTableExporterExtraParams.put("xmlEncoding", ENCODING);
 
       ExecutorService es = Executors.newFixedThreadPool(platform.getMaxThreads());
 
@@ -405,9 +423,8 @@ public class ExportSampledata extends BaseDatabaseTask {
 
     @Override
     public void run() {
-      try {
-        final OutputStream out = new FileOutputStream(file);
-        BufferedOutputStream bufOut = new BufferedOutputStream(out);
+      try (OutputStream out = new FileOutputStream(file);
+          BufferedOutputStream bufOut = new BufferedOutputStream(out)) {
         // reads table data directly from db
         boolean dataExported = dsTableExporter.exportDataSet(db, table, out, moduleId,
             dsTableExporterExtraParams, orderByTableId);
@@ -416,8 +433,6 @@ public class ExportSampledata extends BaseDatabaseTask {
         }
         bufOut.flush();
         out.flush();
-        bufOut.close();
-        out.close();
       } catch (Exception e) {
         log.error("Error while exporting table" + table.getName() + " to module " + moduleId, e);
       }
