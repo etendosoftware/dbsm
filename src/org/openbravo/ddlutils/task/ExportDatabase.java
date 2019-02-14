@@ -204,6 +204,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
         datasets.add(dataset);
       }
 
+      // once model is exported, reload it from files to guarantee data is exported in a fixed
+      // manner, other case column position could be different
+      // we just need to reload it once before exporting the source data because the model
+      // information is the same for all the modules about to be exported
+      Database dbXML = DatabaseUtils.readDatabaseModel(platform, model, moduledir.getAbsolutePath(),
+          "*/src-db/database/model");
+
       int datasetI = 0;
       for (final String dataSetCode : datasets) {
         if (dataSetCode.equalsIgnoreCase("ADRD") && !rd) {
@@ -263,11 +270,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
           final DatabaseDataIO dbdio = new DatabaseDataIO();
           dbdio.setEnsureFKOrder(false);
-
-          // once model is exported, reload it from files to guarantee data is exported in a fixed
-          // manner, other case column position could be different
-          Database dbXML = DatabaseUtils.readDatabaseModel(platform, model,
-              moduledir.getAbsolutePath(), "*/src-db/database/model");
 
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
             getLog().info("Path: " + path);
