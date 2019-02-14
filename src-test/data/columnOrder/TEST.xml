@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+<!--1--><TEST>
+<!--1-->  <TEST_ID><![CDATA[1]]></TEST_ID>
+<!--1-->  <COL1><![CDATA[1]]></COL1>
+<!--1-->  <COL2><![CDATA[2]]></COL2>
+<!--1-->  <COL3><![CDATA[3]]></COL3>
+<!--1-->  <DUMMY><![CDATA[D]]></DUMMY>
+<!--1--></TEST>
+</data>
+

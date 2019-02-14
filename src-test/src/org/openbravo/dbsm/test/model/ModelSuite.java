@@ -20,6 +20,7 @@ import org.openbravo.dbsm.test.model.data.DefaultValuesTest;
 import org.openbravo.dbsm.test.model.data.OtherDefaults;
 import org.openbravo.dbsm.test.model.recreation.AddDropColumn;
 import org.openbravo.dbsm.test.model.recreation.AddDropConstraints;
+import org.openbravo.dbsm.test.model.recreation.ColumnOrderOnExport;
 import org.openbravo.dbsm.test.model.recreation.OtherRecreations;
 import org.openbravo.dbsm.test.model.recreation.PLCode;
 import org.openbravo.dbsm.test.model.recreation.SQLCommands;
@@ -62,7 +63,8 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     OtherRecreations.class, //
     PreventConstraintDeletion.class, //
     PreventCascadeRowDeletion.class, //
-    PLCode.class,
+    PLCode.class, //
+    ColumnOrderOnExport.class, //
 
     ColumnSizeChangesWithDependentViews.class })
 public class ModelSuite {
