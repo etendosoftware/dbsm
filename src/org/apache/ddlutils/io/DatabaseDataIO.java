@@ -467,23 +467,20 @@ public class DatabaseDataIO implements DataSetTableExporter {
 
   }
 
-  public boolean writeDataForTableToXML(Platform platform, Database model,
-      DatabaseData databaseData, OBDatasetTable dsTable, OutputStream output, String xmlEncoding,
-      String moduleID) {
+  public int writeDataForTableToXML(Platform platform, Database model, DatabaseData databaseData,
+      OBDatasetTable dsTable, OutputStream output, String xmlEncoding, String moduleID) {
     DataWriter writer = getConfiguredDataWriter(output, xmlEncoding);
     writer.setWritePrimaryKeyComment(_writePrimaryKeyComment);
     registerConverters(writer.getConverterConfiguration());
     writer.writeDocumentStart();
-    boolean b = false;
     Vector<DynaBean> rows = databaseData.getRowsFromTable(dsTable.getName().toUpperCase());
     if (rows != null) {
       for (DynaBean row : rows) {
         writer.write(model, dsTable, row);
-        b = true;
       }
     }
     writer.writeDocumentEnd();
-    return b;
+    return rows == null ? 0 : rows.size();
   }
 
   /**

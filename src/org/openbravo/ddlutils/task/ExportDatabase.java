@@ -143,7 +143,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
       DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, databaseOrgData,
           moduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
-        getLog().info("Exporting module: " + util.getActiveModule(i).name);
         Database dbI = null;
         try {
           dbI = (Database) db.clone();
@@ -152,9 +151,11 @@ public class ExportDatabase extends BaseDalInitializingTask {
           return;
         }
         dbI.applyNamingConventionFilter(util.getActiveModule(i).filter);
-        if (checkTranslationConsistency) {
+        getLog().info("Exporting model of module: " + util.getActiveModule(i).name);
+        getLog().info("  " + dbI.toString());
 
-          log.info("Checking translation consistency");
+        if (checkTranslationConsistency) {
+          log.info("  Checking translation consistency");
           long t = System.currentTimeMillis();
           List<StructureObject> inconsistentObjects = platform.checkTranslationConsistency(dbI, db);
           if (!inconsistentObjects.isEmpty()) {
@@ -164,11 +165,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
               log.warn(inconsistentObjects.get(numObj).toString());
             }
           } else {
-            log.info("Translation consistency check finished succesfully in "
+            log.info("  Translation consistency check finished succesfully in "
                 + (System.currentTimeMillis() - t) + " ms");
           }
         }
-        getLog().info(db.toString());
         final DatabaseIO io = new DatabaseIO();
         File path;
 
@@ -180,7 +180,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         }
 
         if (testAPI) {
-          getLog().info("Reading XML model for API checking" + path);
+          getLog().info("  Reading XML model for API checking" + path);
           Database dbXML = DatabaseUtils.readDatabaseWithoutConfigScript(path);
           validateAPIForModel(platform, dbI, dbXML, ad);
         }
@@ -189,7 +189,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
           validateDatabaseForModule(util.getActiveModule(i).idMod, dbI);
         }
 
-        getLog().info("Path: " + path);
+        getLog().debug("  Path: " + path);
         io.writeToDir(dbI, path);
       }
 
@@ -219,8 +219,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         OBDataset dataset = new OBDataset(databaseOrgData, dataSetCode);
         final Vector<OBDatasetTable> tableList = dataset.getTableList();
         for (int i = 0; i < util.getActiveModuleCount(); i++) {
-          getLog().info("Exporting module: " + util.getActiveModule(i).name);
-          getLog().info(db.toString());
+          getLog().info("Exporting AD of module: " + util.getActiveModule(i).name);
 
           File path;
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
@@ -260,7 +259,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
             final DataComparator dataComparator = new DataComparator(
                 platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
-            getLog().info("Comparing models");
+            getLog().info("  Comparing models");
             dataComparator.compare(db, db, platform, databaseXMLData, ad,
                 util.getActiveModule(i).idMod);
 
@@ -272,7 +271,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
           dbdio.setEnsureFKOrder(false);
 
           if (util.getActiveModule(i).name.equalsIgnoreCase("CORE") || dataSetCode.equals("AD")) {
-            getLog().info("Path: " + path);
+            getLog().debug("  Path: " + path);
             DatabaseData dataToExport = new DatabaseData(db);
             dbdio.readRowsIntoDatabaseData(platform, dbXML, dataToExport, dataset,
                 util.getActiveModule(i).idMod);
@@ -291,13 +290,12 @@ public class ExportDatabase extends BaseDalInitializingTask {
               try {
                 final File tableFile = new File(path, table.getName().toUpperCase() + ".xml");
                 final OutputStream out = new FileOutputStream(tableFile);
-                final boolean b = dbdio.writeDataForTableToXML(platform, dbXML, dataToExport, table,
-                    out, getEncoding(), util.getActiveModule(i).idMod);
-                if (!b) {
+                int rows = dbdio.writeDataForTableToXML(platform, dbXML, dataToExport, table, out,
+                    getEncoding(), util.getActiveModule(i).idMod);
+                if (rows == 0) {
                   tableFile.delete();
                 } else {
-                  getLog().info("Exported table: " + table.getName() + " to module "
-                      + util.getActiveModule(i).name);
+                  getLog().info("  Exported " + table.getName() + " - " + rows + " rows");
                 }
                 out.flush();
               } catch (Exception e) {
@@ -319,7 +317,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   }
 
   private void validateDatabaseForModule(String moduleId, Database dbI) {
-    getLog().info("Validating Module...");
+    getLog().info("  Validating Module...");
     final Module moduleToValidate = OBDal.getInstance().get(Module.class, moduleId);
     final SystemValidationResult result = SystemService.getInstance()
         .validateDatabase(moduleToValidate, dbI);

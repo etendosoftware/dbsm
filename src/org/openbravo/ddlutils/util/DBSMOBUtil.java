@@ -1047,8 +1047,8 @@ public class DBSMOBUtil {
           "/" + sortedTemplates.get(i) + "/src-db/database/configScript.xml");
       if (configScript.exists()) {
         DatabaseIO dbIO = new DatabaseIO();
-        getLog()
-            .info("Reversing data part of configuration script: " + configScript.getAbsolutePath());
+        getLog().debug(
+            "Reversing data part of configuration script: " + configScript.getAbsolutePath());
         Vector<Change> changes = dbIO.readChanges(configScript);
         boolean isOldConfigScript = isOldConfigScript(changes);
         boolean isOB3 = isOB3(platform);
