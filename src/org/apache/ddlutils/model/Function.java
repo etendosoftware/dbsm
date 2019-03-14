@@ -37,6 +37,18 @@ import org.apache.ddlutils.translation.Translation;
 public class Function implements StructureObject, Cloneable {
   public enum Volatility {
     VOLATILE, STABLE, IMMUTABLE;
+
+    /**
+     * Return Volatility name except for VOLATILE which an empty String is returned to prevent
+     * attribute to be written in xml for default case.
+     */
+    @Override
+    public String toString() {
+      if (this == VOLATILE) {
+        return "";
+      }
+      return super.toString();
+    }
   }
 
   /** The name of the function, may be <code>null</code>. */

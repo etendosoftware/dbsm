@@ -16,6 +16,8 @@ import static org.junit.Assert.assertThat;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
@@ -35,5 +37,16 @@ public class FunctionVolatility extends DbsmTest {
     Database db = createDatabase("functions/SIMPLE_FUNCTION.xml");
     assertThat("Default volatility", db.getFunction(0).getVolatility(),
         is(Function.Volatility.VOLATILE));
+  }
+
+  @Test
+  public void volatileFunctionsDontExportAttribute() throws IOException {
+    createDatabase("functions/SIMPLE_FUNCTION.xml");
+    exportDatabase("/tmp/testDB");
+    String exportedFile = new String(
+        Files.readAllBytes(Paths.get("/tmp/testDB/functions/TEST1.xml")));
+    String originalFile = new String(
+        Files.readAllBytes(Paths.get("model", "functions/SIMPLE_FUNCTION.xml")));
+    assertThat(exportedFile, is(originalFile));
   }
 }
