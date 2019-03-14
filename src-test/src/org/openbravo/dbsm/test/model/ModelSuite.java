@@ -54,7 +54,8 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
     Functions.class, //
-    Views.class, //
+    FunctionVolatility.class, //
+    Views.class,
 
     AddDropConstraints.class, //
     TypeChangeSuite.class, //
