@@ -35,6 +35,9 @@ import org.apache.ddlutils.translation.Translation;
  * @version $Revision$
  */
 public class Function implements StructureObject, Cloneable {
+  public enum Volatility {
+    VOLATILE, STABLE, IMMUTABLE;
+  }
 
   /** The name of the function, may be <code>null</code>. */
   private String _name;
@@ -48,6 +51,8 @@ public class Function implements StructureObject, Cloneable {
   /** The translation object of the function */
   private Translation _translation = new NullTranslation();
   private boolean recreationRequired = false;
+
+  private Volatility volatitilty = Volatility.VOLATILE;
 
   /** Creates a new instance of Function */
   public Function() {
@@ -505,5 +510,9 @@ public class Function implements StructureObject, Cloneable {
   /** Is recreation required even no other changes are detected */
   public boolean isRecreationRequired() {
     return recreationRequired;
+  }
+
+  public Volatility getVolatility() {
+    return volatitilty;
   }
 }
