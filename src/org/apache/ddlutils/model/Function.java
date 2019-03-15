@@ -22,11 +22,10 @@ package org.apache.ddlutils.model;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;
 
 /**
@@ -67,14 +66,13 @@ public class Function implements StructureObject, Cloneable {
   /** The name of the function, may be <code>null</code>. */
   private String _name;
   /** The parameters of the function. */
-  private ArrayList _parameters;
+  private List<Parameter> _parameters;
   /** The JDBC type code, one of the constants in {@link java.sql.Types}. */
   private int _typeCode;
   /** The body of the function. */
   private String _body;
   private String _originalBody;
-  /** The translation object of the function */
-  private Translation _translation = new NullTranslation();
+
   private boolean recreationRequired = false;
 
   private Volatility volatility = Volatility.VOLATILE;
@@ -86,7 +84,7 @@ public class Function implements StructureObject, Cloneable {
 
   public Function(String name) {
     _name = name;
-    _parameters = new ArrayList();
+    _parameters = new ArrayList<>();
     _typeCode = Types.NULL;
     _body = null;
   }
@@ -262,10 +260,8 @@ public class Function implements StructureObject, Cloneable {
    * @param parameters
    *          The parameters
    */
-  public void addParameters(Collection parameters) {
-    for (Iterator it = parameters.iterator(); it.hasNext();) {
-      addParameter((Parameter) it.next());
-    }
+  public void addParameters(Collection<Parameter> parameters) {
+    _parameters.addAll(parameters);
   }
 
   /**
@@ -313,9 +309,7 @@ public class Function implements StructureObject, Cloneable {
    * @return The parameter or <code>null</code> if there is no such parameter
    */
   public Parameter findParameter(String name, boolean caseSensitive) {
-    for (Iterator it = _parameters.iterator(); it.hasNext();) {
-      Parameter parameter = (Parameter) it.next();
-
+    for (Parameter parameter : _parameters) {
       if (caseSensitive) {
         if (parameter.getName().equals(name)) {
           return parameter;
@@ -327,24 +321,6 @@ public class Function implements StructureObject, Cloneable {
       }
     }
     return null;
-  }
-
-  /**
-   * Determines the index of the given parameter.
-   * 
-   * @param parameter
-   *          The parameter
-   * @return The index or <code>-1</code> if it is no parameter of this table
-   */
-  public int getParameterIndex(Parameter parameter) {
-    int idx = 0;
-
-    for (Iterator it = _parameters.iterator(); it.hasNext(); idx++) {
-      if (parameter == it.next()) {
-        return idx;
-      }
-    }
-    return -1;
   }
 
   /**
@@ -375,10 +351,8 @@ public class Function implements StructureObject, Cloneable {
   }
 
   public boolean hasOutputParameters() {
-
-    for (Iterator it = _parameters.iterator(); it.hasNext();) {
-      Parameter parameter = (Parameter) it.next();
-      if (parameter.getModeCode() == parameter.MODE_OUT) {
+    for (Parameter parameter : _parameters) {
+      if (parameter.getModeCode() == Parameter.MODE_OUT) {
         return true;
       }
     }
@@ -388,6 +362,7 @@ public class Function implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Object clone() throws CloneNotSupportedException {
     Function result = (Function) super.clone();
@@ -395,7 +370,7 @@ public class Function implements StructureObject, Cloneable {
     result._name = _name;
     result._body = _body;
     result._typeCode = _typeCode;
-    result._parameters = (ArrayList) _parameters.clone();
+    result._parameters = (List<Parameter>) ((ArrayList<Parameter>) _parameters).clone();
 
     return result;
   }
@@ -458,8 +433,8 @@ public class Function implements StructureObject, Cloneable {
       e.append(_name, otherFunction._name);
 
       for (int i = 0; i < _parameters.size(); i++) {
-        Parameter p1 = (Parameter) _parameters.get(i);
-        Parameter p2 = (Parameter) otherFunction._parameters.get(i);
+        Parameter p1 = _parameters.get(i);
+        Parameter p2 = otherFunction._parameters.get(i);
         e.append(p1.getTypeCode(), p2.getTypeCode());
       }
 
@@ -475,9 +450,7 @@ public class Function implements StructureObject, Cloneable {
    * @param translation
    */
   public void setTranslation(Translation translation) {
-    _translation = translation;
-    for (int i = 0; i < _parameters.size(); i++) {
-      Parameter p = (Parameter) _parameters.get(i);
+    for (Parameter p : _parameters) {
       p.setTranslation(translation);
     }
   }
