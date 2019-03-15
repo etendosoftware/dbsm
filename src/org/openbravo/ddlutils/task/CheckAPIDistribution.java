@@ -218,10 +218,11 @@ public class CheckAPIDistribution extends BaseDatabaseTask {
     File dataFolder = new File(erpBaseDir, "src-db/database/sourcedata");
 
     log.info("Reading dataset AD sourcedata"); // to find prefixes
-    DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, model, model, basedir,
-        dataFilter, dataFolder, strict);
-    DBSMOBUtil.getInstance().applyConfigScripts(platform, databaseOrgData, model, basedir, strict,
-        true);
+    DBSMOBUtil.getInstance()
+        .loadDataStructures(platform, databaseOrgData, model, model, basedir, dataFilter,
+            dataFolder, strict);
+    DBSMOBUtil.getInstance()
+        .applyConfigScripts(platform, databaseOrgData, model, basedir, strict, true);
 
     return databaseOrgData;
   }

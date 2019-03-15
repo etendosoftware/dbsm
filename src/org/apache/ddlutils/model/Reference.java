@@ -191,7 +191,8 @@ public class Reference implements Cloneable, Serializable {
       Reference other = (Reference) obj;
 
       return new EqualsBuilder().append(_localColumnName, other._localColumnName)
-          .append(_foreignColumnName, other._foreignColumnName).isEquals();
+          .append(_foreignColumnName, other._foreignColumnName)
+          .isEquals();
     } else {
       return false;
     }
@@ -214,7 +215,8 @@ public class Reference implements Cloneable, Serializable {
    */
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_localColumnName).append(_foreignColumnName)
+    return new HashCodeBuilder(17, 37).append(_localColumnName)
+        .append(_foreignColumnName)
         .toHashCode();
   }
 

@@ -111,7 +111,8 @@ public class View implements StructureObject, Cloneable {
       // their order
       // (which is irrelevant for ccs) because they are contained in a set
       return new EqualsBuilder().append(_name, otherView._name)
-          .append(_statement.trim(), otherView._statement.trim()).isEquals();
+          .append(_statement.trim(), otherView._statement.trim())
+          .isEquals();
     } else {
       return false;
     }

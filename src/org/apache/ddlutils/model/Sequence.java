@@ -135,7 +135,8 @@ public class Sequence implements StructureObject, Cloneable {
       // their order
       // (which is irrelevant for ccs) because they are contained in a set
       return new EqualsBuilder().append(_name, otherSequence._name)
-          .append(_start, otherSequence._start).append(_increment, otherSequence._increment)
+          .append(_start, otherSequence._start)
+          .append(_increment, otherSequence._increment)
           .isEquals();
     } else {
       return false;
@@ -152,7 +153,8 @@ public class Sequence implements StructureObject, Cloneable {
   public boolean equalsIgnoreCase(Sequence otherSequence) {
     return UtilsCompare.equalsIgnoreCase(_name, otherSequence._name)
         && new EqualsBuilder().append(_start, otherSequence._start)
-            .append(_increment, otherSequence._increment).isEquals();
+            .append(_increment, otherSequence._increment)
+            .isEquals();
 
   }
 

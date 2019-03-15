@@ -1071,12 +1071,15 @@ public class Table implements StructureObject, Serializable, Cloneable {
       // Note that this compares case sensitive
       // TODO: For now we ignore catalog and schema (type should be
       // irrelevant anyways)
-      return new EqualsBuilder().append(_name, other._name).append(_primaryKey, other._primaryKey)
-          .append(_name, other._name).append(_columns, other._columns)
+      return new EqualsBuilder().append(_name, other._name)
+          .append(_primaryKey, other._primaryKey)
+          .append(_name, other._name)
+          .append(_columns, other._columns)
           .append(new HashSet(_foreignKeys), new HashSet(other._foreignKeys))
           .append(new HashSet(_indices), new HashSet(other._indices))
           .append(new HashSet(_uniques), new HashSet(other._uniques))
-          .append(new HashSet(_checks), new HashSet(other._checks)).isEquals();
+          .append(new HashSet(_checks), new HashSet(other._checks))
+          .isEquals();
     } else {
       return false;
     }
@@ -1089,9 +1092,14 @@ public class Table implements StructureObject, Serializable, Cloneable {
   public int hashCode() {
     // TODO: For now we ignore catalog and schema (type should be irrelevant
     // anyways)
-    return new HashCodeBuilder(17, 37).append(_name).append(_primaryKey).append(_columns)
-        .append(new HashSet(_foreignKeys)).append(new HashSet(_indices))
-        .append(new HashSet(_uniques)).append(new HashSet(_checks)).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name)
+        .append(_primaryKey)
+        .append(_columns)
+        .append(new HashSet(_foreignKeys))
+        .append(new HashSet(_indices))
+        .append(new HashSet(_uniques))
+        .append(new HashSet(_checks))
+        .toHashCode();
   }
 
   /**

@@ -111,9 +111,10 @@ public class DatabaseUtils {
   private static Database applyConfigScriptsIntoModel(Database d, ConfigScriptConfig config) {
     final DatabaseData dbDataPartialModel = new DatabaseData(d);
     readDataModuleInfo(d, dbDataPartialModel, config.getBasedir());
-    DBSMOBUtil.getInstance().applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
-        config.getBasedir() + "/modules/", config.isStrict(),
-        config.applyConfigScriptDataChanges());
+    DBSMOBUtil.getInstance()
+        .applyConfigScripts(config.getPlatform(), dbDataPartialModel, d,
+            config.getBasedir() + "/modules/", config.isStrict(),
+            config.applyConfigScriptDataChanges());
     return d;
   }
 

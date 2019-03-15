@@ -2876,104 +2876,105 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     Object value;
 
     switch (jdbcType) {
-    case Types.CHAR:
-    case Types.VARCHAR:
-    case Types.LONGVARCHAR:
-      value = useIdx ? resultSet.getString(columnIdx) : resultSet.getString(columnName);
-      break;
-    case Types.NUMERIC:
-    case Types.DECIMAL:
-      value = useIdx ? resultSet.getBigDecimal(columnIdx) : resultSet.getBigDecimal(columnName);
-      break;
-    case Types.BIT:
-      value = new Boolean(
-          useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
-      break;
-    case Types.TINYINT:
-    case Types.SMALLINT:
-    case Types.INTEGER:
-      value = new Integer(useIdx ? resultSet.getInt(columnIdx) : resultSet.getInt(columnName));
-      break;
-    case Types.BIGINT:
-      value = new Long(useIdx ? resultSet.getLong(columnIdx) : resultSet.getLong(columnName));
-      break;
-    case Types.REAL:
-      value = new Float(useIdx ? resultSet.getFloat(columnIdx) : resultSet.getFloat(columnName));
-      break;
-    case Types.FLOAT:
-    case Types.DOUBLE:
-      value = new Double(useIdx ? resultSet.getDouble(columnIdx) : resultSet.getDouble(columnName));
-      break;
-    case Types.BINARY:
-    case Types.VARBINARY:
-    case Types.LONGVARBINARY:
-      value = useIdx ? resultSet.getBytes(columnIdx) : resultSet.getBytes(columnName);
-      break;
-    case Types.DATE:
-      value = useIdx ? resultSet.getDate(columnIdx) : resultSet.getDate(columnName);
-      break;
-    case Types.TIME:
-      value = useIdx ? resultSet.getTime(columnIdx) : resultSet.getTime(columnName);
-      break;
-    case Types.TIMESTAMP:
-      value = useIdx ? resultSet.getTimestamp(columnIdx) : resultSet.getTimestamp(columnName);
-      break;
-    case Types.CLOB:
-      Clob clob = useIdx ? resultSet.getClob(columnIdx) : resultSet.getClob(columnName);
-
-      if (clob == null) {
-        value = null;
-      } else {
-        long length = clob.length();
-
-        if (length > Integer.MAX_VALUE) {
-          value = clob;
-        } else if (length == 0) {
-          // the javadoc is not clear about whether Clob.getSubString
-          // can be used with a substring length of 0
-          // thus we do the safe thing and handle it ourselves
-          value = "";
-        } else {
-          value = clob.getSubString(1l, (int) length);
-        }
-      }
-      break;
-    case Types.BLOB:
-      Blob blob = useIdx ? resultSet.getBlob(columnIdx) : resultSet.getBlob(columnName);
-
-      if (blob == null) {
-        value = null;
-      } else {
-        long length = blob.length();
-
-        if (length > Integer.MAX_VALUE) {
-          value = blob;
-        } else if (length == 0) {
-          // the javadoc is not clear about whether Blob.getBytes
-          // can be used with for 0 bytes to be copied
-          // thus we do the safe thing and handle it ourselves
-          value = new byte[0];
-        } else {
-          value = blob.getBytes(1l, (int) length);
-        }
-      }
-      break;
-    case Types.ARRAY:
-      value = useIdx ? resultSet.getArray(columnIdx) : resultSet.getArray(columnName);
-      break;
-    case Types.REF:
-      value = useIdx ? resultSet.getRef(columnIdx) : resultSet.getRef(columnName);
-      break;
-    default:
-      // special handling for Java 1.4/JDBC 3 types
-      if (Jdbc3Utils.supportsJava14JdbcTypes()
-          && (jdbcType == Jdbc3Utils.determineBooleanTypeCode())) {
+      case Types.CHAR:
+      case Types.VARCHAR:
+      case Types.LONGVARCHAR:
+        value = useIdx ? resultSet.getString(columnIdx) : resultSet.getString(columnName);
+        break;
+      case Types.NUMERIC:
+      case Types.DECIMAL:
+        value = useIdx ? resultSet.getBigDecimal(columnIdx) : resultSet.getBigDecimal(columnName);
+        break;
+      case Types.BIT:
         value = new Boolean(
             useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
-      } else {
-        value = useIdx ? resultSet.getObject(columnIdx) : resultSet.getObject(columnName);
-      }
-      break;
+        break;
+      case Types.TINYINT:
+      case Types.SMALLINT:
+      case Types.INTEGER:
+        value = new Integer(useIdx ? resultSet.getInt(columnIdx) : resultSet.getInt(columnName));
+        break;
+      case Types.BIGINT:
+        value = new Long(useIdx ? resultSet.getLong(columnIdx) : resultSet.getLong(columnName));
+        break;
+      case Types.REAL:
+        value = new Float(useIdx ? resultSet.getFloat(columnIdx) : resultSet.getFloat(columnName));
+        break;
+      case Types.FLOAT:
+      case Types.DOUBLE:
+        value = new Double(
+            useIdx ? resultSet.getDouble(columnIdx) : resultSet.getDouble(columnName));
+        break;
+      case Types.BINARY:
+      case Types.VARBINARY:
+      case Types.LONGVARBINARY:
+        value = useIdx ? resultSet.getBytes(columnIdx) : resultSet.getBytes(columnName);
+        break;
+      case Types.DATE:
+        value = useIdx ? resultSet.getDate(columnIdx) : resultSet.getDate(columnName);
+        break;
+      case Types.TIME:
+        value = useIdx ? resultSet.getTime(columnIdx) : resultSet.getTime(columnName);
+        break;
+      case Types.TIMESTAMP:
+        value = useIdx ? resultSet.getTimestamp(columnIdx) : resultSet.getTimestamp(columnName);
+        break;
+      case Types.CLOB:
+        Clob clob = useIdx ? resultSet.getClob(columnIdx) : resultSet.getClob(columnName);
+
+        if (clob == null) {
+          value = null;
+        } else {
+          long length = clob.length();
+
+          if (length > Integer.MAX_VALUE) {
+            value = clob;
+          } else if (length == 0) {
+            // the javadoc is not clear about whether Clob.getSubString
+            // can be used with a substring length of 0
+            // thus we do the safe thing and handle it ourselves
+            value = "";
+          } else {
+            value = clob.getSubString(1l, (int) length);
+          }
+        }
+        break;
+      case Types.BLOB:
+        Blob blob = useIdx ? resultSet.getBlob(columnIdx) : resultSet.getBlob(columnName);
+
+        if (blob == null) {
+          value = null;
+        } else {
+          long length = blob.length();
+
+          if (length > Integer.MAX_VALUE) {
+            value = blob;
+          } else if (length == 0) {
+            // the javadoc is not clear about whether Blob.getBytes
+            // can be used with for 0 bytes to be copied
+            // thus we do the safe thing and handle it ourselves
+            value = new byte[0];
+          } else {
+            value = blob.getBytes(1l, (int) length);
+          }
+        }
+        break;
+      case Types.ARRAY:
+        value = useIdx ? resultSet.getArray(columnIdx) : resultSet.getArray(columnName);
+        break;
+      case Types.REF:
+        value = useIdx ? resultSet.getRef(columnIdx) : resultSet.getRef(columnName);
+        break;
+      default:
+        // special handling for Java 1.4/JDBC 3 types
+        if (Jdbc3Utils.supportsJava14JdbcTypes()
+            && (jdbcType == Jdbc3Utils.determineBooleanTypeCode())) {
+          value = new Boolean(
+              useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
+        } else {
+          value = useIdx ? resultSet.getObject(columnIdx) : resultSet.getObject(columnName);
+        }
+        break;
     }
     return resultSet.wasNull() ? null : value;
   }
@@ -3135,8 +3136,9 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         // table,
         // but is wrong if it's just adding a column to the table. We need to check
 
-        this.getModelLoader().addAdditionalTableIfExists(connection, loadedDatabase,
-            correctDatabase.getTable(i).getName());
+        this.getModelLoader()
+            .addAdditionalTableIfExists(connection, loadedDatabase,
+                correctDatabase.getTable(i).getName());
       }
     }
     returnConnection(connection);

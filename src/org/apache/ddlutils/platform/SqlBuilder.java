@@ -762,7 +762,8 @@ public abstract class SqlBuilder {
       while (itChanges.hasNext()) {
         TableChange currentChange = (TableChange) itChanges.next();
 
-        if (currentChange.getChangedTable().getName()
+        if (currentChange.getChangedTable()
+            .getName()
             .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
           if (currentChange instanceof AddColumnChange) {
             newColumnsThisTable.add((AddColumnChange) currentChange);
@@ -872,7 +873,8 @@ public abstract class SqlBuilder {
             continue;
           }
           AddIndexChange ichange = (AddIndexChange) change;
-          if (ichange.getChangedTable().getName()
+          if (ichange.getChangedTable()
+              .getName()
               .equalsIgnoreCase(desiredModel.getTable(i).getName())) {
             newIndexes.add((AddIndexChange) change);
           }
@@ -2808,57 +2810,57 @@ public abstract class SqlBuilder {
 
     // TODO: Handle binary types (BINARY, VARBINARY, LONGVARBINARY, BLOB)
     switch (column.getTypeCode()) {
-    case Types.DATE:
-      result.append(getPlatformInfo().getValueQuoteToken());
-      if (!(value instanceof String) && (getValueDateFormat() != null)) {
-        // TODO: Can the format method handle java.sql.Date properly ?
-        result.append(getValueDateFormat().format(value));
-      } else {
-        result.append(value.toString());
-      }
-      result.append(getPlatformInfo().getValueQuoteToken());
-      break;
-    case Types.TIME:
-      result.append(getPlatformInfo().getValueQuoteToken());
-      if (!(value instanceof String) && (getValueTimeFormat() != null)) {
-        // TODO: Can the format method handle java.sql.Date properly ?
-        result.append(getValueTimeFormat().format(value));
-      } else {
-        result.append(value.toString());
-      }
-      result.append(getPlatformInfo().getValueQuoteToken());
-      break;
-    case Types.TIMESTAMP:
-      if (value.toString().equals("now()")) {
-        result.append("now()");
+      case Types.DATE:
+        result.append(getPlatformInfo().getValueQuoteToken());
+        if (!(value instanceof String) && (getValueDateFormat() != null)) {
+          // TODO: Can the format method handle java.sql.Date properly ?
+          result.append(getValueDateFormat().format(value));
+        } else {
+          result.append(value.toString());
+        }
+        result.append(getPlatformInfo().getValueQuoteToken());
         break;
-      }
-      result.append("to_date(");
-      result.append(getPlatformInfo().getValueQuoteToken());
-      // TODO: SimpleDateFormat does not support nano seconds so we would
-      // need a custom date formatter for timestamps
-      result.append(value.toString().substring(0, value.toString().length() - 2));
-      result.append(getPlatformInfo().getValueQuoteToken());
-      result.append(",'YYYY-MM-DD HH24:MI:SS')");
-      break;
-    case Types.REAL:
-    case Types.NUMERIC:
-    case Types.FLOAT:
-    case Types.DOUBLE:
-    case Types.DECIMAL:
-      result.append(getPlatformInfo().getValueQuoteToken());
-      if (!(value instanceof String) && (getValueNumberFormat() != null)) {
-        result.append(getValueNumberFormat().format(value));
-      } else {
-        result.append(value.toString());
-      }
-      result.append(getPlatformInfo().getValueQuoteToken());
-      break;
-    default:
-      result.append(getPlatformInfo().getValueQuoteToken());
-      result.append(escapeStringValue(value.toString()));
-      result.append(getPlatformInfo().getValueQuoteToken());
-      break;
+      case Types.TIME:
+        result.append(getPlatformInfo().getValueQuoteToken());
+        if (!(value instanceof String) && (getValueTimeFormat() != null)) {
+          // TODO: Can the format method handle java.sql.Date properly ?
+          result.append(getValueTimeFormat().format(value));
+        } else {
+          result.append(value.toString());
+        }
+        result.append(getPlatformInfo().getValueQuoteToken());
+        break;
+      case Types.TIMESTAMP:
+        if (value.toString().equals("now()")) {
+          result.append("now()");
+          break;
+        }
+        result.append("to_date(");
+        result.append(getPlatformInfo().getValueQuoteToken());
+        // TODO: SimpleDateFormat does not support nano seconds so we would
+        // need a custom date formatter for timestamps
+        result.append(value.toString().substring(0, value.toString().length() - 2));
+        result.append(getPlatformInfo().getValueQuoteToken());
+        result.append(",'YYYY-MM-DD HH24:MI:SS')");
+        break;
+      case Types.REAL:
+      case Types.NUMERIC:
+      case Types.FLOAT:
+      case Types.DOUBLE:
+      case Types.DECIMAL:
+        result.append(getPlatformInfo().getValueQuoteToken());
+        if (!(value instanceof String) && (getValueNumberFormat() != null)) {
+          result.append(getValueNumberFormat().format(value));
+        } else {
+          result.append(value.toString());
+        }
+        result.append(getPlatformInfo().getValueQuoteToken());
+        break;
+      default:
+        result.append(getPlatformInfo().getValueQuoteToken());
+        result.append(escapeStringValue(value.toString()));
+        result.append(getPlatformInfo().getValueQuoteToken());
+        break;
     }
     return result.toString();
   }
@@ -4330,14 +4332,14 @@ public abstract class SqlBuilder {
   protected String getParameterMode(Parameter parameter) {
 
     switch (parameter.getModeCode()) {
-    case Parameter.MODE_IN:
-      return "IN";
-    case Parameter.MODE_OUT:
-      return "OUT";
-    case Parameter.MODE_NONE:
-      return null;
-    default:
-      return null;
+      case Parameter.MODE_IN:
+        return "IN";
+      case Parameter.MODE_OUT:
+        return "OUT";
+      case Parameter.MODE_NONE:
+        return null;
+      default:
+        return null;
     }
   }
 
@@ -4401,13 +4403,13 @@ public abstract class SqlBuilder {
         println();
 
         switch (trigger.getFiresCode()) {
-        case Trigger.FIRES_AFTER:
-          print("AFTER");
-          break;
-        case Trigger.FIRES_BEFORE:
-        default:
-          print("BEFORE");
-          break;
+          case Trigger.FIRES_AFTER:
+            print("AFTER");
+            break;
+          case Trigger.FIRES_BEFORE:
+          default:
+            print("BEFORE");
+            break;
         }
 
         if (trigger.isInsert()) {
@@ -4433,9 +4435,9 @@ public abstract class SqlBuilder {
         printIdentifier(shortenName(trigger.getTable(), getMaxTableNameLength()));// database.findTable(trigger.getTable())));
 
         switch (trigger.getForeachCode()) {
-        case Trigger.FOR_EACH_ROW:
-          print(" FOR EACH ROW");
-          break;
+          case Trigger.FOR_EACH_ROW:
+            print(" FOR EACH ROW");
+            break;
         }
         println();
         writeFollows(follows);

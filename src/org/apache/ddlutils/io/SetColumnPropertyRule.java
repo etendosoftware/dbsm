@@ -75,8 +75,9 @@ public class SetColumnPropertyRule extends Rule {
             : attrValue);
 
         if (digester.getLogger().isDebugEnabled()) {
-          digester.getLogger().debug("[SetColumnPropertyRule]{" + digester.getMatch()
-              + "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
+          digester.getLogger()
+              .debug("[SetColumnPropertyRule]{" + digester.getMatch() + "} Setting property '"
+                  + _column.getName() + "' to '" + propValue + "'");
         }
 
         PropertyUtils.setProperty(bean, _column.getName(), propValue);

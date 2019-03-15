@@ -270,7 +270,8 @@ public class IndexColumn implements Cloneable, Serializable {
       }
     }
     EqualsBuilder equalsBuilder = new EqualsBuilder()
-        .append(_name.toUpperCase(), other._name.toUpperCase()).append(_size, other._size)
+        .append(_name.toUpperCase(), other._name.toUpperCase())
+        .append(_size, other._size)
         .append(transformedFunctionExpression, otherTransformedFunctionExpression);
     if (operatorClassMatters) {
       // only compare the operator class if it is relevant in the current dbms

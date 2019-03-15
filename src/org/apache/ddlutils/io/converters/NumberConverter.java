@@ -42,36 +42,36 @@ public class NumberConverter implements SqlTypeConverter {
       Class targetClass = null;
 
       switch (sqlTypeCode) {
-      case Types.BIGINT:
-        targetClass = Long.class;
-        break;
-      case Types.BIT:
-        targetClass = Boolean.class;
-        break;
-      case Types.DECIMAL:
-      case Types.NUMERIC:
-        targetClass = BigDecimal.class;
-        break;
-      case Types.DOUBLE:
-      case Types.FLOAT:
-        targetClass = Double.class;
-        break;
-      case Types.INTEGER:
-        targetClass = Integer.class;
-        break;
-      case Types.REAL:
-        targetClass = Float.class;
-        break;
-      case Types.SMALLINT:
-      case Types.TINYINT:
-        targetClass = Short.class;
-        break;
-      default:
-        if (Jdbc3Utils.supportsJava14JdbcTypes()
-            && (sqlTypeCode == Jdbc3Utils.determineBooleanTypeCode())) {
+        case Types.BIGINT:
+          targetClass = Long.class;
+          break;
+        case Types.BIT:
           targetClass = Boolean.class;
-        }
-        break;
+          break;
+        case Types.DECIMAL:
+        case Types.NUMERIC:
+          targetClass = BigDecimal.class;
+          break;
+        case Types.DOUBLE:
+        case Types.FLOAT:
+          targetClass = Double.class;
+          break;
+        case Types.INTEGER:
+          targetClass = Integer.class;
+          break;
+        case Types.REAL:
+          targetClass = Float.class;
+          break;
+        case Types.SMALLINT:
+        case Types.TINYINT:
+          targetClass = Short.class;
+          break;
+        default:
+          if (Jdbc3Utils.supportsJava14JdbcTypes()
+              && (sqlTypeCode == Jdbc3Utils.determineBooleanTypeCode())) {
+            targetClass = Boolean.class;
+          }
+          break;
       }
       return targetClass == null ? textRep : ConvertUtils.convert(textRep, targetClass);
     }

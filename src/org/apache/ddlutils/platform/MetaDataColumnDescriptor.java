@@ -110,14 +110,14 @@ public class MetaDataColumnDescriptor {
     }
     if (foundIdx > 0) {
       switch (_jdbcType) {
-      case Types.BIT:
-        return new Boolean(resultSet.getBoolean(foundIdx));
-      case Types.INTEGER:
-        return new Integer(resultSet.getInt(foundIdx));
-      case Types.TINYINT:
-        return new Short(resultSet.getShort(foundIdx));
-      default:
-        return resultSet.getString(foundIdx);
+        case Types.BIT:
+          return new Boolean(resultSet.getBoolean(foundIdx));
+        case Types.INTEGER:
+          return new Integer(resultSet.getInt(foundIdx));
+        case Types.TINYINT:
+          return new Short(resultSet.getShort(foundIdx));
+        default:
+          return resultSet.getString(foundIdx);
       }
     } else {
       return _defaultValue;

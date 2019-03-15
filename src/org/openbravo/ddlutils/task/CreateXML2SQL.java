@@ -57,7 +57,8 @@ public class CreateXML2SQL extends BaseDatabaseTask {
     getLog().info("Using database platform " + pl.getName());
 
     try {
-      String basedir = OBPropertiesProvider.getInstance().getOpenbravoProperties()
+      String basedir = OBPropertiesProvider.getInstance()
+          .getOpenbravoProperties()
           .getProperty("source.path");
       boolean strictMode = true;
       boolean applyConfigScriptData = false;

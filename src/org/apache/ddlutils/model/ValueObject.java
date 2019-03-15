@@ -117,35 +117,35 @@ public abstract class ValueObject implements Cloneable {
     if ((_defaultValue != null) && (_defaultValue.length() > 0) && !isDefaultFunction()) {
       try {
         switch (_typeCode) {
-        case Types.TINYINT:
-        case Types.SMALLINT:
-          return new Short(_defaultValue);
-        case Types.INTEGER:
-          return new Integer(_defaultValue);
-        case Types.BIGINT:
-          return new Long(_defaultValue);
-        case Types.DECIMAL:
-        case Types.NUMERIC:
-          return new BigDecimal(_defaultValue);
-        case Types.REAL:
-          return new Float(_defaultValue);
-        case Types.DOUBLE:
-        case Types.FLOAT:
-          return new Double(_defaultValue);
-        case Types.DATE:
-          return Date.valueOf(_defaultValue);
-        case Types.TIME:
-          return Time.valueOf(_defaultValue);
-        case Types.TIMESTAMP:
-          return Timestamp.valueOf(_defaultValue);
-        case Types.BIT:
-          return ConvertUtils.convert(_defaultValue, Boolean.class);
-        default:
-          if (Jdbc3Utils.supportsJava14JdbcTypes()
-              && (_typeCode == Jdbc3Utils.determineBooleanTypeCode())) {
+          case Types.TINYINT:
+          case Types.SMALLINT:
+            return new Short(_defaultValue);
+          case Types.INTEGER:
+            return new Integer(_defaultValue);
+          case Types.BIGINT:
+            return new Long(_defaultValue);
+          case Types.DECIMAL:
+          case Types.NUMERIC:
+            return new BigDecimal(_defaultValue);
+          case Types.REAL:
+            return new Float(_defaultValue);
+          case Types.DOUBLE:
+          case Types.FLOAT:
+            return new Double(_defaultValue);
+          case Types.DATE:
+            return Date.valueOf(_defaultValue);
+          case Types.TIME:
+            return Time.valueOf(_defaultValue);
+          case Types.TIMESTAMP:
+            return Timestamp.valueOf(_defaultValue);
+          case Types.BIT:
             return ConvertUtils.convert(_defaultValue, Boolean.class);
-          }
-          break;
+          default:
+            if (Jdbc3Utils.supportsJava14JdbcTypes()
+                && (_typeCode == Jdbc3Utils.determineBooleanTypeCode())) {
+              return ConvertUtils.convert(_defaultValue, Boolean.class);
+            }
+            break;
         }
       } catch (NumberFormatException ex) {
         return null;
@@ -194,24 +194,24 @@ public abstract class ValueObject implements Cloneable {
       return true;
     } else {
       switch (_typeCode) {
-      case Types.TINYINT:
-      case Types.SMALLINT:
-      case Types.INTEGER:
-      case Types.BIGINT:
-      case Types.DECIMAL:
-      case Types.NUMERIC:
-      case Types.REAL:
-      case Types.DOUBLE:
-      case Types.FLOAT:
-        return false;
-      case Types.DATE:
-      case Types.TIME:
-      case Types.TIMESTAMP:
-        return "SYSDATE".equals(_defaultValue.toUpperCase())
-            || "NOW()".equals(_defaultValue.toUpperCase());
-      case Types.BIT:
-      default:
-        return false;
+        case Types.TINYINT:
+        case Types.SMALLINT:
+        case Types.INTEGER:
+        case Types.BIGINT:
+        case Types.DECIMAL:
+        case Types.NUMERIC:
+        case Types.REAL:
+        case Types.DOUBLE:
+        case Types.FLOAT:
+          return false;
+        case Types.DATE:
+        case Types.TIME:
+        case Types.TIMESTAMP:
+          return "SYSDATE".equals(_defaultValue.toUpperCase())
+              || "NOW()".equals(_defaultValue.toUpperCase());
+        case Types.BIT:
+        default:
+          return false;
       }
     }
   }

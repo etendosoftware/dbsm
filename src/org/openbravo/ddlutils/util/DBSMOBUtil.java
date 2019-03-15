@@ -927,8 +927,9 @@ public class DBSMOBUtil {
       try {
         getLog().debug("Parsing file " + files.get(i).getAbsolutePath());
         dataReader.getSink().start();
-        final String tablename = files.get(i).getName().substring(0,
-            files.get(i).getName().length() - 4);
+        final String tablename = files.get(i)
+            .getName()
+            .substring(0, files.get(i).getName().length() - 4);
         final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
             .getVector();
         dataReader.parse(files.get(i));

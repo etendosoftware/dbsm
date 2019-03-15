@@ -122,48 +122,48 @@ public class OracleModelReader extends JdbcModelReader {
       // Note that the JDBC driver returns DECIMAL for these NUMBER
       // columns
       switch (column.getSizeAsInt()) {
-      case 1:
-        if (column.getScaleAsInt() == 0) {
-          column.setTypeCode(Types.BIT);
-        }
-        break;
-      case 3:
-        if (column.getScaleAsInt() == 0) {
-          column.setTypeCode(Types.TINYINT);
-        }
-        break;
-      case 5:
-        if (column.getScaleAsInt() == 0) {
-          column.setTypeCode(Types.SMALLINT);
-        }
-        break;
-      case 18:
-        column.setTypeCode(Types.REAL);
-        break;
-      case 22:
-        if (column.getScaleAsInt() == 0) {
-          column.setTypeCode(Types.INTEGER);
-        }
-        break;
-      case 38:
-        if (column.getScaleAsInt() == 0) {
-          column.setTypeCode(Types.BIGINT);
-        } else {
-          column.setTypeCode(Types.DOUBLE);
-        }
-        break;
+        case 1:
+          if (column.getScaleAsInt() == 0) {
+            column.setTypeCode(Types.BIT);
+          }
+          break;
+        case 3:
+          if (column.getScaleAsInt() == 0) {
+            column.setTypeCode(Types.TINYINT);
+          }
+          break;
+        case 5:
+          if (column.getScaleAsInt() == 0) {
+            column.setTypeCode(Types.SMALLINT);
+          }
+          break;
+        case 18:
+          column.setTypeCode(Types.REAL);
+          break;
+        case 22:
+          if (column.getScaleAsInt() == 0) {
+            column.setTypeCode(Types.INTEGER);
+          }
+          break;
+        case 38:
+          if (column.getScaleAsInt() == 0) {
+            column.setTypeCode(Types.BIGINT);
+          } else {
+            column.setTypeCode(Types.DOUBLE);
+          }
+          break;
       }
     } else if (column.getTypeCode() == Types.FLOAT) {
       // Same for REAL, FLOAT, DOUBLE PRECISION, which all back-map to
       // FLOAT but with
       // different sizes (63 for REAL, 126 for FLOAT/DOUBLE PRECISION)
       switch (column.getSizeAsInt()) {
-      case 63:
-        column.setTypeCode(Types.REAL);
-        break;
-      case 126:
-        column.setTypeCode(Types.DOUBLE);
-        break;
+        case 63:
+          column.setTypeCode(Types.REAL);
+          break;
+        case 126:
+          column.setTypeCode(Types.DOUBLE);
+          break;
       }
     } else if ((column.getTypeCode() == Types.DATE) || (column.getTypeCode() == Types.TIMESTAMP)) {
       // Oracle has only one DATE/TIME type, so we can't know which it is
@@ -232,10 +232,10 @@ public class OracleModelReader extends JdbcModelReader {
     // user_triggers) in order to
     // determine whether it fits our auto-increment definition
     PreparedStatement prepStmt = null;
-    String triggerName = getPlatform().getSqlBuilder().getConstraintName("trg", table,
-        column.getName(), null);
-    String seqName = getPlatform().getSqlBuilder().getConstraintName("seq", table, column.getName(),
-        null);
+    String triggerName = getPlatform().getSqlBuilder()
+        .getConstraintName("trg", table, column.getName(), null);
+    String seqName = getPlatform().getSqlBuilder()
+        .getConstraintName("seq", table, column.getName(), null);
 
     if (!getPlatform().isDelimitedIdentifierModeOn()) {
       triggerName = triggerName.toUpperCase();

@@ -387,7 +387,8 @@ public class OracleBuilder extends SqlBuilder {
     if ((column.getTypeCode() == Types.BIT) || (Jdbc3Utils.supportsJava14JdbcTypes()
         && (column.getTypeCode() == Jdbc3Utils.determineBooleanTypeCode()))) {
       return getDefaultValueHelper()
-          .convert(column.getDefaultValue(), column.getTypeCode(), Types.SMALLINT).toString();
+          .convert(column.getDefaultValue(), column.getTypeCode(), Types.SMALLINT)
+          .toString();
     }
     // Oracle does not accept ISO formats, so we have to convert an ISO spec
     // if we find one
@@ -522,27 +523,27 @@ public class OracleBuilder extends SqlBuilder {
   @Override
   protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
     switch (typeCode) {
-    case Types.TINYINT:
-    case Types.SMALLINT:
-    case Types.INTEGER:
-    case Types.BIGINT:
-    case Types.DECIMAL:
-    case Types.NUMERIC:
-    case Types.REAL:
-    case Types.DOUBLE:
-    case Types.FLOAT:
-      return neutralFunction;
-    case Types.DATE:
-    case Types.TIME:
-    case Types.TIMESTAMP:
-      if ("SYSDATE".equals(neutralFunction.toUpperCase())) {
-        return "SYSDATE";
-      } else {
+      case Types.TINYINT:
+      case Types.SMALLINT:
+      case Types.INTEGER:
+      case Types.BIGINT:
+      case Types.DECIMAL:
+      case Types.NUMERIC:
+      case Types.REAL:
+      case Types.DOUBLE:
+      case Types.FLOAT:
         return neutralFunction;
-      }
-    case Types.BIT:
-    default:
-      return neutralFunction;
+      case Types.DATE:
+      case Types.TIME:
+      case Types.TIMESTAMP:
+        if ("SYSDATE".equals(neutralFunction.toUpperCase())) {
+          return "SYSDATE";
+        } else {
+          return neutralFunction;
+        }
+      case Types.BIT:
+      default:
+        return neutralFunction;
     }
   }
 
@@ -1173,14 +1174,14 @@ public class OracleBuilder extends SqlBuilder {
 
   private boolean canResizeType(String type) {
     switch (type) {
-    case TypeMap.NVARCHAR:
-    case TypeMap.VARCHAR:
-    case TypeMap.NCHAR:
-    case TypeMap.CHAR:
-    case TypeMap.DECIMAL:
-      return true;
-    default:
-      return false;
+      case TypeMap.NVARCHAR:
+      case TypeMap.VARCHAR:
+      case TypeMap.NCHAR:
+      case TypeMap.CHAR:
+      case TypeMap.DECIMAL:
+        return true;
+      default:
+        return false;
     }
   }
 

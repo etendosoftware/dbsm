@@ -187,38 +187,38 @@ public class OracleModelLoader extends ModelLoaderBase {
   protected String translateDefault(String value, int type) {
 
     switch (type) {
-    case Types.CHAR:
-    case Types.VARCHAR:
-    case ExtTypes.NCHAR:
-    case ExtTypes.NVARCHAR:
-    case Types.LONGVARCHAR:
-      if (value.length() >= 2 && value.startsWith("'") && value.endsWith("'")) {
-        value = value.substring(1, value.length() - 1);
-        int i = 0;
-        StringBuffer sunescaped = new StringBuffer();
-        while (i < value.length()) {
-          char c = value.charAt(i);
-          if (c == '\'') {
-            i++;
-            if (i < value.length()) {
+      case Types.CHAR:
+      case Types.VARCHAR:
+      case ExtTypes.NCHAR:
+      case ExtTypes.NVARCHAR:
+      case Types.LONGVARCHAR:
+        if (value.length() >= 2 && value.startsWith("'") && value.endsWith("'")) {
+          value = value.substring(1, value.length() - 1);
+          int i = 0;
+          StringBuffer sunescaped = new StringBuffer();
+          while (i < value.length()) {
+            char c = value.charAt(i);
+            if (c == '\'') {
+              i++;
+              if (i < value.length()) {
+                sunescaped.append(c);
+                i++;
+              }
+            } else {
               sunescaped.append(c);
               i++;
             }
-          } else {
-            sunescaped.append(c);
-            i++;
           }
-        }
-        if (sunescaped.length() == 0) {
-          return null;
+          if (sunescaped.length() == 0) {
+            return null;
+          } else {
+            return sunescaped.toString();
+          }
         } else {
-          return sunescaped.toString();
+          return value;
         }
-      } else {
+      default:
         return value;
-      }
-    default:
-      return value;
     }
   }
 

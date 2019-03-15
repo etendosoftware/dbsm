@@ -1101,12 +1101,12 @@ public class PlatformInfo {
       return typeCode;
     } else {
       switch (typeCode) {
-      case ExtTypes.NVARCHAR:
-        return Types.VARCHAR;
-      case ExtTypes.NCHAR:
-        return Types.CHAR;
-      default:
-        return typeCode;
+        case ExtTypes.NVARCHAR:
+          return Types.VARCHAR;
+        case ExtTypes.NCHAR:
+          return Types.CHAR;
+        default:
+          return typeCode;
       }
     }
   }

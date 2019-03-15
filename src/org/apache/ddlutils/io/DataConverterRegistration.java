@@ -55,7 +55,8 @@ public class DataConverterRegistration {
    */
   public void setClassName(String converterClassName) throws BuildException {
     try {
-      _converter = (SqlTypeConverter) getClass().getClassLoader().loadClass(converterClassName)
+      _converter = (SqlTypeConverter) getClass().getClassLoader()
+          .loadClass(converterClassName)
           .newInstance();
     } catch (Exception ex) {
       throw new BuildException(ex);

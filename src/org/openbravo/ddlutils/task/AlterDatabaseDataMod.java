@@ -125,8 +125,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
 
     DatabaseData databaseFullData = new DatabaseData(dbXML);
     databaseFullData.setStrictMode(strict);
-    DBSMOBUtil.getInstance().loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
-        "*/src-db/database/sourcedata", input, strict);
+    DBSMOBUtil.getInstance()
+        .loadDataStructures(platform, databaseFullData, dbXML, dbXML, basedir,
+            "*/src-db/database/sourcedata", input, strict);
     OBDataset ad = new OBDataset(databaseFullData, "AD");
     boolean hasBeenModified = DBSMOBUtil.getInstance().hasBeenModified(ad);
     if (hasBeenModified) {
@@ -250,7 +251,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
               if (table != null) {
                 ForeignKey fk = null;
                 for (int j = 0; j < table.getForeignKeyCount() && fk == null; j++) {
-                  if (table.getForeignKey(j).getName()
+                  if (table.getForeignKey(j)
+                      .getName()
                       .equals(change.getNewForeignKey().getName())) {
                     fk = table.getForeignKey(j);
                   }
@@ -290,8 +292,9 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
         for (int i = 0; i < files.size(); i++) {
           try {
             dataReader.getSink().start();
-            final String tablename = files.get(i).getName().substring(0,
-                files.get(i).getName().length() - 4);
+            final String tablename = files.get(i)
+                .getName()
+                .substring(0, files.get(i).getName().length() - 4);
             final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
                 .getVector();
             dataReader.parse(files.get(i));
@@ -367,8 +370,8 @@ public class AlterDatabaseDataMod extends BaseDatabaseTask {
       }
       DBSMOBUtil.getInstance().updateCRC();
       DatabaseData databaseOrgData2 = new DatabaseData(dbAD);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData2, dbAD, dbAD, basedir,
-          datafilter, input);
+      DBSMOBUtil.getInstance()
+          .loadDataStructures(platform, databaseOrgData2, dbAD, dbAD, basedir, datafilter, input);
       final DataComparator dataComparator2 = new DataComparator(
           platform.getSqlBuilder().getPlatformInfo(), platform.isDelimitedIdentifierModeOn());
       dataComparator2.compare(dbXML, dbXML, platform, databaseOrgData2, ad, null);

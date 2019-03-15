@@ -786,27 +786,27 @@ public class PostgreSqlBuilder extends SqlBuilder {
   @Override
   protected String getNativeFunction(String neutralFunction, int typeCode) throws IOException {
     switch (typeCode) {
-    case Types.TINYINT:
-    case Types.SMALLINT:
-    case Types.INTEGER:
-    case Types.BIGINT:
-    case Types.DECIMAL:
-    case Types.NUMERIC:
-    case Types.REAL:
-    case Types.DOUBLE:
-    case Types.FLOAT:
-      return neutralFunction;
-    case Types.DATE:
-    case Types.TIME:
-    case Types.TIMESTAMP:
-      if ("SYSDATE".equals(neutralFunction.toUpperCase())) {
-        return "now()";
-      } else {
+      case Types.TINYINT:
+      case Types.SMALLINT:
+      case Types.INTEGER:
+      case Types.BIGINT:
+      case Types.DECIMAL:
+      case Types.NUMERIC:
+      case Types.REAL:
+      case Types.DOUBLE:
+      case Types.FLOAT:
         return neutralFunction;
-      }
-    case Types.BIT:
-    default:
-      return neutralFunction;
+      case Types.DATE:
+      case Types.TIME:
+      case Types.TIMESTAMP:
+        if ("SYSDATE".equals(neutralFunction.toUpperCase())) {
+          return "now()";
+        } else {
+          return neutralFunction;
+        }
+      case Types.BIT:
+      default:
+        return neutralFunction;
     }
   }
 
@@ -1131,14 +1131,14 @@ public class PostgreSqlBuilder extends SqlBuilder {
   private boolean canResizeType(int typeCode) {
     String type = TypeMap.getJdbcTypeName(typeCode);
     switch (type) {
-    case NVARCHAR:
-    case VARCHAR:
-    case NCHAR:
-    case CHAR:
-    case DECIMAL:
-      return true;
-    default:
-      return false;
+      case NVARCHAR:
+      case VARCHAR:
+      case NCHAR:
+      case CHAR:
+      case DECIMAL:
+        return true;
+      default:
+        return false;
     }
   }
 

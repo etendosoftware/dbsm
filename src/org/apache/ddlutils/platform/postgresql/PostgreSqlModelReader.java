@@ -131,20 +131,20 @@ public class PostgreSqlModelReader extends JdbcModelReader {
         // "-9000000000000000000::bigint" or
         // "'some value'::character varying" or "'2000-01-01'::date"
         switch (column.getTypeCode()) {
-        case Types.INTEGER:
-        case Types.BIGINT:
-        case Types.DECIMAL:
-        case Types.NUMERIC:
-          defaultValue = extractUndelimitedDefaultValue(defaultValue);
-          break;
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-        case Types.DATE:
-        case Types.TIME:
-        case Types.TIMESTAMP:
-          defaultValue = extractDelimitedDefaultValue(defaultValue);
-          break;
+          case Types.INTEGER:
+          case Types.BIGINT:
+          case Types.DECIMAL:
+          case Types.NUMERIC:
+            defaultValue = extractUndelimitedDefaultValue(defaultValue);
+            break;
+          case Types.CHAR:
+          case Types.VARCHAR:
+          case Types.LONGVARCHAR:
+          case Types.DATE:
+          case Types.TIME:
+          case Types.TIMESTAMP:
+            defaultValue = extractDelimitedDefaultValue(defaultValue);
+            break;
         }
         if (TypeMap.isTextType(column.getTypeCode())) {
           // We assume escaping via double quote (see also the

@@ -220,8 +220,8 @@ public class DBUpdater {
     DatabaseData dbData = new DatabaseData(db);
     if (baseSrcAD != null) {
       String modulesBaseDir = basedir == null ? null : basedir + "../modules/";
-      DBSMOBUtil.getInstance().loadDataStructures(dbData, db, modulesBaseDir, datafilter,
-          baseSrcAD);
+      DBSMOBUtil.getInstance()
+          .loadDataStructures(dbData, db, modulesBaseDir, datafilter, baseSrcAD);
     }
     dbData.setStrictMode(strict);
     return dbData;

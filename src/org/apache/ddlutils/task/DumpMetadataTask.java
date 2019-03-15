@@ -616,15 +616,15 @@ public class DumpMetadataTask extends Task {
         addIntAttribute(result, columns, "NUM_PREC_RADIX", columnElem, "precision");
         if (columns.contains("NULLABLE")) {
           switch (result.getInt("NULLABLE")) {
-          case DatabaseMetaData.columnNoNulls:
-            columnElem.addAttribute("nullable", "false");
-            break;
-          case DatabaseMetaData.columnNullable:
-            columnElem.addAttribute("nullable", "true");
-            break;
-          default:
-            columnElem.addAttribute("nullable", "unknown");
-            break;
+            case DatabaseMetaData.columnNoNulls:
+              columnElem.addAttribute("nullable", "false");
+              break;
+            case DatabaseMetaData.columnNullable:
+              columnElem.addAttribute("nullable", "true");
+              break;
+            default:
+              columnElem.addAttribute("nullable", "unknown");
+              break;
           }
         }
         addStringAttribute(result, columns, "REMARKS", columnElem, "remarks");
@@ -749,15 +749,15 @@ public class DumpMetadataTask extends Task {
         addShortAttribute(result, columns, "DECIMAL_DIGITS", columnElem, "scale");
         if (columns.contains("PSEUDO_COLUMN")) {
           switch (result.getShort("PSEUDO_COLUMN")) {
-          case DatabaseMetaData.versionColumnPseudo:
-            columnElem.addAttribute("columnType", "pseudo column");
-            break;
-          case DatabaseMetaData.versionColumnNotPseudo:
-            columnElem.addAttribute("columnType", "real column");
-            break;
-          default:
-            columnElem.addAttribute("columnType", "unknown");
-            break;
+            case DatabaseMetaData.versionColumnPseudo:
+              columnElem.addAttribute("columnType", "pseudo column");
+              break;
+            case DatabaseMetaData.versionColumnNotPseudo:
+              columnElem.addAttribute("columnType", "real column");
+              break;
+            default:
+              columnElem.addAttribute("columnType", "unknown");
+              break;
           }
         }
       }
@@ -810,57 +810,57 @@ public class DumpMetadataTask extends Task {
         addShortAttribute(result, columns, "KEY_SEQ", fkElem, "sequenceNumberInFK");
         if (columns.contains("UPDATE_RULE")) {
           switch (result.getShort("UPDATE_RULE")) {
-          case DatabaseMetaData.importedKeyNoAction:
-            fkElem.addAttribute("updateRule", "no action");
-            break;
-          case DatabaseMetaData.importedKeyCascade:
-            fkElem.addAttribute("updateRule", "cascade PK change");
-            break;
-          case DatabaseMetaData.importedKeySetNull:
-            fkElem.addAttribute("updateRule", "set FK to NULL");
-            break;
-          case DatabaseMetaData.importedKeySetDefault:
-            fkElem.addAttribute("updateRule", "set FK to default");
-            break;
-          default:
-            fkElem.addAttribute("updateRule", "unknown");
-            break;
+            case DatabaseMetaData.importedKeyNoAction:
+              fkElem.addAttribute("updateRule", "no action");
+              break;
+            case DatabaseMetaData.importedKeyCascade:
+              fkElem.addAttribute("updateRule", "cascade PK change");
+              break;
+            case DatabaseMetaData.importedKeySetNull:
+              fkElem.addAttribute("updateRule", "set FK to NULL");
+              break;
+            case DatabaseMetaData.importedKeySetDefault:
+              fkElem.addAttribute("updateRule", "set FK to default");
+              break;
+            default:
+              fkElem.addAttribute("updateRule", "unknown");
+              break;
           }
         }
         if (columns.contains("DELETE_RULE")) {
           switch (result.getShort("DELETE_RULE")) {
-          case DatabaseMetaData.importedKeyNoAction:
-          case DatabaseMetaData.importedKeyRestrict:
-            fkElem.addAttribute("deleteRule", "no action");
-            break;
-          case DatabaseMetaData.importedKeyCascade:
-            fkElem.addAttribute("deleteRule", "cascade PK change");
-            break;
-          case DatabaseMetaData.importedKeySetNull:
-            fkElem.addAttribute("deleteRule", "set FK to NULL");
-            break;
-          case DatabaseMetaData.importedKeySetDefault:
-            fkElem.addAttribute("deleteRule", "set FK to default");
-            break;
-          default:
-            fkElem.addAttribute("deleteRule", "unknown");
-            break;
+            case DatabaseMetaData.importedKeyNoAction:
+            case DatabaseMetaData.importedKeyRestrict:
+              fkElem.addAttribute("deleteRule", "no action");
+              break;
+            case DatabaseMetaData.importedKeyCascade:
+              fkElem.addAttribute("deleteRule", "cascade PK change");
+              break;
+            case DatabaseMetaData.importedKeySetNull:
+              fkElem.addAttribute("deleteRule", "set FK to NULL");
+              break;
+            case DatabaseMetaData.importedKeySetDefault:
+              fkElem.addAttribute("deleteRule", "set FK to default");
+              break;
+            default:
+              fkElem.addAttribute("deleteRule", "unknown");
+              break;
           }
         }
         if (columns.contains("DEFERRABILITY")) {
           switch (result.getShort("DEFERRABILITY")) {
-          case DatabaseMetaData.importedKeyInitiallyDeferred:
-            fkElem.addAttribute("deferrability", "initially deferred");
-            break;
-          case DatabaseMetaData.importedKeyInitiallyImmediate:
-            fkElem.addAttribute("deferrability", "immediately deferred");
-            break;
-          case DatabaseMetaData.importedKeyNotDeferrable:
-            fkElem.addAttribute("deferrability", "not deferred");
-            break;
-          default:
-            fkElem.addAttribute("deferrability", "unknown");
-            break;
+            case DatabaseMetaData.importedKeyInitiallyDeferred:
+              fkElem.addAttribute("deferrability", "initially deferred");
+              break;
+            case DatabaseMetaData.importedKeyInitiallyImmediate:
+              fkElem.addAttribute("deferrability", "immediately deferred");
+              break;
+            case DatabaseMetaData.importedKeyNotDeferrable:
+              fkElem.addAttribute("deferrability", "not deferred");
+              break;
+            default:
+              fkElem.addAttribute("deferrability", "unknown");
+              break;
           }
         }
       }
@@ -908,21 +908,21 @@ public class DumpMetadataTask extends Task {
         addStringAttribute(result, columns, "INDEX_QUALIFIER", indexElem, "indexCatalog");
         if (columns.contains("TYPE")) {
           switch (result.getShort("TYPE")) {
-          case DatabaseMetaData.tableIndexStatistic:
-            indexElem.addAttribute("type", "table statistics");
-            break;
-          case DatabaseMetaData.tableIndexClustered:
-            indexElem.addAttribute("type", "clustered");
-            break;
-          case DatabaseMetaData.tableIndexHashed:
-            indexElem.addAttribute("type", "hashed");
-            break;
-          case DatabaseMetaData.tableIndexOther:
-            indexElem.addAttribute("type", "other");
-            break;
-          default:
-            indexElem.addAttribute("type", "unknown");
-            break;
+            case DatabaseMetaData.tableIndexStatistic:
+              indexElem.addAttribute("type", "table statistics");
+              break;
+            case DatabaseMetaData.tableIndexClustered:
+              indexElem.addAttribute("type", "clustered");
+              break;
+            case DatabaseMetaData.tableIndexHashed:
+              indexElem.addAttribute("type", "hashed");
+              break;
+            case DatabaseMetaData.tableIndexOther:
+              indexElem.addAttribute("type", "other");
+              break;
+            default:
+              indexElem.addAttribute("type", "unknown");
+              break;
           }
         }
         addStringAttribute(result, columns, "COLUMN_NAME", indexElem, "column");
@@ -995,18 +995,18 @@ public class DumpMetadataTask extends Task {
         addStringAttribute(result, columns, "REMARKS", procedureElem, "remarks");
         if (columns.contains("PROCEDURE_TYPE")) {
           switch (result.getShort("PROCEDURE_TYPE")) {
-          case DatabaseMetaData.procedureReturnsResult:
-            procedureElem.addAttribute("type", "returns result");
-            break;
-          case DatabaseMetaData.procedureNoResult:
-            procedureElem.addAttribute("type", "doesn't return result");
-            break;
-          case DatabaseMetaData.procedureResultUnknown:
-            procedureElem.addAttribute("type", "may return result");
-            break;
-          default:
-            procedureElem.addAttribute("type", "unknown");
-            break;
+            case DatabaseMetaData.procedureReturnsResult:
+              procedureElem.addAttribute("type", "returns result");
+              break;
+            case DatabaseMetaData.procedureNoResult:
+              procedureElem.addAttribute("type", "doesn't return result");
+              break;
+            case DatabaseMetaData.procedureResultUnknown:
+              procedureElem.addAttribute("type", "may return result");
+              break;
+            default:
+              procedureElem.addAttribute("type", "unknown");
+              break;
           }
         }
 
@@ -1060,24 +1060,24 @@ public class DumpMetadataTask extends Task {
         columnElem.addAttribute("name", columnName);
         if (columns.contains("COLUMN_TYPE")) {
           switch (result.getShort("COLUMN_TYPE")) {
-          case DatabaseMetaData.procedureColumnIn:
-            columnElem.addAttribute("type", "in parameter");
-            break;
-          case DatabaseMetaData.procedureColumnInOut:
-            columnElem.addAttribute("type", "in/out parameter");
-            break;
-          case DatabaseMetaData.procedureColumnOut:
-            columnElem.addAttribute("type", "out parameter");
-            break;
-          case DatabaseMetaData.procedureColumnReturn:
-            columnElem.addAttribute("type", "return value");
-            break;
-          case DatabaseMetaData.procedureColumnResult:
-            columnElem.addAttribute("type", "result column in ResultSet");
-            break;
-          default:
-            columnElem.addAttribute("type", "unknown");
-            break;
+            case DatabaseMetaData.procedureColumnIn:
+              columnElem.addAttribute("type", "in parameter");
+              break;
+            case DatabaseMetaData.procedureColumnInOut:
+              columnElem.addAttribute("type", "in/out parameter");
+              break;
+            case DatabaseMetaData.procedureColumnOut:
+              columnElem.addAttribute("type", "out parameter");
+              break;
+            case DatabaseMetaData.procedureColumnReturn:
+              columnElem.addAttribute("type", "return value");
+              break;
+            case DatabaseMetaData.procedureColumnResult:
+              columnElem.addAttribute("type", "result column in ResultSet");
+              break;
+            default:
+              columnElem.addAttribute("type", "unknown");
+              break;
           }
         }
 
@@ -1089,15 +1089,15 @@ public class DumpMetadataTask extends Task {
         addShortAttribute(result, columns, "RADIX", columnElem, "radix");
         if (columns.contains("NULLABLE")) {
           switch (result.getInt("NULLABLE")) {
-          case DatabaseMetaData.procedureNoNulls:
-            columnElem.addAttribute("nullable", "false");
-            break;
-          case DatabaseMetaData.procedureNullable:
-            columnElem.addAttribute("nullable", "true");
-            break;
-          default:
-            columnElem.addAttribute("nullable", "unknown");
-            break;
+            case DatabaseMetaData.procedureNoNulls:
+              columnElem.addAttribute("nullable", "false");
+              break;
+            case DatabaseMetaData.procedureNullable:
+              columnElem.addAttribute("nullable", "true");
+              break;
+            default:
+              columnElem.addAttribute("nullable", "unknown");
+              break;
           }
         }
         addStringAttribute(result, columns, "REMARKS", columnElem, "remarks");
