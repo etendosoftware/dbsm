@@ -41,13 +41,7 @@ public class FunctionVolatility extends DbsmTest {
 
   @Test
   public void volatileFunctionsDontExportAttribute() throws IOException {
-    createDatabase("functions/SIMPLE_FUNCTION.xml");
-    exportDatabase("/tmp/testDB");
-    String exportedFile = new String(
-        Files.readAllBytes(Paths.get("/tmp/testDB/functions/TEST1.xml")));
-    String originalFile = new String(
-        Files.readAllBytes(Paths.get("model", "functions/SIMPLE_FUNCTION.xml")));
-    assertThat(exportedFile, is(originalFile));
+    assertExportIsStable("functions/SIMPLE_FUNCTION.xml");
   }
 
   @Test
@@ -60,5 +54,24 @@ public class FunctionVolatility extends DbsmTest {
   public void immutableFunctionsAreReadFromXml() {
     Database db = createDatabase("functions/IMMUTABLE_FUNCTION.xml");
     assertThat("Volatility", db.getFunction(0).getVolatility(), is(Function.Volatility.IMMUTABLE));
+  }
+
+  @Test
+  public void stableFunctionsAreCreatedInDB() throws IOException {
+    assertExportIsStable("functions/STABLE_FUNCTION.xml");
+  }
+
+  @Test
+  public void immutableFunctionsAreCreatedInDB() throws IOException {
+    assertExportIsStable("functions/IMMUTABLE_FUNCTION.xml");
+  }
+
+  private void assertExportIsStable(String model) throws IOException {
+    createDatabase(model);
+    exportDatabase("/tmp/testDB");
+    String exportedFile = new String(
+        Files.readAllBytes(Paths.get("/tmp/testDB/functions/TEST1.xml")));
+    String originalFile = new String(Files.readAllBytes(Paths.get("model", model)));
+    assertThat(exportedFile, is(originalFile));
   }
 }

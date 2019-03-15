@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-  <database name="test">
+  <database name="FUNCTION TEST1">
     <function name="TEST1" type="NUMERIC" volatility="STABLE">
       <parameter name="p1" type="NUMERIC" mode="in">
         <default/>

@@ -4216,7 +4216,7 @@ public abstract class SqlBuilder {
 
         print(body);
         // println();
-        print(getFunctionEndBody());
+        print(getFunctionEndBody(function));
 
         printEndOfStatement(getStructureObjectName(function));
       }
@@ -4256,7 +4256,7 @@ public abstract class SqlBuilder {
   /**
    * Gets the end body clause for a function.
    */
-  protected String getFunctionEndBody() {
+  protected String getFunctionEndBody(Function function) {
     return "";
   }
 

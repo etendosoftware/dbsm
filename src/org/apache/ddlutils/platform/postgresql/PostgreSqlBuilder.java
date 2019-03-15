@@ -397,8 +397,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected String getFunctionEndBody() {
-    return "; $BODY$ LANGUAGE plpgsql;";
+  protected String getFunctionEndBody(Function f) {
+    return "; $BODY$ LANGUAGE plpgsql " + (f != null ? f.getVolatility() : "") + " ;";
   }
 
   /**
@@ -576,7 +576,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
     print(body);
     println();
-    print(getFunctionEndBody());
+    print(getFunctionEndBody(null));
 
     printEndOfStatement(getStructureObjectName(trigger));
   }

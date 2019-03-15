@@ -38,6 +38,19 @@ public class Function implements StructureObject, Cloneable {
   public enum Volatility {
     VOLATILE, STABLE, IMMUTABLE;
 
+    public static Volatility fromPGCode(String code) {
+      switch (code) {
+      case "v":
+        return VOLATILE;
+      case "s":
+        return STABLE;
+      case "i":
+        return IMMUTABLE;
+      default:
+        return VOLATILE;
+      }
+    }
+
     /**
      * Return Volatility name except for VOLATILE which an empty String is returned to prevent
      * attribute to be written in xml for default case.

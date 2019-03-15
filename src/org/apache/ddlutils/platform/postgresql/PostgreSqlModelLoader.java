@@ -377,7 +377,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     _stmt_paramtypes = _connection.prepareStatement("SELECT pg_catalog.format_type(?, NULL)");
 
     _stmt_oids_funcs = _connection
-        .prepareStatement("SELECT oid, proconfig FROM pg_proc WHERE proname = ?");
+        .prepareStatement("SELECT oid, proconfig, provolatile FROM pg_proc WHERE proname = ?");
 
     _stmt_comments_funcs = _connection.prepareStatement("SELECT obj_description(?,'pg_proc')");
 
@@ -429,6 +429,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       public void fillRow(ResultSet r) throws SQLException {
         oidFunc = r.getInt(1);
         configs = r.getArray(2);
+        f.setVolatility(Function.Volatility.fromPGCode(r.getString(3)));
       }
     });
 

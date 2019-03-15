@@ -50,6 +50,7 @@ import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Table;
@@ -502,7 +503,7 @@ public class OracleBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected String getFunctionEndBody() {
+  protected String getFunctionEndBody(Function f) {
     return ";";
   }
 
