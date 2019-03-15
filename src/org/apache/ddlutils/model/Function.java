@@ -40,14 +40,14 @@ public class Function implements StructureObject, Cloneable {
 
     public static Volatility fromPGCode(String code) {
       switch (code) {
-      case "v":
-        return VOLATILE;
-      case "s":
-        return STABLE;
-      case "i":
-        return IMMUTABLE;
-      default:
-        return VOLATILE;
+        case "v":
+          return VOLATILE;
+        case "s":
+          return STABLE;
+        case "i":
+          return IMMUTABLE;
+        default:
+          return VOLATILE;
       }
     }
 
@@ -405,37 +405,16 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof Function) {
-      Function other = (Function) obj;
-
-      int typeCode2 = _typeCode;
-      int othertypeCode2 = other._typeCode;
-
-      /*
-       * System.out.println(other._translation.toString()); //System.out.println
-       * (other._translation.exec(other._body.trim()));
-       * System.out.println("NOMBRE"+_name.equals(other._name)); System.out
-       * .println("PARAMETROS: "+_parameters.equals(other._parameters)); System
-       * .out.println("BODY: "+_translation.exec(_body.trim()).equals
-       * (other._translation.exec(other._body.trim()))); try{ PrintWriter w1 = new PrintWriter(new
-       * BufferedWriter(new FileWriter("/home/openbravo/Desktop/t1"))); PrintWriter w2 = new
-       * PrintWriter(new BufferedWriter(new FileWriter("/home/openbravo/Desktop/t2"))); String
-       * b1=_translation.exec(_body.trim()); String b2=other._translation.exec(other._body.trim());
-       * w1.println(b1); w2.println(b2); w1.close(); w2.close();
-       * System.out.println("BODYS********************");
-       * System.out.println(_translation.exec(_body.trim()));
-       * System.out.println(other._translation.exec(other._body.trim()));
-       * System.out.println("BODYS********************"); }catch(Exception e){}
-       */
-
-      // Note that this compares case sensitive
-      // TODO: For now we ignore catalog and schema (type should be
-      // irrelevant anyways)
-      return new EqualsBuilder().append(_name, other._name).append(_parameters, other._parameters)
-          .append(_body, other._body).append(typeCode2, othertypeCode2).isEquals();
-    } else {
+    if (!(obj instanceof Function)) {
       return false;
     }
+    Function other = (Function) obj;
+    boolean sameIgnoreCase = equalsIgnoreCase(other);
+    if (!sameIgnoreCase) {
+      return false;
+    }
+
+    return new EqualsBuilder().append(_name, other._name).isEquals();
   }
 
   /**
@@ -444,16 +423,18 @@ public class Function implements StructureObject, Cloneable {
    * @param otherFunction
    *          The other function
    * @return <code>true</code> if this function is equal (ignoring case) to the given one
-   * @throws Exception
    */
   public boolean equalsIgnoreCase(Function otherFunction) {
-    int typeCode2 = _typeCode;
-
-    int othertypeCode2 = otherFunction._typeCode;
     try {
+      // @formatter:off
       return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name)
-          && new EqualsBuilder().append(_parameters, otherFunction._parameters)
-              .append(_body, otherFunction._body).append(typeCode2, othertypeCode2).isEquals();
+          && new EqualsBuilder()
+              .append(_parameters, otherFunction._parameters)
+              .append(_body, otherFunction._body)
+              .append(_typeCode, otherFunction._typeCode)
+              .append(volatility, otherFunction.volatility)
+              .isEquals();
+      // @formatter:on
     } catch (Exception e) {
       throw new RuntimeException("Error while comparing functions " + this._name + " and "
           + otherFunction._name
@@ -506,10 +487,12 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public int hashCode() {
-    // TODO: For now we ignore catalog and schema (type should be irrelevant
-    // anyways)
-    return new HashCodeBuilder(17, 37).append(_name).append(_parameters).append(_typeCode)
-        .append(_body).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name)
+        .append(_parameters)
+        .append(_typeCode)
+        .append(_body)
+        .append(volatility)
+        .toHashCode();
   }
 
   /**
