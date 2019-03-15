@@ -64,7 +64,7 @@ public class Function implements StructureObject, Cloneable {
   private Translation _translation = new NullTranslation();
   private boolean recreationRequired = false;
 
-  private Volatility volatitilty = Volatility.VOLATILE;
+  private Volatility volatility = Volatility.VOLATILE;
 
   /** Creates a new instance of Function */
   public Function() {
@@ -525,6 +525,10 @@ public class Function implements StructureObject, Cloneable {
   }
 
   public Volatility getVolatility() {
-    return volatitilty;
+    return volatility;
+  }
+
+  public void setVolatility(Volatility volatility) {
+    this.volatility = volatility;
   }
 }

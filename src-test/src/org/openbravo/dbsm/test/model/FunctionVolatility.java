@@ -49,4 +49,16 @@ public class FunctionVolatility extends DbsmTest {
         Files.readAllBytes(Paths.get("model", "functions/SIMPLE_FUNCTION.xml")));
     assertThat(exportedFile, is(originalFile));
   }
+
+  @Test
+  public void stableFunctionsAreReadFromXml() {
+    Database db = createDatabase("functions/STABLE_FUNCTION.xml");
+    assertThat("Volatility", db.getFunction(0).getVolatility(), is(Function.Volatility.STABLE));
+  }
+
+  @Test
+  public void immutableFunctionsAreReadFromXml() {
+    Database db = createDatabase("functions/IMMUTABLE_FUNCTION.xml");
+    assertThat("Volatility", db.getFunction(0).getVolatility(), is(Function.Volatility.IMMUTABLE));
+  }
 }
