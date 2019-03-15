@@ -23,6 +23,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -115,20 +116,8 @@ public class Function implements StructureObject, Cloneable {
    * @return The notation
    */
   public String getNotation() {
-    StringBuffer s = new StringBuffer();
-    s.append(_name);
-    s.append("(");
-
-    for (int i = 0; i < _parameters.size(); i++) {
-      Parameter p = (Parameter) _parameters.get(i);
-      if (i > 0) {
-        s.append(", ");
-      }
-      s.append(p.getType());
-    }
-
-    s.append(")");
-    return s.toString();
+    return _name + "("
+        + _parameters.stream().map(Parameter::getType).collect(Collectors.joining(", ")) + ")";
   }
 
   /**
@@ -148,8 +137,7 @@ public class Function implements StructureObject, Cloneable {
    *          The type code
    */
   public void setTypeCode(int typeCode) {
-    String _type = TypeMap.getJdbcTypeName(typeCode);
-    if (_type == null) {
+    if (TypeMap.getJdbcTypeName(typeCode) == null) {
       throw new ModelException("Unknown JDBC type code " + typeCode);
     }
     _typeCode = typeCode;
@@ -197,7 +185,7 @@ public class Function implements StructureObject, Cloneable {
    * @return The parameter at this position
    */
   public Parameter getParameter(int idx) {
-    return (Parameter) _parameters.get(idx);
+    return _parameters.get(idx);
   }
 
   /**
@@ -206,7 +194,7 @@ public class Function implements StructureObject, Cloneable {
    * @return The parameters
    */
   public Parameter[] getParameters() {
-    return (Parameter[]) _parameters.toArray(new Parameter[_parameters.size()]);
+    return _parameters.toArray(new Parameter[_parameters.size()]);
   }
 
   /**
@@ -473,14 +461,7 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public String toString() {
-    StringBuffer result = new StringBuffer();
-
-    result.append("Function [notation=");
-    result.append(getNotation());
-    result.append("; ");
-    result.append("]");
-
-    return result.toString();
+    return "Function " + _name + "[notation=" + getNotation() + "; ]";
   }
 
   /** Sets whether recreation is required even no other changes are detected */

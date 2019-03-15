@@ -92,7 +92,7 @@
   </target>
 
   <target name="compile" depends="init">
-    <javac srcdir="${build.db.src}" destdir="${build.db.classes}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false" source="1.7" target="1.7">
+    <javac srcdir="${build.db.src}" destdir="${build.db.classes}" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false" source="1.8" target="1.8">
       <classpath refid="db.class.path" />
     </javac>
     <copy todir="${build.db.classes}">
