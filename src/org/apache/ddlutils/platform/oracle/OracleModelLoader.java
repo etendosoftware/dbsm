@@ -26,12 +26,12 @@ import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
-import org.apache.ddlutils.model.Function.Volatility;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.Function.Volatility;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowFiller;
 import org.apache.ddlutils.util.ExtTypes;
@@ -45,7 +45,9 @@ public class OracleModelLoader extends ModelLoaderBase {
   private static Pattern _pFunctionHeader = Pattern
       .compile("\\A\\s*(FUNCTION|PROCEDURE)\\s+\\w+\\s*(\\((.*?)\\))??" //
           + "\\s*(RETURN\\s+(\\w+)\\s*)?" //
-          + "( DETERMINISTIC\\s*)?" + "(/\\*.*?\\*/\\s*)?" //
+          + "( DETERMINISTIC\\s*)?" //
+          + "(\\s*--OBTG:(\\w+)\\s*)?" //
+          + "(/\\*.*?\\*/\\s*)?" //
           + "(AS|IS)\\s+", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
   private Pattern _pFunctionParam = Pattern.compile(
       "^\\s*(.+?)\\s+(([Ii][Nn]|[Oo][Uu][Tt])\\s+)?(.+?)(\\s+[Dd][Ee][Ff][Aa][Uu][Ll][Tt]\\s+(.+?))?\\s*?$");
@@ -574,7 +576,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     if (mFunctionHeader.find()) {
       f.setTypeCode(translateParamType(mFunctionHeader.group(5)));
 
-      String scomment = mFunctionHeader.group(7);
+      String scomment = mFunctionHeader.group(9);
       if (scomment == null) {
         f.setBody(translatePLSQLBody(functioncode.substring(mFunctionHeader.end(0))));
       } else {
@@ -603,6 +605,11 @@ public class OracleModelLoader extends ModelLoaderBase {
       String volatility = mFunctionHeader.group(6);
       if (volatility != null && "DETERMINISTIC".equalsIgnoreCase(volatility.trim())) {
         f.setVolatility(Volatility.IMMUTABLE);
+      }
+
+      String obtgComment = mFunctionHeader.group(8);
+      if ("STABLE".equalsIgnoreCase(obtgComment)) {
+        f.setVolatility(Volatility.STABLE);
       }
     } else {
       System.out.println("Function header not readed for function : " + f.getName());

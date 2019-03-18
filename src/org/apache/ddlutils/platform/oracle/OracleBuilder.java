@@ -1214,8 +1214,18 @@ public class OracleBuilder extends SqlBuilder {
   protected String getFunctionReturn(Function function) {
     String r = function.getTypeCode() == Types.NULL ? ""
         : "RETURN " + getSqlType(function.getTypeCode());
-    if (function.getVolatility() == Function.Volatility.IMMUTABLE) {
-      r += " DETERMINISTIC";
+    switch (function.getVolatility()) {
+      case VOLATILE:
+        // no-op
+        break;
+      case STABLE:
+        r += "\n --OBTG:STABLE\n";
+        break;
+      case IMMUTABLE:
+        r += " DETERMINISTIC";
+        break;
+      default:
+        break;
     }
     return r;
   }
