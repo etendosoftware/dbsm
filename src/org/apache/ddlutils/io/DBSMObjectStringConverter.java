@@ -29,7 +29,7 @@ public class DBSMObjectStringConverter extends DefaultObjectStringConverter {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public Object stringToObject(String value, Class type, Context context) {
-    if (type.isAssignableFrom(Function.Volatility.class)) {
+    if (Function.Volatility.class.isAssignableFrom(type)) {
       return Function.Volatility.valueOf(value);
     }
     return super.stringToObject(value, type, context);
