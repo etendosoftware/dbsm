@@ -20,12 +20,16 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Function.Volatility;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
@@ -38,14 +42,17 @@ import org.openbravo.ddlutils.util.DBSMContants;
  * @author adrian
  */
 public class OracleModelLoader extends ModelLoaderBase {
+  private static Pattern _pFunctionHeader = Pattern.compile(
+      "\\A\\s*([Ff][Uu][Nn][Cc][Tt][Ii][Oo][Nn]|[Pp][Rr][Oo][Cc][Ee][Dd][Uu][Rr][Ee])\\s+\\w+\\s*(\\((.*?)\\))??"
+          + "\\s*([Rr][Ee][Tt][Uu][Rr][Nn]\\s+(\\w+)\\s*)?" + "( DETERMINISTIC\\s*)?"
+          + "(/\\*.*?\\*/\\s*)?" + "([Aa][Ss]|[Ii][Ss])\\s+",
+      Pattern.DOTALL);
+  private Pattern _pFunctionParam = Pattern.compile(
+      "^\\s*(.+?)\\s+(([Ii][Nn]|[Oo][Uu][Tt])\\s+)?(.+?)(\\s+[Dd][Ee][Ff][Aa][Uu][Ll][Tt]\\s+(.+?))?\\s*?$");
 
   protected PreparedStatement _stmt_comments_tables;
 
   private static final String VIRTUAL_COLUMN_PREFIX = "SYS_NC";
-
-  /** Creates a new instance of BasicModelLoader */
-  public OracleModelLoader() {
-  }
 
   @Override
   protected String readName() {
@@ -551,5 +558,54 @@ public class OracleModelLoader extends ModelLoaderBase {
     });
 
     return fk;
+  }
+
+  @Override
+  protected Function readFunction(String name) throws SQLException {
+    Function f = new Function();
+    f.setName(name);
+    parseFunctionCode(f, readFunctionCode(name));
+    return f;
+  }
+
+  private void parseFunctionCode(Function f, String functioncode) {
+    Matcher mFunctionHeader = _pFunctionHeader.matcher(functioncode);
+
+    if (mFunctionHeader.find()) {
+      f.setTypeCode(translateParamType(mFunctionHeader.group(5)));
+
+      String scomment = mFunctionHeader.group(7);
+      if (scomment == null) {
+        f.setBody(translatePLSQLBody(functioncode.substring(mFunctionHeader.end(0))));
+      } else {
+        f.setBody(
+            translatePLSQLBody(scomment + "\n" + functioncode.substring(mFunctionHeader.end(0))));
+      }
+
+      if (mFunctionHeader.group(3) != null) {
+        StringTokenizer t = new StringTokenizer(removeLineComments(mFunctionHeader.group(3)), ",");
+        while (t.hasMoreTokens()) {
+          Matcher mparam = _pFunctionParam.matcher(t.nextToken());
+          if (mparam.find()) {
+            Parameter p = new Parameter();
+            p.setName(mparam.group(1));
+            p.setModeCode(translateMode(mparam.group(3)));
+            p.setTypeCode(translateParamType(mparam.group(4)));
+            p.setDefaultValue(translateParamDefault(mparam.group(6), p.getTypeCode()));
+
+            f.addParameter(p);
+          } else {
+            System.out.println("Function parameter not readed for function : " + f.getName());
+          }
+        }
+      }
+
+      String volatility = mFunctionHeader.group(6);
+      if (volatility != null && "DETERMINISTIC".equals(volatility.trim())) {
+        f.setVolatility(Volatility.IMMUTABLE);
+      }
+    } else {
+      System.out.println("Function header not readed for function : " + f.getName());
+    }
   }
 }

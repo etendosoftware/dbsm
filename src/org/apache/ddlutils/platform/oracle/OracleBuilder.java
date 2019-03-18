@@ -1199,4 +1199,24 @@ public class OracleBuilder extends SqlBuilder {
     writeColumnType(column);
     printEndOfStatement();
   }
+
+  @Override
+  protected void writeCreateFunctionStmt(Function function) throws IOException {
+    if (function.getTypeCode() == Types.NULL) {
+      print("CREATE OR REPLACE PROCEDURE ");
+    } else {
+      print("CREATE OR REPLACE FUNCTION ");
+    }
+    printIdentifier(getStructureObjectName(function));
+  }
+
+  @Override
+  protected String getFunctionReturn(Function function) {
+    String r = function.getTypeCode() == Types.NULL ? ""
+        : "RETURN " + getSqlType(function.getTypeCode());
+    if (function.getVolatility() == Function.Volatility.IMMUTABLE) {
+      r += " DETERMINISTIC";
+    }
+    return r;
+  }
 }

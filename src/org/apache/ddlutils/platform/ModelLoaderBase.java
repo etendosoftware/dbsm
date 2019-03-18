@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.ddlutils.model.Check;
@@ -91,14 +88,6 @@ public abstract class ModelLoaderBase implements ModelLoader {
   protected PreparedStatement _stmt_functioncode;
 
   protected Log _log;
-
-  private static Pattern _pFunctionHeader = Pattern.compile(
-      "\\A\\s*([Ff][Uu][Nn][Cc][Tt][Ii][Oo][Nn]|[Pp][Rr][Oo][Cc][Ee][Dd][Uu][Rr][Ee])\\s+\\w+\\s*(\\((.*?)\\))??"
-          + "\\s*([Rr][Ee][Tt][Uu][Rr][Nn]\\s+(\\w+)\\s*)?" + "(/\\*.*?\\*/\\s*)?"
-          + "([Aa][Ss]|[Ii][Ss])\\s+",
-      Pattern.DOTALL);
-  private Pattern _pFunctionParam = Pattern.compile(
-      "^\\s*(.+?)\\s+(([Ii][Nn]|[Oo][Uu][Tt])\\s+)?(.+?)(\\s+[Dd][Ee][Ff][Aa][Uu][Ll][Tt]\\s+(.+?))?\\s*?$");
 
   protected String _prefix;
   protected boolean _loadCompleteTables;
@@ -674,52 +663,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     });
   }
 
-  protected Function readFunction(String name) throws SQLException {
-
-    Function f = new Function();
-    f.setName(name);
-    parseFunctionCode(f, readFunctionCode(name));
-    return f;
-  }
-
-  protected void parseFunctionCode(Function f, String functioncode) {
-
-    Matcher mFunctionHeader = _pFunctionHeader.matcher(functioncode);
-
-    if (mFunctionHeader.find()) {
-
-      f.setTypeCode(translateParamType(mFunctionHeader.group(5)));
-
-      String scomment = mFunctionHeader.group(6);
-      if (scomment == null) {
-        f.setBody(translatePLSQLBody(functioncode.substring(mFunctionHeader.end(0))));
-      } else {
-        f.setBody(
-            translatePLSQLBody(scomment + "\n" + functioncode.substring(mFunctionHeader.end(0))));
-      }
-
-      if (mFunctionHeader.group(3) != null) {
-        StringTokenizer t = new StringTokenizer(removeLineComments(mFunctionHeader.group(3)), ",");
-        while (t.hasMoreTokens()) {
-          Matcher mparam = _pFunctionParam.matcher(t.nextToken());
-          if (mparam.find()) {
-            Parameter p = new Parameter();
-            p.setName(mparam.group(1));
-            p.setModeCode(translateMode(mparam.group(3)));
-            p.setTypeCode(translateParamType(mparam.group(4)));
-            p.setDefaultValue(translateParamDefault(mparam.group(6), p.getTypeCode()));
-
-            f.addParameter(p);
-          } else {
-            System.out.println("Function parameter not readed for function : " + f.getName());
-          }
-          // System.out.println(t.nextToken());
-        }
-      }
-    } else {
-      System.out.println("Function header not readed for function : " + f.getName());
-    }
-  }
+  abstract protected Function readFunction(String name) throws SQLException;
 
   protected String removeLineComments(String scode) {
 

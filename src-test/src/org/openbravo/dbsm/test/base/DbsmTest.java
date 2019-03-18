@@ -422,6 +422,7 @@ public class DbsmTest {
    * @return the database.
    */
   protected Database createDatabase(String dbModelPath) {
+    resetDB();
     File dbModel = new File("model", dbModelPath);
     final Platform currentPlatform = getPlatform();
 
