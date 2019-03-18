@@ -42,11 +42,11 @@ import org.openbravo.ddlutils.util.DBSMContants;
  * @author adrian
  */
 public class OracleModelLoader extends ModelLoaderBase {
-  private static Pattern _pFunctionHeader = Pattern.compile(
-      "\\A\\s*([Ff][Uu][Nn][Cc][Tt][Ii][Oo][Nn]|[Pp][Rr][Oo][Cc][Ee][Dd][Uu][Rr][Ee])\\s+\\w+\\s*(\\((.*?)\\))??"
-          + "\\s*([Rr][Ee][Tt][Uu][Rr][Nn]\\s+(\\w+)\\s*)?" + "( DETERMINISTIC\\s*)?"
-          + "(/\\*.*?\\*/\\s*)?" + "([Aa][Ss]|[Ii][Ss])\\s+",
-      Pattern.DOTALL);
+  private static Pattern _pFunctionHeader = Pattern
+      .compile("\\A\\s*(FUNCTION|PROCEDURE)\\s+\\w+\\s*(\\((.*?)\\))??" //
+          + "\\s*(RETURN\\s+(\\w+)\\s*)?" //
+          + "( DETERMINISTIC\\s*)?" + "(/\\*.*?\\*/\\s*)?" //
+          + "(AS|IS)\\s+", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
   private Pattern _pFunctionParam = Pattern.compile(
       "^\\s*(.+?)\\s+(([Ii][Nn]|[Oo][Uu][Tt])\\s+)?(.+?)(\\s+[Dd][Ee][Ff][Aa][Uu][Ll][Tt]\\s+(.+?))?\\s*?$");
 
@@ -601,7 +601,7 @@ public class OracleModelLoader extends ModelLoaderBase {
       }
 
       String volatility = mFunctionHeader.group(6);
-      if (volatility != null && "DETERMINISTIC".equals(volatility.trim())) {
+      if (volatility != null && "DETERMINISTIC".equalsIgnoreCase(volatility.trim())) {
         f.setVolatility(Volatility.IMMUTABLE);
       }
     } else {
