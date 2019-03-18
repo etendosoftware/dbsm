@@ -461,7 +461,7 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public String toString() {
-    return "Function " + _name + "[notation=" + getNotation() + "; ]";
+    return "Function " + _name + "[notation=" + getNotation() + "; ] " + volatility;
   }
 
   /** Sets whether recreation is required even no other changes are detected */
