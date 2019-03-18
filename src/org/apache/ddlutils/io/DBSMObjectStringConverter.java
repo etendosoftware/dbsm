@@ -21,7 +21,6 @@ package org.apache.ddlutils.io;
 
 import org.apache.commons.betwixt.expression.Context;
 import org.apache.commons.betwixt.strategy.DefaultObjectStringConverter;
-import org.apache.ddlutils.model.Function;
 
 /** Defines specific conversion types used when reading xml files. */
 @SuppressWarnings("serial")
@@ -29,8 +28,8 @@ public class DBSMObjectStringConverter extends DefaultObjectStringConverter {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public Object stringToObject(String value, Class type, Context context) {
-    if (Function.Volatility.class.isAssignableFrom(type)) {
-      return Function.Volatility.valueOf(value);
+    if (type.isEnum()) {
+      return Enum.valueOf(type, value);
     }
     return super.stringToObject(value, type, context);
   }
