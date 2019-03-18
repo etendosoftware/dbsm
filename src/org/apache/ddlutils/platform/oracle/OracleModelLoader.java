@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2018 Openbravo S.L.U.
+ * Copyright (C) 2001-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -26,12 +26,12 @@ import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Function.Volatility;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
-import org.apache.ddlutils.model.Function.Volatility;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowFiller;
 import org.apache.ddlutils.util.ExtTypes;
@@ -42,15 +42,15 @@ import org.openbravo.ddlutils.util.DBSMContants;
  * @author adrian
  */
 public class OracleModelLoader extends ModelLoaderBase {
-  private static Pattern _pFunctionHeader = Pattern
+  private static final Pattern FUNC_HEADER_PATT = Pattern
       .compile("\\A\\s*(FUNCTION|PROCEDURE)\\s+\\w+\\s*(\\((.*?)\\))??" //
           + "\\s*(RETURN\\s+(\\w+)\\s*)?" //
           + "( DETERMINISTIC\\s*)?" //
           + "(\\s*--OBTG:(\\w+)\\s*)?" //
           + "(/\\*.*?\\*/\\s*)?" //
           + "(AS|IS)\\s+", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-  private Pattern _pFunctionParam = Pattern.compile(
-      "^\\s*(.+?)\\s+(([Ii][Nn]|[Oo][Uu][Tt])\\s+)?(.+?)(\\s+[Dd][Ee][Ff][Aa][Uu][Ll][Tt]\\s+(.+?))?\\s*?$");
+  private static final Pattern FUNC_PARAM_PATT = Pattern.compile(
+      "^\\s*(.+?)\\s+((IN|OUT)\\s+)?(.+?)(\\s+DEFAULT\\s+(.+?))?\\s*?$", Pattern.CASE_INSENSITIVE);
 
   protected PreparedStatement _stmt_comments_tables;
 
@@ -571,48 +571,54 @@ public class OracleModelLoader extends ModelLoaderBase {
   }
 
   private void parseFunctionCode(Function f, String functioncode) {
-    Matcher mFunctionHeader = _pFunctionHeader.matcher(functioncode);
+    Matcher mFunctionHeader = FUNC_HEADER_PATT.matcher(functioncode);
 
-    if (mFunctionHeader.find()) {
-      f.setTypeCode(translateParamType(mFunctionHeader.group(5)));
+    if (!mFunctionHeader.find()) {
+      _log.error("Function header not readed for function : " + f.getName());
+      return;
+    }
+    f.setTypeCode(translateParamType(mFunctionHeader.group(5)));
 
-      String scomment = mFunctionHeader.group(9);
-      if (scomment == null) {
-        f.setBody(translatePLSQLBody(functioncode.substring(mFunctionHeader.end(0))));
-      } else {
-        f.setBody(
-            translatePLSQLBody(scomment + "\n" + functioncode.substring(mFunctionHeader.end(0))));
-      }
+    String body = functioncode.substring(mFunctionHeader.end(0));
+    String scomment = mFunctionHeader.group(9);
+    if (scomment != null) {
+      body = scomment + "\n" + body;
+    }
+    f.setBody(translatePLSQLBody(body));
 
-      if (mFunctionHeader.group(3) != null) {
-        StringTokenizer t = new StringTokenizer(removeLineComments(mFunctionHeader.group(3)), ",");
-        while (t.hasMoreTokens()) {
-          Matcher mparam = _pFunctionParam.matcher(t.nextToken());
-          if (mparam.find()) {
-            Parameter p = new Parameter();
-            p.setName(mparam.group(1));
-            p.setModeCode(translateMode(mparam.group(3)));
-            p.setTypeCode(translateParamType(mparam.group(4)));
-            p.setDefaultValue(translateParamDefault(mparam.group(6), p.getTypeCode()));
+    setFunctionParams(f, mFunctionHeader);
+    setFunctionVolatility(f, mFunctionHeader);
+  }
 
-            f.addParameter(p);
-          } else {
-            System.out.println("Function parameter not readed for function : " + f.getName());
-          }
+  private void setFunctionParams(Function f, Matcher mFunctionHeader) {
+    if (mFunctionHeader.group(3) != null) {
+      StringTokenizer t = new StringTokenizer(removeLineComments(mFunctionHeader.group(3)), ",");
+      while (t.hasMoreTokens()) {
+        Matcher mparam = FUNC_PARAM_PATT.matcher(t.nextToken());
+        if (mparam.find()) {
+          Parameter p = new Parameter();
+          p.setName(mparam.group(1));
+          p.setModeCode(translateMode(mparam.group(3)));
+          p.setTypeCode(translateParamType(mparam.group(4)));
+          p.setDefaultValue(translateParamDefault(mparam.group(6), p.getTypeCode()));
+
+          f.addParameter(p);
+        } else {
+          _log.error("Function parameter not readed for function : " + f.getName());
         }
       }
+    }
+  }
 
-      String volatility = mFunctionHeader.group(6);
-      if (volatility != null && "DETERMINISTIC".equalsIgnoreCase(volatility.trim())) {
-        f.setVolatility(Volatility.IMMUTABLE);
-      }
+  private void setFunctionVolatility(Function f, Matcher mFunctionHeader) {
+    String volatility = mFunctionHeader.group(6);
+    if (volatility != null && "DETERMINISTIC".equalsIgnoreCase(volatility.trim())) {
+      f.setVolatility(Volatility.IMMUTABLE);
+    }
 
-      String obtgComment = mFunctionHeader.group(8);
-      if ("STABLE".equalsIgnoreCase(obtgComment)) {
-        f.setVolatility(Volatility.STABLE);
-      }
-    } else {
-      System.out.println("Function header not readed for function : " + f.getName());
+    String obtgComment = mFunctionHeader.group(8);
+    if ("STABLE".equalsIgnoreCase(obtgComment)) {
+      f.setVolatility(Volatility.STABLE);
     }
   }
 }
