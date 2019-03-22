@@ -138,15 +138,15 @@ public class ForeignKey implements ConstraintObject, Cloneable {
   private String getAction(int actioncode) {
 
     switch (actioncode) {
-    case DatabaseMetaData.importedKeyCascade:
-      return "cascade";
-    case DatabaseMetaData.importedKeyRestrict:
-      return "restrict";
-    case DatabaseMetaData.importedKeySetNull:
-      return "setnull";
-    case DatabaseMetaData.importedKeyNoAction: // fall-through
-    default:
-      return null; // "none"
+      case DatabaseMetaData.importedKeyCascade:
+        return "cascade";
+      case DatabaseMetaData.importedKeyRestrict:
+        return "restrict";
+      case DatabaseMetaData.importedKeySetNull:
+        return "setnull";
+      case DatabaseMetaData.importedKeyNoAction: // fall-through
+      default:
+        return null; // "none"
     }
   }
 
@@ -410,8 +410,10 @@ public class ForeignKey implements ConstraintObject, Cloneable {
         builder.append(_name, otherFk._name);
       }
       return builder.append(_foreignTableName, otherFk._foreignTableName)
-          .append(_onUpdate, otherFk._onUpdate).append(_onDelete, otherFk._onDelete)
-          .append(_references, otherFk._references).isEquals();
+          .append(_onUpdate, otherFk._onUpdate)
+          .append(_onDelete, otherFk._onDelete)
+          .append(_references, otherFk._references)
+          .isEquals();
     } else {
       return false;
     }
@@ -462,8 +464,12 @@ public class ForeignKey implements ConstraintObject, Cloneable {
    */
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_foreignTableName).append(_onUpdate)
-        .append(_onDelete).append(_references).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name)
+        .append(_foreignTableName)
+        .append(_onUpdate)
+        .append(_onDelete)
+        .append(_references)
+        .toHashCode();
   }
 
   /**

@@ -79,14 +79,14 @@ public class ExportSampledata extends BaseDatabaseTask {
      */
     public DataSetTableExporter getDataSetTableExporter(DataSetTableQueryGenerator queryGenerator) {
       switch (this) {
-      case COPY:
-        return new PostgreSqlDatabaseDataIO(queryGenerator);
-      default:
-        DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
-        databaseDataIO.setEnsureFKOrder(false);
-        // for sampledata do not write a primary key comment onto each line to save space
-        databaseDataIO.setWritePrimaryKeyComment(false);
-        return databaseDataIO;
+        case COPY:
+          return new PostgreSqlDatabaseDataIO(queryGenerator);
+        default:
+          DatabaseDataIO databaseDataIO = new DatabaseDataIO(queryGenerator);
+          databaseDataIO.setEnsureFKOrder(false);
+          // for sampledata do not write a primary key comment onto each line to save space
+          databaseDataIO.setWritePrimaryKeyComment(false);
+          return databaseDataIO;
       }
     }
   }
@@ -152,9 +152,9 @@ public class ExportSampledata extends BaseDatabaseTask {
       Database db = platform.loadTablesFromDatabase(excludeFilter);
       db.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
-          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata",
-          new File(basedir, "src-db/database/sourcedata"));
+      DBSMOBUtil.getInstance()
+          .loadDataStructures(platform, databaseOrgData, db, db, moduledir.getAbsolutePath(),
+              "*/src-db/database/sourcedata", new File(basedir, "src-db/database/sourcedata"));
 
       getLog().info("Exporting client " + client + " to module: " + module);
 

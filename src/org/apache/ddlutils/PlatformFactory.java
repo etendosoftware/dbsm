@@ -67,20 +67,20 @@ public class PlatformFactory {
     try {
       Class<? extends Platform> selectedPlatform;
       switch (databaseProductName) {
-      case "Oracle":
-        selectedPlatform = OraclePlatform.class;
-        break;
-      case "PostgreSQL":
-        if (majorVersion >= 11) {
-          selectedPlatform = PostgreSql11Platform.class;
-        } else if (majorVersion >= 10) {
-          selectedPlatform = PostgreSql10Platform.class;
-        } else {
-          selectedPlatform = PostgreSqlPlatform.class;
-        }
-        break;
-      default:
-        return null;
+        case "Oracle":
+          selectedPlatform = OraclePlatform.class;
+          break;
+        case "PostgreSQL":
+          if (majorVersion >= 11) {
+            selectedPlatform = PostgreSql11Platform.class;
+          } else if (majorVersion >= 10) {
+            selectedPlatform = PostgreSql10Platform.class;
+          } else {
+            selectedPlatform = PostgreSqlPlatform.class;
+          }
+          break;
+        default:
+          return null;
       }
       return selectedPlatform.newInstance();
     } catch (Exception ex) {

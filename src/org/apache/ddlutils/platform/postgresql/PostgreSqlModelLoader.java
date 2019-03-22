@@ -784,51 +784,51 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected String translateDefault(String value, int type) {
 
     switch (type) {
-    case Types.CHAR:
-    case Types.VARCHAR:
-    case ExtTypes.NCHAR:
-    case ExtTypes.NVARCHAR:
-    case Types.LONGVARCHAR:
-      if (value.endsWith("::character varying")) {
-        value = value.substring(0, value.length() - 19);
-      }
-      if (value.endsWith("::bpchar")) {
-        value = value.substring(0, value.length() - 8);
-      }
+      case Types.CHAR:
+      case Types.VARCHAR:
+      case ExtTypes.NCHAR:
+      case ExtTypes.NVARCHAR:
+      case Types.LONGVARCHAR:
+        if (value.endsWith("::character varying")) {
+          value = value.substring(0, value.length() - 19);
+        }
+        if (value.endsWith("::bpchar")) {
+          value = value.substring(0, value.length() - 8);
+        }
 
-      if (value.length() >= 2 && value.startsWith("'") && value.endsWith("'")) {
-        value = value.substring(1, value.length() - 1);
-        int i = 0;
-        StringBuffer sunescaped = new StringBuffer();
-        while (i < value.length()) {
-          char c = value.charAt(i);
-          if (c == '\'') {
-            i++;
-            if (i < value.length()) {
+        if (value.length() >= 2 && value.startsWith("'") && value.endsWith("'")) {
+          value = value.substring(1, value.length() - 1);
+          int i = 0;
+          StringBuffer sunescaped = new StringBuffer();
+          while (i < value.length()) {
+            char c = value.charAt(i);
+            if (c == '\'') {
+              i++;
+              if (i < value.length()) {
+                sunescaped.append(c);
+                i++;
+              }
+            } else {
               sunescaped.append(c);
               i++;
             }
-          } else {
-            sunescaped.append(c);
-            i++;
           }
-        }
-        if (sunescaped.length() == 0) {
-          return null;
+          if (sunescaped.length() == 0) {
+            return null;
+          } else {
+            return sunescaped.toString();
+          }
         } else {
-          return sunescaped.toString();
+          return value;
         }
-      } else {
+      case Types.TIMESTAMP:
+        if ("now()".equalsIgnoreCase(value)) {
+          return "SYSDATE";
+        } else {
+          return value;
+        }
+      default:
         return value;
-      }
-    case Types.TIMESTAMP:
-      if ("now()".equalsIgnoreCase(value)) {
-        return "SYSDATE";
-      } else {
-        return value;
-      }
-    default:
-      return value;
     }
   }
 
@@ -1060,7 +1060,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       int closingQuoteIndex = -1;
       while (openingQuoteIndex != -1) {
         String unquotedExpression = transformedIndexExpression
-            .substring(closingQuoteIndex + 1, openingQuoteIndex).toUpperCase();
+            .substring(closingQuoteIndex + 1, openingQuoteIndex)
+            .toUpperCase();
         expressionBuilder.append(removeExtraWhiteSpaces(unquotedExpression));
         closingQuoteIndex = indexExpression.indexOf("'", openingQuoteIndex + 1);
         expressionBuilder

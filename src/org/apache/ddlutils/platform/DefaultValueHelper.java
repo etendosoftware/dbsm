@@ -51,35 +51,35 @@ public class DefaultValueHelper {
 
     if (defaultValue != null) {
       switch (originalTypeCode) {
-      case Types.BIT:
-        result = convertBoolean(defaultValue, targetTypeCode).toString();
-        break;
-      case Types.DATE:
-        if (targetTypeCode == Types.TIMESTAMP) {
-          try {
-            Date date = Date.valueOf(result);
-
-            return new Timestamp(date.getTime()).toString();
-          } catch (IllegalArgumentException ex) {
-          }
-        }
-        break;
-      case Types.TIME:
-        if (targetTypeCode == Types.TIMESTAMP) {
-          try {
-            Time time = Time.valueOf(result);
-
-            return new Timestamp(time.getTime()).toString();
-          } catch (IllegalArgumentException ex) {
-          }
-        }
-        break;
-      default:
-        if (Jdbc3Utils.supportsJava14JdbcTypes()
-            && (originalTypeCode == Jdbc3Utils.determineBooleanTypeCode())) {
+        case Types.BIT:
           result = convertBoolean(defaultValue, targetTypeCode).toString();
-        }
-        break;
+          break;
+        case Types.DATE:
+          if (targetTypeCode == Types.TIMESTAMP) {
+            try {
+              Date date = Date.valueOf(result);
+
+              return new Timestamp(date.getTime()).toString();
+            } catch (IllegalArgumentException ex) {
+            }
+          }
+          break;
+        case Types.TIME:
+          if (targetTypeCode == Types.TIMESTAMP) {
+            try {
+              Time time = Time.valueOf(result);
+
+              return new Timestamp(time.getTime()).toString();
+            } catch (IllegalArgumentException ex) {
+            }
+          }
+          break;
+        default:
+          if (Jdbc3Utils.supportsJava14JdbcTypes()
+              && (originalTypeCode == Jdbc3Utils.determineBooleanTypeCode())) {
+            result = convertBoolean(defaultValue, targetTypeCode).toString();
+          }
+          break;
       }
     }
     return result;

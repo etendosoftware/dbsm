@@ -62,8 +62,9 @@ public class DynaSqlCreateRule extends Rule {
     Object instance = _model.createDynaBeanFor(_table);
 
     if (digester.getLogger().isDebugEnabled()) {
-      digester.getLogger().debug("[DynaSqlCreateRule]{" + digester.getMatch() + "} New dyna bean '"
-          + _table.getName() + "' created");
+      digester.getLogger()
+          .debug("[DynaSqlCreateRule]{" + digester.getMatch() + "} New dyna bean '"
+              + _table.getName() + "' created");
     }
     digester.push(instance);
   }
@@ -76,8 +77,9 @@ public class DynaSqlCreateRule extends Rule {
     DynaBean top = (DynaBean) digester.pop();
 
     if (digester.getLogger().isDebugEnabled()) {
-      digester.getLogger().debug(
-          "[DynaSqlCreateRule]{" + digester.getMatch() + "} Pop " + top.getDynaClass().getName());
+      digester.getLogger()
+          .debug("[DynaSqlCreateRule]{" + digester.getMatch() + "} Pop "
+              + top.getDynaClass().getName());
     }
     _receiver.addBean(top);
   }

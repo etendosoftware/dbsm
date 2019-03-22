@@ -86,7 +86,8 @@ public class OBDataset {
         Vector<String> excludedColNames = new Vector<String>();
         for (DynaBean db : excludedCols) {
           String colName = searchDynaBeans("AD_COLUMN", readFromDb,
-              db.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get(0).get("COLUMNNAME")
+              db.get("AD_COLUMN_ID").toString(), "AD_COLUMN_ID").get(0)
+                  .get("COLUMNNAME")
                   .toString();
           excludedColNames.add(colName.toUpperCase());
         }

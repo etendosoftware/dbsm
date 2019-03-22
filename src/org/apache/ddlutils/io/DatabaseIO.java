@@ -143,7 +143,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().register(getBetwixtMapping());
       writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
       writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-      writer.getXMLIntrospector().getConfiguration()
+      writer.getXMLIntrospector()
+          .getConfiguration()
           .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
       writer.getBindingConfiguration()
@@ -172,7 +173,8 @@ public class DatabaseIO {
       writer.getXMLIntrospector().register(getBetwixtMapping());
       writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
       writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-      writer.getXMLIntrospector().getConfiguration()
+      writer.getXMLIntrospector()
+          .getConfiguration()
           .setElementNameMapper(new HyphenatedNameMapper());
       writer.getBindingConfiguration().setMapIDs(false);
       writer.getBindingConfiguration()

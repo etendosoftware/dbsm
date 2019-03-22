@@ -356,7 +356,8 @@ public class ValidateAPIModel extends ValidateAPI {
           } else if (originalType != testType) {
             warnings.add("Column type change from " + originalColumn.getType() + " to "
                 + testDB.findTable(c.getChangedTable().getName())
-                    .findColumn(c.getChangedColumn().getName()).getType()
+                    .findColumn(c.getChangedColumn().getName())
+                    .getType()
                 + ": column:" + tableColumn);
           }
         } else if (change instanceof ColumnAutoIncrementChange) {

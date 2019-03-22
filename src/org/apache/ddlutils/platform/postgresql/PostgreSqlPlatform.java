@@ -264,17 +264,17 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     // PostgreSQL doesn't like setNull for BYTEA columns
     if (value == null) {
       switch (typeCode) {
-      case Types.BINARY:
-      case Types.VARBINARY:
-      case Types.LONGVARBINARY:
-        statement.setBlob(sqlIndex, (Blob) null);
-        break;
-      case Types.BLOB:
-        statement.setNull(sqlIndex, Types.BINARY);
-        break;
-      default:
-        statement.setNull(sqlIndex, typeCode);
-        break;
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+          statement.setBlob(sqlIndex, (Blob) null);
+          break;
+        case Types.BLOB:
+          statement.setNull(sqlIndex, Types.BINARY);
+          break;
+        default:
+          statement.setNull(sqlIndex, typeCode);
+          break;
       }
     } else {
       super.setObject(statement, sqlIndex, dynaBean, property);

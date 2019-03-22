@@ -137,11 +137,12 @@ public class ExportDatabase extends BaseDalInitializingTask {
       db = platform.loadModelFromDatabase(excludeFilter);
       db.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(db);
-      DBSMOBUtil.getInstance().loadDataStructures(platform, databaseOrgData, db, db,
-          moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
+      DBSMOBUtil.getInstance()
+          .loadDataStructures(platform, databaseOrgData, db, db, moduledir.getAbsolutePath(),
+              "*/src-db/database/sourcedata", output);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      DBSMOBUtil.getInstance().removeSortedTemplates(platform, db, databaseOrgData,
-          moduledir.getAbsolutePath());
+      DBSMOBUtil.getInstance()
+          .removeSortedTemplates(platform, db, databaseOrgData, moduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         Database dbI = null;
         try {
@@ -245,8 +246,9 @@ public class ExportDatabase extends BaseDalInitializingTask {
             for (int j = 0; j < dataFiles.size(); j++) {
               try {
                 dataReader.getSink().start();
-                final String tablename = dataFiles.get(j).getName().substring(0,
-                    dataFiles.get(j).getName().length() - 4);
+                final String tablename = dataFiles.get(j)
+                    .getName()
+                    .substring(0, dataFiles.get(j).getName().length() - 4);
                 final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
                     .getVector();
                 dataReader.parse(dataFiles.get(j));
@@ -275,8 +277,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
             DatabaseData dataToExport = new DatabaseData(db);
             dbdio.readRowsIntoDatabaseData(platform, dbXML, dataToExport, dataset,
                 util.getActiveModule(i).idMod);
-            DBSMOBUtil.getInstance().removeSortedTemplates(platform, dataToExport,
-                moduledir.getAbsolutePath());
+            DBSMOBUtil.getInstance()
+                .removeSortedTemplates(platform, dataToExport, moduledir.getAbsolutePath());
             path.mkdirs();
             if (datasetI == 0) {
               final File[] filestodelete = path.listFiles();

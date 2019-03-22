@@ -125,8 +125,9 @@ public class CheckAPI extends BaseDatabaseTask {
 
       try {
         dataReader.getSink().start();
-        final String tablename = dataFiles.get(j).getName().substring(0,
-            dataFiles.get(j).getName().length() - 4);
+        final String tablename = dataFiles.get(j)
+            .getName()
+            .substring(0, dataFiles.get(j).getName().length() - 4);
         final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
             .getVector();
         dataReader.parse(dataFiles.get(j));

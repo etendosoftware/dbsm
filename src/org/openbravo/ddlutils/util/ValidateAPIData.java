@@ -55,8 +55,9 @@ public class ValidateAPIData extends ValidateAPI {
       allowedChange |= "AD_MODULE_DEPENDENCY".equalsIgnoreCase(tableName);
 
       if (!allowedChange) {
-        errors.add("Removed row from table " + c.getTable().getName() + " - ID: " + c.getRow().get(
-            ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
+        errors.add("Removed row from table " + c.getTable().getName() + " - ID: " + c.getRow()
+            .get(
+                ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
       }
     } else if (change instanceof ColumnDataChange) {
       ColumnDataChange c = (ColumnDataChange) change;
@@ -99,8 +100,9 @@ public class ValidateAPIData extends ValidateAPI {
               + ") as they are related to newly added process(" + processId + ")");
           return;
         }
-        errors.add(
-            "Not Allowed insertions in " + c.getTable().getName() + " table. ID: " + c.getRow().get(
+        errors.add("Not Allowed insertions in " + c.getTable().getName() + " table. ID: " + c
+            .getRow()
+            .get(
                 ((SqlDynaClass) c.getRow().getDynaClass()).getPrimaryKeyProperties()[0].getName()));
       }
     }

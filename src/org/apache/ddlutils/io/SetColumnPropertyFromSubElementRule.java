@@ -96,8 +96,9 @@ public class SetColumnPropertyFromSubElementRule extends Rule {
         : attrValue);
 
     if (digester.getLogger().isDebugEnabled()) {
-      digester.getLogger().debug("[SetColumnPropertyFromSubElementRule]{" + digester.getMatch()
-          + "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
+      digester.getLogger()
+          .debug("[SetColumnPropertyFromSubElementRule]{" + digester.getMatch()
+              + "} Setting property '" + _column.getName() + "' to '" + propValue + "'");
     }
 
     PropertyUtils.setProperty(digester.peek(), _column.getName(), propValue);

@@ -90,13 +90,13 @@ public class Parameter extends ValueObject implements Cloneable {
   public String getMode() {
 
     switch (_modeCode) {
-    case MODE_IN:
-      return "in";
-    case MODE_OUT:
-      return "out";
-    case MODE_NONE:
-    default:
-      return "";
+      case MODE_IN:
+        return "in";
+      case MODE_OUT:
+        return "out";
+      case MODE_NONE:
+      default:
+        return "";
     }
   }
 
@@ -164,8 +164,10 @@ public class Parameter extends ValueObject implements Cloneable {
       }
 
       return new EqualsBuilder().append(_name.toLowerCase(), other._name.toLowerCase())
-          .append(typeCode2, othertypeCode2).append(modeCode2, otherModeCode2)
-          .append(_defaultValueT, _otherDefaultValueT).isEquals();
+          .append(typeCode2, othertypeCode2)
+          .append(modeCode2, otherModeCode2)
+          .append(_defaultValueT, _otherDefaultValueT)
+          .isEquals();
     } else {
       return false;
     }
@@ -176,8 +178,11 @@ public class Parameter extends ValueObject implements Cloneable {
    */
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_typeCode).append(_modeCode)
-        .append(_defaultValue).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name)
+        .append(_typeCode)
+        .append(_modeCode)
+        .append(_defaultValue)
+        .toHashCode();
   }
 
   /**

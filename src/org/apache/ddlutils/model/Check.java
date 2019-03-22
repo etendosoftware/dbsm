@@ -137,7 +137,8 @@ public class Check implements ConstraintObject, Cloneable {
 
       // Note that this compares case sensitive
       return new EqualsBuilder().append(_name, otherCC._name)
-          .append(_condition.toUpperCase(), otherCC._condition.toUpperCase()).isEquals();
+          .append(_condition.toUpperCase(), otherCC._condition.toUpperCase())
+          .isEquals();
     } else {
       return false;
     }
@@ -151,8 +152,9 @@ public class Check implements ConstraintObject, Cloneable {
    * @return <code>true</code> if this check is equal (ignoring case) to the given one
    */
   public boolean equalsIgnoreCase(Check otherCheck) {
-    return UtilsCompare.equalsIgnoreCase(_name, otherCheck._name) && new EqualsBuilder()
-        .append(_condition.toUpperCase(), otherCheck._condition.toUpperCase()).isEquals();
+    return UtilsCompare.equalsIgnoreCase(_name, otherCheck._name)
+        && new EqualsBuilder().append(_condition.toUpperCase(), otherCheck._condition.toUpperCase())
+            .isEquals();
   }
 
   /**

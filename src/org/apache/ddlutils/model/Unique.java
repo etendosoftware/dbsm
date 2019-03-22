@@ -125,7 +125,8 @@ public class Unique implements ConstraintObject, Cloneable, Serializable {
     if (obj instanceof Unique) {
       Unique other = (Unique) obj;
 
-      return new EqualsBuilder().append(_name, other._name).append(_columns, other._columns)
+      return new EqualsBuilder().append(_name, other._name)
+          .append(_columns, other._columns)
           .isEquals();
     } else {
       return false;

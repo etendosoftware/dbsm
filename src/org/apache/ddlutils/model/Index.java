@@ -162,9 +162,12 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     if (obj instanceof Index) {
       Index other = (Index) obj;
 
-      return new EqualsBuilder().append(_name, other._name).append(_unique, other._unique)
-          .append(_containsSearch, other._containsSearch).append(_whereClause, other._whereClause)
-          .append(_columns, other._columns).isEquals();
+      return new EqualsBuilder().append(_name, other._name)
+          .append(_unique, other._unique)
+          .append(_containsSearch, other._containsSearch)
+          .append(_whereClause, other._whereClause)
+          .append(_columns, other._columns)
+          .isEquals();
     } else {
       return false;
     }
@@ -185,8 +188,8 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
     if (platformInfo == null) {
       return equals(other);
     } else {
-      EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name).append(_unique,
-          other._unique);
+      EqualsBuilder equalsBuilder = new EqualsBuilder().append(_name, other._name)
+          .append(_unique, other._unique);
       if (platformInfo.isContainsSearchIndexesSupported()) {
         equalsBuilder.append(_containsSearch, other._containsSearch);
       }
@@ -278,8 +281,12 @@ public class Index implements ConstraintObject, Cloneable, Serializable {
    */
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(_name).append(_unique).append(_containsSearch)
-        .append(_whereClause).append(_columns).toHashCode();
+    return new HashCodeBuilder(17, 37).append(_name)
+        .append(_unique)
+        .append(_containsSearch)
+        .append(_whereClause)
+        .append(_columns)
+        .toHashCode();
   }
 
   /**

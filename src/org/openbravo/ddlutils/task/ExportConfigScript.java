@@ -127,8 +127,9 @@ public class ExportConfigScript extends BaseDatabaseTask {
         // "+dataFiles.get(i).getAbsolutePath());
         try {
           dataReader.getSink().start();
-          final String tablename = dataFiles.get(i).getName().substring(0,
-              dataFiles.get(i).getName().length() - 4);
+          final String tablename = dataFiles.get(i)
+              .getName()
+              .substring(0, dataFiles.get(i).getName().length() - 4);
           final Vector<DynaBean> vectorDynaBeans = ((DataToArraySink) dataReader.getSink())
               .getVector();
           dataReader.parse(dataFiles.get(i));
