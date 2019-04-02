@@ -84,10 +84,17 @@ public class FunctionVolatility extends DbsmTest {
   }
 
   @Test
-  public void stableIsUpdatedToVolatile() throws IOException {
+  public void stableIsUpdatedToImmutable() throws IOException {
     createDatabase("functions/STABLE_FUNCTION.xml");
     updateDatabase("functions/IMMUTABLE_FUNCTION.xml");
     assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
+  }
+
+  @Test
+  public void stableIsUpdatedToVolatile() throws IOException {
+    createDatabase("functions/STABLE_FUNCTION.xml");
+    updateDatabase("functions/SIMPLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/SIMPLE_FUNCTION.xml");
   }
 
   private void assertExportIsConsistent(String model) throws IOException {
