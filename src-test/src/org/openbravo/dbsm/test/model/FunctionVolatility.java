@@ -42,7 +42,7 @@ public class FunctionVolatility extends DbsmTest {
   @Test
   public void volatileFunctionsDontExportAttribute() throws IOException {
     createDatabase("functions/SIMPLE_FUNCTION.xml");
-    assertExportIsStable("functions/SIMPLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/SIMPLE_FUNCTION.xml");
   }
 
   @Test
@@ -60,37 +60,37 @@ public class FunctionVolatility extends DbsmTest {
   @Test
   public void stableFunctionsAreCreatedInDB() throws IOException {
     createDatabase("functions/STABLE_FUNCTION.xml");
-    assertExportIsStable("functions/STABLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/STABLE_FUNCTION.xml");
   }
 
   @Test
   public void immutableFunctionsAreCreatedInDB() throws IOException {
     createDatabase("functions/IMMUTABLE_FUNCTION.xml");
-    assertExportIsStable("functions/IMMUTABLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
   }
 
   @Test
   public void volatileIsUpdatedToStable() throws IOException {
     createDatabase("functions/SIMPLE_FUNCTION.xml");
     updateDatabase("functions/STABLE_FUNCTION.xml");
-    assertExportIsStable("functions/STABLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/STABLE_FUNCTION.xml");
   }
 
   @Test
   public void volatileIsUpdatedToImmutable() throws IOException {
     createDatabase("functions/SIMPLE_FUNCTION.xml");
     updateDatabase("functions/IMMUTABLE_FUNCTION.xml");
-    assertExportIsStable("functions/IMMUTABLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
   }
 
   @Test
   public void stableIsUpdatedToVolatile() throws IOException {
     createDatabase("functions/STABLE_FUNCTION.xml");
     updateDatabase("functions/IMMUTABLE_FUNCTION.xml");
-    assertExportIsStable("functions/IMMUTABLE_FUNCTION.xml");
+    assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
   }
 
-  private void assertExportIsStable(String model) throws IOException {
+  private void assertExportIsConsistent(String model) throws IOException {
     exportDatabase("/tmp/testDB");
     String exportedFile = new String(
         Files.readAllBytes(Paths.get("/tmp/testDB/functions/TEST1.xml")));
