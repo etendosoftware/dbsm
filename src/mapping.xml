@@ -158,6 +158,7 @@ under the License.
     <element name="function">
       <attribute name="name" property="name"/>
       <attribute name="type" property="type"/>
+      <attribute name="volatility" property="volatility" type="org.apache.ddlutils.model.Function$Volatility"/>
       <element property="parameters" updater="addParameter"/>
       <element name="body" property="body">
         <option>

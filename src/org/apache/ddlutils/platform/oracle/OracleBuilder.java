@@ -50,6 +50,7 @@ import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Table;
@@ -503,7 +504,7 @@ public class OracleBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected String getFunctionEndBody() {
+  protected String getFunctionEndBody(Function f) {
     return ";";
   }
 
@@ -1197,5 +1198,35 @@ public class OracleBuilder extends SqlBuilder {
     print("ALTER TABLE " + table.getName() + " MODIFY ");
     writeColumnType(column);
     printEndOfStatement();
+  }
+
+  @Override
+  protected void writeCreateFunctionStmt(Function function) throws IOException {
+    if (function.getTypeCode() == Types.NULL) {
+      print("CREATE OR REPLACE PROCEDURE ");
+    } else {
+      print("CREATE OR REPLACE FUNCTION ");
+    }
+    printIdentifier(getStructureObjectName(function));
+  }
+
+  @Override
+  protected String getFunctionReturn(Function function) {
+    String r = function.getTypeCode() == Types.NULL ? ""
+        : "RETURN " + getSqlType(function.getTypeCode());
+    switch (function.getVolatility()) {
+      case VOLATILE:
+        // no-op
+        break;
+      case STABLE:
+        r += "\n --OBTG:STABLE\n";
+        break;
+      case IMMUTABLE:
+        r += " DETERMINISTIC";
+        break;
+      default:
+        break;
+    }
+    return r;
   }
 }

@@ -121,6 +121,7 @@ public class DatabaseIO {
     reader.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
     reader.getXMLIntrospector().getConfiguration().setElementNameMapper(new HyphenatedNameMapper());
     reader.setValidating(isValidateXml());
+    reader.getBindingConfiguration().setObjectStringConverter(new DBSMObjectStringConverter());
     if (isUseInternalDtd()) {
       reader.setEntityResolver(new LocalEntityResolver());
     }

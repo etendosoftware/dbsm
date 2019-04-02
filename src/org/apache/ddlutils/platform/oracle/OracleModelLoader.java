@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2018 Openbravo S.L.U.
+ * Copyright (C) 2001-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -20,12 +20,16 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.ForeignKey;
+import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Function.Volatility;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ModelLoaderBase;
@@ -38,14 +42,19 @@ import org.openbravo.ddlutils.util.DBSMContants;
  * @author adrian
  */
 public class OracleModelLoader extends ModelLoaderBase {
+  private static final Pattern FUNC_HEADER_PATT = Pattern
+      .compile("\\A\\s*(FUNCTION|PROCEDURE)\\s+\\w+\\s*(\\((.*?)\\))??" //
+          + "\\s*(RETURN\\s+(\\w+)\\s*)?" //
+          + "( DETERMINISTIC\\s*)?" //
+          + "(\\s*--OBTG:(\\w+)\\s*)?" //
+          + "(/\\*.*?\\*/\\s*)?" //
+          + "(AS|IS)\\s+", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+  private static final Pattern FUNC_PARAM_PATT = Pattern.compile(
+      "^\\s*(.+?)\\s+((IN|OUT)\\s+)?(.+?)(\\s+DEFAULT\\s+(.+?))?\\s*?$", Pattern.CASE_INSENSITIVE);
 
   protected PreparedStatement _stmt_comments_tables;
 
   private static final String VIRTUAL_COLUMN_PREFIX = "SYS_NC";
-
-  /** Creates a new instance of BasicModelLoader */
-  public OracleModelLoader() {
-  }
 
   @Override
   protected String readName() {
@@ -127,7 +136,6 @@ public class OracleModelLoader extends ModelLoaderBase {
         "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
     _stmt_uniquecolumns = _connection.prepareStatement(
         "SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
-    firstExpressionInWhereClause = true;
     sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS " + _filter.getExcludeFilterWhereClause(
         "VIEW_NAME", _filter.getExcludedViews(), firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
@@ -185,7 +193,6 @@ public class OracleModelLoader extends ModelLoaderBase {
 
   @Override
   protected String translateDefault(String value, int type) {
-
     switch (type) {
       case Types.CHAR:
       case Types.VARCHAR:
@@ -193,14 +200,14 @@ public class OracleModelLoader extends ModelLoaderBase {
       case ExtTypes.NVARCHAR:
       case Types.LONGVARCHAR:
         if (value.length() >= 2 && value.startsWith("'") && value.endsWith("'")) {
-          value = value.substring(1, value.length() - 1);
+          String localValue = value.substring(1, value.length() - 1);
           int i = 0;
-          StringBuffer sunescaped = new StringBuffer();
-          while (i < value.length()) {
-            char c = value.charAt(i);
+          StringBuilder sunescaped = new StringBuilder();
+          while (i < localValue.length()) {
+            char c = localValue.charAt(i);
             if (c == '\'') {
               i++;
-              if (i < value.length()) {
+              if (i < localValue.length()) {
                 sunescaped.append(c);
                 i++;
               }
@@ -209,11 +216,7 @@ public class OracleModelLoader extends ModelLoaderBase {
               i++;
             }
           }
-          if (sunescaped.length() == 0) {
-            return null;
-          } else {
-            return sunescaped.toString();
-          }
+          return (sunescaped.length() == 0) ? null : sunescaped.toString();
         } else {
           return value;
         }
@@ -304,7 +307,7 @@ public class OracleModelLoader extends ModelLoaderBase {
         }
       });
       if (commentCol != null && !commentCol.equals("")) {
-        List<String> commentLines = new ArrayList<String>(Arrays.asList(commentCol.split("\\$")));
+        List<String> commentLines = new ArrayList<>(Arrays.asList(commentCol.split("\\$")));
         Pattern pat3 = Pattern.compile("--OBTG:ONCREATEDEFAULT:(.*?)--");
         for (String comment : commentLines) {
           Matcher match3 = pat3.matcher(comment);
@@ -551,5 +554,66 @@ public class OracleModelLoader extends ModelLoaderBase {
     });
 
     return fk;
+  }
+
+  @Override
+  protected Function readFunction(String name) throws SQLException {
+    Function f = new Function();
+    f.setName(name);
+    parseFunctionCode(f, readFunctionCode(name));
+    return f;
+  }
+
+  private void parseFunctionCode(Function f, String functioncode) {
+    Matcher mFunctionHeader = FUNC_HEADER_PATT.matcher(functioncode);
+
+    if (!mFunctionHeader.find()) {
+      _log.error("Function header not readed for function : " + f.getName());
+      return;
+    }
+    f.setTypeCode(translateParamType(mFunctionHeader.group(5)));
+
+    String body = functioncode.substring(mFunctionHeader.end(0));
+    String scomment = mFunctionHeader.group(9);
+    if (scomment != null) {
+      body = scomment + "\n" + body;
+    }
+    f.setBody(translatePLSQLBody(body));
+
+    setFunctionParams(f, mFunctionHeader);
+    setFunctionVolatility(f, mFunctionHeader);
+  }
+
+  private void setFunctionParams(Function f, Matcher mFunctionHeader) {
+    if (mFunctionHeader.group(3) != null) {
+      StringTokenizer t = new StringTokenizer(removeLineComments(mFunctionHeader.group(3)), ",");
+      while (t.hasMoreTokens()) {
+        Matcher mparam = FUNC_PARAM_PATT.matcher(t.nextToken());
+        if (mparam.find()) {
+          Parameter p = new Parameter();
+          p.setName(mparam.group(1));
+          p.setModeCode(translateMode(mparam.group(3)));
+          p.setTypeCode(translateParamType(mparam.group(4)));
+          p.setDefaultValue(translateParamDefault(mparam.group(6), p.getTypeCode()));
+
+          f.addParameter(p);
+        } else {
+          _log.error("Function parameter not readed for function : " + f.getName());
+        }
+      }
+    }
+  }
+
+  private void setFunctionVolatility(Function f, Matcher mFunctionHeader) {
+    String volatility = mFunctionHeader.group(6);
+    if (volatility != null && "DETERMINISTIC".equalsIgnoreCase(volatility.trim())) {
+      f.setVolatility(Volatility.IMMUTABLE);
+    }
+
+    // Oracle does not support STABLE functions, they are kept as a comment
+    String obtgComment = mFunctionHeader.group(8);
+    if ("STABLE".equalsIgnoreCase(obtgComment)) {
+      f.setVolatility(Volatility.STABLE);
+    }
   }
 }

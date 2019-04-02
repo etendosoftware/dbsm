@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
   <database name="FUNCTION TEST1">
-    <function name="TEST1" type="NUMERIC">
+    <function name="TEST1" type="NUMERIC" volatility="IMMUTABLE">
       <parameter name="p1" type="NUMERIC" mode="in">
         <default/>
       </parameter>

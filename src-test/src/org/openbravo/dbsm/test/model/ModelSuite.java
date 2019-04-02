@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015-2017 Openbravo S.L.U.
+ * Copyright (C) 2015-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -54,7 +54,8 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     CheckDisableAndEnableForeignKeysAndConstraints.class, //
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
     Functions.class, //
-    Views.class, //
+    FunctionVolatility.class, //
+    Views.class,
 
     AddDropConstraints.class, //
     TypeChangeSuite.class, //

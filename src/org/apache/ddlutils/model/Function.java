@@ -22,11 +22,11 @@ package org.apache.ddlutils.model;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.ddlutils.translation.NullTranslation;
 import org.apache.ddlutils.translation.Translation;
 
 /**
@@ -35,19 +35,48 @@ import org.apache.ddlutils.translation.Translation;
  * @version $Revision$
  */
 public class Function implements StructureObject, Cloneable {
+  public enum Volatility {
+    VOLATILE, STABLE, IMMUTABLE;
+
+    public static Volatility fromPGCode(String code) {
+      switch (code) {
+        case "v":
+          return VOLATILE;
+        case "s":
+          return STABLE;
+        case "i":
+          return IMMUTABLE;
+        default:
+          return VOLATILE;
+      }
+    }
+
+    /**
+     * Return Volatility name except for VOLATILE which an empty String is returned to prevent
+     * attribute to be written in xml for default case.
+     */
+    @Override
+    public String toString() {
+      if (this == VOLATILE) {
+        return "";
+      }
+      return super.toString();
+    }
+  }
 
   /** The name of the function, may be <code>null</code>. */
   private String _name;
   /** The parameters of the function. */
-  private ArrayList _parameters;
+  private List<Parameter> _parameters;
   /** The JDBC type code, one of the constants in {@link java.sql.Types}. */
   private int _typeCode;
   /** The body of the function. */
   private String _body;
   private String _originalBody;
-  /** The translation object of the function */
-  private Translation _translation = new NullTranslation();
+
   private boolean recreationRequired = false;
+
+  private Volatility volatility = Volatility.VOLATILE;
 
   /** Creates a new instance of Function */
   public Function() {
@@ -56,7 +85,7 @@ public class Function implements StructureObject, Cloneable {
 
   public Function(String name) {
     _name = name;
-    _parameters = new ArrayList();
+    _parameters = new ArrayList<>();
     _typeCode = Types.NULL;
     _body = null;
   }
@@ -87,20 +116,8 @@ public class Function implements StructureObject, Cloneable {
    * @return The notation
    */
   public String getNotation() {
-    StringBuffer s = new StringBuffer();
-    s.append(_name);
-    s.append("(");
-
-    for (int i = 0; i < _parameters.size(); i++) {
-      Parameter p = (Parameter) _parameters.get(i);
-      if (i > 0) {
-        s.append(", ");
-      }
-      s.append(p.getType());
-    }
-
-    s.append(")");
-    return s.toString();
+    return _name + "("
+        + _parameters.stream().map(Parameter::getType).collect(Collectors.joining(", ")) + ")";
   }
 
   /**
@@ -120,8 +137,7 @@ public class Function implements StructureObject, Cloneable {
    *          The type code
    */
   public void setTypeCode(int typeCode) {
-    String _type = TypeMap.getJdbcTypeName(typeCode);
-    if (_type == null) {
+    if (TypeMap.getJdbcTypeName(typeCode) == null) {
       throw new ModelException("Unknown JDBC type code " + typeCode);
     }
     _typeCode = typeCode;
@@ -169,7 +185,7 @@ public class Function implements StructureObject, Cloneable {
    * @return The parameter at this position
    */
   public Parameter getParameter(int idx) {
-    return (Parameter) _parameters.get(idx);
+    return _parameters.get(idx);
   }
 
   /**
@@ -178,7 +194,7 @@ public class Function implements StructureObject, Cloneable {
    * @return The parameters
    */
   public Parameter[] getParameters() {
-    return (Parameter[]) _parameters.toArray(new Parameter[_parameters.size()]);
+    return _parameters.toArray(new Parameter[_parameters.size()]);
   }
 
   /**
@@ -232,10 +248,8 @@ public class Function implements StructureObject, Cloneable {
    * @param parameters
    *          The parameters
    */
-  public void addParameters(Collection parameters) {
-    for (Iterator it = parameters.iterator(); it.hasNext();) {
-      addParameter((Parameter) it.next());
-    }
+  public void addParameters(Collection<Parameter> parameters) {
+    _parameters.addAll(parameters);
   }
 
   /**
@@ -283,9 +297,7 @@ public class Function implements StructureObject, Cloneable {
    * @return The parameter or <code>null</code> if there is no such parameter
    */
   public Parameter findParameter(String name, boolean caseSensitive) {
-    for (Iterator it = _parameters.iterator(); it.hasNext();) {
-      Parameter parameter = (Parameter) it.next();
-
+    for (Parameter parameter : _parameters) {
       if (caseSensitive) {
         if (parameter.getName().equals(name)) {
           return parameter;
@@ -297,24 +309,6 @@ public class Function implements StructureObject, Cloneable {
       }
     }
     return null;
-  }
-
-  /**
-   * Determines the index of the given parameter.
-   * 
-   * @param parameter
-   *          The parameter
-   * @return The index or <code>-1</code> if it is no parameter of this table
-   */
-  public int getParameterIndex(Parameter parameter) {
-    int idx = 0;
-
-    for (Iterator it = _parameters.iterator(); it.hasNext(); idx++) {
-      if (parameter == it.next()) {
-        return idx;
-      }
-    }
-    return -1;
   }
 
   /**
@@ -345,10 +339,8 @@ public class Function implements StructureObject, Cloneable {
   }
 
   public boolean hasOutputParameters() {
-
-    for (Iterator it = _parameters.iterator(); it.hasNext();) {
-      Parameter parameter = (Parameter) it.next();
-      if (parameter.getModeCode() == parameter.MODE_OUT) {
+    for (Parameter parameter : _parameters) {
+      if (parameter.getModeCode() == Parameter.MODE_OUT) {
         return true;
       }
     }
@@ -358,6 +350,7 @@ public class Function implements StructureObject, Cloneable {
   /**
    * {@inheritDoc}
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Object clone() throws CloneNotSupportedException {
     Function result = (Function) super.clone();
@@ -365,7 +358,7 @@ public class Function implements StructureObject, Cloneable {
     result._name = _name;
     result._body = _body;
     result._typeCode = _typeCode;
-    result._parameters = (ArrayList) _parameters.clone();
+    result._parameters = (List<Parameter>) ((ArrayList<Parameter>) _parameters).clone();
 
     return result;
   }
@@ -375,40 +368,16 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof Function) {
-      Function other = (Function) obj;
-
-      int typeCode2 = _typeCode;
-      int othertypeCode2 = other._typeCode;
-
-      /*
-       * System.out.println(other._translation.toString()); //System.out.println
-       * (other._translation.exec(other._body.trim()));
-       * System.out.println("NOMBRE"+_name.equals(other._name)); System.out
-       * .println("PARAMETROS: "+_parameters.equals(other._parameters)); System
-       * .out.println("BODY: "+_translation.exec(_body.trim()).equals
-       * (other._translation.exec(other._body.trim()))); try{ PrintWriter w1 = new PrintWriter(new
-       * BufferedWriter(new FileWriter("/home/openbravo/Desktop/t1"))); PrintWriter w2 = new
-       * PrintWriter(new BufferedWriter(new FileWriter("/home/openbravo/Desktop/t2"))); String
-       * b1=_translation.exec(_body.trim()); String b2=other._translation.exec(other._body.trim());
-       * w1.println(b1); w2.println(b2); w1.close(); w2.close();
-       * System.out.println("BODYS********************");
-       * System.out.println(_translation.exec(_body.trim()));
-       * System.out.println(other._translation.exec(other._body.trim()));
-       * System.out.println("BODYS********************"); }catch(Exception e){}
-       */
-
-      // Note that this compares case sensitive
-      // TODO: For now we ignore catalog and schema (type should be
-      // irrelevant anyways)
-      return new EqualsBuilder().append(_name, other._name)
-          .append(_parameters, other._parameters)
-          .append(_body, other._body)
-          .append(typeCode2, othertypeCode2)
-          .isEquals();
-    } else {
+    if (!(obj instanceof Function)) {
       return false;
     }
+    Function other = (Function) obj;
+    boolean sameIgnoreCase = equalsIgnoreCase(other);
+    if (!sameIgnoreCase) {
+      return false;
+    }
+
+    return new EqualsBuilder().append(_name, other._name).isEquals();
   }
 
   /**
@@ -417,18 +386,18 @@ public class Function implements StructureObject, Cloneable {
    * @param otherFunction
    *          The other function
    * @return <code>true</code> if this function is equal (ignoring case) to the given one
-   * @throws Exception
    */
   public boolean equalsIgnoreCase(Function otherFunction) {
-    int typeCode2 = _typeCode;
-
-    int othertypeCode2 = otherFunction._typeCode;
     try {
+      // @formatter:off
       return UtilsCompare.equalsIgnoreCase(_name, otherFunction._name)
-          && new EqualsBuilder().append(_parameters, otherFunction._parameters)
+          && new EqualsBuilder()
+              .append(_parameters, otherFunction._parameters)
               .append(_body, otherFunction._body)
-              .append(typeCode2, othertypeCode2)
+              .append(_typeCode, otherFunction._typeCode)
+              .append(volatility, otherFunction.volatility)
               .isEquals();
+      // @formatter:on
     } catch (Exception e) {
       throw new RuntimeException("Error while comparing functions " + this._name + " and "
           + otherFunction._name
@@ -452,8 +421,8 @@ public class Function implements StructureObject, Cloneable {
       e.append(_name, otherFunction._name);
 
       for (int i = 0; i < _parameters.size(); i++) {
-        Parameter p1 = (Parameter) _parameters.get(i);
-        Parameter p2 = (Parameter) otherFunction._parameters.get(i);
+        Parameter p1 = _parameters.get(i);
+        Parameter p2 = otherFunction._parameters.get(i);
         e.append(p1.getTypeCode(), p2.getTypeCode());
       }
 
@@ -469,9 +438,7 @@ public class Function implements StructureObject, Cloneable {
    * @param translation
    */
   public void setTranslation(Translation translation) {
-    _translation = translation;
-    for (int i = 0; i < _parameters.size(); i++) {
-      Parameter p = (Parameter) _parameters.get(i);
+    for (Parameter p : _parameters) {
       p.setTranslation(translation);
     }
   }
@@ -481,12 +448,11 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public int hashCode() {
-    // TODO: For now we ignore catalog and schema (type should be irrelevant
-    // anyways)
     return new HashCodeBuilder(17, 37).append(_name)
         .append(_parameters)
         .append(_typeCode)
         .append(_body)
+        .append(volatility)
         .toHashCode();
   }
 
@@ -495,14 +461,7 @@ public class Function implements StructureObject, Cloneable {
    */
   @Override
   public String toString() {
-    StringBuffer result = new StringBuffer();
-
-    result.append("Function [notation=");
-    result.append(getNotation());
-    result.append("; ");
-    result.append("]");
-
-    return result.toString();
+    return "Function " + _name + "[notation=" + getNotation() + "; ] " + volatility;
   }
 
   /** Sets whether recreation is required even no other changes are detected */
@@ -513,5 +472,13 @@ public class Function implements StructureObject, Cloneable {
   /** Is recreation required even no other changes are detected */
   public boolean isRecreationRequired() {
     return recreationRequired;
+  }
+
+  public Volatility getVolatility() {
+    return volatility;
+  }
+
+  public void setVolatility(Volatility volatility) {
+    this.volatility = volatility;
   }
 }

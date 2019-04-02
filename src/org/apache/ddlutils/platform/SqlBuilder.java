@@ -4218,7 +4218,7 @@ public abstract class SqlBuilder {
 
         print(body);
         // println();
-        print(getFunctionEndBody());
+        print(getFunctionEndBody(function));
 
         printEndOfStatement(getStructureObjectName(function));
       }
@@ -4231,22 +4231,12 @@ public abstract class SqlBuilder {
    * @param function
    *          The function
    */
-  protected void writeCreateFunctionStmt(Function function) throws IOException {
-    if (function.getTypeCode() == Types.NULL) {
-      print("CREATE OR REPLACE PROCEDURE ");
-    } else {
-      print("CREATE OR REPLACE FUNCTION ");
-    }
-    printIdentifier(getStructureObjectName(function));
-  }
+  abstract protected void writeCreateFunctionStmt(Function function) throws IOException;
 
   /**
    * Gets the return reserved identifier for a function.
    */
-  protected String getFunctionReturn(Function function) {
-    return function.getTypeCode() == Types.NULL ? ""
-        : "RETURN " + getSqlType(function.getTypeCode());
-  }
+  abstract protected String getFunctionReturn(Function function);
 
   /**
    * Gets the begin body clause for a function.
@@ -4258,7 +4248,7 @@ public abstract class SqlBuilder {
   /**
    * Gets the end body clause for a function.
    */
-  protected String getFunctionEndBody() {
+  protected String getFunctionEndBody(Function function) {
     return "";
   }
 
