@@ -34,7 +34,6 @@ import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
-import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.OBDataset;
@@ -75,11 +74,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
   /** main method invoked from export.database.structure ant task */
   public static void main(String[] args) {
-    try {
-      createExportDatabase(args).execute();
-    } finally {
-      SessionFactoryController.getInstance().closeHibernatePool();
-    }
+    createExportDatabase(args).execute();
   }
 
   private static ExportDatabase createExportDatabase(String[] args) {
