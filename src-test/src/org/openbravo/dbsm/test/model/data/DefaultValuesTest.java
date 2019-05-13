@@ -129,7 +129,7 @@ public class DefaultValuesTest extends DbsmTest {
   }
 
   private String getColumnDefaultValueInPostgres(String tableName, String columnName) {
-    String postgresSQLQuery = "SELECT d.adsrc AS default_value " //
+    String postgresSQLQuery = "SELECT pg_get_expr(d.adbin, d.adrelid) AS default_value " //
         + "FROM pg_attribute a " //
         + "LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum " //
         + "JOIN pg_class t ON t.oid = a.attrelid " //

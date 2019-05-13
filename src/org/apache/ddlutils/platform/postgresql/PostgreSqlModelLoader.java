@@ -175,7 +175,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + "         CASE atttypmod" + "             WHEN -1 THEN 0"
         + "             ELSE numeric_precision" + "         END" + " END,"
         + " numeric_scale, not pg_attribute.attnotnull," + " CASE pg_attribute.atthasdef"
-        + "     WHEN true THEN ( SELECT pg_attrdef.adsrc FROM pg_attrdef WHERE pg_attrdef.adrelid = pg_class.oid AND pg_attrdef.adnum = pg_attribute.attnum)"
+        + "     WHEN true THEN ( SELECT pg_get_expr(adbin, adrelid) FROM pg_attrdef WHERE pg_attrdef.adrelid = pg_class.oid AND pg_attrdef.adnum = pg_attribute.attnum)"
         + "     ELSE NULL::text" + " END"
         + " FROM pg_class, pg_namespace, pg_attribute, pg_type,information_schema.columns"
         + " WHERE pg_attribute.attrelid = pg_class.oid AND pg_attribute.atttypid = pg_type.oid AND pg_class.relnamespace = pg_namespace.oid AND pg_namespace.nspname = current_schema() AND pg_attribute.attnum > 0 "
