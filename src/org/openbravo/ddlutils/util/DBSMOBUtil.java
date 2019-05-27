@@ -1117,15 +1117,14 @@ public class DBSMOBUtil {
           }
           getLog().debug(change);
         }
-        getLog().info("Sorting foreign keys, indexes and checks after reversing templates...");
-        for (int tableIdx = 0; tableIdx < database.getTableCount(); tableIdx++) {
-          database.getTable(tableIdx).sortIndices(false);
-          database.getTable(tableIdx).sortChecks(false);
-        }
       } else {
         getLog().info("Couldn't find configuration script for template: " + sortedTemplates.get(i)
             + " (file: " + configScript.getAbsolutePath() + ")");
       }
+    }
+    for (int tableIdx = 0; tableIdx < database.getTableCount(); tableIdx++) {
+      database.getTable(tableIdx).sortIndices(false);
+      database.getTable(tableIdx).sortChecks(false);
     }
   }
 
