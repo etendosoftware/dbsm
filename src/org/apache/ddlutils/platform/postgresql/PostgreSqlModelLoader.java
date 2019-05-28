@@ -43,6 +43,7 @@ import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
+import org.apache.ddlutils.platform.SkipRowException;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -406,6 +407,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   int oidFunc;
   String comment = "";
   Array configs = null;
+  private static boolean invalidFunctionRead;
 
   @Override
   protected Function readFunction(String name) throws SQLException {
@@ -473,6 +475,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       }
     }
 
+    invalidFunctionRead = false;
+
     fillList(_stmt_functionparams, new RowFiller() {
       @Override
       public void fillRow(ResultSet r) throws SQLException {
@@ -518,6 +522,9 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
           for (int i = 0; i < atypes.length; i++) {
             Parameter p = new Parameter();
+            if (names == null || names[i] == null) {
+              invalidFunctionRead = true;
+            }
             if (names != null) {
               p.setName(names[i]);
             }
@@ -549,6 +556,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         }
       }
     });
+
+    if (invalidFunctionRead) {
+      throw new SkipRowException("Function parameter without name is not supported");
+    }
+
     firststep.set(false);
     paramsNVARCHAR.clear();
 

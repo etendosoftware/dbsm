@@ -812,7 +812,12 @@ public abstract class ModelLoaderBase implements ModelLoader {
     try {
       rs = stmt.executeQuery();
       while (rs.next()) {
-        l.add(r.getRow(rs));
+        try {
+          l.add(r.getRow(rs));
+        } catch (SkipRowException e) {
+          // just skip the current row
+          getLog().warn("Skipping row: " + e.getMessage());
+        }
       }
     } finally {
       if (rs != null) {

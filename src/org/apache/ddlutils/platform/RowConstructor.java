@@ -21,5 +21,5 @@ import java.sql.SQLException;
  */
 public interface RowConstructor {
 
-  public Object getRow(ResultSet r) throws SQLException;
+  public Object getRow(ResultSet r) throws SQLException, SkipRowException;
 }

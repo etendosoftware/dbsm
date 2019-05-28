@@ -16,6 +16,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -26,11 +27,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.openbravo.dbsm.test.base.DbsmTest;
+import org.openbravo.dbsm.test.base.TestLogAppender;
 
 public class Functions extends DbsmTest {
 
@@ -88,6 +92,24 @@ public class Functions extends DbsmTest {
         allOf(containsString("search_path"), containsString("public")));
   }
 
+  /** see issue #38179 */
+  @Test
+  public void invalidFunctionIsIgnored() throws SQLException {
+    assumeThat("not executing in Oracle", getRdbms(), is(Rdbms.PG));
+    try {
+      allowLogErrorsForThisTest();
+      resetDB();
+      createInvalidFunction();
+      updateDatabase("functions/SIMPLE_FUNCTION.xml");
+      List<String> warnAndErrors = TestLogAppender.getWarnAndErrors();
+      assertThat(warnAndErrors, not(IsEmptyCollection.empty()));
+      assertThat(warnAndErrors.get(0),
+          containsString("Skipping row: Function parameter without name is not supported"));
+    } finally {
+      removeInvalidFunction();
+    }
+  }
+
   private String getSearchPath(String functionName) throws SQLException {
     try (Connection cn = getDataSource().getConnection();
         PreparedStatement st = cn
@@ -112,6 +134,26 @@ public class Functions extends DbsmTest {
         "BEGIN\n" + //
         "  RETURN NULL;\n" + //
         "END ; $BODY$ LANGUAGE plpgsql;";
+    try (Connection cn = getDataSource().getConnection();
+        PreparedStatement st = cn.prepareStatement(code)) {
+      st.execute();
+    }
+  }
+
+  private void createInvalidFunction() throws SQLException {
+    String code = "CREATE FUNCTION bad_function(integer, integer) RETURNS integer " + //
+        " AS 'select $1 + $2;' " + //
+        " LANGUAGE SQL " + //
+        " IMMUTABLE " + //
+        " RETURNS NULL ON NULL INPUT;";
+    try (Connection cn = getDataSource().getConnection();
+        PreparedStatement st = cn.prepareStatement(code)) {
+      st.execute();
+    }
+  }
+
+  private void removeInvalidFunction() throws SQLException {
+    String code = "DROP FUNCTION bad_function(integer, integer);";
     try (Connection cn = getDataSource().getConnection();
         PreparedStatement st = cn.prepareStatement(code)) {
       st.execute();
