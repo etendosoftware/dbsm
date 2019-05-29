@@ -103,8 +103,8 @@ public class Functions extends DbsmTest {
       updateDatabase("functions/SIMPLE_FUNCTION.xml");
       List<String> warnAndErrors = TestLogAppender.getWarnAndErrors();
       assertThat(warnAndErrors, not(IsEmptyCollection.empty()));
-      assertThat(warnAndErrors.get(0),
-          containsString("Skipping row: Function parameter without name is not supported"));
+      assertThat(warnAndErrors.get(0), containsString(
+          "Skipping row: Invalid function BAD_FUNCTION. Function parameter without name is not supported"));
     } finally {
       removeInvalidFunction();
     }

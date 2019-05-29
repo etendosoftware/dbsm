@@ -40,10 +40,10 @@ import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Unique;
+import org.apache.ddlutils.platform.InvalidRowException;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
-import org.apache.ddlutils.platform.InvalidRowException;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -558,7 +558,8 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     });
 
     if (invalidFunctionRead) {
-      throw new InvalidRowException("Function parameter without name is not supported");
+      throw new InvalidRowException(
+          "Invalid function " + f.getName() + ". Function parameter without name is not supported");
     }
 
     firststep.set(false);
