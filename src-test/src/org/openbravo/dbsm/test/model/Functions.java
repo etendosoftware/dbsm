@@ -92,7 +92,7 @@ public class Functions extends DbsmTest {
         allOf(containsString("search_path"), containsString("public")));
   }
 
-  /** see issue #38179 */
+  /** see issue #40264 */
   @Test
   public void invalidFunctionIsIgnored() throws SQLException {
     assumeThat("not executing in Oracle", getRdbms(), is(Rdbms.PG));
