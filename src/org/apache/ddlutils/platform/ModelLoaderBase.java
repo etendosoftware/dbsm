@@ -814,7 +814,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
       while (rs.next()) {
         try {
           l.add(r.getRow(rs));
-        } catch (SkipRowException e) {
+        } catch (InvalidRowException e) {
           // just skip the current row
           getLog().warn("Skipping row: " + e.getMessage());
         }

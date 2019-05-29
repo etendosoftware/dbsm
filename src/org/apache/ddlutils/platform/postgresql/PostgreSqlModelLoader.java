@@ -43,7 +43,7 @@ import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.platform.ModelLoaderBase;
 import org.apache.ddlutils.platform.RowConstructor;
 import org.apache.ddlutils.platform.RowFiller;
-import org.apache.ddlutils.platform.SkipRowException;
+import org.apache.ddlutils.platform.InvalidRowException;
 import org.apache.ddlutils.translation.Translation;
 import org.apache.ddlutils.util.ExtTypes;
 
@@ -558,7 +558,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     });
 
     if (invalidFunctionRead) {
-      throw new SkipRowException("Function parameter without name is not supported");
+      throw new InvalidRowException("Function parameter without name is not supported");
     }
 
     firststep.set(false);
