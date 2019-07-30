@@ -431,6 +431,13 @@ public class DbsmTest {
 
     currentPlatform.enableNOTNULLColumns(newDB);
 
+    log.info("Creating foreign keys");
+    boolean fksEnabled = platform.createAllFKs(newDB, false);
+
+    if (!fksEnabled) {
+      log.error("Not all the foreign keys were correctly activated.");
+    }
+
     ModelComparator comparator = new ModelComparator(currentPlatform.getPlatformInfo(),
         currentPlatform.isDelimitedIdentifierModeOn());
     List<ModelChange> newChanges = comparator.compare(
