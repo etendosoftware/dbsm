@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+  <database name="TABLE CHILD">
+    <table name="CHILD" primaryKey="CHILD_ID">
+      <column name="CHILD_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UN1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UN2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="PARENT" name="CHILD_PARENT_FK">
+        <reference local="UN1" foreign="UN1"/>
+        <reference local="UN2" foreign="UN2"/>
+      </foreign-key>
+    </table>
+  </database>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+  <database name="TABLE PARENT">
+    <table name="PARENT" primaryKey="PARENT_ID">
+      <column name="PARENT_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UN1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UN2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <unique name="TEST_UN">
+        <unique-column name="UN1"/>
+        <unique-column name="UN2"/>
+      </unique>
+    </table>
+  </database>

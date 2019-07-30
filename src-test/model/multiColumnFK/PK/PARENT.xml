@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+  <database name="TABLE PARENT">
+    <table name="PARENT" primaryKey="PARENT_ID">
+      <column name="PARENT_ID1" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PARENT_ID2" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

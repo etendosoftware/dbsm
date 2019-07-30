@@ -19,6 +19,9 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -795,5 +798,32 @@ public class DbsmTest {
     public String getValue(String colName) {
       return cols.get(colName);
     }
+  }
+
+  protected void assertExportIsConsistent(String model) throws IOException {
+    Database originalDb = DatabaseUtils.readDatabaseWithoutConfigScript(new File("model", model));
+
+    String exportPath = "/tmp/exportDB";
+    exportDatabase(exportPath);
+
+    for (Table table : originalDb.getTables()) {
+      log.info("comparing table: {}" + table);
+      Path originalTable = Paths.get("model", model, table.getName() + ".xml");
+      if (!Files.exists(originalTable)) {
+        throw new FileNotFoundException(
+            "Not found original xml model for table " + table.getName());
+      }
+
+      Path exportedTable = Paths.get(exportPath, "tables", table.getName() + ".xml");
+      if (!Files.exists(exportedTable)) {
+        throw new FileNotFoundException(
+            "Not found exported xml model for table " + table.getName());
+      }
+
+      String originalFile = new String(Files.readAllBytes(originalTable));
+      String exportedFile = new String(Files.readAllBytes(exportedTable));
+      assertThat(table.getName(), exportedFile, is(originalFile));
+    }
+    // TODO: implement the rest of DB artifacts
   }
 }
