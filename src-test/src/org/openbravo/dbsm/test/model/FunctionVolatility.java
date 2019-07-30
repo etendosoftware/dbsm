@@ -42,7 +42,7 @@ public class FunctionVolatility extends DbsmTest {
   @Test
   public void volatileFunctionsDontExportAttribute() throws IOException {
     createDatabase("functions/SIMPLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/SIMPLE_FUNCTION.xml");
+    assertExportConsistency("functions/SIMPLE_FUNCTION.xml");
   }
 
   @Test
@@ -60,44 +60,45 @@ public class FunctionVolatility extends DbsmTest {
   @Test
   public void stableFunctionsAreCreatedInDB() throws IOException {
     createDatabase("functions/STABLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/STABLE_FUNCTION.xml");
+    assertExportConsistency("functions/STABLE_FUNCTION.xml");
   }
 
   @Test
   public void immutableFunctionsAreCreatedInDB() throws IOException {
     createDatabase("functions/IMMUTABLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
+    assertExportConsistency("functions/IMMUTABLE_FUNCTION.xml");
   }
 
   @Test
   public void volatileIsUpdatedToStable() throws IOException {
     createDatabase("functions/SIMPLE_FUNCTION.xml");
     updateDatabase("functions/STABLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/STABLE_FUNCTION.xml");
+    assertExportConsistency("functions/STABLE_FUNCTION.xml");
   }
 
   @Test
   public void volatileIsUpdatedToImmutable() throws IOException {
     createDatabase("functions/SIMPLE_FUNCTION.xml");
     updateDatabase("functions/IMMUTABLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
+    assertExportConsistency("functions/IMMUTABLE_FUNCTION.xml");
   }
 
   @Test
   public void stableIsUpdatedToImmutable() throws IOException {
     createDatabase("functions/STABLE_FUNCTION.xml");
     updateDatabase("functions/IMMUTABLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/IMMUTABLE_FUNCTION.xml");
+    assertExportConsistency("functions/IMMUTABLE_FUNCTION.xml");
   }
 
   @Test
   public void stableIsUpdatedToVolatile() throws IOException {
     createDatabase("functions/STABLE_FUNCTION.xml");
     updateDatabase("functions/SIMPLE_FUNCTION.xml");
-    assertExportIsConsistent("functions/SIMPLE_FUNCTION.xml");
+    assertExportConsistency("functions/SIMPLE_FUNCTION.xml");
   }
 
-  private void assertExportIsConsistent(String model) throws IOException {
+  private void assertExportConsistency(String model) throws IOException {
+    // TODO: use super.assertExportIsConsistent
     exportDatabase("/tmp/testDB");
     String exportedFile = new String(
         Files.readAllBytes(Paths.get("/tmp/testDB/functions/TEST1.xml")));
