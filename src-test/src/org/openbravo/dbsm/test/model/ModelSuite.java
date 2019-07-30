@@ -68,7 +68,8 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     ColumnOrderOnExport.class, //
 
     ColumnSizeChangesWithDependentViews.class, //
-    MultiColumnFK.class })
+    MultiColumnFK.class, //
+    CheckConstraintLowerCase.class })
 public class ModelSuite {
 
 }

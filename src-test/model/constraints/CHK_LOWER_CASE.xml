@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+  <database name="TABLE CHK_LOWER_CASE">
+    <table name="CHK_LOWER_CASE" primaryKey="CHK_LOWER_CASE_ID">
+      <column name="CHK_LOWER_CASE_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      
+      <check name="TEST_COLS_CHK"><![CDATA[COL1 IN ('lower_case', 'UPPER_CASE', 'camelCase')]]></check>
+    </table>
+  </database>
+  
