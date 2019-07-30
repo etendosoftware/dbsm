@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.io.FileUtils;
@@ -52,6 +53,8 @@ import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
+import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.OracleStandardBatchEvaluator;
@@ -807,23 +810,47 @@ public class DbsmTest {
     exportDatabase(exportPath);
 
     for (Table table : originalDb.getTables()) {
-      log.info("comparing table: {}" + table);
-      Path originalTable = Paths.get("model", model, table.getName() + ".xml");
-      if (!Files.exists(originalTable)) {
-        throw new FileNotFoundException(
-            "Not found original xml model for table " + table.getName());
-      }
+      compareDBOject(model, exportPath, table);
+    }
 
-      Path exportedTable = Paths.get(exportPath, "tables", table.getName() + ".xml");
-      if (!Files.exists(exportedTable)) {
-        throw new FileNotFoundException(
-            "Not found exported xml model for table " + table.getName());
-      }
-
-      String originalFile = new String(Files.readAllBytes(originalTable));
-      String exportedFile = new String(Files.readAllBytes(exportedTable));
-      assertThat(table.getName(), exportedFile, is(originalFile));
+    for (Function function : originalDb.getFunctions()) {
+      compareDBOject(model, exportPath, function);
     }
     // TODO: implement the rest of DB artifacts
   }
+
+  private void compareDBOject(String model, String exportPath, StructureObject dbObject)
+      throws IOException {
+    String objectType = dbObject.getClass().getSimpleName().toLowerCase();
+    log.info("comparing " + objectType + " " + dbObject.getName());
+    Path originalFile = getXml("model/" + model, dbObject);
+    Path exportedFile = getXml(exportPath + "/" + objectType + "s", dbObject);
+    String originalContent = cleanupFile(originalFile);
+    String exportedContent = cleanupFile(exportedFile);
+    assertThat(dbObject.getName(), originalContent, is(exportedContent));
+  }
+
+  private Path getXml(String model, StructureObject dbObject) throws FileNotFoundException {
+    Path xml;
+    if (model.endsWith(".xml")) {
+      xml = Paths.get(model);
+    } else {
+      xml = Paths.get(model, dbObject.getName() + ".xml");
+    }
+    if (!Files.exists(xml)) {
+      throw new FileNotFoundException("Not found xml model for "
+          + dbObject.getClass().getSimpleName() + " " + dbObject.getName());
+    }
+
+    return xml;
+  }
+
+  private String cleanupFile(Path file) throws IOException {
+    return Files.readAllLines(file)
+        .stream()
+        .map(String::trim)
+        .filter(l -> !l.isEmpty())
+        .collect(Collectors.joining("\n"));
+  }
+
 }
