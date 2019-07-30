@@ -12,16 +12,23 @@
 
 package org.apache.ddlutils.platform.postgresql;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.ddlutils.translation.CombinedTranslation;
 import org.apache.ddlutils.translation.ReplacePatTranslation;
 import org.apache.ddlutils.translation.ReplaceStrTranslation;
-import org.apache.ddlutils.translation.Translation;
 
 /**
  * 
  * @author adrian
  */
 public class PostgreSqlCheckTranslation extends CombinedTranslation {
+
+  private static final Pattern STRING_LITERAL = Pattern.compile("\\'(.*?)\\'");
 
   public PostgreSqlCheckTranslation() {
     // pg 9.3+ adds extra casting to character varying columns, let's remove them
@@ -53,11 +60,22 @@ public class PostgreSqlCheckTranslation extends CombinedTranslation {
     // handles numeric casting
     append(new ReplacePatTranslation("([0-9\\.\\-]+?)::[Nn][Uu][Mm][Ee][Rr][Ii][Cc]", "$1"));
 
-    append(new Translation() {
-      @Override
-      public String exec(String s) {
-        return s.toUpperCase();
-      }
-    });
+    append(this::capitalizeAllButStrings);
+  }
+
+  private String capitalizeAllButStrings(String s) {
+    List<String> matchList = new ArrayList<>();
+    Matcher regexMatcher = STRING_LITERAL.matcher(s);
+
+    // TODO: from JDK 9 StringBuilder is supported in Matcher.appendReplacement
+    StringBuffer sb = new StringBuffer();
+    int idx = 0;
+    while (regexMatcher.find()) {
+      regexMatcher.appendReplacement(sb, "{" + idx + "}");
+      matchList.add(regexMatcher.group());
+      idx++;
+    }
+    regexMatcher.appendTail(sb);
+    return MessageFormat.format(sb.toString().toUpperCase(), matchList.toArray());
   }
 }
