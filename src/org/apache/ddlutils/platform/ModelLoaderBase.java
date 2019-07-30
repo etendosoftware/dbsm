@@ -34,7 +34,6 @@ import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
-import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
@@ -478,30 +477,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     }
   }
 
-  protected ForeignKey readForeignKey(ResultSet rs) throws SQLException {
-    String fkRealName = rs.getString(1);
-    String fkName = fkRealName.toUpperCase();
-
-    final ForeignKey fk = new ForeignKey();
-
-    fk.setName(fkName);
-    fk.setForeignTableName(rs.getString(2));
-    fk.setOnDeleteCode(translateFKEvent(rs.getString(3)));
-    fk.setOnUpdateCode(translateFKEvent(rs.getString(4)));
-
-    _stmt_fkcolumns.setString(1, fkRealName);
-    fillList(_stmt_fkcolumns, new RowFiller() {
-      @Override
-      public void fillRow(ResultSet r) throws SQLException {
-        Reference ref = new Reference();
-        ref.setLocalColumnName(r.getString(1));
-        ref.setForeignColumnName(r.getString(2));
-        fk.addReference(ref);
-      }
-    });
-
-    return fk;
-  }
+  abstract protected ForeignKey readForeignKey(ResultSet rs) throws SQLException;
 
   protected Collection readIndexes(String tablename, boolean usePrefix) throws SQLException {
     if (_prefix == null || !usePrefix) {

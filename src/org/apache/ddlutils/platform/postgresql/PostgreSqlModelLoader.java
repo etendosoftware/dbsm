@@ -33,10 +33,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.Parameter;
+import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Unique;
@@ -67,6 +69,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected Translation _SQLTranslation = new PostgreSQLStandarization();
 
   protected Map<Integer, Integer> _paramtypes = new HashMap<Integer, Integer>();
+  private PreparedStatement _stmt_fkcolumnName;
 
   private static final int FUNCTION_BASED_COLUMN_INDEX_POSITION = 0;
 
@@ -223,10 +226,21 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + "\\\\_%' OR (UPPER(pg_constraint.conname::text)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
         + _moduleId + "')))" + " ORDER BY upper(pg_constraint.conname::text)");
 
-    _stmt_fkcolumns = _connection.prepareStatement("SELECT upper(pa1.attname), upper(pa2.attname)"
-        + " FROM pg_constraint pc, pg_class pc1, pg_attribute pa1, pg_class pc2, pg_attribute pa2"
-        + " WHERE pc.contype='f' and pc.conrelid= pc1.oid and pc.conname = ? and pa1.attrelid = pc1.oid and pa1.attnum = ANY(pc.conkey)"
-        + " and pc.confrelid = pc2.oid and pa2.attrelid = pc2.oid and pa2.attnum = ANY(pc.confkey)");
+    // @formatter:off
+    _stmt_fkcolumns = _connection.prepareStatement(
+        "select conrelid, conkey, confrelid, confkey\n" +
+        "  from pg_constraint\n" +
+        " where conname = ?\n" +
+        "   and contype = 'f'");
+
+     _stmt_fkcolumnName = _connection.prepareStatement(
+        "select upper(a1.attname), upper(a2.attname) \n" +
+        "  from pg_attribute a1, pg_attribute a2\n" +
+        " where a1.attrelid = ?\n" +
+        "   and a1.attnum = ?\n" +
+        "   and a2.attrelid = ?\n" +
+        "   and a2.attnum = ?");
+    // @formatter:on
 
     sql = "SELECT PG_CLASS.RELNAME, CASE PG_INDEX.indisunique WHEN true THEN 'UNIQUE' ELSE 'NONUNIQUE' END, "
         + " PG_INDEX.indclass, PG_GET_EXPR(PG_INDEX.indpred,PG_INDEX.indrelid,true)"
@@ -397,7 +411,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     super.closeMetadataSentences();
     _stmt_functionparams.close();
     _stmt_paramtypes.close();
-
+    _stmt_fkcolumnName.close();
   }
 
   int numDefaults;
@@ -1145,5 +1159,44 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       }
     }
     return uni;
+  }
+
+  @Override
+  protected ForeignKey readForeignKey(ResultSet rs) throws SQLException {
+    String fkRealName = rs.getString(1);
+    String fkName = fkRealName.toUpperCase();
+
+    final ForeignKey fk = new ForeignKey();
+
+    fk.setName(fkName);
+    fk.setForeignTableName(rs.getString(2));
+    fk.setOnDeleteCode(translateFKEvent(rs.getString(3)));
+    fk.setOnUpdateCode(translateFKEvent(rs.getString(4)));
+
+    _stmt_fkcolumns.setString(1, fkRealName);
+    fillList(_stmt_fkcolumns, r -> {
+      Long baseTableOID = r.getLong(1);
+      Short[] baseTableFKColumns = (Short[]) r.getArray(2).getArray();
+
+      Long fkTableOID = r.getLong(3);
+      Short[] fkTableFKColumns = (Short[]) r.getArray(4).getArray();
+
+      for (int i = 0; i < baseTableFKColumns.length; i++) {
+        _stmt_fkcolumnName.setLong(1, baseTableOID);
+        _stmt_fkcolumnName.setShort(2, baseTableFKColumns[i]);
+
+        _stmt_fkcolumnName.setLong(3, fkTableOID);
+        _stmt_fkcolumnName.setShort(4, fkTableFKColumns[i]);
+
+        fillList(_stmt_fkcolumnName, c -> {
+          Reference ref = new Reference();
+          ref.setLocalColumnName(c.getString(1));
+          ref.setForeignColumnName(c.getString(2));
+          fk.addReference(ref);
+        });
+      }
+    });
+
+    return fk;
   }
 }
