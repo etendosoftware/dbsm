@@ -1995,9 +1995,7 @@ public abstract class SqlBuilder {
     for (int i = 0; i < newColumns.size(); i++) {
       Column column = newColumns.get(i).getNewColumn();
       if (column.isRequired() && !column.isPrimaryKey()) {
-        if (getSqlType(column).equalsIgnoreCase("CLOB")
-            || getSqlType(column).equalsIgnoreCase("NCLOB")
-            || getSqlType(column).equalsIgnoreCase("BLOB")) {
+        if (isLargeObject(column)) {
           // In the case of Large Object columns in oracle, it is wrong to specify the type
           // when changing the null/not null constraint
           println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + " MODIFY "
@@ -2075,9 +2073,7 @@ public abstract class SqlBuilder {
       Column column = table.getColumn(i);
       if (column.isRequired() && !column.isPrimaryKey()
           && !recreatedTablesTwice.contains(table.getName())) {
-        if (getSqlType(column).equalsIgnoreCase("CLOB")
-            || getSqlType(column).equalsIgnoreCase("NCLOB")
-            || getSqlType(column).equalsIgnoreCase("BLOB")) {
+        if (isLargeObject(column)) {
           // In the case of Large Object columns in oracle, it is wrong to specify the type
           // when changing the null/not null constraint
           println(
@@ -2106,9 +2102,7 @@ public abstract class SqlBuilder {
     for (int i = 0; i < newColumns.size(); i++) {
       Column column = newColumns.get(i).getChangedColumn();
       if (column.isRequired() && !column.isPrimaryKey()) {
-        if (getSqlType(column).equalsIgnoreCase("CLOB")
-            || getSqlType(column).equalsIgnoreCase("NCLOB")
-            || getSqlType(column).equalsIgnoreCase("BLOB")) {
+        if (isLargeObject(column)) {
           // In the case of Large Object columns in oracle, it is wrong to specify the type
           // when changing the null/not null constraint
           println("ALTER TABLE " + newColumns.get(i).getChangedTable().getName() + " MODIFY "
@@ -2121,6 +2115,12 @@ public abstract class SqlBuilder {
       }
 
     }
+  }
+
+  private boolean isLargeObject(Column column) {
+    return getSqlType(column).equalsIgnoreCase("CLOB")
+        || getSqlType(column).equalsIgnoreCase("NCLOB")
+        || getSqlType(column).equalsIgnoreCase("BLOB");
   }
 
   public void processDataChanges(Database database, DatabaseData databaseData, List changes)
