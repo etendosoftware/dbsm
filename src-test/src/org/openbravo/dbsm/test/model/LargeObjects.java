@@ -19,23 +19,51 @@ public class LargeObjects extends DbsmTest {
   }
 
   @Test
-  public void largeObjectsShouldBeSupported() {
-    Database database;
-    Column blobField;
-    Column clobField;
+  public void canCreateDBWithLargeRequiredObjects() {
     createDatabase("largeObjects/BLOB_TABLE_REQ.xml");
-    database = readModelFromDB();
-    blobField = database.findTable("BLOB_TABLE").findColumn("BLOB_FIELD");
-    assertThat(blobField.isRequired(), is(true));
-    clobField = database.findTable("BLOB_TABLE").findColumn("CLOB_FIELD");
-    assertThat(clobField.isRequired(), is(true));
-
-    updateDatabase("largeObjects/BLOB_TABLE_NOREQ.xml");
-    database = readModelFromDB();
-    blobField = database.findTable("BLOB_TABLE").findColumn("BLOB_FIELD");
-    assertThat(blobField.isRequired(), is(false));
-    clobField = database.findTable("BLOB_TABLE").findColumn("CLOB_FIELD");
-    assertThat(clobField.isRequired(), is(false));
+    assertColumnsAreRequired(true);
   }
 
+  @Test
+  public void canCreateDBWithLargeOptionalObjects() {
+    createDatabase("largeObjects/BLOB_TABLE_NOREQ.xml");
+    assertColumnsAreRequired(false);
+  }
+
+  @Test
+  public void canUpdateDBWithLargeRequiredObjects() {
+    resetDB();
+    updateDatabase("largeObjects/BLOB_TABLE_REQ.xml");
+    assertColumnsAreRequired(true);
+  }
+
+  @Test
+  public void canUpdateDBWithLargeOptionalObjects() {
+    resetDB();
+    updateDatabase("largeObjects/BLOB_TABLE_NOREQ.xml");
+    assertColumnsAreRequired(false);
+  }
+
+  @Test
+  public void canUpdateLargeObjetsFromMandatoryToNullable() {
+    createDatabase("largeObjects/BLOB_TABLE_REQ.xml");
+    updateDatabase("largeObjects/BLOB_TABLE_NOREQ.xml");
+    assertColumnsAreRequired(false);
+  }
+
+  @Test
+  public void canUpdateLargeObjetsFromNullableToMandatory() {
+    createDatabase("largeObjects/BLOB_TABLE_NOREQ.xml");
+    updateDatabase("largeObjects/BLOB_TABLE_REQ.xml");
+    assertColumnsAreRequired(true);
+  }
+
+  private void assertColumnsAreRequired(boolean required) {
+    Database database = readModelFromDB();
+    Column blobColumn = database.findTable("BLOB_TABLE").findColumn("BLOB_FIELD");
+    assertThat(blobColumn.getName() + " is required", blobColumn.isRequired(), is(required));
+
+    Column clobColumn = database.findTable("BLOB_TABLE").findColumn("CLOB_FIELD");
+    assertThat(clobColumn.getName() + " is required", clobColumn.isRequired(), is(required));
+  }
 }
