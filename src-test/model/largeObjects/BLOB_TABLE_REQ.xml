@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+  <database name="TABLE BLOB_TABLE">
+    <table name="BLOB_TABLE" primaryKey="BLOB_TABLE_ID">
+      <column name="BLOB_TABLE_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="BLOB_FIELD" primaryKey="false" required="true" type="BLOB" size="4000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CLOB_FIELD" primaryKey="false" required="true" type="CLOB" size="4000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>
