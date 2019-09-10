@@ -245,6 +245,13 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     assertExport("indexes/FUNCTION_INDEX_CASE.xml", "tables/TEST.xml");
   }
 
+  @Test
+  public void indexWithCoalseceVarChar() throws IOException {
+    resetDB();
+    updateDatabase("indexes/FUNCTION_INDEX_COALESCE.xml", false);
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_COALESCE.xml");
+  }
+
   // Given the name of an index, return a string representation of its column, along with the
   // function applied to them
   private String getColumnsFromIndex(String indexName) {
