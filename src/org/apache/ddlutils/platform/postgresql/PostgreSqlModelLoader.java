@@ -1039,10 +1039,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
   private String removeCastExpressions(String indexExpression) {
     // casts will start with :: and end either with ')', ',' or ' '
+    // they can be a single word or 2 words being last one "varying" (ie. character varying)
     // we replace all characters between '::' and one of these ending characters
 
-    String castExpressionRegExp = "(:{2}[a-zA-Z0-9]+)([ \\),])?";
-    int replacementGroup = 2;
+    String castExpressionRegExp = "(::[a-zA-Z0-9?]+( varying)?)([ \\),])?";
+    int replacementGroup = -1;
     return replaceRegularExpressionMatchings(indexExpression, castExpressionRegExp,
         replacementGroup);
   }
@@ -1059,12 +1060,30 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     return expr;
   }
 
-  private String replaceRegularExpressionMatchings(String string, String regExp, int groupIndex) {
+  /**
+   * Looks the given {@code string} all occurrences of of {@code regExp}, removing all groups
+   * defined in the expression except those with indices in {@code preserveGroups}.
+   * 
+   * {@code preserveGroups} can be either a positive number which preserves the group with that
+   * number, or negative, in which case it is the group starting by the last one, ie. if it is
+   * {@code -1} and there are 3 groups, it will keep 3rd group removing all the rest.
+   */
+  private String replaceRegularExpressionMatchings(String string, String regExp,
+      int... preserveGroups) {
     Pattern pattern = Pattern.compile(regExp);
     Matcher matcher = pattern.matcher(string);
     StringBuffer buffer = new StringBuffer();
     while (matcher.find()) {
-      String replacement = matcher.group(groupIndex) != null ? matcher.group(groupIndex) : "";
+      String replacement = "";
+      for (int preserve : preserveGroups) {
+        int groupIndex;
+        if (preserve >= 0) {
+          groupIndex = preserve;
+        } else {
+          groupIndex = matcher.groupCount() + preserve + 1;
+        }
+        replacement += matcher.group(groupIndex) != null ? matcher.group(groupIndex) : "";
+      }
       matcher.appendReplacement(buffer, replacement);
     }
     matcher.appendTail(buffer);
