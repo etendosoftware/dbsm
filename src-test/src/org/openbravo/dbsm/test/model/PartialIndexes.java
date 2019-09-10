@@ -119,7 +119,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASIC_INDEX.xml");
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX.xml");
   }
 
   @Test
@@ -130,7 +130,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml");
     updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
   }
 
   @Test
@@ -140,7 +140,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
     updateDatabase("indexes/BASIC_INDEX.xml");
-    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_INDEX.xml");
   }
 
   @Test
@@ -151,7 +151,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
     updateDatabase("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml");
-    assertExport("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_INDEX_AND_ON_CREATE_DEFAULT.xml");
   }
 
   @Test
@@ -162,7 +162,7 @@ public class PartialIndexes extends IndexBaseTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX2.xml");
     updateDatabase("indexes/BASIC_PARTIAL_INDEX3.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX3.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX3.xml");
   }
 
   @Test
@@ -251,7 +251,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX.xml");
   }
 
   @Test
@@ -261,7 +261,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX2.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX2.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX2.xml");
   }
 
   @Test
@@ -270,7 +270,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX3.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX3.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX3.xml");
   }
 
   @Test
@@ -279,7 +279,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml");
-    assertExport("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX.xml");
   }
 
   @Test
@@ -289,7 +289,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX2.xml");
-    assertExport("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX2.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/MULTIPLE_COLUMN_PARTIAL_INDEX2.xml");
   }
 
   @Test
@@ -298,7 +298,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_PARTIAL_INDEX.xml");
-    assertExport("indexes/FUNCTION_PARTIAL_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_PARTIAL_INDEX.xml");
   }
 
   @Test
@@ -308,7 +308,7 @@ public class PartialIndexes extends IndexBaseTest {
     boolean forceCreation = true;
     createDatabaseIfNeeded(forceCreation);
     updateDatabase("indexes/NESTED_FUNCTION_PARTIAL_INDEX.xml");
-    assertExport("indexes/NESTED_FUNCTION_PARTIAL_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/NESTED_FUNCTION_PARTIAL_INDEX.xml");
   }
 
   @Test
@@ -318,7 +318,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml");
-    assertExport("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_PARTIAL_INDEX_WITH_QUOTED_BLANKSPACES.xml");
   }
 
   @Test
@@ -328,7 +328,7 @@ public class PartialIndexes extends IndexBaseTest {
     assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
   }
 
   @Test
@@ -338,7 +338,7 @@ public class PartialIndexes extends IndexBaseTest {
     assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
     updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
-    assertExport("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
   }
 
   @Test
@@ -349,7 +349,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml");
     updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
   }
 
   @Test
@@ -360,7 +360,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASIC_PARTIAL_INDEX_AND_ON_CREATE_DEFAULT.xml");
     updateDatabase("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml");
-    assertExport("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASE_MODEL_ON_CREATE_DEFAULT.xml");
   }
 
   @Test
@@ -369,7 +369,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/SEVERAL_PARTIAL_INDEXES.xml");
-    assertExport("indexes/SEVERAL_PARTIAL_INDEXES.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/SEVERAL_PARTIAL_INDEXES.xml");
   }
 
   @Test
@@ -380,7 +380,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASE_MODEL_WITH_INDEXES.xml");
     updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
-    assertExport("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
   }
 
   @Test
@@ -392,7 +392,7 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/PARTIAL_INDEXES_AND_ON_CREATE_DEFAULTS.xml");
     updateDatabase("indexes/BASE_MODEL_WITH_INDEXES.xml");
-    assertExport("indexes/BASE_MODEL_WITH_INDEXES.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASE_MODEL_WITH_INDEXES.xml");
   }
 
   @Test
@@ -403,6 +403,6 @@ public class PartialIndexes extends IndexBaseTest {
     resetDB();
     createDatabase("indexes/BASE_MODEL.xml");
     updateDatabase("indexes/BASIC_PARTIAL_INDEX4.xml");
-    assertExport("indexes/BASIC_PARTIAL_INDEX4.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_PARTIAL_INDEX4.xml");
   }
 }

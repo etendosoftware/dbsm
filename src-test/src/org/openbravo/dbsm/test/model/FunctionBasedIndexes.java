@@ -109,7 +109,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_INDEX.xml");
 
-    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_INDEX.xml");
   }
 
   @Test
@@ -119,7 +119,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml");
-    assertExport("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_WITH_QUOTED_BLANKSPACES.xml");
   }
 
   @Test
@@ -129,7 +129,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_TWO_ARGUMENTS.xml");
-    assertExport("indexes/FUNCTION_INDEX_TWO_ARGUMENTS.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_TWO_ARGUMENTS.xml");
   }
 
   @Test
@@ -156,7 +156,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_BASED_INDEXES.xml");
 
-    assertExport("indexes/FUNCTION_BASED_INDEXES.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_BASED_INDEXES.xml");
   }
 
   @Test
@@ -166,7 +166,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     boolean forceCreation = true;
     createDatabaseIfNeeded(forceCreation);
     updateDatabase("indexes/NON_MONADIC_FUNCTION_INDEX.xml");
-    assertExport("indexes/NON_MONADIC_FUNCTION_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/NON_MONADIC_FUNCTION_INDEX.xml");
   }
 
   @Test
@@ -176,7 +176,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     boolean forceCreation = true;
     createDatabaseIfNeeded(forceCreation);
     updateDatabase("indexes/NESTED_FUNCTION_INDEX.xml");
-    assertExport("indexes/NESTED_FUNCTION_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/NESTED_FUNCTION_INDEX.xml");
   }
 
   @Test
@@ -189,7 +189,7 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     updateDatabase("indexes/FUNCTION_INDEX.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/FUNCTION_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX.xml");
   }
 
   @Test
@@ -197,52 +197,52 @@ public class FunctionBasedIndexes extends IndexBaseTest {
     assumeThat(getTestType(), is(TestType.onCreate));
     resetDB();
     updateDatabase("indexes/FUNCTION_INDEX.xml");
-    assertExport("indexes/FUNCTION_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX.xml");
 
     // 2nd update should perform model check, but it doesn't check correctly index type...
     updateDatabase("indexes/BASIC_INDEX.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_INDEX.xml");
   }
 
   @Test
   public void expressionWithOperators() throws IOException {
     resetDB();
     updateDatabase("indexes/FUNCTION_INDEX_OPERATOR.xml", false);
-    assertExport("indexes/FUNCTION_INDEX_OPERATOR.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_OPERATOR.xml");
 
     // 2nd update should perform model check, but it doesn't check correctly index type...
     updateDatabase("indexes/FUNCTION_INDEX_OPERATOR.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/FUNCTION_INDEX_OPERATOR.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_OPERATOR.xml");
   }
 
   @Test
   public void multiColumnWithExpressions() throws IOException {
     resetDB();
     updateDatabase("indexes/FUNCTION_INDEX_MULTI_COL.xml", false);
-    assertExport("indexes/FUNCTION_INDEX_MULTI_COL.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_MULTI_COL.xml");
 
     // 2nd update should perform model check, but it doesn't check correctly index type...
     updateDatabase("indexes/FUNCTION_INDEX_MULTI_COL.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/FUNCTION_INDEX_MULTI_COL.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_MULTI_COL.xml");
   }
 
   @Test
   public void indexWithCase() throws IOException {
     resetDB();
     updateDatabase("indexes/FUNCTION_INDEX_CASE.xml", false);
-    assertExport("indexes/FUNCTION_INDEX_CASE.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_CASE.xml");
 
     // 2nd update should perform model check, but it doesn't check correctly index type...
     updateDatabase("indexes/FUNCTION_INDEX_CASE.xml");
 
     // ...that's why we compare models now
-    assertExport("indexes/FUNCTION_INDEX_CASE.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_CASE.xml");
   }
 
   @Test

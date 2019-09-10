@@ -101,7 +101,7 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
-    assertExport("indexes/CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/CONTAINS_SEARCH_INDEX.xml");
   }
 
   @Test
@@ -110,7 +110,7 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/ICONTAINS_SEARCH_INDEX.xml");
-    assertExport("indexes/ICONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/ICONTAINS_SEARCH_INDEX.xml");
   }
 
   @Test
@@ -120,7 +120,7 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/BASIC_INDEX.xml");
     updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
-    assertExport("indexes/CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/CONTAINS_SEARCH_INDEX.xml");
   }
 
   @Test
@@ -130,7 +130,7 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     resetDB();
     updateDatabase("indexes/CONTAINS_SEARCH_INDEX.xml");
     updateDatabase("indexes/BASIC_INDEX.xml");
-    assertExport("indexes/BASIC_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_INDEX.xml");
   }
 
   @Test
@@ -188,7 +188,7 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/MULTIPLE_CONTAINS_SEARCH_INDEX.xml");
-    assertExport("indexes/MULTIPLE_CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/MULTIPLE_CONTAINS_SEARCH_INDEX.xml");
   }
 
   @Test
@@ -197,7 +197,7 @@ public class ContainsSearchIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml");
-    assertExport("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/PARTIAL_CONTAINS_SEARCH_INDEX.xml");
   }
 
   @Override

@@ -11,11 +11,6 @@
  */
 package org.openbravo.dbsm.test.model;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
@@ -27,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -36,9 +30,6 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 
 @RunWith(Parameterized.class)
 public class IndexBaseTest extends DbsmTest {
-
-  protected static final String EXPORT_DIR = "/tmp/export-test";
-
   protected enum TestType {
     onCreate, onUpdate
   }
@@ -79,25 +70,6 @@ public class IndexBaseTest extends DbsmTest {
     if (forceCreation || testType == TestType.onUpdate) {
       updateDatabase("indexes/BASE_MODEL.xml");
     }
-  }
-
-  protected void assertExport(String modelFileToCompare, String exportedTablePath)
-      throws IOException {
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedTable = new File(EXPORT_DIR, exportedTablePath);
-    assertThat("exported table exists", exportedTable.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedTable);
-    log.debug("exported Contents " + exportedContents);
-    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
-    log.debug("original Contents " + originalContents);
-    assertThat("exported contents", exportedContents, equalTo(originalContents));
   }
 
   /**

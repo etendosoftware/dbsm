@@ -48,7 +48,7 @@ public class IndexParallelization extends IndexBaseTest {
     resetDB();
     createDatabase("indexes/BASE_MODEL_FOUR_COLUMNS.xml");
     updateDatabase("indexes/THREE_INDEXES.xml");
-    assertExport("indexes/THREE_INDEXES.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/THREE_INDEXES.xml");
   }
 
 }

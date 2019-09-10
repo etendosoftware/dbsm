@@ -127,7 +127,7 @@ public class OperatorClassIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
-    assertExport("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
   }
 
   @Test
@@ -136,7 +136,7 @@ public class OperatorClassIndexes extends IndexBaseTest {
     resetDB();
     createDatabaseIfNeeded();
     updateDatabase("indexes/BASIC_INDEX_WITH_OPERATOR_CLASS.xml");
-    assertExport("indexes/BASIC_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASIC_INDEX_WITH_OPERATOR_CLASS.xml");
   }
 
   @Test
@@ -146,7 +146,7 @@ public class OperatorClassIndexes extends IndexBaseTest {
     createDatabaseIfNeeded();
     updateDatabase("indexes/FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
     updateDatabase("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
-    assertExport("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/OTHER_FUNCTION_INDEX_WITH_OPERATOR_CLASS.xml");
   }
 
   @Test

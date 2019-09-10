@@ -86,7 +86,7 @@ public class CheckIndexFunctionInPrescripts extends IndexBaseTest {
     setExcludeFilter(excludeFilter);
 
     updateDatabase("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
-    assertExport("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml", "tables/TEST.xml");
+    assertExportIsConsistent("indexes/BASE_FUNCTION_INDEX_PRESCRIPT.xml");
   }
 
   @After
