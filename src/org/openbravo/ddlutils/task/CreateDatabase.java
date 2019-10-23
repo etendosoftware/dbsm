@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2017 Openbravo S.L.U.
+ * Copyright (C) 2001-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -27,7 +27,6 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
-import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
@@ -52,7 +51,6 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   private String dirFilter;
   private String input;
-  private ExcludeFilter excludeFilter;
 
   private static final String MSG_ERROR = "There were serious problems while creating the database. Please review and fix them before continuing with the creation of the database.";
 
@@ -62,8 +60,6 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   @Override
   public void doExecute() {
-    excludeFilter = DBSMOBUtil.getInstance()
-        .getExcludeFilter(new File(model.getAbsolutePath() + "/../../../"));
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
         + getSystemUser());
     final Platform platform = getPlatformInstance();
