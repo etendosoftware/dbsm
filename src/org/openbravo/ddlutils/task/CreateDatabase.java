@@ -81,7 +81,7 @@ public class CreateDatabase extends BaseDatabaseTask {
     executePrescripts(platform);
   }
 
-  private void postCreateModel(final Platform platform, Database db) throws Exception {
+  protected void postCreateModel(final Platform platform, Database db) throws Exception {
     executePostscript(platform);
     writeChecksumInfo();
     insertSourceData(platform, db);
