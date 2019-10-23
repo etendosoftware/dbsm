@@ -103,7 +103,9 @@ public class CreateDatabase extends BaseDatabaseTask {
       // We read model files using the filter, obtaining a file array. The models will be merged
       // to create a final target model.
       final Vector<File> dirs = new Vector<>();
-      dirs.add(model);
+      if (model.exists()) {
+        dirs.add(model);
+      }
       final DirectoryScanner dirScanner = new DirectoryScanner();
       dirScanner.setBasedir(new File(modulesDir));
       final String[] dirFilterA = { dirFilter };
