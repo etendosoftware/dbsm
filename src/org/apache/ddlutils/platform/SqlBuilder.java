@@ -101,6 +101,8 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.IndexableModelObject;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Reference;
@@ -532,6 +534,13 @@ public abstract class SqlBuilder {
       createView(database.getView(idx));
     }
 
+    _log.info("Creating materialized views");
+    // Write the materialized views
+    for (int idx = 0; idx < database.getMaterializedViewCount(); idx++) {
+      _log.info("Create");
+      createMaterializedView(database.getMaterializedView(idx));
+    }
+
     // Write the triggers
     for (int idx = 0; idx < database.getTriggerCount(); idx++) {
       createTrigger(database, database.getTrigger(idx));
@@ -886,6 +895,10 @@ public abstract class SqlBuilder {
       createView(desiredModel.getView(i));
     }
 
+    for (int i = 0; i < desiredModel.getMaterializedViewCount(); i++) {
+      createMaterializedView(desiredModel.getMaterializedView(i));
+    }
+
     // We will now recreate the unchanged foreign keys
     ListOrderedMap changesPerTable = new ListOrderedMap();
     ListOrderedMap unchangedFKs = new ListOrderedMap();
@@ -955,7 +968,8 @@ public abstract class SqlBuilder {
    *          a map of all the tables that have new indexes, along with the new indexes
    * @throws IOException
    */
-  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+  protected void newIndexesPostAction(Map<IndexableModelObject, List<Index>> newIndexesMap)
+      throws IOException {
   }
 
   /**
@@ -965,8 +979,9 @@ public abstract class SqlBuilder {
    *          a map of all the tables that have new indexes, along with the new indexes
    * @throws IOException
    */
-  private void newIndexesPostAction(Table table, Index[] indexes) throws IOException {
-    Map<Table, List<Index>> newIndexesMap = new HashMap<Table, List<Index>>();
+  private void newIndexesPostAction(IndexableModelObject table, Index[] indexes)
+      throws IOException {
+    Map<IndexableModelObject, List<Index>> newIndexesMap = new HashMap<>();
     newIndexesMap.put(table, Arrays.asList(indexes));
     newIndexesPostAction(newIndexesMap);
   }
@@ -1067,6 +1082,10 @@ public abstract class SqlBuilder {
 
     for (View view : currentModel.getViews()) {
       dropView(view);
+    }
+
+    for (MaterializedView materializedView : currentModel.getMaterializedViews()) {
+      dropMaterializedView(materializedView);
     }
   }
 
@@ -3645,6 +3664,25 @@ public abstract class SqlBuilder {
   }
 
   /**
+   * Writes the indexes of the given materialized view.
+   * 
+   * @param materializedView
+   *          The materialized view
+   */
+  protected void writeExternalIndicesCreateStmt(MaterializedView materializedView)
+      throws IOException {
+    for (int idx = 0; idx < materializedView.getIndexCount(); idx++) {
+      Index index = materializedView.getIndex(idx);
+
+      if (!index.isUnique() && !getPlatformInfo().isIndicesSupported()) {
+        throw new ModelException("Platform does not support non-unique indices");
+      }
+      writeExternalIndexCreateStmt(materializedView, index);
+    }
+    newIndexesPostAction(materializedView, materializedView.getIndices());
+  }
+
+  /**
    * Writes the indexes embedded within the create table statement.
    * 
    * @param table
@@ -3662,12 +3700,13 @@ public abstract class SqlBuilder {
   /**
    * Writes the given index of the table.
    * 
-   * @param table
-   *          The table
+   * @param indexableObject
+   *          The i
    * @param index
    *          The index
    */
-  protected void writeExternalIndexCreateStmt(Table table, Index index) throws IOException {
+  protected void writeExternalIndexCreateStmt(IndexableModelObject indexableObject, Index index)
+      throws IOException {
     if (getPlatformInfo().isIndicesSupported()) {
       if (index.getName() == null) {
         _log.warn("Cannot write unnamed index " + index);
@@ -3679,7 +3718,7 @@ public abstract class SqlBuilder {
         print(" INDEX ");
         printIdentifier(getConstraintObjectName(index));
         print(" ON ");
-        printIdentifier(getStructureObjectName(table));
+        printIdentifier(getStructureObjectName(indexableObject));
         writeMethod(index);
         print(" (");
 
@@ -3694,13 +3733,13 @@ public abstract class SqlBuilder {
             // parenthesis to support ORA-PG compatibility
             print("(" + idxColumn.getFunctionExpression() + ")");
           } else {
-            Column col = table.findColumn(idxColumn.getName());
+            Column col = indexableObject.findColumn(idxColumn.getName());
 
             if (col == null) {
               // would get null pointer on next line anyway, so throw
               // exception
               throw new ModelException("Invalid column '" + idxColumn.getName() + "' on index "
-                  + index.getName() + " for table " + table.getName());
+                  + index.getName() + " for table " + indexableObject.getName());
             }
             printIdentifier(getColumnName(col));
           }
@@ -4161,6 +4200,37 @@ public abstract class SqlBuilder {
   }
 
   /**
+   * Writes the given materialized view .
+   * 
+   * @param materialized
+   *          view The view
+   */
+  protected void createMaterializedView(MaterializedView materializedView) throws IOException {
+    if (getPlatformInfo().isViewsSupported()) {
+      if (materializedView.getName() == null) {
+        _log.warn("Cannot write unnamed materialized view " + materializedView);
+      } else {
+        printStartOfStatement("MATERIALIZED VIEW", getStructureObjectName(materializedView));
+        writeCreateMaterializedViewStatement(materializedView);
+        printEndOfStatement(getStructureObjectName(materializedView));
+        writeExternalIndicesCreateStmt(materializedView);
+      }
+    }
+  }
+
+  /**
+   * Writes the create statement of a new materialized view
+   * 
+   * @param materializedView
+   *          the in-memory model of the materialized view
+   * @throws IOException
+   */
+  protected void writeCreateMaterializedViewStatement(MaterializedView materializedView)
+      throws IOException {
+    throw new RuntimeException("Needs to be implemented by a specific db class");
+  }
+
+  /**
    * Drops the given view .
    * 
    * @param view
@@ -4178,6 +4248,28 @@ public abstract class SqlBuilder {
         printStartOfStatement("VIEW", getStructureObjectName(view));
 
         print("DROP VIEW ");
+        printIdentifier(getStructureObjectName(view));
+
+        printEndOfStatement(getStructureObjectName(view));
+      }
+    }
+  }
+
+  /**
+   * Drops the given materialized view .
+   * 
+   * @param materialized
+   *          view The materialized view
+   */
+  protected void dropMaterializedView(MaterializedView view) throws IOException {
+
+    if (getPlatformInfo().isViewsSupported()) {
+      if (view.getName() == null) {
+        _log.warn("Cannot write unnamed view " + view);
+      } else {
+        printStartOfStatement("MATERIALIZED VIEW", getStructureObjectName(view));
+
+        print("DROP MATERIALIZED VIEW ");
         printIdentifier(getStructureObjectName(view));
 
         printEndOfStatement(getStructureObjectName(view));

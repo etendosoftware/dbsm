@@ -27,6 +27,7 @@ under the License.
       <element property="tables" updater="addTable"/>
       <element property="sequences" updater="addSequence"/>
       <element property="views" updater="addView"/>
+      <element property="materializedViews" updater="addMaterializedView"/>
       <element property="functions" updater="addFunction"/>
       <element property="triggers" updater="addTrigger"/>
     </element>
@@ -154,6 +155,19 @@ under the License.
     </element>
   </class>
   
+  <class name="org.apache.ddlutils.model.MaterializedView">
+    <element name="materializedView">
+        <attribute name="name" property="name"/>
+        <text property="statement"/>
+        <option>
+            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+            <value>CDATA</value>
+        </option>
+      <element property="columns"     updater="addColumn"/>
+      <element property="indices"     updater="addIndex"/>
+    </element>
+  </class>  
+  
   <class name="org.apache.ddlutils.model.Function">
     <element name="function">
       <attribute name="name" property="name"/>
@@ -277,6 +291,12 @@ under the License.
   
   <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedView">
     <element name="excludedView">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
+  
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedMaterializedView">
+    <element name="excludedMaterializedView">
       <attribute name="name" property="name"/>
     </element>
   </class>

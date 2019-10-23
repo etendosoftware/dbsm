@@ -53,6 +53,8 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.IndexableModelObject;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
@@ -517,6 +519,17 @@ public class OracleBuilder extends SqlBuilder {
     print(getSQLTranslation().exec(view.getStatement()));
   }
 
+  @Override
+  protected void writeCreateMaterializedViewStatement(MaterializedView view) throws IOException {
+    print(" CREATE MATERIALIZED VIEW ");
+    printIdentifier(getStructureObjectName(view));
+    print(" BUILD DEFERRED ");
+    print(" REFRESH COMPLETE ");
+    print(" ON DEMAND ");
+    print(" AS ");
+    print(getSQLTranslation().exec(view.getStatement()));
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -688,13 +701,14 @@ public class OracleBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void newIndexesPostAction(Map<Table, List<Index>> newIndexesMap) throws IOException {
+  protected void newIndexesPostAction(Map<IndexableModelObject, List<Index>> newIndexesMap)
+      throws IOException {
     // Updates the comments of the tables that have new indexes, to prevent losing the info about
     // the operator class or partial indexing of the indexed columns
-    for (Table table : newIndexesMap.keySet()) {
+    for (IndexableModelObject indexableModelObject : newIndexesMap.keySet()) {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       List<Index> partialIndexes = new ArrayList<Index>();
-      for (Index index : newIndexesMap.get(table)) {
+      for (Index index : newIndexesMap.get(indexableModelObject)) {
         if (indexHasColumnWithOperatorClass(index) || index.isContainsSearch()) {
           indexesWithOperatorClass.add(index);
         }
@@ -703,10 +717,16 @@ public class OracleBuilder extends SqlBuilder {
         }
       }
       if (!indexesWithOperatorClass.isEmpty()) {
-        includeOperatorClassInTableComment(table, indexesWithOperatorClass);
+        if (indexableModelObject instanceof Table) {
+          includeOperatorClassInTableComment((Table) indexableModelObject,
+              indexesWithOperatorClass);
+        } else if (indexableModelObject instanceof MaterializedView) {
+          includeOperatorClassInMaterializedViewComment((MaterializedView) indexableModelObject,
+              indexesWithOperatorClass);
+        }
       }
       if (!partialIndexes.isEmpty()) {
-        includeWhereClauseInColumnComment(table, partialIndexes);
+        includeWhereClauseInColumnComment(indexableModelObject.getName(), partialIndexes);
       }
     }
 
@@ -741,24 +761,37 @@ public class OracleBuilder extends SqlBuilder {
    */
   private void includeOperatorClassInTableComment(Table table, List<Index> indexesWithOperatorClass)
       throws IOException {
+    String tableName = table.getName();
+    includeOperatorClassInComment("TABLE", tableName, getCommentOfTable(tableName),
+        indexesWithOperatorClass);
+  }
+
+  private void includeOperatorClassInMaterializedViewComment(MaterializedView materializedView,
+      List<Index> indexesWithOperatorClass) throws IOException {
+    String materializedViewName = materializedView.getName();
+    includeOperatorClassInComment("MATERIALIZED VIEW", materializedViewName,
+        getCommentOfMaterializedView(materializedViewName), indexesWithOperatorClass);
+  }
+
+  private void includeOperatorClassInComment(String objectType, String objectName,
+      String currentComments, List<Index> indexesWithOperatorClass) throws IOException {
     if (!indexesWithOperatorClass.isEmpty()) {
       // If the table already has comments, append new to comments to thems
-      String currentComments = getCommentOfTable(table.getName());
-      StringBuilder tableComment = new StringBuilder();
+      StringBuilder comment = new StringBuilder();
       if (currentComments != null) {
-        tableComment.append(currentComments);
+        comment.append(currentComments);
       }
       for (Index index : indexesWithOperatorClass) {
         for (IndexColumn indexColumn : index.getColumns()) {
           if (indexColumn.getOperatorClass() != null && !indexColumn.getOperatorClass().isEmpty()) {
-            tableComment.append(index.getName() + "." + indexColumn.getName() + ".operatorClass="
+            comment.append(index.getName() + "." + indexColumn.getName() + ".operatorClass="
                 + indexColumn.getOperatorClass() + "$");
           } else if (index.isContainsSearch()) {
-            tableComment.append(index.getName() + "." + DBSMContants.CONTAINS_SEARCH + "$");
+            comment.append(index.getName() + "." + DBSMContants.CONTAINS_SEARCH + "$");
           }
         }
       }
-      print("COMMENT ON TABLE " + table.getName() + " IS '" + tableComment.toString() + "'");
+      print("COMMENT ON " + objectType + " " + objectName + " IS '" + comment.toString() + "'");
       printEndOfStatement();
     }
   }
@@ -775,19 +808,19 @@ public class OracleBuilder extends SqlBuilder {
    *          the list of partial indexes
    * @throws IOException
    */
-  private void includeWhereClauseInColumnComment(Table table, List<Index> partialIndexes)
+  private void includeWhereClauseInColumnComment(String objectName, List<Index> partialIndexes)
       throws IOException {
     // If the column already has comments, the new comment will be appended
     Map<String, String> columnComments = new HashMap<String, String>();
     for (Index index : partialIndexes) {
       IndexColumn firstIndexColumn = index.getColumn(0);
-      String columnName = table.getName() + "." + firstIndexColumn.getName();
+      String columnName = objectName + "." + firstIndexColumn.getName();
       String currentColumnComment;
       if (columnComments.containsKey(columnName)) {
         currentColumnComment = columnComments.get(columnName);
       } else {
         String commentFromDatabase = transformInOracleComment(
-            getCommentOfColumn(table.getName(), firstIndexColumn.getName()));
+            getCommentOfColumn(objectName, firstIndexColumn.getName()));
         currentColumnComment = commentFromDatabase != null ? commentFromDatabase : "";
       }
       StringBuilder updatedColumnComment = new StringBuilder();
@@ -1087,6 +1120,21 @@ public class OracleBuilder extends SqlBuilder {
         PreparedStatement st = con.prepareStatement(
             "SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?")) {
       st.setString(1, tableName.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      if (rs.next()) {
+        tableComment = rs.getString(1);
+      }
+    } catch (SQLException e) {
+    }
+    return tableComment;
+  }
+
+  private String getCommentOfMaterializedView(String materializedViewName) {
+    String tableComment = null;
+    try (Connection con = getPlatform().getDataSource().getConnection();
+        PreparedStatement st = con.prepareStatement(
+            "SELECT comments FROM user_mview_comments WHERE UPPER(mview_name) = ?")) {
+      st.setString(1, materializedViewName.toUpperCase());
       ResultSet rs = st.executeQuery();
       if (rs.next()) {
         tableComment = rs.getString(1);

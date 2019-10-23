@@ -64,6 +64,8 @@ public class Database implements Serializable, Cloneable {
   private ArrayList _sequences = new ArrayList();
   /** The views. */
   private ArrayList _views = new ArrayList();
+  /** The materialized views. */
+  private ArrayList _materializedViews = new ArrayList();
   /** The functions. */
   private ArrayList _functions = new ArrayList();
   /** The functions. */
@@ -125,6 +127,19 @@ public class Database implements Serializable, Cloneable {
       }
       try {
         addView((View) view.clone());
+      } catch (CloneNotSupportedException ex) {
+        // won't happen
+      }
+    }
+
+    for (Iterator it = otherDb._materializedViews.iterator(); it.hasNext();) {
+      MaterializedView materializedView = (MaterializedView) it.next();
+
+      if (findMaterializedView(materializedView.getName()) != null) {
+        this.removeMaterializedView(findMaterializedView(materializedView.getName()));
+      }
+      try {
+        addMaterializedView((MaterializedView) materializedView.clone());
       } catch (CloneNotSupportedException ex) {
         // won't happen
       }
@@ -462,12 +477,31 @@ public class Database implements Serializable, Cloneable {
   }
 
   /**
+   * Returns the number of materialized views in this model.
+   * 
+   * @return The number of materialized views
+   */
+  public int getMaterializedViewCount() {
+    return _materializedViews.size();
+  }
+
+  /**
    * Returns the views in this model.
    * 
    * @return The views
    */
   public View[] getViews() {
     return (View[]) _views.toArray(new View[_views.size()]);
+  }
+
+  /**
+   * Returns the materialized views in this model.
+   * 
+   * @return The materialized views
+   */
+  public MaterializedView[] getMaterializedViews() {
+    return (MaterializedView[]) _materializedViews
+        .toArray(new MaterializedView[_materializedViews.size()]);
   }
 
   /**
@@ -482,6 +516,17 @@ public class Database implements Serializable, Cloneable {
   }
 
   /**
+   * Returns the materialized view at the specified position.
+   * 
+   * @param idx
+   *          The index of the materialized view
+   * @return The materialized view
+   */
+  public MaterializedView getMaterializedView(int idx) {
+    return (MaterializedView) _materializedViews.get(idx);
+  }
+
+  /**
    * Adds a view.
    * 
    * @param view
@@ -490,6 +535,18 @@ public class Database implements Serializable, Cloneable {
   public void addView(View view) {
     if (view != null) {
       _views.add(view);
+    }
+  }
+
+  /**
+   * Adds a materialized view.
+   * 
+   * @param materializedView
+   *          The materialized view to add
+   */
+  public void addMaterializedView(MaterializedView materializedView) {
+    if (materializedView != null) {
+      _materializedViews.add(materializedView);
     }
   }
 
@@ -520,6 +577,18 @@ public class Database implements Serializable, Cloneable {
   }
 
   /**
+   * Adds the given materialized views.
+   * 
+   * @param materializedViews
+   *          The materialized views to add
+   */
+  public void addMaterializedViews(Collection materializedViews) {
+    for (Iterator it = materializedViews.iterator(); it.hasNext();) {
+      addMaterializedView((MaterializedView) it.next());
+    }
+  }
+
+  /**
    * Removes the given view.
    * 
    * @param view
@@ -528,6 +597,18 @@ public class Database implements Serializable, Cloneable {
   public void removeView(View view) {
     if (view != null) {
       _views.remove(view);
+    }
+  }
+
+  /**
+   * Removes the given view.
+   * 
+   * @param view
+   *          The view to remove
+   */
+  public void removeMaterializedView(MaterializedView materializedView) {
+    if (materializedView != null) {
+      _materializedViews.remove(materializedView);
     }
   }
 
@@ -1111,6 +1192,18 @@ public class Database implements Serializable, Cloneable {
   }
 
   /**
+   * Finds the materialized view with the specified name, using case insensitive matching. Note that
+   * this method is not called getMaterializedView to avoid introspection problems.
+   * 
+   * @param name
+   *          The name of the materialized view to find
+   * @return The materialized view or <code>null</code> if there is no such materialized view
+   */
+  public MaterializedView findMaterializedView(String name) {
+    return findMaterializedView(name, false);
+  }
+
+  /**
    * Finds the view with the specified name, using case insensitive matching. Note that this method
    * is not called getView) to avoid introspection problems.
    * 
@@ -1131,6 +1224,33 @@ public class Database implements Serializable, Cloneable {
       } else {
         if (view.getName().equalsIgnoreCase(name)) {
           return view;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Finds the materialized view with the specified name, using case insensitive matching. Note that
+   * this method is not called getMaterializedView to avoid introspection problems.
+   * 
+   * @param name
+   *          The name of the materialized view to find
+   * @param caseSensitive
+   *          Whether case matters for the names
+   * @return The materialized view or <code>null</code> if there is no such materialized view
+   */
+  public MaterializedView findMaterializedView(String name, boolean caseSensitive) {
+    for (Iterator iter = _materializedViews.iterator(); iter.hasNext();) {
+      MaterializedView materializedView = (MaterializedView) iter.next();
+
+      if (caseSensitive) {
+        if (materializedView.getName().equals(name)) {
+          return materializedView;
+        }
+      } else {
+        if (materializedView.getName().equalsIgnoreCase(name)) {
+          return materializedView;
         }
       }
     }
@@ -1373,6 +1493,7 @@ public class Database implements Serializable, Cloneable {
     result._version = _version;
     result._tables = new ArrayList();
     result._views = new ArrayList();
+    result._materializedViews = new ArrayList();
     result._functions = new ArrayList();
     result._triggers = new ArrayList();
     result._sequences = new ArrayList();
@@ -1384,6 +1505,10 @@ public class Database implements Serializable, Cloneable {
     it = _views.iterator();
     while (it.hasNext()) {
       result._views.add(((View) it.next()).clone());
+    }
+    it = _materializedViews.iterator();
+    while (it.hasNext()) {
+      result._materializedViews.add(((MaterializedView) it.next()).clone());
     }
     it = _functions.iterator();
     while (it.hasNext()) {
@@ -1457,6 +1582,9 @@ public class Database implements Serializable, Cloneable {
     result.append(getViewCount());
     result.append(" views");
     result.append("; ");
+    result.append(getMaterializedViewCount());
+    result.append(" materialized views");
+    result.append("; ");
     result.append(getFunctionCount());
     result.append(" functions");
     result.append("; ");
@@ -1490,6 +1618,11 @@ public class Database implements Serializable, Cloneable {
     for (int idx = 0; idx < getViewCount(); idx++) {
       result.append(" ");
       result.append(getView(idx).toVerboseString());
+    }
+    result.append(" materialized views:");
+    for (int idx = 0; idx < getMaterializedViewCount(); idx++) {
+      result.append(" ");
+      result.append(getMaterializedView(idx).toVerboseString());
     }
     result.append(" functions:");
     for (int idx = 0; idx < getFunctionCount(); idx++) {
@@ -1557,6 +1690,13 @@ public class Database implements Serializable, Cloneable {
       View v = (View) _views.get(i);
       if (!filter.compliesWithNamingRuleObject(v.getName())) {
         _views.remove(v);
+        i--;
+      }
+    }
+    for (int i = 0; i < _materializedViews.size(); i++) {
+      MaterializedView mv = (MaterializedView) _materializedViews.get(i);
+      if (!filter.compliesWithNamingRuleObject(mv.getName())) {
+        _materializedViews.remove(mv);
         i--;
       }
     }

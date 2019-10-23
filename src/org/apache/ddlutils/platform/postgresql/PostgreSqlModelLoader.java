@@ -165,35 +165,55 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + " AND (upper(PG_CONSTRAINT.CONNAME::TEXT) LIKE 'EM_" + _prefix
         + "\\\\_%' OR (upper(PG_CONSTRAINT.CONNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
         + _moduleId + "')))");
-
-    sql = "SELECT UPPER(PG_ATTRIBUTE.ATTNAME::TEXT), UPPER(PG_TYPE.TYPNAME::TEXT), "
-        + " CASE PG_TYPE.TYPNAME" + "     WHEN 'varchar'::name THEN pg_attribute.atttypmod - 4"
-        + "     WHEN 'bpchar'::name THEN pg_attribute.atttypmod - 4" + "     ELSE NULL::integer"
-        + " END," + " CASE PG_TYPE.TYPNAME" + "     WHEN 'bytea'::name THEN 4000"
-        + "     WHEN 'text'::name THEN 4000" + "     WHEN 'oid'::name THEN 4000"
-        + "     ELSE CASE PG_ATTRIBUTE.ATTLEN "
-        + "              WHEN -1 THEN PG_ATTRIBUTE.ATTTYPMOD - 4 "
-        + "              ELSE PG_ATTRIBUTE.ATTLEN " + "          END" + " END,"
-        + " CASE pg_type.typname" + "     WHEN 'bytea'::name THEN 4000"
-        + "     WHEN 'text'::name THEN 4000" + "     WHEN 'oid'::name THEN 4000" + "     ELSE"
-        + "         CASE atttypmod" + "             WHEN -1 THEN 0"
-        + "             ELSE numeric_precision" + "         END" + " END,"
-        + " numeric_scale, not pg_attribute.attnotnull," + " CASE pg_attribute.atthasdef"
-        + "     WHEN true THEN ( SELECT pg_get_expr(adbin, adrelid) FROM pg_attrdef WHERE pg_attrdef.adrelid = pg_class.oid AND pg_attrdef.adnum = pg_attribute.attnum)"
-        + "     ELSE NULL::text" + " END"
-        + " FROM pg_class, pg_namespace, pg_attribute, pg_type,information_schema.columns"
-        + " WHERE pg_attribute.attrelid = pg_class.oid AND pg_attribute.atttypid = pg_type.oid AND pg_class.relnamespace = pg_namespace.oid AND pg_namespace.nspname = current_schema() AND pg_attribute.attnum > 0 "
-        + " AND PG_ATTRIBUTE.ATTNAME = information_schema.columns.column_name"
-        + " AND pg_class.relname = information_schema.columns.table_name"
-        + " AND pg_class.relname = ? ";
-    _stmt_listcolumns = _connection.prepareStatement(sql + " ORDER BY pg_attribute.attnum");
-    _stmt_listcolumns_noprefix = _connection
-        .prepareStatement(sql + " AND upper(PG_ATTRIBUTE.ATTNAME::TEXT) NOT LIKE 'EM\\\\_%'"
-            + " ORDER BY pg_attribute.attnum");
+    sql = "";
+    sql += "SELECT UPPER(a.ATTNAME::TEXT), ";
+    sql += "       UPPER(t.TYPNAME::TEXT), ";
+    sql += "       CASE t.TYPNAME ";
+    sql += "         WHEN 'varchar'::name THEN a.atttypmod - 4 ";
+    sql += "         WHEN 'bpchar'::name THEN a.atttypmod - 4  ELSE NULL::integer ";
+    sql += "       END, ";
+    sql += "       CASE t.TYPNAME ";
+    sql += "         WHEN 'bytea'::name THEN 4000 ";
+    sql += "         WHEN 'text'::name THEN 4000 ";
+    sql += "         WHEN 'oid'::name THEN 4000";
+    sql += "         ELSE ";
+    sql += "           CASE a.ATTLEN ";
+    sql += "             WHEN -1 THEN a.ATTTYPMOD - 4 ";
+    sql += "             ELSE a.ATTLEN   ";
+    sql += "           END ";
+    sql += "         END,";
+    sql += "         CASE t.typname  ";
+    sql += "          WHEN 'bytea'::name THEN 4000";
+    sql += "          WHEN 'text'::name THEN 4000 ";
+    sql += "          WHEN 'oid'::name THEN 4000 ";
+    sql += "          ELSE ";
+    sql += "            CASE atttypmod ";
+    sql += "              WHEN -1 THEN 0 ";
+    sql += "              ELSE coalesce(numeric_precision, 0) ";
+    sql += "             END ";
+    sql += "          END,";
+    sql += "          coalesce(numeric_scale, 0), ";
+    sql += "          not a.attnotnull, ";
+    sql += "          CASE a.atthasdef ";
+    sql += "            WHEN true THEN (SELECT pg_get_expr(adbin, adrelid) ";
+    sql += "                              FROM pg_attrdef ";
+    sql += "                             WHERE pg_attrdef.adrelid = c.oid ";
+    sql += "                               AND pg_attrdef.adnum = a.attnum)";
+    sql += "            ELSE NULL::text";
+    sql += "          END ";
+    sql += "     FROM pg_class c JOIN pg_attribute a ON c.oid = a.attrelid ";
+    sql += "     JOIN pg_type t ON a.atttypid = t.oid ";
+    sql += "     JOIN pg_namespace n ON c.relnamespace = n.oid ";
+    sql += "LEFT JOIN information_schema.columns isc on isc.table_name = c.relname AND isc.column_name = a.attname ";
+    sql += "    WHERE n.nspname = current_schema() AND a.attnum > 0 ";
+    sql += "      AND c.relname = ? ";
+    _stmt_listcolumns = _connection.prepareStatement(sql + " ORDER BY a.attnum");
+    _stmt_listcolumns_noprefix = _connection.prepareStatement(
+        sql + " AND upper(a.ATTNAME::TEXT) NOT LIKE 'EM\\\\_%'" + " ORDER BY a.attnum");
     _stmt_listcolumns_prefix = _connection.prepareStatement(sql
-        + " AND (upper(PG_ATTRIBUTE.ATTNAME::TEXT) LIKE 'EM_" + _prefix
-        + "\\\\_%' OR (UPPER(PG_ATTRIBUTE.ATTNAME::TEXT)||UPPER(PG_CLASS.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
-        + _moduleId + "')))" + " ORDER BY pg_attribute.attnum");
+        + " AND (upper(a.ATTNAME::TEXT) LIKE 'EM_" + _prefix
+        + "\\\\_%' OR (UPPER(a.ATTNAME::TEXT)||UPPER(c.RELNAME::TEXT) IN (SELECT upper(NAME1)||UPPER(NAME2) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+        + _moduleId + "')))" + " ORDER BY a.attnum");
 
     _stmt_pkcolumns = _connection.prepareStatement("SELECT upper(pg_attribute.attname::text)"
         + " FROM pg_constraint, pg_class, pg_attribute"
@@ -299,6 +319,17 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
           + _moduleId + "')))";
     }
     _stmt_listviews = _connection.prepareStatement(sql);
+
+    sql = "SELECT matviewname, pg_get_viewdef(matviewname, true) FROM pg_matviews "
+        + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND matviewname !~ '^pg_'"
+        + _filter.getExcludeFilterWhereClause("matviewname", _filter.getExcludedMaterializedViews(),
+            firstExpressionInWhereClause);
+    if (_prefix != null) {
+      sql += " AND (upper(matviewname) LIKE '" + _prefix
+          + "\\\\_%' OR (upper(matviewname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+          + _moduleId + "')))";
+    }
+    _stmt_listmaterializedviews = _connection.prepareStatement(sql);
 
     // sequences are partially loaded from catalog, details (start number and increment) are read by
     // readSequences method

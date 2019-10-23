@@ -64,12 +64,13 @@ public class OracleModelLoader extends ModelLoaderBase {
   @Override
   protected void initMetadataSentences() throws SQLException {
     String sql;
-    boolean firstExpressionInWhereClause = true;
+    boolean firstExpressionInWhereClause = false;
     String escapeClause = "ESCAPE '\\'";
-    _stmt_listtables = _connection.prepareStatement("SELECT TABLE_NAME FROM USER_TABLES "
-        + _filter.getExcludeFilterWhereClause("TABLE_NAME", _filter.getExcludedTables(),
-            firstExpressionInWhereClause, escapeClause)
-        + " ORDER BY TABLE_NAME");
+    _stmt_listtables = _connection.prepareStatement(
+        "SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME NOT IN (SELECT MVIEW_NAME FROM USER_MVIEWS) "
+            + _filter.getExcludeFilterWhereClause("TABLE_NAME", _filter.getExcludedTables(),
+                firstExpressionInWhereClause, escapeClause)
+            + " ORDER BY TABLE_NAME");
     _stmt_pkname = _connection.prepareStatement(
         "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'P' AND TABLE_NAME = ?");
     _stmt_pkname_prefix = _connection.prepareStatement(
@@ -136,6 +137,7 @@ public class OracleModelLoader extends ModelLoaderBase {
         "SELECT CONSTRAINT_NAME FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'U' AND TABLE_NAME = ? AND upper(CONSTRAINT_NAME) NOT LIKE 'EM\\_%' ESCAPE '\\' ORDER BY CONSTRAINT_NAME");
     _stmt_uniquecolumns = _connection.prepareStatement(
         "SELECT COLUMN_NAME FROM USER_CONS_COLUMNS WHERE CONSTRAINT_NAME = ? ORDER BY POSITION");
+    firstExpressionInWhereClause = true;
     sql = "SELECT VIEW_NAME, TEXT FROM USER_VIEWS " + _filter.getExcludeFilterWhereClause(
         "VIEW_NAME", _filter.getExcludedViews(), firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
@@ -144,6 +146,15 @@ public class OracleModelLoader extends ModelLoaderBase {
           + _moduleId + "')))";
     }
     _stmt_listviews = _connection.prepareStatement(sql);
+    sql = "SELECT MVIEW_NAME, QUERY FROM USER_MVIEWS "
+        + _filter.getExcludeFilterWhereClause("matviewname", _filter.getExcludedMaterializedViews(),
+            firstExpressionInWhereClause, escapeClause);
+    if (_prefix != null) {
+      sql += " AND (UPPER(MVIEW_NAME) LIKE '" + _prefix
+          + "\\_%' ESCAPE '\\' OR (upper(MVIEW_NAME) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
+          + _moduleId + "')))";
+    }
+    _stmt_listmaterializedviews = _connection.prepareStatement(sql);
     firstExpressionInWhereClause = true;
     sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES "
         + _filter.getExcludeFilterWhereClause("SEQUENCE_NAME", _filter.getExcludedSequences(),
@@ -415,10 +426,19 @@ public class OracleModelLoader extends ModelLoaderBase {
    * "indexName1.indexColumn1.operatorClass=operatorClass1$indexName2.indexColumn2.operatorClass=operatorClass2$..."
    */
   private String getIndexOperatorClass(String indexName, String indexColumnName) {
+    _log.info("Getting operator class of index " + indexName);
+    String tableName = getTableNameFromIndexName(indexName);
+    _log.info("Tablename " + tableName);
+    String commentsQuery = null;
+    if (isMaterializedView(tableName)) {
+      commentsQuery = "SELECT comments FROM user_mview_comments WHERE UPPER(mview_name) = ?";
+    } else if (isTable(tableName)) {
+      commentsQuery = "SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?";
+    } else {
+      throw new UnsupportedOperationException();
+    }
     String operatorClass = null;
-    try (PreparedStatement st = _connection
-        .prepareStatement("SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?")) {
-      String tableName = getTableNameFromIndexName(indexName);
+    try (PreparedStatement st = _connection.prepareStatement(commentsQuery)) {
       st.setString(1, tableName.toUpperCase());
       ResultSet rs = st.executeQuery();
       String commentText = null;
@@ -440,6 +460,30 @@ public class OracleModelLoader extends ModelLoaderBase {
           + indexColumnName, e);
     }
     return operatorClass;
+  }
+
+  private boolean isMaterializedView(String name) {
+    try (PreparedStatement st = _connection
+        .prepareStatement("SELECT 1 FROM user_mviews WHERE UPPER(mview_name) = ?")) {
+      st.setString(1, name.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      return rs.next();
+    } catch (Exception e) {
+      _log.error("Error while checking if " + name + " is a materialized view");
+      return false;
+    }
+  }
+
+  private boolean isTable(String name) {
+    try (PreparedStatement st = _connection
+        .prepareStatement("SELECT 1 FROM user_tables WHERE UPPER(table_name) = ?")) {
+      st.setString(1, name.toUpperCase());
+      ResultSet rs = st.executeQuery();
+      return rs.next();
+    } catch (Exception e) {
+      _log.error("Error while checking if " + name + " is a table");
+      return false;
+    }
   }
 
   /**
@@ -475,11 +519,11 @@ public class OracleModelLoader extends ModelLoaderBase {
   }
 
   /**
-   * Given the name of an index, returns the name of the table it belongs to
+   * Given the name of an index, returns the name of the table or materialized view it belongs to
    * 
    * @param indexName
    *          the name of the index
-   * @return the name of the table it belongs to
+   * @return the name of the table or materialized view it belongs to
    */
   private String getTableNameFromIndexName(String indexName) {
     String tableName = null;

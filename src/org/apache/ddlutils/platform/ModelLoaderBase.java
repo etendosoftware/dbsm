@@ -33,6 +33,7 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
@@ -78,6 +79,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
   protected PreparedStatement _stmt_uniquecolumns;
 
   protected PreparedStatement _stmt_listviews;
+  protected PreparedStatement _stmt_listmaterializedviews;
 
   protected PreparedStatement _stmt_listsequences;
 
@@ -173,6 +175,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     _stmt_uniquecolumns.close();
 
     _stmt_listviews.close();
+    _stmt_listmaterializedviews.close();
 
     _stmt_listsequences.close();
 
@@ -207,6 +210,8 @@ public abstract class ModelLoaderBase implements ModelLoader {
     if (!onlyLoadTableColumns) {
       _log.info("Reading views...");
       db.addViews(readViews());
+      _log.info("Reading materialized views...");
+      db.addMaterializedViews(readMaterializedViews());
       _log.info("Reading sequences...");
       db.addSequences(readSequences());
       _log.info("Reading triggers...");
@@ -239,7 +244,6 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Collection readTables() throws SQLException {
-
     return readList(_stmt_listtables, new RowConstructor() {
       @Override
       public Object getRow(ResultSet r) throws SQLException {
@@ -589,6 +593,25 @@ public abstract class ModelLoaderBase implements ModelLoader {
         v.setName(r.getString(1));
         v.setStatement(translateSQL(r.getString(2)));
         return v;
+      }
+    });
+  }
+
+  protected Collection readMaterializedViews() throws SQLException {
+    return readList(_stmt_listmaterializedviews, new RowConstructor() {
+      @Override
+      public Object getRow(ResultSet r) throws SQLException {
+        MaterializedView mv = new MaterializedView();
+        String materializedViewName = r.getString(1);
+        mv.setName(materializedViewName.toUpperCase());
+        mv.setStatement(translateSQL(r.getString(2)));
+
+        boolean usePrefix = false;
+        // Columns
+        mv.addColumns(readColumns(materializedViewName, usePrefix));
+        // Indexes
+        mv.addIndices(readIndexes(materializedViewName, usePrefix));
+        return mv;
       }
     });
   }

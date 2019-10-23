@@ -41,6 +41,7 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.Parameter;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
@@ -661,6 +662,15 @@ public class PostgreSqlBuilder extends SqlBuilder {
     printIdentifier(getStructureObjectName(view));
     print(" AS ");
     print(getSQLTranslation().exec(view.getStatement()));
+  }
+
+  @Override
+  protected void writeCreateMaterializedViewStatement(MaterializedView view) throws IOException {
+    print("CREATE MATERIALIZED VIEW ");
+    printIdentifier(getStructureObjectName(view));
+    print(" AS ");
+    print(getSQLTranslation().exec(view.getStatement()));
+    print(" WITH NO DATA ");
   }
 
   @Override

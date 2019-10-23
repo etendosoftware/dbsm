@@ -22,6 +22,7 @@ import java.util.Vector;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedFunction;
+import org.apache.ddlutils.platform.modelexclusion.ExcludedMaterializedView;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedSequence;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedTable;
 import org.apache.ddlutils.platform.modelexclusion.ExcludedTrigger;
@@ -50,6 +51,7 @@ public class ExcludeFilter implements Cloneable {
   Vector<String> excludedFunctions = new Vector<String>();
   Vector<String> excludedTriggers = new Vector<String>();
   Vector<String> excludedViews = new Vector<String>();
+  Vector<String> excludedMaterializedViews = new Vector<String>();
   Vector<String> excludedSequences = new Vector<String>();
 
   private Logger log4j = Logger.getLogger(getClass());
@@ -63,6 +65,10 @@ public class ExcludeFilter implements Cloneable {
     }
     sb.append("***Filtered views: " + "\n");
     for (String s : excludedViews) {
+      sb.append("  -" + s + "\n");
+    }
+    sb.append("***Filtered materialized views: " + "\n");
+    for (String s : excludedMaterializedViews) {
       sb.append("  -" + s + "\n");
     }
     sb.append("***Filtered triggers: " + "\n");
@@ -97,6 +103,7 @@ public class ExcludeFilter implements Cloneable {
 
     filter.excludedTables.addAll(excludedTables);
     filter.excludedViews.addAll(excludedViews);
+    filter.excludedMaterializedViews.addAll(excludedMaterializedViews);
     filter.excludedTriggers.addAll(excludedTriggers);
     filter.excludedFunctions.addAll(excludedFunctions);
     filter.excludedSequences.addAll(excludedSequences);
@@ -121,6 +128,8 @@ public class ExcludeFilter implements Cloneable {
           excludedTables.add(((ExcludedTable) obj).getName());
         } else if (obj instanceof ExcludedView) {
           excludedViews.add(((ExcludedView) obj).getName());
+        } else if (obj instanceof ExcludedMaterializedView) {
+          excludedMaterializedViews.add(((ExcludedMaterializedView) obj).getName());
         } else if (obj instanceof ExcludedFunction) {
           excludedFunctions.add(((ExcludedFunction) obj).getName());
         } else if (obj instanceof ExcludedTrigger) {
@@ -177,6 +186,10 @@ public class ExcludeFilter implements Cloneable {
 
   public String[] getExcludedViews() {
     return excludedViews.toArray(new String[0]);
+  }
+
+  public String[] getExcludedMaterializedViews() {
+    return excludedMaterializedViews.toArray(new String[0]);
   }
 
   public String[] getExcludedSequences() {

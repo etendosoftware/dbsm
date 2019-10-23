@@ -40,7 +40,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
  * 
  * @version $Revision: 494338 $
  */
-public class Table implements StructureObject, Serializable, Cloneable {
+public class Table implements IndexableModelObject, StructureObject, Serializable, Cloneable {
   /** Unique ID for serialization purposes. */
   private static final long serialVersionUID = -5541154961302342608L;
 
@@ -616,6 +616,7 @@ public class Table implements StructureObject, Serializable, Cloneable {
    *          The name of the column
    * @return The column or <code>null</code> if there is no such column
    */
+  @Override
   public Column findColumn(String name) {
     return findColumn(name, false);
   }

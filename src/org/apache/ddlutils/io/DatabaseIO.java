@@ -37,6 +37,7 @@ import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
@@ -380,6 +381,20 @@ public class DatabaseIO {
       d.setName("VIEW " + v.getName());
       d.addView(v);
       write(d, new File(subdir, v.getName() + ".xml"));
+    }
+
+    // Write materialized views
+    subdir = new File(dir, "materializedViews");
+    if (model.getMaterializedViewCount() > 0) {
+      subdir.mkdirs();
+    }
+
+    for (int i = 0; i < model.getMaterializedViewCount(); i++) {
+      MaterializedView mv = model.getMaterializedView(i);
+      d = new Database();
+      d.setName("MATERIALIZED VIEW " + mv.getName());
+      d.addMaterializedView(mv);
+      write(d, new File(subdir, mv.getName() + ".xml"));
     }
 
     // Write sequences
