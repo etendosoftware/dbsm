@@ -14,6 +14,7 @@ package org.openbravo.dbsm.test.base;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
@@ -851,6 +852,40 @@ public class DbsmTest {
         .map(String::trim)
         .filter(l -> !l.isEmpty())
         .collect(Collectors.joining("\n"));
+  }
+
+  protected void assertExportedObject(String exportDir, String modelFileToCompare,
+      String exportedObjectPath, String xmlOpenTag, String xmlCloseTag) throws IOException {
+    File exportTo = new File(exportDir);
+    if (exportTo.exists()) {
+      exportTo.delete();
+    }
+    exportTo.mkdirs();
+    exportDatabase(exportDir);
+
+    File exportedView = new File(exportDir, exportedObjectPath);
+    assertThat("exported view exists", exportedView.exists(), is(true));
+
+    String exportedContents = FileUtils.readFileToString(exportedView);
+    log.debug("exported Contents " + exportedContents);
+    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
+    log.debug("original Contents " + originalContents);
+    assertEquals("exported contents",
+        getViewsXMLDefinition(originalContents, xmlOpenTag, xmlCloseTag),
+        getViewsXMLDefinition(exportedContents, xmlOpenTag, xmlCloseTag));
+  }
+
+  private ArrayList<String> getViewsXMLDefinition(String xmlContent, String xmlOpenTag,
+      String xmlCloseTag) {
+    String xmlModel = new String(xmlContent);
+    ArrayList<String> viewDefinitions = new ArrayList<String>();
+    while (xmlModel.indexOf(xmlOpenTag) != -1) {
+      int startIndex = xmlModel.indexOf(xmlOpenTag);
+      int endIndex = xmlModel.indexOf(xmlCloseTag) + xmlCloseTag.length();
+      viewDefinitions.add(xmlModel.substring(startIndex, endIndex));
+      xmlModel = xmlModel.substring(endIndex);
+    }
+    return viewDefinitions;
   }
 
 }

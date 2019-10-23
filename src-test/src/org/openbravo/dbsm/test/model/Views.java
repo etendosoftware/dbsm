@@ -12,22 +12,20 @@
 package org.openbravo.dbsm.test.model;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.openbravo.dbsm.test.base.DbsmTest;
 
 public class Views extends DbsmTest {
 
   protected static final String EXPORT_DIR = "/tmp/export-test";
+
+  private static final String VIEW_XML_OPEN_TAG = "<view";
+  private static final String VIEW_XML_CLOSE_TAG = "</view>";
 
   public Views(String rdbms, String driver, String url, String sid, String user, String password,
       String name) throws FileNotFoundException, IOException {
@@ -39,7 +37,7 @@ public class Views extends DbsmTest {
   public void exportBasicView() throws IOException {
     resetDB();
     updateDatabase("views/BASE_MODEL.xml", false);
-    assertViewExport("views/BASE_MODEL.xml", "views/TEST_VIEW.xml");
+    assertExportedView("views/BASE_MODEL.xml", "views/TEST_VIEW.xml");
   }
 
   @Test
@@ -49,7 +47,7 @@ public class Views extends DbsmTest {
   public void exportViewWithTextCast() throws IOException {
     resetDB();
     updateDatabase("views/TEXT_CAST_TEST_MODEL.xml", false);
-    assertViewExport("views/TEXT_CAST_TEST_MODEL.xml", "views/TEST_VIEW.xml");
+    assertExportedView("views/TEXT_CAST_TEST_MODEL.xml", "views/TEST_VIEW.xml");
   }
 
   @Test
@@ -61,55 +59,27 @@ public class Views extends DbsmTest {
     assumeThat("not executing in Oracle", getRdbms(), is(Rdbms.PG));
     resetDB();
     updateDatabase("views/DOUBLE_PRECISION_CAST_TEST_MODEL.xml", false);
-    assertViewExport("views/DOUBLE_PRECISION_CAST_TEST_MODEL.xml", "views/TEST_VIEW.xml");
+    assertExportedView("views/DOUBLE_PRECISION_CAST_TEST_MODEL.xml", "views/TEST_VIEW.xml");
   }
 
   @Test
   public void multipleInClauses() throws IOException {
     resetDB();
     updateDatabase("views/IN_VIEW.xml", false);
-    assertViewExport("views/IN_VIEW.xml", "views/TEST_VIEW.xml");
+    assertExportedView("views/IN_VIEW.xml", "views/TEST_VIEW.xml");
   }
 
   @Test
   public void multipleNotInClauses() throws IOException {
     resetDB();
     updateDatabase("views/NOT_IN_VIEW.xml", false);
-    assertViewExport("views/NOT_IN_VIEW.xml", "views/TEST_VIEW.xml");
+    assertExportedView("views/NOT_IN_VIEW.xml", "views/TEST_VIEW.xml");
   }
 
-  private void assertViewExport(String modelFileToCompare, String exportedViewPath)
+  private void assertExportedView(String modelFileToCompare, String exportedObjectPath)
       throws IOException {
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
-    exportDatabase(EXPORT_DIR);
-
-    File exportedView = new File(EXPORT_DIR, exportedViewPath);
-    assertThat("exported view exists", exportedView.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedView);
-    log.debug("exported Contents " + exportedContents);
-    String originalContents = FileUtils.readFileToString(new File("model", modelFileToCompare));
-    log.debug("original Contents " + originalContents);
-    assertEquals("exported contents", getViewsXMLDefinition(originalContents),
-        getViewsXMLDefinition(exportedContents));
-  }
-
-  private ArrayList<String> getViewsXMLDefinition(String xmlContent) {
-    final String viewOpenTag = "<view";
-    final String viewCloseTag = "</view>";
-    String xmlModel = new String(xmlContent);
-    ArrayList<String> viewDefinitions = new ArrayList<String>();
-    while (xmlModel.indexOf(viewOpenTag) != -1) {
-      int startIndex = xmlModel.indexOf(viewOpenTag);
-      int endIndex = xmlModel.indexOf(viewCloseTag) + viewCloseTag.length();
-      viewDefinitions.add(xmlModel.substring(startIndex, endIndex));
-      xmlModel = xmlModel.substring(endIndex);
-    }
-    return viewDefinitions;
+    assertExportedObject(EXPORT_DIR, modelFileToCompare, exportedObjectPath, VIEW_XML_OPEN_TAG,
+        VIEW_XML_CLOSE_TAG);
   }
 
 }

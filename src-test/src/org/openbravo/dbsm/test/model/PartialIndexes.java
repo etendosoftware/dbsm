@@ -49,6 +49,23 @@ public class PartialIndexes extends IndexBaseTest {
   }
 
   @Test
+  // Tests that partial indexes which make use of functions within the where clause are properly
+  // imported
+  public void importFunctionPartialIndexInMaterializedView() {
+    resetDB();
+    createDatabaseIfNeeded();
+    updateDatabase("indexes/FUNCTION_PARTIAL_INDEX_MATERIALIZED_VIEW.xml");
+    if (Rdbms.PG.equals(getRdbms())) {
+      String indexWhereClause = getWhereClauseForIndexFromDb("FUNCTION_INDEX");
+      assertThat(indexWhereClause.toUpperCase(), equalTo("UPPER(MATVIEWCOL::TEXT) = ''::TEXT"));
+    } else if (Rdbms.ORA.equals(getRdbms())) {
+      // In Oracle, the partial index definition should be stored in the comment of the first column
+      assertThat(getCommentOfColumnInOracle("TEST_MATERIALIZEDVIEW", "MATVIEWCOL"),
+          equalTo("FUNCTION_INDEX.whereClause=UPPER(MATVIEWCOL)=''$"));
+    }
+  }
+
+  @Test
   // Tests that partial indexes are properly imported
   public void importBasicPartialIndex() {
     resetDB();

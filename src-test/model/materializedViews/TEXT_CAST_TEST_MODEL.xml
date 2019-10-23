@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+  <database name="TABLE TEST">
+    <table name="TEST" primaryKey="TEST_ID">
+      <column name="TEST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL1" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COL2" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </table>
+    <materializedView name="TEST_MATERIALIZEDVIEW"><![CDATA[SELECT CASE WHEN substr(t.col1, 1, 17) = t.col2 THEN 1 ELSE 0 END AS matviewcol FROM test t]]>      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+    </materializedView>    
+  </database>

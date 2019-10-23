@@ -55,7 +55,8 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     CheckFollowsClauseCanBeDefinedInOracleTriggers.class, //
     Functions.class, //
     FunctionVolatility.class, //
-    Views.class,
+    Views.class, //
+    MaterializedViews.class, //
 
     AddDropConstraints.class, //
     TypeChangeSuite.class, //
@@ -70,7 +71,7 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     ColumnSizeChangesWithDependentViews.class, //
     MultiColumnFK.class, //
     CheckConstraintLowerCase.class, //
-    LargeObjects.class})
+    LargeObjects.class })
 public class ModelSuite {
 
 }

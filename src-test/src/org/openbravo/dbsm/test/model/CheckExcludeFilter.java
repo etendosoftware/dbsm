@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
@@ -134,6 +135,23 @@ public class CheckExcludeFilter extends DbsmTest {
     File notExcludedFile = new File(EXPORT_DIR + "/views/NOT_EXCLUDED_VIEW.xml");
     File excludedFile = new File(EXPORT_DIR + "/views/EXCLUDED_VIEW.xml");
     assertThat(excludedViewExistsInDb("EXCLUDED_VIEW"), equalTo(true));
+    assertThat(notExcludedFile.exists(), equalTo(true));
+    assertThat(excludedFile.exists(), equalTo(false));
+  }
+
+  @Test
+  // Tests that materialized views in the exclude filter are not exported
+  public void materializedViewIsExcluded() throws IOException {
+    resetDB();
+    updateDatabase("excludeFilter/BASE_MODEL_WITH_MATERIALIZEDVIEW.xml");
+    ExcludeFilter excludeFilter = new ExcludeFilter();
+    excludeFilter.fillFromFile(new File("model/excludeFilter/excludeMaterializedView.xml"));
+    setExcludeFilter(excludeFilter);
+    exportDatabase(EXPORT_DIR);
+    File notExcludedFile = new File(
+        EXPORT_DIR + "/materializedViews/NOT_EXCLUDED_MATERIALIZEDVIEW.xml");
+    File excludedFile = new File(EXPORT_DIR + "/materializedViews/EXCLUDED_MATERIALIZEDVIEW.xml");
+    assertThat(excludedMaterializedViewExistsInDb("EXCLUDED_MATERIALIZEDVIEW"), equalTo(true));
     assertThat(notExcludedFile.exists(), equalTo(true));
     assertThat(excludedFile.exists(), equalTo(false));
   }
@@ -437,6 +455,13 @@ public class CheckExcludeFilter extends DbsmTest {
     Database database = platform.loadModelFromDatabase(new ExcludeFilter());
     View view = database.findView(viewName);
     return (view != null);
+  }
+
+  private boolean excludedMaterializedViewExistsInDb(String materializedViewName) {
+    Platform platform = getPlatform();
+    Database database = platform.loadModelFromDatabase(new ExcludeFilter());
+    MaterializedView materializedView = database.findMaterializedView(materializedViewName);
+    return (materializedView != null);
   }
 
   private boolean excludedTriggerExistsInDb(String triggerName) {
