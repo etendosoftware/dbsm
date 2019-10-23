@@ -81,7 +81,7 @@ public class CreateDatabase extends BaseDatabaseTask {
     executePrescripts(platform);
   }
 
-  private void postCreateModel(final Platform platform, Database db) throws IOException, Exception {
+  private void postCreateModel(final Platform platform, Database db) throws Exception {
     executePostscript(platform);
     writeChecksumInfo();
     insertSourceData(platform, db);
@@ -102,7 +102,7 @@ public class CreateDatabase extends BaseDatabaseTask {
     } else {
       // We read model files using the filter, obtaining a file array. The models will be merged
       // to create a final target model.
-      final Vector<File> dirs = new Vector<File>();
+      final Vector<File> dirs = new Vector<>();
       dirs.add(model);
       final DirectoryScanner dirScanner = new DirectoryScanner();
       dirScanner.setBasedir(new File(modulesDir));
@@ -191,24 +191,11 @@ public class CreateDatabase extends BaseDatabaseTask {
     }
   }
 
-  private void executePostScript(Platform platform) throws IOException {
-    File postScript = getPostscript();
-    if (postScript == null) {
-      // try to execute the default postscript
-      postScript = new File(getModel(), "postscript-" + platform.getName() + ".sql");
-    }
-    if (postScript.exists()) {
-      getLog().info("Executing script " + postScript.getName());
-      platform.evaluateBatch(DatabaseUtils.readFile(postScript), !isFailonerror());
-    }
-  }
-
-  private void insertSourceData(final Platform platform, Database db)
-      throws IOException, Exception {
+  private void insertSourceData(final Platform platform, Database db) throws Exception {
     // Now we insert sourcedata into the database first we load the data files
     final String folders = getInput();
     final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
-    final Vector<File> files = new Vector<File>();
+    final Vector<File> files = new Vector<>();
     while (strTokFol.hasMoreElements()) {
       if (basedir == null) {
         getLog().info("Basedir not specified, will insert just Core data files.");
@@ -236,9 +223,9 @@ public class CreateDatabase extends BaseDatabaseTask {
     }
 
     getLog().info("Disabling triggers");
-    Connection _connection = platform.borrowConnection();
-    platform.disableAllTriggers(_connection, db, false);
-    platform.returnConnection(_connection);
+    Connection connection = platform.borrowConnection();
+    platform.disableAllTriggers(connection, db, false);
+    platform.returnConnection(connection);
 
     getLog().info("Inserting data into the database.");
     // Now we insert the data into the database
@@ -284,12 +271,12 @@ public class CreateDatabase extends BaseDatabaseTask {
     getLog().info("Creating foreign keys");
     boolean fksEnabled = platform.createAllFKs(db, continueOnError);
 
-    _connection = platform.borrowConnection();
+    connection = platform.borrowConnection();
     getLog().info("Enabling triggers");
-    boolean triggersEnabled = platform.enableAllTriggers(_connection, db, false);
-    platform.returnConnection(_connection);
+    boolean triggersEnabled = platform.enableAllTriggers(connection, db, false);
+    platform.returnConnection(connection);
 
-    executePostScript(platform);
+    executePostscript(platform);
 
     if (!triggersEnabled) {
       getLog().error(
@@ -375,6 +362,8 @@ public class CreateDatabase extends BaseDatabaseTask {
   /**
    * Functionality for deleting data during create.database was removed. Function is kept to not
    * require lock-step update of dbsm.jar & build-create.xml
+   * 
+   * @deprecated
    */
   @Deprecated
   public void setFilter(String filter) {
