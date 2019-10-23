@@ -121,6 +121,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       executor.execute(new PostgrePLSQLViewConcurrentStandardization(db, i));
     }
 
+    int materializedViewCnt = db.getMaterializedViewCount();
+    for (int i = 0; i < materializedViewCnt; i++) {
+      executor.execute(new PostgrePLSQLMaterializedViewConcurrentStandardization(db, i));
+    }
+
     executor.shutdown();
     try {
       // await till actual standardization occurs, this should take few seconds at most
