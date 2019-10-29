@@ -534,11 +534,9 @@ public abstract class SqlBuilder {
       createView(database.getView(idx));
     }
 
-    _log.info("Creating materialized views");
     // Write the materialized views
-    for (int idx = 0; idx < database.getMaterializedViewCount(); idx++) {
-      _log.info("Create");
-      createMaterializedView(database.getMaterializedView(idx));
+    for (MaterializedView materializedView : database.getMaterializedViews()) {
+      createMaterializedView(materializedView);
     }
 
     // Write the triggers
@@ -895,8 +893,8 @@ public abstract class SqlBuilder {
       createView(desiredModel.getView(i));
     }
 
-    for (int i = 0; i < desiredModel.getMaterializedViewCount(); i++) {
-      createMaterializedView(desiredModel.getMaterializedView(i));
+    for (MaterializedView materializedView : desiredModel.getMaterializedViews()) {
+      createMaterializedView(materializedView);
     }
 
     // We will now recreate the unchanged foreign keys
@@ -3671,9 +3669,7 @@ public abstract class SqlBuilder {
    */
   protected void writeExternalIndicesCreateStmt(MaterializedView materializedView)
       throws IOException {
-    for (int idx = 0; idx < materializedView.getIndexCount(); idx++) {
-      Index index = materializedView.getIndex(idx);
-
+    for (Index index : materializedView.getIndices()) {
       if (!index.isUnique() && !getPlatformInfo().isIndicesSupported()) {
         throw new ModelException("Platform does not support non-unique indices");
       }

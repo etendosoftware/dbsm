@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.function.Predicate;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -64,8 +65,8 @@ public class Database implements Serializable, Cloneable {
   private ArrayList _sequences = new ArrayList();
   /** The views. */
   private ArrayList _views = new ArrayList();
-  /** The materialized views. */
-  private ArrayList _materializedViews = new ArrayList();
+
+  private List<MaterializedView> materializedViews = new ArrayList();
   /** The functions. */
   private ArrayList _functions = new ArrayList();
   /** The functions. */
@@ -132,11 +133,13 @@ public class Database implements Serializable, Cloneable {
       }
     }
 
-    for (Iterator it = otherDb._materializedViews.iterator(); it.hasNext();) {
-      MaterializedView materializedView = (MaterializedView) it.next();
+    // using Iterator because records may be deleted from the collection
+    for (Iterator<MaterializedView> it = otherDb.materializedViews.iterator(); it.hasNext();) {
+      MaterializedView materializedView = it.next();
 
-      if (findMaterializedView(materializedView.getName()) != null) {
-        this.removeMaterializedView(findMaterializedView(materializedView.getName()));
+      String materializedViewName = materializedView.getName();
+      if (findMaterializedView(materializedViewName) != null) {
+        removeMaterializedView(findMaterializedView(materializedViewName));
       }
       try {
         addMaterializedView((MaterializedView) materializedView.clone());
@@ -482,7 +485,7 @@ public class Database implements Serializable, Cloneable {
    * @return The number of materialized views
    */
   public int getMaterializedViewCount() {
-    return _materializedViews.size();
+    return materializedViews.size();
   }
 
   /**
@@ -499,9 +502,8 @@ public class Database implements Serializable, Cloneable {
    * 
    * @return The materialized views
    */
-  public MaterializedView[] getMaterializedViews() {
-    return (MaterializedView[]) _materializedViews
-        .toArray(new MaterializedView[_materializedViews.size()]);
+  public List<MaterializedView> getMaterializedViews() {
+    return new ArrayList<>(materializedViews);
   }
 
   /**
@@ -523,7 +525,7 @@ public class Database implements Serializable, Cloneable {
    * @return The materialized view
    */
   public MaterializedView getMaterializedView(int idx) {
-    return (MaterializedView) _materializedViews.get(idx);
+    return (MaterializedView) materializedViews.get(idx);
   }
 
   /**
@@ -546,7 +548,7 @@ public class Database implements Serializable, Cloneable {
    */
   public void addMaterializedView(MaterializedView materializedView) {
     if (materializedView != null) {
-      _materializedViews.add(materializedView);
+      materializedViews.add(materializedView);
     }
   }
 
@@ -608,7 +610,7 @@ public class Database implements Serializable, Cloneable {
    */
   public void removeMaterializedView(MaterializedView materializedView) {
     if (materializedView != null) {
-      _materializedViews.remove(materializedView);
+      materializedViews.remove(materializedView);
     }
   }
 
@@ -1241,20 +1243,12 @@ public class Database implements Serializable, Cloneable {
    * @return The materialized view or <code>null</code> if there is no such materialized view
    */
   public MaterializedView findMaterializedView(String name, boolean caseSensitive) {
-    for (Iterator iter = _materializedViews.iterator(); iter.hasNext();) {
-      MaterializedView materializedView = (MaterializedView) iter.next();
-
-      if (caseSensitive) {
-        if (materializedView.getName().equals(name)) {
-          return materializedView;
-        }
-      } else {
-        if (materializedView.getName().equalsIgnoreCase(name)) {
-          return materializedView;
-        }
-      }
-    }
-    return null;
+    Predicate<String> filterFunction = s -> caseSensitive ? s.equals(name)
+        : s.equalsIgnoreCase(name);
+    return materializedViews.stream()
+        .filter(v -> filterFunction.test(v.getName()))
+        .findAny()
+        .orElse(null);
   }
 
   /**
@@ -1493,7 +1487,7 @@ public class Database implements Serializable, Cloneable {
     result._version = _version;
     result._tables = new ArrayList();
     result._views = new ArrayList();
-    result._materializedViews = new ArrayList();
+    result.materializedViews = new ArrayList();
     result._functions = new ArrayList();
     result._triggers = new ArrayList();
     result._sequences = new ArrayList();
@@ -1506,9 +1500,9 @@ public class Database implements Serializable, Cloneable {
     while (it.hasNext()) {
       result._views.add(((View) it.next()).clone());
     }
-    it = _materializedViews.iterator();
-    while (it.hasNext()) {
-      result._materializedViews.add(((MaterializedView) it.next()).clone());
+    Iterator<MaterializedView> materializedViewIterator = materializedViews.iterator();
+    while (materializedViewIterator.hasNext()) {
+      result.materializedViews.add((MaterializedView) (materializedViewIterator.next()).clone());
     }
     it = _functions.iterator();
     while (it.hasNext()) {
@@ -1693,10 +1687,12 @@ public class Database implements Serializable, Cloneable {
         i--;
       }
     }
-    for (int i = 0; i < _materializedViews.size(); i++) {
-      MaterializedView mv = (MaterializedView) _materializedViews.get(i);
+
+    // using Iterator because records may be deleted from the collection
+    for (int i = 0; i < materializedViews.size(); i++) {
+      MaterializedView mv = (MaterializedView) materializedViews.get(i);
       if (!filter.compliesWithNamingRuleObject(mv.getName())) {
-        _materializedViews.remove(mv);
+        materializedViews.remove(mv);
         i--;
       }
     }

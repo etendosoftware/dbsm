@@ -79,7 +79,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
   protected PreparedStatement _stmt_uniquecolumns;
 
   protected PreparedStatement _stmt_listviews;
-  protected PreparedStatement _stmt_listmaterializedviews;
+  protected PreparedStatement stmtListMaterializedViews;
 
   protected PreparedStatement _stmt_listsequences;
 
@@ -175,7 +175,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     _stmt_uniquecolumns.close();
 
     _stmt_listviews.close();
-    _stmt_listmaterializedviews.close();
+    stmtListMaterializedViews.close();
 
     _stmt_listsequences.close();
 
@@ -479,6 +479,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
         }
       });
     }
+
   }
 
   abstract protected ForeignKey readForeignKey(ResultSet rs) throws SQLException;
@@ -509,6 +510,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
         }
       });
     }
+
   }
 
   protected Index readIndex(ResultSet rs) throws SQLException {
@@ -545,6 +547,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
     } else if (_filter.compliesWithNamingRuleObject(tablename)) {
       _stmt_listuniques_noprefix.setString(1, tablename);
       return readList(_stmt_listuniques_noprefix, new RowConstructor() {
+
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readUnique(r);
@@ -597,23 +600,20 @@ public abstract class ModelLoaderBase implements ModelLoader {
     });
   }
 
+  @SuppressWarnings("unchecked")
   protected Collection readMaterializedViews() throws SQLException {
-    return readList(_stmt_listmaterializedviews, new RowConstructor() {
-      @Override
-      public Object getRow(ResultSet r) throws SQLException {
-        MaterializedView mv = new MaterializedView();
-        String materializedViewName = r.getString(1);
-        mv.setName(materializedViewName.toUpperCase());
-        mv.setStatement(translateSQL(r.getString(2)));
+    return readList(stmtListMaterializedViews, r -> {
+      MaterializedView mv = new MaterializedView();
+      String materializedViewName = r.getString(1);
+      mv.setName(materializedViewName.toUpperCase());
+      mv.setStatement(translateSQL(r.getString(2)));
 
-        boolean usePrefix = false;
-        // Columns
-        mv.addColumns(readColumns(materializedViewName, usePrefix));
-        // Indexes
-        mv.addIndices(readIndexes(materializedViewName, usePrefix));
-        return mv;
-      }
+      boolean usePrefix = false;
+      mv.addColumns(readColumns(materializedViewName, usePrefix));
+      mv.addIndices(readIndexes(materializedViewName, usePrefix));
+      return mv;
     });
+
   }
 
   protected Collection readSequences() throws SQLException {

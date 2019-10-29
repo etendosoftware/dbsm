@@ -51,7 +51,7 @@ public class ExcludeFilter implements Cloneable {
   Vector<String> excludedFunctions = new Vector<String>();
   Vector<String> excludedTriggers = new Vector<String>();
   Vector<String> excludedViews = new Vector<String>();
-  Vector<String> excludedMaterializedViews = new Vector<String>();
+  List<String> excludedMaterializedViews = new ArrayList<>();
   Vector<String> excludedSequences = new Vector<String>();
 
   private Logger log4j = Logger.getLogger(getClass());
@@ -188,8 +188,8 @@ public class ExcludeFilter implements Cloneable {
     return excludedViews.toArray(new String[0]);
   }
 
-  public String[] getExcludedMaterializedViews() {
-    return excludedMaterializedViews.toArray(new String[0]);
+  public List<String> getExcludedMaterializedViews() {
+    return new ArrayList<>(excludedMaterializedViews);
   }
 
   public String[] getExcludedSequences() {

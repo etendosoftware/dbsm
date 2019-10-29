@@ -327,14 +327,15 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     sql = "SELECT matviewname, pg_get_viewdef(matviewname, true) FROM pg_matviews "
         + "WHERE SCHEMANAME = CURRENT_SCHEMA() AND matviewname !~ '^pg_'"
-        + _filter.getExcludeFilterWhereClause("matviewname", _filter.getExcludedMaterializedViews(),
+        + _filter.getExcludeFilterWhereClause("matviewname",
+            _filter.getExcludedMaterializedViews().toArray(new String[0]),
             firstExpressionInWhereClause);
     if (_prefix != null) {
       sql += " AND (upper(matviewname) LIKE '" + _prefix
           + "\\\\_%' OR (upper(matviewname) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     }
-    _stmt_listmaterializedviews = _connection.prepareStatement(sql);
+    stmtListMaterializedViews = _connection.prepareStatement(sql);
 
     // sequences are partially loaded from catalog, details (start number and increment) are read by
     // readSequences method

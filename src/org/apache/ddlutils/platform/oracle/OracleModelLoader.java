@@ -146,15 +146,15 @@ public class OracleModelLoader extends ModelLoaderBase {
           + _moduleId + "')))";
     }
     _stmt_listviews = _connection.prepareStatement(sql);
-    sql = "SELECT MVIEW_NAME, QUERY FROM USER_MVIEWS "
-        + _filter.getExcludeFilterWhereClause("matviewname", _filter.getExcludedMaterializedViews(),
-            firstExpressionInWhereClause, escapeClause);
+    sql = "SELECT MVIEW_NAME, QUERY FROM USER_MVIEWS " + _filter.getExcludeFilterWhereClause(
+        "matviewname", _filter.getExcludedMaterializedViews().toArray(new String[0]),
+        firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
       sql += " AND (UPPER(MVIEW_NAME) LIKE '" + _prefix
           + "\\_%' ESCAPE '\\' OR (upper(MVIEW_NAME) IN (SELECT upper(name1) FROM AD_EXCEPTIONS WHERE AD_MODULE_ID='"
           + _moduleId + "')))";
     }
-    _stmt_listmaterializedviews = _connection.prepareStatement(sql);
+    stmtListMaterializedViews = _connection.prepareStatement(sql);
     firstExpressionInWhereClause = true;
     sql = "SELECT SEQUENCE_NAME, MIN_VALUE, INCREMENT_BY FROM USER_SEQUENCES "
         + _filter.getExcludeFilterWhereClause("SEQUENCE_NAME", _filter.getExcludedSequences(),
@@ -430,10 +430,10 @@ public class OracleModelLoader extends ModelLoaderBase {
     String tableName = getTableNameFromIndexName(indexName);
     _log.info("Tablename " + tableName);
     String commentsQuery = null;
-    if (isMaterializedView(tableName)) {
-      commentsQuery = "SELECT comments FROM user_mview_comments WHERE UPPER(mview_name) = ?";
-    } else if (isTable(tableName)) {
+    if (isTable(tableName)) {
       commentsQuery = "SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?";
+    } else if (isMaterializedView(tableName)) {
+      commentsQuery = "SELECT comments FROM user_mview_comments WHERE UPPER(mview_name) = ?";
     } else {
       throw new UnsupportedOperationException();
     }
