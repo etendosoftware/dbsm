@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2016-2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -27,8 +27,8 @@ import org.apache.ddlutils.model.View;
 class PostgrePLSQLViewConcurrentStandardization implements Runnable {
   private static final Log log = LogFactory.getLog(PostgrePLSQLViewConcurrentStandardization.class);
 
-  private Database db;
-  private int idx;
+  protected Database db;
+  protected int idx;
 
   PostgrePLSQLViewConcurrentStandardization(Database db, int idx) {
     this.db = db;
@@ -37,19 +37,23 @@ class PostgrePLSQLViewConcurrentStandardization implements Runnable {
 
   @Override
   public void run() {
-    View view = db.getView(idx);
+    View view = getView();
     log.debug("Standardizing view: " + view.getName());
     PostgreSQLStandarization viewStandarization = new PostgreSQLStandarization();
-    String body = db.getView(idx).getStatement();
+    String body = getView().getStatement();
 
     String standardizedBody = viewStandarization.exec(body);
     if (standardizedBody.endsWith("\n")) {
       standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
     }
     standardizedBody = standardizedBody.trim();
-    db.getView(idx).setStatement(standardizedBody);
+    getView().setStatement(standardizedBody);
 
     log.debug("  ...standardized view: " + view.getName());
+  }
+
+  protected View getView() {
+    return db.getView(idx);
   }
 
 }

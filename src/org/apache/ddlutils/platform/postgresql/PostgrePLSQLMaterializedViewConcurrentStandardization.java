@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016 Openbravo S.L.U.
+ * Copyright (C) 2019 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -12,10 +12,8 @@
 
 package org.apache.ddlutils.platform.postgresql;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.MaterializedView;
+import org.apache.ddlutils.model.View;
 
 /**
  * Allows to concurrently standardize DB materialized views.
@@ -23,33 +21,16 @@ import org.apache.ddlutils.model.MaterializedView;
  * @see PostgreSqlModelLoader#standardizePlSql
  * 
  */
-class PostgrePLSQLMaterializedViewConcurrentStandardization implements Runnable {
-  private static final Log log = LogFactory
-      .getLog(PostgrePLSQLMaterializedViewConcurrentStandardization.class);
-
-  private Database db;
-  private int idx;
+class PostgrePLSQLMaterializedViewConcurrentStandardization
+    extends PostgrePLSQLViewConcurrentStandardization {
 
   PostgrePLSQLMaterializedViewConcurrentStandardization(Database db, int idx) {
-    this.db = db;
-    this.idx = idx;
+    super(db, idx);
   }
 
   @Override
-  public void run() {
-    MaterializedView materializedView = db.getMaterializedView(idx);
-    log.debug("Standardizing materialized view: " + materializedView.getName());
-    PostgreSQLStandarization materializedViewStandarization = new PostgreSQLStandarization();
-    String body = materializedView.getStatement();
-
-    String standardizedBody = materializedViewStandarization.exec(body);
-    if (standardizedBody.endsWith("\n")) {
-      standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
-    }
-    standardizedBody = standardizedBody.trim();
-    materializedView.setStatement(standardizedBody);
-
-    log.debug("  ...standardized view: " + materializedView.getName());
+  protected View getView() {
+    return db.getMaterializedView(idx).getView();
   }
 
 }

@@ -1,10 +1,3 @@
-package org.apache.ddlutils.model;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,6 +17,13 @@ import java.util.Iterator;
  * under the License.
  */
 
+package org.apache.ddlutils.model;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -34,13 +34,9 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  */
 public class MaterializedView implements IndexableModelObject, StructureObject, Cloneable {
 
-  /** The name of the materialized view */
-  private String name;
-  /** The statement of the materialized view. */
-  private String statement;
-  /** The columns in this materialized view. */
+  private View view;
+
   private ArrayList<Column> columns = new ArrayList<>();
-  /** The indices applied to this materialized view. */
   private ArrayList<Index> indices = new ArrayList<>();
 
   /** Creates a new instance of MaterializedViewView */
@@ -49,8 +45,7 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
   }
 
   public MaterializedView(String name) {
-    this.name = name;
-    statement = null;
+    this.view = new View(name);
   }
 
   /**
@@ -60,7 +55,7 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
    */
   @Override
   public String getName() {
-    return name;
+    return view.getName();
   }
 
   /**
@@ -70,7 +65,7 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
    *          The name
    */
   public void setName(String name) {
-    this.name = name;
+    this.view.setName(name);
   }
 
   /**
@@ -79,7 +74,7 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
    * @return The statement
    */
   public String getStatement() {
-    return statement;
+    return view.getStatement();
   }
 
   /**
@@ -89,7 +84,7 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
    *          The statement
    */
   public void setStatement(String statement) {
-    this.statement = statement;
+    this.view.setStatement(statement);
   }
 
   /**
@@ -313,8 +308,9 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
 
     MaterializedView result = (MaterializedView) super.clone();
 
-    result.name = name;
-    result.statement = statement;
+    result.view = (View) view.clone();
+    result.columns = new ArrayList<>(columns);
+    result.indices = new ArrayList<>(indices);
 
     return result;
   }
@@ -324,16 +320,12 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
    */
   @Override
   public boolean equals(Object obj) {
-
     if (obj instanceof MaterializedView) {
-      MaterializedView otherMaterializedView = (MaterializedView) obj;
-
-      // Note that this compares case sensitive
-      // Note also that we can simply compare the references regardless of
-      // their order
-      // (which is irrelevant for ccs) because they are contained in a set
-      return new EqualsBuilder().append(name, otherMaterializedView.name)
-          .append(statement.trim(), otherMaterializedView.statement.trim())
+      MaterializedView other = (MaterializedView) obj;
+      return new EqualsBuilder().append(view.getName(), other.view.getName())
+          .append(view.getStatement(), other.view.getStatement())
+          .append(columns, other.columns)
+          .append(indices, other.indices)
           .isEquals();
     } else {
       return false;
@@ -341,25 +333,11 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
   }
 
   /**
-   * Compares this materialized view to the given one while ignoring the case of identifiers.
-   * 
-   * @param otherMaterializedView
-   *          The other materialized view
-   * @return <code>true</code> if this materialized view is equal (ignoring case) to the given one
-   */
-  public boolean equalsIgnoreCase(MaterializedView otherMaterializedView) {
-    return UtilsCompare.equalsIgnoreCase(name, otherMaterializedView.name)
-        && new EqualsBuilder().append(statement.trim(), otherMaterializedView.statement.trim())
-            .isEquals();
-
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
   public int hashCode() {
-    return new HashCodeBuilder(17, 37).append(name).append(statement).toHashCode();
+    return new HashCodeBuilder(17, 37).append(view).append(columns).append(indices).toHashCode();
   }
 
   /**
@@ -394,5 +372,9 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
     result.append("]");
 
     return result.toString();
+  }
+
+  public View getView() {
+    return view;
   }
 }
