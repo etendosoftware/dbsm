@@ -19,7 +19,6 @@
 
 package org.apache.ddlutils.model;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -175,7 +174,7 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
    * @param newColumns
    *          The columns
    */
-  public void addColumns(Collection<Column> newColumns) throws SQLException {
+  public void addColumns(Collection<Column> newColumns) {
     for (Iterator<Column> it = newColumns.iterator(); it.hasNext();) {
       addColumn(it.next());
     }

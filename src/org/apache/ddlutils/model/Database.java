@@ -66,7 +66,7 @@ public class Database implements Serializable, Cloneable {
   /** The views. */
   private ArrayList _views = new ArrayList();
 
-  private List<MaterializedView> materializedViews = new ArrayList();
+  private List<MaterializedView> materializedViews = new ArrayList<>();
   /** The functions. */
   private ArrayList _functions = new ArrayList();
   /** The functions. */
@@ -581,12 +581,12 @@ public class Database implements Serializable, Cloneable {
   /**
    * Adds the given materialized views.
    * 
-   * @param materializedViews
+   * @param matViews
    *          The materialized views to add
    */
-  public void addMaterializedViews(Collection materializedViews) {
-    for (Iterator it = materializedViews.iterator(); it.hasNext();) {
-      addMaterializedView((MaterializedView) it.next());
+  public void addMaterializedViews(Collection<MaterializedView> matViews) {
+    for (Iterator<MaterializedView> it = matViews.iterator(); it.hasNext();) {
+      addMaterializedView(it.next());
     }
   }
 
@@ -1500,9 +1500,8 @@ public class Database implements Serializable, Cloneable {
     while (it.hasNext()) {
       result._views.add(((View) it.next()).clone());
     }
-    Iterator<MaterializedView> materializedViewIterator = materializedViews.iterator();
-    while (materializedViewIterator.hasNext()) {
-      result.materializedViews.add((MaterializedView) (materializedViewIterator.next()).clone());
+    for (Iterator<MaterializedView> matViewIt = materializedViews.iterator(); it.hasNext();) {
+      result.materializedViews.add((MaterializedView) (matViewIt.next()).clone());
     }
     it = _functions.iterator();
     while (it.hasNext()) {
@@ -1689,11 +1688,10 @@ public class Database implements Serializable, Cloneable {
     }
 
     // using Iterator because records may be deleted from the collection
-    for (int i = 0; i < materializedViews.size(); i++) {
-      MaterializedView mv = (MaterializedView) materializedViews.get(i);
+    for (Iterator<MaterializedView> it = materializedViews.iterator(); it.hasNext();) {
+      MaterializedView mv = it.next();
       if (!filter.compliesWithNamingRuleObject(mv.getName())) {
-        materializedViews.remove(mv);
-        i--;
+        it.remove();
       }
     }
     for (int i = 0; i < _functions.size(); i++) {
