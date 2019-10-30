@@ -1500,9 +1500,11 @@ public class Database implements Serializable, Cloneable {
     while (it.hasNext()) {
       result._views.add(((View) it.next()).clone());
     }
-    for (Iterator<MaterializedView> matViewIt = materializedViews.iterator(); it.hasNext();) {
+    for (Iterator<MaterializedView> matViewIt = materializedViews.iterator(); matViewIt
+        .hasNext();) {
       result.materializedViews.add((MaterializedView) (matViewIt.next()).clone());
     }
+
     it = _functions.iterator();
     while (it.hasNext()) {
       result._functions.add(((Function) it.next()).clone());
