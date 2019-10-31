@@ -431,9 +431,9 @@ public class OracleModelLoader extends ModelLoaderBase {
     _log.info("Tablename " + tableName);
     String commentsQuery = null;
     if (isTable(tableName)) {
-      commentsQuery = "SELECT comments FROM user_tab_comments WHERE UPPER(table_name) = ?";
+      commentsQuery = "SELECT comments FROM user_tab_comments WHERE table_name = ?";
     } else if (isMaterializedView(tableName)) {
-      commentsQuery = "SELECT comments FROM user_mview_comments WHERE UPPER(mview_name) = ?";
+      commentsQuery = "SELECT comments FROM user_mview_comments WHERE mview_name = ?";
     } else {
       throw new UnsupportedOperationException();
     }
