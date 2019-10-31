@@ -101,7 +101,6 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
-import org.apache.ddlutils.model.IndexableModelObject;
 import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.model.Parameter;
@@ -966,7 +965,7 @@ public abstract class SqlBuilder {
    *          a map of all the tables that have new indexes, along with the new indexes
    * @throws IOException
    */
-  protected void newIndexesPostAction(Map<IndexableModelObject, List<Index>> newIndexesMap)
+  protected void newIndexesPostAction(Map<StructureObject, List<Index>> newIndexesMap)
       throws IOException {
   }
 
@@ -977,9 +976,8 @@ public abstract class SqlBuilder {
    *          a map of all the tables that have new indexes, along with the new indexes
    * @throws IOException
    */
-  private void newIndexesPostAction(IndexableModelObject table, Index[] indexes)
-      throws IOException {
-    Map<IndexableModelObject, List<Index>> newIndexesMap = new HashMap<>();
+  private void newIndexesPostAction(StructureObject table, Index[] indexes) throws IOException {
+    Map<StructureObject, List<Index>> newIndexesMap = new HashMap<>();
     newIndexesMap.put(table, Arrays.asList(indexes));
     newIndexesPostAction(newIndexesMap);
   }
@@ -1682,7 +1680,8 @@ public abstract class SqlBuilder {
    */
   protected void processChange(Database currentModel, Database desiredModel,
       CreationParameters params, AddIndexChange change) throws IOException {
-    writeExternalIndexCreateStmt(change.getChangedTable(), change.getNewIndex());
+    Table table = change.getChangedTable();
+    writeExternalIndexCreateStmt(table, Arrays.asList(table.getColumns()), change.getNewIndex());
     change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
   }
 
@@ -3656,7 +3655,7 @@ public abstract class SqlBuilder {
       if (!index.isUnique() && !getPlatformInfo().isIndicesSupported()) {
         throw new ModelException("Platform does not support non-unique indices");
       }
-      writeExternalIndexCreateStmt(table, index);
+      writeExternalIndexCreateStmt(table, Arrays.asList(table.getColumns()), index);
     }
     newIndexesPostAction(table, table.getIndices());
   }
@@ -3673,7 +3672,8 @@ public abstract class SqlBuilder {
       if (!index.isUnique() && !getPlatformInfo().isIndicesSupported()) {
         throw new ModelException("Platform does not support non-unique indices");
       }
-      writeExternalIndexCreateStmt(materializedView, index);
+      writeExternalIndexCreateStmt(materializedView, Arrays.asList(materializedView.getColumns()),
+          index);
     }
     newIndexesPostAction(materializedView, materializedView.getIndices());
   }
@@ -3701,8 +3701,8 @@ public abstract class SqlBuilder {
    * @param index
    *          The index
    */
-  protected void writeExternalIndexCreateStmt(IndexableModelObject indexableObject, Index index)
-      throws IOException {
+  protected void writeExternalIndexCreateStmt(StructureObject structureObject, List<Column> columns,
+      Index index) throws IOException {
     if (getPlatformInfo().isIndicesSupported()) {
       if (index.getName() == null) {
         _log.warn("Cannot write unnamed index " + index);
@@ -3714,7 +3714,7 @@ public abstract class SqlBuilder {
         print(" INDEX ");
         printIdentifier(getConstraintObjectName(index));
         print(" ON ");
-        printIdentifier(getStructureObjectName(indexableObject));
+        printIdentifier(getStructureObjectName(structureObject));
         writeMethod(index);
         print(" (");
 
@@ -3729,13 +3729,13 @@ public abstract class SqlBuilder {
             // parenthesis to support ORA-PG compatibility
             print("(" + idxColumn.getFunctionExpression() + ")");
           } else {
-            Column col = indexableObject.findColumn(idxColumn.getName());
+            Column col = findColumn(idxColumn.getName(), columns);
 
             if (col == null) {
               // would get null pointer on next line anyway, so throw
               // exception
               throw new ModelException("Invalid column '" + idxColumn.getName() + "' on index "
-                  + index.getName() + " for table " + indexableObject.getName());
+                  + index.getName() + " for table " + structureObject.getName());
             }
             printIdentifier(getColumnName(col));
           }
@@ -3753,6 +3753,10 @@ public abstract class SqlBuilder {
         printEndOfStatement();
       }
     }
+  }
+
+  private Column findColumn(String name, List<Column> columns) {
+    return columns.stream().filter(c -> c.getName().equalsIgnoreCase(name)).findAny().orElse(null);
   }
 
   /**

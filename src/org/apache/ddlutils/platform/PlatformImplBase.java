@@ -88,7 +88,6 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
-import org.apache.ddlutils.model.IndexableModelObject;
 import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
@@ -838,7 +837,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
 
   private void createIndexes(Database currentModel, Database desiredModel,
       List<AddIndexChange> indexes) throws IOException {
-    Map<IndexableModelObject, List<Index>> newIndexesMap = new HashMap<>();
+    Map<StructureObject, List<Index>> newIndexesMap = new HashMap<>();
 
     for (AddIndexChange indexChg : indexes) {
       getSqlBuilder().processChange(currentModel, desiredModel, null, indexChg);

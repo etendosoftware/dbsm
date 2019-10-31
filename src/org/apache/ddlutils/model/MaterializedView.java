@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * 
  * @version $Revision$
  */
-public class MaterializedView implements IndexableModelObject, StructureObject, Cloneable {
+public class MaterializedView implements StructureObject, Cloneable {
 
   private View view;
 
@@ -202,7 +202,6 @@ public class MaterializedView implements IndexableModelObject, StructureObject, 
     columns.remove(idx);
   }
 
-  @Override
   public Column findColumn(String columnName) {
     return columns.stream()
         .filter(c -> c.getName().equalsIgnoreCase(columnName))

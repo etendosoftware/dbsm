@@ -53,8 +53,8 @@ import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
-import org.apache.ddlutils.model.IndexableModelObject;
 import org.apache.ddlutils.model.MaterializedView;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
@@ -701,11 +701,11 @@ public class OracleBuilder extends SqlBuilder {
    * {@inheritDoc}
    */
   @Override
-  protected void newIndexesPostAction(Map<IndexableModelObject, List<Index>> newIndexesMap)
+  protected void newIndexesPostAction(Map<StructureObject, List<Index>> newIndexesMap)
       throws IOException {
     // Updates the comments of the tables that have new indexes, to prevent losing the info about
     // the operator class or partial indexing of the indexed columns
-    for (IndexableModelObject indexableModelObject : newIndexesMap.keySet()) {
+    for (StructureObject indexableModelObject : newIndexesMap.keySet()) {
       List<Index> indexesWithOperatorClass = new ArrayList<Index>();
       List<Index> partialIndexes = new ArrayList<Index>();
       for (Index index : newIndexesMap.get(indexableModelObject)) {
