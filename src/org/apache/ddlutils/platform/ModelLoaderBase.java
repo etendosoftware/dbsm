@@ -601,7 +601,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   @SuppressWarnings("unchecked")
-  protected Collection readMaterializedViews() throws SQLException {
+  protected Collection<MaterializedView> readMaterializedViews() throws SQLException {
     return readList(stmtListMaterializedViews, r -> {
       MaterializedView mv = new MaterializedView();
       String materializedViewName = r.getString(1);
