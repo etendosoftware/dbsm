@@ -118,7 +118,10 @@
 
     <antcall target="warn.local.changes"/>
 
-   <echo message="${scm.id}" file="${build.db.classes}/rev.id"/>
+    <condition property="scm.msg" value="git: ${scm.id}" else="hg: ${scm.id}" >
+      <istrue value="${scm.git}"/>
+    </condition>
+    <echo message="${scm.msg}" file="${build.db.classes}/rev.id"/>
   </target>
   
   <target name="warn.local.changes" if="forced.localChanges">
