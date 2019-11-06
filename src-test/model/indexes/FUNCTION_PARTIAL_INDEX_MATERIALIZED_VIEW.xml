@@ -14,7 +14,9 @@
         <onCreateDefault/>
       </column> 
     </table>
-    <materializedView name="TEST_MATERIALIZEDVIEW"><![CDATA[SELECT t.col1 AS matviewcol FROM test t]]>      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
+    <materializedView name="TEST_MATERIALIZEDVIEW">
+      <sql><![CDATA[SELECT t.col1 AS matviewcol FROM test t]]></sql>
+      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>

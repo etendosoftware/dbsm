@@ -157,14 +157,15 @@ under the License.
   
   <class name="org.apache.ddlutils.model.MaterializedView">
     <element name="materializedView">
-        <attribute name="name" property="name"/>
-        <text property="statement"/>
+      <attribute name="name" property="name"/>
+      <element name="sql" property="statement">      
         <option>
-            <name>org.apache.commons.betwixt.mixed-content-encoding</name>
-            <value>CDATA</value>
+          <name>org.apache.commons.betwixt.mixed-content-encoding</name>
+          <value>CDATA</value>
         </option>
-      <element property="columns"     updater="addColumn"/>
-      <element property="indices"     updater="addIndex"/>
+      </element>  
+      <element property="columns" updater="addColumn"/>
+      <element property="indices" updater="addIndex"/>
     </element>
   </class>  
   

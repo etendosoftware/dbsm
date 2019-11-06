@@ -10,12 +10,16 @@
         <onCreateDefault/>
       </column>
     </table>
-    <materializedView name="NOT_EXCLUDED_MATERIALIZEDVIEW"><![CDATA[SELECT t.col1 AS matviewcol FROM not_excluded_table t]]>      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
+    <materializedView name="NOT_EXCLUDED_MATERIALIZEDVIEW">
+      <sql><![CDATA[SELECT t.col1 AS matviewcol FROM not_excluded_table t]]></sql>
+      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
     </materializedView>
-    <materializedView name="EXCLUDED_MATERIALIZEDVIEW"><![CDATA[SELECT t.col1 AS matviewcol FROM not_excluded_table t]]>      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
+    <materializedView name="EXCLUDED_MATERIALIZEDVIEW">
+      <sql><![CDATA[SELECT t.col1 AS matviewcol FROM not_excluded_table t]]></sql>
+      <column name="MATVIEWCOL" primaryKey="false" required="false" type="OTHER" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
