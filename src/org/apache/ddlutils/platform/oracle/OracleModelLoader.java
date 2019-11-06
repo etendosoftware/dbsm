@@ -147,7 +147,7 @@ public class OracleModelLoader extends ModelLoaderBase {
     }
     _stmt_listviews = _connection.prepareStatement(sql);
     sql = "SELECT MVIEW_NAME, QUERY FROM USER_MVIEWS " + _filter.getExcludeFilterWhereClause(
-        "matviewname", _filter.getExcludedMaterializedViews().toArray(new String[0]),
+        "MVIEW_NAME", _filter.getExcludedMaterializedViews().toArray(new String[0]),
         firstExpressionInWhereClause, escapeClause);
     if (_prefix != null) {
       sql += " AND (UPPER(MVIEW_NAME) LIKE '" + _prefix
@@ -464,7 +464,7 @@ public class OracleModelLoader extends ModelLoaderBase {
 
   private boolean isMaterializedView(String name) {
     try (PreparedStatement st = _connection
-        .prepareStatement("SELECT 1 FROM user_mviews WHERE UPPER(mview_name) = ?")) {
+        .prepareStatement("SELECT 1 FROM user_mviews WHERE mview_name = ?")) {
       st.setString(1, name.toUpperCase());
       ResultSet rs = st.executeQuery();
       return rs.next();
@@ -475,9 +475,10 @@ public class OracleModelLoader extends ModelLoaderBase {
   }
 
   private boolean isTable(String name) {
-    try (PreparedStatement st = _connection
-        .prepareStatement("SELECT 1 FROM user_tables WHERE UPPER(table_name) = ?")) {
+    try (PreparedStatement st = _connection.prepareStatement(
+        "SELECT 1 FROM user_tables WHERE table_name = ? AND not exists (select 1 from user_mviews WHERE mview_name = ?)")) {
       st.setString(1, name.toUpperCase());
+      st.setString(2, name.toUpperCase());
       ResultSet rs = st.executeQuery();
       return rs.next();
     } catch (Exception e) {
