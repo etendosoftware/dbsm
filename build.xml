@@ -45,22 +45,60 @@
   </target>
 
   <target name="set.code.rev" depends="init">
-    <exec executable="hg" outputproperty="hg.id" failifexecutionfails="false">
+    <condition property="scm.hg">
+      <available file=".hg" type="dir"/>
+    </condition>
+    <antcall target="set.code.rev.hg"/>
+
+    <condition property="scm.git">
+      <available file=".git" type="dir"/>
+    </condition>
+    <antcall target="set.code.rev.git"/>
+  </target>
+
+  <target name="set.code.rev.hg" if="scm.hg">
+    <exec executable="hg" outputproperty="scm.id" failifexecutionfails="false">
       <arg value="id"/>
       <arg value="-i"/>
     </exec>
 
-   <fail message="couldn't get revision id">
+   <condition property="localChanges">
+     <matches pattern="\+" string="${scm.id}"/>
+   </condition>
+
+   <antcall target="handle.scm.id"/>
+  </target>
+
+   <target name="set.code.rev.git" if="scm.git">
+    <exec executable="git" outputproperty="scm.id" failifexecutionfails="false">
+      <arg value="log"/>
+      <arg value="--format=format:%H"/>
+      <arg value="-1"/>
+    </exec>
+
+    <exec executable="git" outputproperty="git.localChanges" failifexecutionfails="false">
+      <arg value="diff-index"/>
+      <arg value="HEAD"/>
+      <arg value="--"/>
+    </exec>
+
+    <condition property="localChanges">
+      <not>
+        <equals arg1="${git.localChanges}" arg2=""/>
+      </not>
+    </condition>
+
+    <antcall target="handle.scm.id"/>
+  </target>
+  
+  <target name="handle.scm.id">
+   <fail message="couldn't get SCM revision id">
      <condition>
        <not>
-         <isset property="hg.id"/>
+         <isset property="scm.id"/>
        </not>
      </condition>
    </fail>
-
-   <condition property="localChanges">
-     <matches pattern="\+" string="${hg.id}"/>
-   </condition>
 
    <fail message="there are local changes, jar will not be generated">
      <condition>
@@ -80,7 +118,10 @@
 
     <antcall target="warn.local.changes"/>
 
-   <echo message="${hg.id}" file="${build.db.classes}/rev.id"/>
+    <condition property="scm.msg" value="git: ${scm.id}" else="hg: ${scm.id}" >
+      <istrue value="${scm.git}"/>
+    </condition>
+    <echo message="${scm.msg}" file="${build.db.classes}/rev.id"/>
   </target>
   
   <target name="warn.local.changes" if="forced.localChanges">
