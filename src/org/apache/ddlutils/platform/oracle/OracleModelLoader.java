@@ -426,9 +426,8 @@ public class OracleModelLoader extends ModelLoaderBase {
    * "indexName1.indexColumn1.operatorClass=operatorClass1$indexName2.indexColumn2.operatorClass=operatorClass2$..."
    */
   private String getIndexOperatorClass(String indexName, String indexColumnName) {
-    _log.info("Getting operator class of index " + indexName);
     String tableName = getTableNameFromIndexName(indexName);
-    _log.info("Tablename " + tableName);
+    _log.trace("Getting operator class of index " + indexName + " - Tablename " + tableName);
     String commentsQuery = null;
     if (isTable(tableName)) {
       commentsQuery = "SELECT comments FROM user_tab_comments WHERE table_name = ?";
