@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="SEQUENCE TESTSEQ2">
+    <sequence name="TESTSEQ2" start="2147483648" increment="1"/>
+  </database>

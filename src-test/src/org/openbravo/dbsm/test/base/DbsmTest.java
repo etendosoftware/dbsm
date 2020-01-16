@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015-2019 Openbravo S.L.U.
+ * Copyright (C) 2015-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -55,6 +55,7 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Function;
+import org.apache.ddlutils.model.Sequence;
 import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
@@ -817,6 +818,11 @@ public class DbsmTest {
     for (Function function : originalDb.getFunctions()) {
       compareDBOject(model, exportPath, function);
     }
+
+    for (Sequence sequence : originalDb.getSequences()) {
+      compareDBOject(model, exportPath, sequence);
+    }
+
     // TODO: implement the rest of DB artifacts
   }
 

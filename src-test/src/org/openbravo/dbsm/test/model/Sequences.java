@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2015 Openbravo S.L.U.
+ * Copyright (C) 2015-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -12,11 +12,9 @@
 
 package org.openbravo.dbsm.test.model;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
@@ -24,13 +22,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.openbravo.dbsm.test.base.DbsmTest;
+import org.openbravo.test.base.Issue;
 
 /**
  * Test cases for DB sequence management
@@ -42,7 +40,6 @@ import org.openbravo.dbsm.test.base.DbsmTest;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class Sequences extends DbsmTest {
   private static final String SEQ_NAME = "testseq1";
-  private static final String EXPORT_DIR = "/tmp/export-test";
 
   public Sequences(String rdbms, String driver, String url, String sid, String user,
       String password, String name) throws FileNotFoundException, IOException {
@@ -60,16 +57,16 @@ public class Sequences extends DbsmTest {
   @Test
   public void seq010shouldBeCreated() throws SQLException {
     updateDatabase();
-    int val = getNextVal(SEQ_NAME);
-    assertThat(val, is(10));
+    long val = getNextVal(SEQ_NAME);
+    assertThat(val, is(10L));
   }
 
   /** Updates db having a sequence, and checks it has not been recreated */
   @Test
   public void seq020shouldNotBeRecreated() throws SQLException {
     updateDatabase();
-    int val = getNextVal(SEQ_NAME);
-    assertThat(val, is(11));
+    long val = getNextVal(SEQ_NAME);
+    assertThat(val, is(11L));
   }
 
   /**
@@ -79,31 +76,36 @@ public class Sequences extends DbsmTest {
   @Test
   public void seq030shouldBeUpdated() throws SQLException {
     updateDatabase("sequences/TESTSEQ-update.xml");
-    int val = getNextVal(SEQ_NAME);
-    assertThat(val, is(21));
+    long val = getNextVal(SEQ_NAME);
+    assertThat(val, is(21L));
   }
 
   /** Exports database and checks sequences are properly exported */
   @Test
   public void seq040shouldBeExported() throws IOException {
-    File exportTo = new File(EXPORT_DIR);
-    if (exportTo.exists()) {
-      exportTo.delete();
-    }
-    exportTo.mkdirs();
+    assertExportIsConsistent("sequences/TESTSEQ-update.xml");
 
-    exportDatabase(EXPORT_DIR);
-    File exportedSequence = new File(EXPORT_DIR, "sequences/TESTSEQ1.xml");
-    assertThat(exportedSequence.exists(), is(true));
-
-    String exportedContents = FileUtils.readFileToString(exportedSequence);
-    String originalContents = FileUtils
-        .readFileToString(new File("model", "sequences/TESTSEQ-update.xml"));
-
-    assertThat(exportedContents, equalTo(originalContents));
   }
 
-  private int getNextVal(String seqName) throws SQLException {
+  /** Sequences with big start sequence (bigger than MAX_INT) can be created */
+  @Test
+  @Issue("42908")
+  public void seq050SequncesWithBigStartShouldBeCreated() throws SQLException {
+    updateDatabase("sequences/SEQUENCE_BIG_START.xml");
+    long val = getNextVal("TESTSEQ2");
+    assertThat(val, is(Long.valueOf(Integer.MAX_VALUE) + 1));
+  }
+
+  /** Sequences with big start sequence (bigger than MAX_INT) can be exported */
+  @Test
+  @Issue("42908")
+  public void seq060SequncesWithBigStartShouldBeExported() throws IOException {
+    createDatabase("sequences/SEQUENCE_BIG_START.xml");
+
+    assertExportIsConsistent("sequences/SEQUENCE_BIG_START.xml");
+  }
+
+  private long getNextVal(String seqName) throws SQLException {
     Connection cn = null;
     try {
       cn = getDataSource().getConnection();
@@ -119,7 +121,7 @@ public class Sequences extends DbsmTest {
       ResultSet rs = st.executeQuery();
 
       rs.next();
-      return rs.getInt(1);
+      return rs.getLong(1);
     } finally {
       if (cn != null) {
         cn.close();
