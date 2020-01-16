@@ -4117,9 +4117,9 @@ public abstract class SqlBuilder {
         print("CREATE SEQUENCE ");
         printIdentifier(getStructureObjectName(sequence));
         print(" MINVALUE ");
-        print(Integer.toString(sequence.getStart()));
+        print(Long.toString(sequence.getStart()));
         print(" INCREMENT BY ");
-        print(Integer.toString(sequence.getIncrement()));
+        print(Long.toString(sequence.getIncrement()));
 
         printEndOfStatement(getStructureObjectName(sequence));
       }
@@ -4137,7 +4137,7 @@ public abstract class SqlBuilder {
         print("ALTER SEQUENCE ");
         printIdentifier(getStructureObjectName(sequence));
         print(" MINVALUE ");
-        print(Integer.toString(sequence.getStart()));
+        print(Long.toString(sequence.getStart()));
         print(" INCREMENT BY ");
         print(Integer.toString(sequence.getIncrement()));
 

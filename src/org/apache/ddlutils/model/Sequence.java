@@ -32,7 +32,7 @@ public class Sequence implements StructureObject, Cloneable {
   /** The name of the sequence, may be <code>null</code>. */
   private String _name;
   /** The start attribute of the sequence. */
-  private int _start;
+  private long _start;
   /** The increment attribute of the sequence. */
   private int _increment;
 
@@ -73,7 +73,7 @@ public class Sequence implements StructureObject, Cloneable {
    * 
    * @return The start attribute
    */
-  public int getStart() {
+  public long getStart() {
     return _start;
   }
 
@@ -83,7 +83,7 @@ public class Sequence implements StructureObject, Cloneable {
    * @param start
    *          The start attribute
    */
-  public void setStart(int start) {
+  public void setStart(long start) {
     _start = start;
   }
 
