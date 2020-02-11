@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2019 Openbravo S.L.U.
+ * Copyright (C) 2001-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -19,6 +19,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -521,7 +522,7 @@ public class DBSMOBUtil {
       }
 
       getLog().info("Checking if data has changed in the application dictionary.");
-      return dataset.hasChanged(connection, Logger.getLogger(DBSMOBUtil.class));
+      return dataset.hasChanged(connection, new ArrayList<>());
 
     } catch (Exception e) {
       e.printStackTrace();

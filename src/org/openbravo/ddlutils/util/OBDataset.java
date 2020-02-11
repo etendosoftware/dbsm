@@ -163,11 +163,7 @@ public class OBDataset {
     return sb.toString();
   }
 
-  public boolean hasChanged(Connection connection, Logger log) {
-    return hasChanged(connection, log, null);
-  }
-
-  public boolean hasChanged(Connection connection, Logger log, List<String> modifiedTables) {
+  public boolean hasChanged(Connection connection, List<String> modifiedTables) {
     boolean hasChanges = false;
     for (OBDatasetTable table : tables) {
       try {
@@ -195,24 +191,6 @@ public class OBDataset {
       }
     }
     return hasChanges;
-  }
-
-  /**
-   * @deprecated Use with log4j2 logger: hasChanged(Connection, org.apache.logging.log4j.Logger)
-   */
-  @Deprecated
-  public boolean hasChanged(Connection connection, org.apache.log4j.Logger log) {
-    return hasChanged(connection, (Logger) null, null);
-  }
-
-  /**
-   * @deprecated Use with log4j2 logger: hasChanged(Connection, org.apache.logging.log4j.Logger,
-   *             List<String>)
-   */
-  @Deprecated
-  public boolean hasChanged(Connection connection, org.apache.log4j.Logger log,
-      List<String> modifiedTables) {
-    return hasChanged(connection, (Logger) null, modifiedTables);
   }
 
   public void setTables(Vector<OBDatasetTable> tables2) {
