@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2001-2019 Openbravo S.L.U.
+ * Copyright (C) 2001-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -274,7 +274,8 @@ public class DatabaseUtils {
   private static Database readDatabase_noChecks(File f) {
 
     if (f.isDirectory()) {
-      if (f.getAbsolutePath().contains(".svn") || f.getAbsolutePath().contains(".hg")) {
+      if (f.getAbsolutePath().contains(".git") || f.getAbsolutePath().contains(".svn")
+          || f.getAbsolutePath().contains(".hg")) {
         return new Database();
       } else {
         // create an empty database
