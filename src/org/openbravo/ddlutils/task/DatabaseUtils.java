@@ -95,7 +95,7 @@ public class DatabaseUtils {
    *          The file to be loaded as a database model.
    */
   private static Database getDatabaseAndInitialize(File file) {
-    Database d = readDatabase_noChecks(file);
+    Database d = readDatabaseNoChecks(file);
     try {
       d.initialize();
     } catch (Exception e) {
@@ -161,15 +161,15 @@ public class DatabaseUtils {
 
   public static Database readDatabaseNoInit(File f) {
 
-    Database d = readDatabase_noChecks(f);
+    Database d = readDatabaseNoChecks(f);
     return d;
   }
 
   public static Database readDatabaseNoInit(File[] f) {
 
-    Database d = readDatabase_noChecks(f[0]);
+    Database d = readDatabaseNoChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
-      d.mergeWith(readDatabase_noChecks(f[i]));
+      d.mergeWith(readDatabaseNoChecks(f[i]));
     }
 
     return d;
@@ -225,9 +225,9 @@ public class DatabaseUtils {
    *          The file to be loaded as a database model.
    */
   private static Database getMergedDatabaseAndInitialize(File[] f) throws ModelException {
-    Database d = readDatabase_noChecks(f[0]);
+    Database d = readDatabaseNoChecks(f[0]);
     for (int i = 1; i < f.length; i++) {
-      d.mergeWith(readDatabase_noChecks(f[i]));
+      d.mergeWith(readDatabaseNoChecks(f[i]));
     }
     d.initialize();
     return d;
@@ -271,8 +271,7 @@ public class DatabaseUtils {
     }
   }
 
-  private static Database readDatabase_noChecks(File f) {
-
+  private static Database readDatabaseNoChecks(File f) {
     if (f.isDirectory()) {
       if (f.getAbsolutePath().contains(".git") || f.getAbsolutePath().contains(".svn")
           || f.getAbsolutePath().contains(".hg")) {
@@ -287,7 +286,7 @@ public class DatabaseUtils {
         Arrays.sort(filelist, new FilesComparator());
 
         for (File file : filelist) {
-          d.mergeWith(readDatabase_noChecks(file));
+          d.mergeWith(readDatabaseNoChecks(file));
         }
 
         return d;
