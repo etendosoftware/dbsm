@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2010-2018 Openbravo S.L.U.
+ * Copyright (C) 2010-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -25,9 +25,12 @@ import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.Table;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class OBDataset {
+  private static final Logger logger = LogManager.getLogger();
+
   Vector<OBDatasetTable> tables = new Vector<OBDatasetTable>();
   DatabaseData databaseData;
   Database database;
@@ -178,9 +181,7 @@ public class OBDataset {
           ResultSet rs = ps.getResultSet();
           rs.next();
           if (rs.getInt(1) > 0) {
-            if (log != null) {
-              log.warn("Change detected in table: " + table.getName());
-            }
+            logger.warn("Change detected in table: {}", table.getName());
             if (modifiedTables != null) {
               modifiedTables.add(table.getName());
             }
