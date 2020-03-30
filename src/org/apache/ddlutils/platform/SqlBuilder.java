@@ -4268,6 +4268,7 @@ public abstract class SqlBuilder {
         _log.warn("Cannot write unnamed view " + view);
       } else {
         printStartOfStatement("MATERIALIZED VIEW", getStructureObjectName(view));
+        printScriptOptions("FORCE = TRUE");
 
         print("DROP MATERIALIZED VIEW ");
         printIdentifier(getStructureObjectName(view));
