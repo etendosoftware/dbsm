@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016-2017 Openbravo S.L.U.
+ * Copyright (C) 2016-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -13,7 +13,6 @@ package org.openbravo.dbsm.test.configscript;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +27,7 @@ import org.apache.ddlutils.model.Table;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.openbravo.test.base.Issue;
 
 @RunWith(Parameterized.class)
 public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
@@ -43,7 +43,7 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   private static final Map<String, String> columnDataChanges;
 
   static {
-    columnDataChanges = new LinkedHashMap<String, String>();
+    columnDataChanges = new LinkedHashMap<>();
     columnDataChanges.put("TEST_ID", "1");
     columnDataChanges.put("COL1",
         "This is the first part of the regression test.This is the second.");
@@ -51,7 +51,7 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   }
 
   public ConfigScriptColumnSizeChange(String rdbms, String driver, String url, String sid,
-      String user, String password, String name) throws FileNotFoundException, IOException {
+      String user, String password, String name) throws IOException {
     super(rdbms, driver, url, sid, user, password, name);
   }
 
@@ -76,11 +76,9 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   /**
    * Test case to test if it is possible to update the database with a columnSizeChange without any
    * problem in the insert of the data in the recreated table.
-   * 
-   * See issue https://issues.openbravo.com/view.php?id=36902
-   *
    */
   @Test
+  @Issue("36902")
   public void isColumnSizeAppliedProperly() {
     // this method creates a new database with the configScripts applied and insert the data
     exportModelChangesAndUpdateDatabase(BASE_MODEL, Arrays.asList(TEST_TABLE),
@@ -109,6 +107,6 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
   }
 
   private static List<String> getColumnDataChangesColumnValues() {
-    return new ArrayList<String>(columnDataChanges.values());
+    return new ArrayList<>(columnDataChanges.values());
   }
 }
