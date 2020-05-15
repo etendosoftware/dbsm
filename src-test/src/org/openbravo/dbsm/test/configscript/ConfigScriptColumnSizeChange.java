@@ -11,7 +11,9 @@
  */
 package org.openbravo.dbsm.test.configscript;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
 
   private static final String BASE_MODEL = MODEL_DIRECTORY + "BASE_MODEL.xml";
   private static final String CONFIG_SCRIPT_INSTALL = "model/configScripts/columnSizeChange/configScript.xml";
+  private static final String MANDATORY_COL_SCRIPT_INSTALL = "model/configScripts/columnSizeChange/configScriptMandatoryColumn.xml";
   private static final String DATA_DIRECTORY_SIZE = "data/configScriptsChangeSizeColumn";
 
   private static final String TEST_TABLE = "TEST";
@@ -89,6 +92,18 @@ public class ConfigScriptColumnSizeChange extends ConfigScriptBaseTest {
 
     assertEquals("Data changes applied by Configuration Script", getColumnDataChangesColumnValues(),
         getRowValues(TEST_ROW_ID, TEST_TABLE, getColumnDataChangesColumnNames()));
+  }
+
+  @Test
+  @Issue("44069")
+  public void columnSizeInMandatoryColumn() {
+    Database database = exportModelChangesAndUpdateDatabase(BASE_MODEL,
+        Arrays.asList(MANDATORY_COL_SCRIPT_INSTALL));
+    Table table = database.findTable(TEST_TABLE);
+    Column column = table.findColumn("COL4");
+    assertEquals("Size of column COL4 increased by the configuration script", 70,
+        Integer.parseInt(column.getSize()));
+    assertThat("Column is not null", column.isRequired(), is(true));
   }
 
   /**
