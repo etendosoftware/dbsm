@@ -568,7 +568,7 @@ public class OracleBuilder extends SqlBuilder {
     Column column = table.findColumn(change.getColumnname());
     column.setSize(Integer.toString(change.getNewSize()));
     print("ALTER TABLE " + table.getName() + " MODIFY ");
-    writeColumn(table, column);
+    writeColumn(table, column, true);
     printEndOfStatement();
   }
 
