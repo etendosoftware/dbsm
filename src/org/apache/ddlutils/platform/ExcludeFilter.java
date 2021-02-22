@@ -121,7 +121,8 @@ public class ExcludeFilter implements Cloneable {
 
     try {
       DatabaseIO dbIO = new DatabaseIO();
-      Vector<Object> list = dbIO.readExcludedObjects(file);
+      file = file.getCanonicalFile();
+      Vector<Object> list = dbIO.readExcludedObjects(file.getCanonicalFile());
 
       for (Object obj : list) {
         if (obj instanceof ExcludedTable) {

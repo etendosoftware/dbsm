@@ -38,6 +38,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
@@ -207,9 +208,13 @@ public class DBUpdater {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(model);
     } else {
-      String modulesBaseDir = basedir + "../modules/";
-      final File[] fileArray = readModelFiles(modulesBaseDir);
-      log.info("Reading model files...");
+      File[] fileArray = new File[] {model};
+      for (String moduleDir : ModulesUtil.moduleDirs) {
+        log.debug("Reading model files... " + moduleDir);
+        String modulesBaseDir = basedir + "../" + moduleDir + "/";
+        fileArray = ModulesUtil.union(fileArray, readModelFiles(modulesBaseDir));
+      }
+      log.debug("Found " + fileArray.length + " module files ");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
     db.checkDataTypes();
@@ -219,7 +224,10 @@ public class DBUpdater {
   private DatabaseData readADData(Database db) {
     DatabaseData dbData = new DatabaseData(db);
     if (baseSrcAD != null) {
-      String modulesBaseDir = basedir == null ? null : basedir + "../modules/";
+      String[] modulesBaseDir = ModulesUtil.moduleDirs;
+      for (int i = 0; i < modulesBaseDir.length; i++) {
+        modulesBaseDir[i] = basedir == null ? null : basedir + "../" + modulesBaseDir[i] + "/";
+      }
       DBSMOBUtil.getInstance()
           .loadDataStructures(dbData, db, modulesBaseDir, datafilter, baseSrcAD);
     }
@@ -337,7 +345,6 @@ public class DBUpdater {
    */
   public File[] readModelFiles(String modulesBaseDir) throws IllegalStateException {
     final Vector<File> dirs = new Vector<File>();
-    dirs.add(model);
     final DirectoryScanner dirScanner = new DirectoryScanner();
     dirScanner.setBasedir(new File(modulesBaseDir));
     final String[] dirFilterA = { dirFilter };
@@ -349,7 +356,9 @@ public class DBUpdater {
       dirs.add(dirF);
     }
     final File[] fileArray = new File[dirs.size()];
+    log.debug("readModelFiles");
     for (int i = 0; i < dirs.size(); i++) {
+      log.debug(dirs.get(i));
       fileArray[i] = dirs.get(i);
     }
     return fileArray;

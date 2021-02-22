@@ -15,6 +15,7 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -30,6 +31,7 @@ import org.apache.ddlutils.model.DatabaseData;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModulesUtil;
 
 /**
  * 
@@ -102,25 +104,32 @@ public class CreateDatabase extends BaseDatabaseTask {
     } else {
       // We read model files using the filter, obtaining a file array. The models will be merged
       // to create a final target model.
-      final Vector<File> dirs = new Vector<>();
+      File[] fileArray = new File[] {};
       if (model.exists()) {
-        dirs.add(model);
+        fileArray = new File[] {model};
       }
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(modulesDir));
-      final String[] dirFilterA = { dirFilter };
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirF = new File(modulesDir, incDirs[j]);
-        dirs.add(dirF);
+      String workDir = System.getProperty("user.dir");
+      log.info("Working Directory = " + workDir);
+      for (String modDir : ModulesUtil.moduleDirs) {
+        modDir = workDir + "/" + modDir;
+        log.info("Scanning " + modDir);
+        final Vector<File> dirs = new Vector<>();
+        final DirectoryScanner dirScanner = new DirectoryScanner();
+        dirScanner.setBasedir(new File(modDir));
+        final String[] dirFilterA = { dirFilter };
+        dirScanner.setIncludes(dirFilterA);
+        dirScanner.scan();
+        final String[] incDirs = dirScanner.getIncludedDirectories();
+        for (int j = 0; j < incDirs.length; j++) {
+          final File dirF = new File(modDir, incDirs[j]);
+          dirs.add(dirF);
+        }
+        final File[] dirArray = new File[dirs.size()];
+        for (int i = 0; i < dirs.size(); i++) {
+          dirArray[i] = dirs.get(i);
+        }
+        fileArray = ModulesUtil.union(fileArray, dirArray);
       }
-      final File[] fileArray = new File[dirs.size()];
-      for (int i = 0; i < dirs.size(); i++) {
-        fileArray[i] = dirs.get(i);
-      }
-
       db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
     }
 
@@ -251,16 +260,25 @@ public class CreateDatabase extends BaseDatabaseTask {
     DatabaseData dbData = new DatabaseData(db);
     DatabaseUtils.readDataModuleInfo(db, dbData, basedir);
     for (String template : DBSMOBUtil.getInstance().getSortedTemplates(dbData)) {
-      File configScript = new File(new File(modulesDir),
-          template + "/src-db/database/configScript.xml");
-      getLog().info("Loading config script for module from path " + configScript.getAbsolutePath());
-      if (configScript.exists()) {
-        final DatabaseIO dbIO = new DatabaseIO();
-        final Vector<Change> changesConfigScript = dbIO.readChanges(configScript);
-        platform.applyConfigScript(db, changesConfigScript);
-      } else {
-        getLog().error("Error. We couldn't find configuration script for template "
-            + configScript.getName() + ". Path: " + configScript.getAbsolutePath());
+      File configScript = null;
+      String workDir = System.getProperty("user.dir");
+      for (String moduleDir : ModulesUtil.moduleDirs) {
+        configScript = new File(new File(workDir + "/" + moduleDir),
+                template + "/src-db/database/configScript.xml");
+        if(configScript.exists()) {
+          break;
+        }
+      }
+      if(configScript != null) {
+        getLog().info("Loading config script for module from path " + configScript.getAbsolutePath());
+        if (configScript.exists()) {
+          final DatabaseIO dbIO = new DatabaseIO();
+          final Vector<Change> changesConfigScript = dbIO.readChanges(configScript);
+          platform.applyConfigScript(db, changesConfigScript);
+        } else {
+          getLog().error("Error. We couldn't find configuration script for template "
+                  + configScript.getName() + ". Path: " + configScript.getAbsolutePath());
+        }
       }
     }
 

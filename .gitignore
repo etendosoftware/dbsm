@@ -3,3 +3,8 @@ docs/
 dbsm.properties
 src-test/config/db-config.json
 src-test/result.xml
+/.idea
+/.gradle
+/lib/*.jar
+/libclear
+/gradle.properties

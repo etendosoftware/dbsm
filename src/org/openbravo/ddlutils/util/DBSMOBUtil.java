@@ -19,14 +19,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -883,11 +876,12 @@ public class DBSMOBUtil {
       Database originaldb, Database db, String modulesBaseDir, String datafilter, File input,
       boolean strict, boolean applyConfigScriptData) {
 
-    loadDataStructures(databaseOrgData, db, modulesBaseDir, datafilter, input);
+    loadDataStructures(databaseOrgData, db, new String[] {modulesBaseDir}, datafilter, input);
   }
 
-  public void loadDataStructures(DatabaseData databaseOrgData, Database db, String modulesBaseDir,
+  public void loadDataStructures(DatabaseData databaseOrgData, Database db, String[] modulesBaseDirList,
       String datafilter, File input) {
+    getLog().info("loadDataStructures - dirs to scan " + Arrays.toString(modulesBaseDirList));
     final Vector<File> files = new Vector<File>();
     File[] sourceFiles = input.listFiles();
     for (int i = 0; i < sourceFiles.length; i++) {
@@ -896,24 +890,27 @@ public class DBSMOBUtil {
       }
     }
 
-    if (modulesBaseDir != null) {
+    if (modulesBaseDirList != null) {
       final String token = datafilter;
-      final DirectoryScanner dirScanner = new DirectoryScanner();
-      dirScanner.setBasedir(new File(modulesBaseDir));
-      final String[] dirFilterA = token.split(",");
-      dirScanner.setIncludes(dirFilterA);
-      dirScanner.scan();
-      final String[] incDirs = dirScanner.getIncludedDirectories();
-      for (int j = 0; j < incDirs.length; j++) {
-        final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
-        final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
-        for (int i = 0; i < fileArray.length; i++) {
-          if (fileArray[i].getName().endsWith(".xml")) {
-            files.add(fileArray[i]);
+      for (String modulesBaseDir : modulesBaseDirList) {
+        final DirectoryScanner dirScanner = new DirectoryScanner();
+        dirScanner.setBasedir(new File(modulesBaseDir));
+        final String[] dirFilterA = token.split(",");
+        dirScanner.setIncludes(dirFilterA);
+        dirScanner.scan();
+        final String[] incDirs = dirScanner.getIncludedDirectories();
+        for (int j = 0; j < incDirs.length; j++) {
+          final File dirFolder = new File(modulesBaseDir, incDirs[j] + "/");
+          final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
+          for (int i = 0; i < fileArray.length; i++) {
+            if (fileArray[i].getName().endsWith(".xml")) {
+              files.add(fileArray[i]);
+            }
           }
         }
       }
     }
+    getLog().info("loadDataStructures - files to read " + Arrays.toString(files.toArray()));
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
@@ -1133,15 +1130,18 @@ public class DBSMOBUtil {
     ExcludeFilter ex = new ExcludeFilter();
     try {
       ex.fillFromFile(new File(rootDir, "src-db/database/model/excludeFilter.xml"));
-      File f = new File(rootDir, "modules");
-      File[] mods = f.listFiles();
-      for (File mod : mods) {
-        File fex = new File(mod, "src-db/database/model/excludeFilter.xml");
-        if (fex.exists()) {
-          ex.fillFromFile(fex);
+      for (String moduleDir : ModulesUtil.moduleDirs) {
+        File f = new File(rootDir, moduleDir);
+        File[] mods = f.listFiles();
+        if (mods != null) {
+          for (File mod : mods) {
+            File fex = new File(mod, "src-db/database/model/excludeFilter.xml");
+            if (fex.exists()) {
+              ex.fillFromFile(fex);
+            }
+          }
         }
       }
-
     } catch (Exception e) {
       getLog().error("Error while reading excludeFilter file", e);
     }
