@@ -20,13 +20,7 @@ package org.apache.ddlutils.io;
  */
 
 import java.beans.IntrospectionException;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Vector;
 

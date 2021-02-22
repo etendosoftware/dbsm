@@ -19,11 +19,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.io.DatabaseFilter;
@@ -38,6 +34,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.service.system.SystemService;
 
 public class DatabaseUtils {
@@ -128,10 +125,8 @@ public class DatabaseUtils {
     Vector<File> dirs = new Vector<File>();
     addModuleFilesIfExist(dirs, path);
 
-    File modules = new File(path, "/modules");
-    for (File moduleDir : modules.listFiles()) {
-      addModuleFilesIfExist(dirs, moduleDir.getAbsolutePath());
-    }
+    ModulesUtil.get(path).forEach(moduleDir ->
+            addModuleFilesIfExist(dirs, moduleDir.getAbsolutePath()));
 
     DBSMOBUtil.getInstance().readDataIntoDatabaseData(d, dbdata, dirs);
   }

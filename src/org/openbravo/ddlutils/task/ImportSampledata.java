@@ -46,6 +46,7 @@ import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
 import org.xml.sax.SAXException;
@@ -85,12 +86,13 @@ public class ImportSampledata extends BaseDatabaseTask {
 
       Vector<File> dirs = new Vector<File>();
       dirs.add(new File(basedir, "/src-db/database/model/"));
-      File modules = new File(basedir, "/modules");
-
-      for (int j = 0; j < modules.listFiles().length; j++) {
-        final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
-        if (dirF.exists()) {
-          dirs.add(dirF);
+      for (String modDir : ModulesUtil.moduleDirs) {
+        File modules = new File(basedir, "/" + modDir);
+        for (int j = 0; j < modules.listFiles().length; j++) {
+          final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
+          if (dirF.exists()) {
+            dirs.add(dirF);
+          }
         }
       }
       File[] fileArray2 = new File[dirs.size()];
@@ -122,11 +124,13 @@ public class ImportSampledata extends BaseDatabaseTask {
 
       Vector<File> refdirs = new Vector<File>();
       refdirs.add(new File(basedir, "referencedata/sampledata"));
-
-      for (int j = 0; j < modules.listFiles().length; j++) {
-        final File dirF = new File(modules.listFiles()[j], "referencedata/sampledata");
-        if (dirF.exists()) {
-          refdirs.add(dirF);
+      for (String modDir : ModulesUtil.moduleDirs) {
+        File modules = new File(basedir, "/" + modDir);
+        for (int j = 0; j < modules.listFiles().length; j++) {
+          final File dirF = new File(modules.listFiles()[j], "referencedata/sampledata");
+          if (dirF.exists()) {
+            refdirs.add(dirF);
+          }
         }
       }
       // for each folder having sampledata
