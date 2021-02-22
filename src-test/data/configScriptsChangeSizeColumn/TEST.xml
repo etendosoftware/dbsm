@@ -2,6 +2,7 @@
   <data>
     <!--1--><TEST>
     <!--1-->  <TEST_ID><![CDATA[1]]></TEST_ID>
-    <!--1-->  <COL1><![CDATA[This is the first part of the regression test.This is the second.]]></COL1>    
+    <!--1-->  <COL1><![CDATA[This is the first part of the regression test.This is the second.]]></COL1>
+    <!--1-->  <COL4><![CDATA[some data]]></COL4>
     <!--1--></TEST>
   </data>

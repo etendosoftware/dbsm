@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2016-2017 Openbravo S.L.U.
+ * Copyright (C) 2016-2020 Openbravo S.L.U.
  * Licensed under the Apache Software License version 2.0
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to  in writing,  software  distributed
@@ -67,6 +67,17 @@ public class MaterializedViews extends DbsmTest {
     updateDatabase("materializedViews/OPERATOR_CLASS_INDEX_MODEL.xml", false);
     assertExportedMaterializedView("materializedViews/OPERATOR_CLASS_INDEX_MODEL.xml",
         "materializedViews/TEST_MATERIALIZEDVIEW.xml");
+  }
+
+  @Test
+  public void createWithDependencies() {
+    createDatabase("materializedViews/DEPENDENCY.xml");
+  }
+
+  @Test
+  public void dropWithDependencies() {
+    createDatabase("materializedViews/DEPENDENCY.xml");
+    resetDB();
   }
 
   private void assertExportedMaterializedView(String modelFileToCompare, String exportedObjectPath)

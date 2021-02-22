@@ -15,6 +15,7 @@
     <excludedFunction name="GTRGM_PICKSPLIT"/>
     <excludedFunction name="GTRGM_SAME"/>
     <excludedFunction name="GTRGM_UNION"/>
+    <excludedFunction name="GTRGM_OPTIONS"/>
     <excludedFunction name="SET_LIMIT"/>
     <excludedFunction name="SHOW_LIMIT"/>
     <excludedFunction name="SHOW_TRGM"/>

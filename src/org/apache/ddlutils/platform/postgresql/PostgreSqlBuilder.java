@@ -656,8 +656,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   @Override
   protected void writeCreateViewStatement(View view) throws IOException {
-
     printScriptOptions("FORCE = TRUE");
+
     print("CREATE OR REPLACE VIEW ");
     printIdentifier(getStructureObjectName(view));
     print(" AS ");
@@ -666,6 +666,8 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   @Override
   protected void writeCreateMaterializedViewStatement(MaterializedView view) throws IOException {
+    printScriptOptions("FORCE = TRUE");
+
     print("CREATE MATERIALIZED VIEW ");
     printIdentifier(getStructureObjectName(view));
     print(" AS ");
