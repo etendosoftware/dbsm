@@ -27,6 +27,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.openbravo.ddlutils.process.DBUpdater;
 import org.openbravo.ddlutils.task.DatabaseUtils.ConfigScriptConfig;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.service.system.SystemService;
 
 /**
@@ -166,6 +167,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
 
     Database db = null;
     String modulesBaseDir = config.getBasedir() + "modules/";
+    String modulesCoreBaseDir = config.getBasedir() + "modules_core/";
     if (config.getBasedir() == null) {
       getLog()
           .info("Basedir for additional files not specified. Updating database with just Core.");
@@ -173,7 +175,7 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       modulesBaseDir = null;
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
-      final File[] fileArray = getDBUpdater().readModelFiles(modulesBaseDir);
+      File[] fileArray = ModulesUtil.union(getDBUpdater().readModelFiles(modulesBaseDir), getDBUpdater().readModelFiles(modulesCoreBaseDir));
       getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray, config);
     }
