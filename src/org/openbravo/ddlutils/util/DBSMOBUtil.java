@@ -953,8 +953,13 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      File configScript = new File(new File(modulesBaseDir),
+      final File modulesDir = new File(modulesBaseDir);
+      File configScript = new File(modulesDir,
           template + "/src-db/database/configScript.xml");
+      if (!configScript.exists()) {
+        configScript = new File(modulesDir.getParent(),
+                "modules_core/" + template + "/src-db/database/configScript.xml");
+      }
       applyConfigScript(configScript, platform, databaseOrgData, db, strict, applyConfigScriptData,
           isApplied);
     }
