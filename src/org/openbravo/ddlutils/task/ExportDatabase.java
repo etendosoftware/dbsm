@@ -177,12 +177,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
           path = model;
         } else {
-          path = new File(
-              coremoduledir + File.separator + util.getActiveModule(i).dir + getModelPath());
-          if (!path.exists()) {
-            path = new File(
-                    moduledir + File.separator + util.getActiveModule(i).dir + getModelPath());
+          File moduleDir = new File(
+                  coremoduledir + File.separator + util.getActiveModule(i).dir);
+          if (!moduleDir.exists()) {
+            moduleDir = new File(
+                    moduledir + File.separator + util.getActiveModule(i).dir);
           }
+          path = new File(moduleDir, getModelPath());
         }
 
         if (testAPI) {
@@ -235,12 +236,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
                 path = new File(path, "referencedData");
               }
             } else {
-              path = new File(coremoduledir,
-                      util.getActiveModule(i).dir + "/src-db/database/sourcedata/");
-              if (!path.exists()) {
-                path = new File(moduledir,
-                        util.getActiveModule(i).dir + "/src-db/database/sourcedata/");
+              File moduleDir = new File(
+                      coremoduledir + File.separator + util.getActiveModule(i).dir);
+              if (!moduleDir.exists()) {
+                moduleDir = new File(
+                        moduledir + File.separator + util.getActiveModule(i).dir);
               }
+              path = new File(moduleDir, "/src-db/database/sourcedata/");
             }
 
             if (testAPI) {
