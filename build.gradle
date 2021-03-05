@@ -40,8 +40,8 @@ dependencies {
     compile files('lib/log4j-api-2.11.1.jar')
     compile files('lib/commons-digester-1.8.1.jar')
     compile files('lib/commons-lang-2.1.jar')
-    compile fileTree(dir: "$etendo_project/lib", include: '*.jar')
-    compile fileTree(dir: "$etendo_project/lib/runtime", include: '*.jar')
+    compile project(':EtendoCore')
+    compile fileTree(dir: project(':EtendoCore').projectDir.getAbsolutePath(), include: 'lib/**/*.jar')
 
     compile files('lib/etendo_core.jar')
 
