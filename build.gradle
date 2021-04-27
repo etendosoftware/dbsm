@@ -72,7 +72,7 @@ publishing {
                 username "$mavenUser"
                 password "$mavenPassword"
             }
-            url "https://repo.futit.cloud/repository/maven-public-snapshots"
+            url "https://repo.futit.cloud/repository/maven-public-releases"
         }
     }
 }
