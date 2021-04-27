@@ -60,9 +60,9 @@ sourceSets {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId "com.smf"
+            groupId "com.etendoerp"
             artifactId "ddlutils"
-            version "1.0.0-SNAPSHOT"
+            version "1.0.1"
             artifact file("build/libs/dbsourcemanager.jar")
         }
     }
