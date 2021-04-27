@@ -8,3 +8,6 @@
  */
 
 rootProject.name = 'dbsm'
+
+include 'EtendoCore'
+project(':EtendoCore').projectDir = new File('../etendo_core')

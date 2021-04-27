@@ -61,6 +61,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   private String encoding = "UTF-8";
 
   private File moduledir;
+  private File coremoduledir;
   private String openbravoRootPath;
   private boolean force = false;
   private boolean validateModel = true;
@@ -135,11 +136,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
       dbForModel.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(dbForAD);
       DBSMOBUtil.getInstance()
-          .loadDataStructures(platform, databaseOrgData, dbForAD, dbForAD,
-              moduledir.getAbsolutePath(), "*/src-db/database/sourcedata", output);
+          .loadDataStructures(databaseOrgData, dbForAD,
+              new String[] {moduledir.getAbsolutePath(), coremoduledir.getAbsolutePath()}, "*/src-db/database/sourcedata", output);
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
       DBSMOBUtil.getInstance()
           .removeSortedTemplates(platform, dbForAD, databaseOrgData, moduledir.getAbsolutePath());
+      DBSMOBUtil.getInstance()
+              .removeSortedTemplates(platform, dbForAD, databaseOrgData, coremoduledir.getAbsolutePath());
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         Database dbI = null;
         try {
@@ -174,8 +177,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
           path = model;
         } else {
-          path = new File(
-              moduledir + File.separator + util.getActiveModule(i).dir + getModelPath());
+          File moduleDir = new File(
+                  coremoduledir + File.separator + util.getActiveModule(i).dir);
+          if (!moduleDir.exists()) {
+            moduleDir = new File(
+                    moduledir + File.separator + util.getActiveModule(i).dir);
+          }
+          path = new File(moduleDir, getModelPath());
         }
 
         if (testAPI) {
@@ -209,7 +217,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         // we just need to reload it once before exporting the source data because the model
         // information is the same for all the modules about to be exported
         Database dbXML = DatabaseUtils.readDatabaseModel(platform, model,
-            moduledir.getAbsolutePath(), "*/src-db/database/model");
+            moduledir.getAbsolutePath(), coremoduledir.getAbsolutePath(), "*/src-db/database/model");
 
         int datasetI = 0;
         for (final String dataSetCode : datasets) {
@@ -228,8 +236,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
                 path = new File(path, "referencedData");
               }
             } else {
-              path = new File(moduledir,
-                  util.getActiveModule(i).dir + "/src-db/database/sourcedata/");
+              File moduleDir = new File(
+                      coremoduledir + File.separator + util.getActiveModule(i).dir);
+              if (!moduleDir.exists()) {
+                moduleDir = new File(
+                        moduledir + File.separator + util.getActiveModule(i).dir);
+              }
+              path = new File(moduleDir, "/src-db/database/sourcedata/");
             }
 
             if (testAPI) {
@@ -279,6 +292,8 @@ public class ExportDatabase extends BaseDalInitializingTask {
                   util.getActiveModule(i).idMod);
               DBSMOBUtil.getInstance()
                   .removeSortedTemplates(platform, dataToExport, moduledir.getAbsolutePath());
+              DBSMOBUtil.getInstance()
+                      .removeSortedTemplates(platform, dataToExport, coremoduledir.getAbsolutePath());
               path.mkdirs();
               if (datasetI == 0) {
                 final File[] filestodelete = path.listFiles();
@@ -393,6 +408,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
   public void setModuledir(File moduledir) {
     this.openbravoRootPath = moduledir.getAbsolutePath() + "/../";
     this.moduledir = moduledir;
+    this.coremoduledir = new File(openbravoRootPath + "/modules_core");
     model = new File(openbravoRootPath, getModelPath());
     output = new File(openbravoRootPath, "src-db/database/sourcedata");
   }

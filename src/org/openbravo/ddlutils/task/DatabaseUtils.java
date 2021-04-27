@@ -402,10 +402,10 @@ public class DatabaseUtils {
 
   /**
    * Reads the model recursively from core + modules.
-   * 
+   *
    * @param model
    *          should point to <erpBaseDir>/src-db/database/model
-   * @param basedir
+   * @param modulesBaseDir
    *          <erpBaseDir>/modules
    * @param dirFilter
    *          i.e. \*\/src-db/database/model
@@ -413,7 +413,26 @@ public class DatabaseUtils {
    */
   // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
   static Database readDatabaseModel(Platform platform, File model, String modulesBaseDir,
-      String dirFilter) {
+                                    String dirFilter) {
+    return readDatabaseModel(platform, model, modulesBaseDir, getSourcePath() + "/modules_core", dirFilter);
+  }
+
+  /**
+   * Reads the model recursively from core + modules.
+   * 
+   * @param model
+   *          should point to <erpBaseDir>/src-db/database/model
+   * @param modulesBaseDir
+   *          <erpBaseDir>/modules
+   * @param coreModulesBaseDir
+   * *          <erpBaseDir>/modules_core
+   * @param dirFilter
+   *          i.e. \*\/src-db/database/model
+   * @return Database object representing the loaded model
+   */
+  // TODO: centralize other copies in update.database (+xml) also into DatabaseUtils
+  static Database readDatabaseModel(Platform platform, File model, String modulesBaseDir,
+      String coreModulesBaseDir, String dirFilter) {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
     ConfigScriptConfig config = new ConfigScriptConfig(platform, modulesBaseDir + "/../",
@@ -434,10 +453,19 @@ public class DatabaseUtils {
     dirScanner.setIncludes(dirFilterA);
     dirScanner.scan();
     final String[] incDirs = dirScanner.getIncludedDirectories();
-    for (int j = 0; j < incDirs.length; j++) {
-      final File dirF = new File(modulesBaseDir, incDirs[j]);
+    for (String incDir : incDirs) {
+      final File dirF = new File(modulesBaseDir, incDir);
       dirs.add(dirF);
     }
+
+    dirScanner.setBasedir(new File(coreModulesBaseDir));
+    dirScanner.setIncludes(dirFilterA);
+    dirScanner.scan();
+    for (String incDir : dirScanner.getIncludedDirectories()) {
+      final File dirF = new File(coreModulesBaseDir, incDir);
+      dirs.add(dirF);
+    }
+
     final File[] fileArray = new File[dirs.size()];
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
