@@ -62,7 +62,7 @@ publishing {
         maven(MavenPublication) {
             groupId "com.etendoerp"
             artifactId "ddlutils"
-            version "1.0.1"
+            version "1.0.2"
             artifact file("build/libs/dbsourcemanager.jar")
         }
     }
