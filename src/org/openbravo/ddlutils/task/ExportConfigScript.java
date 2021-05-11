@@ -52,6 +52,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
   private File model = null;
   private String coreData = null;
   private File moduledir;
+  private File modulecoredir;
 
   private File output;
   private String encoding = "UTF-8";
@@ -88,9 +89,14 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-          final File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/model/");
+          File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/model/");
           if (dirF.exists()) {
             dirs.add(dirF);
+          } else {
+            dirF = new File(modulecoredir, util.getModule(j).dir + "/src-db/database/model/");
+            if (dirF.exists()) {
+              dirs.add(dirF);
+            }
           }
         }
       }
@@ -113,10 +119,16 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-          final File dirF = new File(moduledir,
+          File dirF = new File(modulecoredir,
               util.getModule(j).dir + "/src-db/database/sourcedata/");
           if (dirF.exists()) {
             dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
+          } else {
+            dirF =  new File(moduledir,
+                    util.getModule(j).dir + "/src-db/database/sourcedata/");
+            if (dirF.exists()) {
+              dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
+            }
           }
         }
       }
@@ -172,7 +184,10 @@ public class ExportConfigScript extends BaseDatabaseTask {
       getLog().info("Loading and applying configuration scripts");
       DatabaseIO dbIOs = new DatabaseIO();
       for (String configScript : configScripts) {
-        File f = new File(moduledir, configScript + "/src-db/database/configScript.xml");
+        File f = new File(modulecoredir, configScript + "/src-db/database/configScript.xml");
+        if (!f.exists()) {
+          f = new File(moduledir, configScript + "/src-db/database/configScript.xml");
+        }
         if (configScript.equals(industryTemplate) || !f.exists()
             || !DBSMOBUtil.isApplied(platform, configScript)) {
           continue;
@@ -214,8 +229,13 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
       final DatabaseIO dbIO = new DatabaseIO();
 
-      final File configFile = new File(moduledir,
-          industryTemplate + "/src-db/database/configScript.xml");
+      File baseDir = new File(modulecoredir, industryTemplate);
+      if (!baseDir.exists()) {
+        baseDir = new File(moduledir, industryTemplate);
+      }
+
+      final File configFile = new File(baseDir,
+          "/src-db/database/configScript.xml");
       final File folder = new File(configFile.getParent());
 
       folder.mkdirs();
@@ -333,6 +353,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
 
   public void setModuledir(File moduledir) {
     this.moduledir = moduledir;
+    this.modulecoredir = new File(moduledir, "../modules_core");
   }
 
   public String getCoreData() {
