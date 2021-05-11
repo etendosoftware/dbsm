@@ -45,7 +45,7 @@ public abstract class BaseDatabaseTask extends Task {
   private String systemPassword;
 
   protected Logger log;
-  protected boolean doOBRebuildAppender = true;
+  protected boolean doOBRebuildAppender = false;
 
   public BaseDatabaseTask() {
   }
