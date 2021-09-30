@@ -108,13 +108,14 @@ public class CreateDatabase extends BaseDatabaseTask {
       if (model.exists()) {
         fileArray = new File[] {model};
       }
-      String workDir = System.getProperty("user.dir");
+      String workDir = basedir;
       log.info("Working Directory = " + workDir);
       for (String modDir : ModulesUtil.moduleDirs) {
         modDir = workDir + "/" + modDir;
         log.info("Scanning " + modDir);
         final Vector<File> dirs = new Vector<>();
         final DirectoryScanner dirScanner = new DirectoryScanner();
+        dirScanner.setErrorOnMissingDir(false); // dirs like modules_core may not exists when core is a (class) jar dependency
         dirScanner.setBasedir(new File(modDir));
         final String[] dirFilterA = { dirFilter };
         dirScanner.setIncludes(dirFilterA);
