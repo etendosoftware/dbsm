@@ -472,25 +472,6 @@ public class DatabaseUtils {
       }
     }
 
-//    final DirectoryScanner dirScanner = new DirectoryScanner();
-//    dirScanner.setBasedir(new File(modulesBaseDir));
-//    final String[] dirFilterA = { dirFilter };
-//    dirScanner.setIncludes(dirFilterA);
-//    dirScanner.scan();
-//    final String[] incDirs = dirScanner.getIncludedDirectories();
-//    for (String incDir : incDirs) {
-//      final File dirF = new File(modulesBaseDir, incDir);
-//      dirs.add(dirF);
-//    }
-//
-//    dirScanner.setBasedir(new File(coreModulesBaseDir));
-//    dirScanner.setIncludes(dirFilterA);
-//    dirScanner.scan();
-//    for (String incDir : dirScanner.getIncludedDirectories()) {
-//      final File dirF = new File(coreModulesBaseDir, incDir);
-//      dirs.add(dirF);
-//    }
-
     final File[] fileArray = new File[dirs.size()];
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
