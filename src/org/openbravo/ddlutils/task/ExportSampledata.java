@@ -147,11 +147,14 @@ public class ExportSampledata extends BaseDatabaseTask {
       final DBSMOBUtil util = DBSMOBUtil.getInstance();
       util.getModules(platform, excludeFilter);
 
+      // TODO: Change the dir to point to the root modules dir when core in JAR
       File moduledir = new File(basedir, "modules");
 
       Database db = platform.loadTablesFromDatabase(excludeFilter);
       db.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(db);
+
+      // TODO: Check the path to point to the 'root' modules dir when core in JAR
       DBSMOBUtil.getInstance()
           .loadDataStructures(platform, databaseOrgData, db, db, moduledir.getAbsolutePath(),
               "*/src-db/database/sourcedata", new File(basedir, "src-db/database/sourcedata"));

@@ -94,6 +94,7 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   private void writeChecksumInfo() {
     getLog().info("Writing checksum info");
+    // TODO: Check path when core in JAR
     DBSMOBUtil
             .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
   }
@@ -112,7 +113,8 @@ public class CreateDatabase extends BaseDatabaseTask {
         fileArray = new File[] {model};
         log.info("Model = " + model.getAbsolutePath());
       }
-      String workDir = System.getProperty("user.dir");
+      String workDir = ModulesUtil.getProjectRootDir();
+
       log.info("Working Directory = " + workDir);
       for (String modDir : ModulesUtil.moduleDirs) {
         modDir = workDir + "/" + modDir;
@@ -213,7 +215,9 @@ public class CreateDatabase extends BaseDatabaseTask {
     final String folders = getInput();
     final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
     final Vector<File> files = new Vector<>();
-    String workDir = System.getProperty("user.dir");
+
+    String workDir = ModulesUtil.getProjectRootDir();
+
     while (strTokFol.hasMoreElements()) {
       if (basedir == null) {
         getLog().info("Basedir not specified, will insert just Core data files.");

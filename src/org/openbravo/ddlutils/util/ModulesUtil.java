@@ -1,5 +1,10 @@
 package org.openbravo.ddlutils.util;
 
+import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.ddlutils.coreutils.CoreMetadata;
+import org.openbravo.ddlutils.coreutils.JarCoreMetadata;
+import org.openbravo.ddlutils.coreutils.SourceCoreMetadata;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
@@ -12,18 +17,22 @@ public class ModulesUtil {
     public static final String MODULES_BASE = "modules";
     public static final String MODULES_CORE = "modules_core";
     public static String[] moduleDirs = new String[] {MODULES_BASE, MODULES_CORE};
+
+    static {
+        checkCoreInSources(coreInSources());
+    }
+
     public static Vector<File> get(String path) {
 
         checkCoreInSources(coreInSources());
 
         String auxPath = path;
-        final String rootWorkDir = System.getProperty("user.dir");
+        final String rootWorkDir = getProjectRootDir();
 
         /**
          * The core is in JAR.
          * Set the 'path' to the root project to take into account all the modules folders:
          * - root/modules
-         * - root/modules_core
          * - root/build/etendo/modules
          */
         if (!ModulesUtil.coreInSources) {
@@ -43,17 +52,16 @@ public class ModulesUtil {
 
     public static void checkCoreInSources(Boolean isCoreInSources) {
         coreInSources = isCoreInSources;
-        String workDir = System.getProperty("user.dir");
-        // Add extra module folder.
+        CoreMetadata coreData = null;
+        String workDir = getProjectRootDir();
+
         if (isCoreInSources) {
-            File jarModulesLocation = new File(workDir + File.separator + MODULES_JAR);
-            if (jarModulesLocation.exists()) {
-                moduleDirs = new String[] {MODULES_BASE, MODULES_CORE, MODULES_JAR};
-            }
+            coreData = new SourceCoreMetadata(workDir);
         } else {
-            // The core is in JAR
-            moduleDirs = new String[] {MODULES_BASE, MODULES_JAR};
+            coreData = new JarCoreMetadata(workDir);
         }
+
+        moduleDirs = coreData.getAllModulesLocation();
     }
 
     /**
@@ -62,13 +70,23 @@ public class ModulesUtil {
      * @return
      */
     public static Boolean coreInSources() {
-        String rootWorkDir = System.getProperty("user.dir");
+        String rootWorkDir = getProjectRootDir();
         File rootLocation = new File(rootWorkDir);
 
         // File used to verify that the core is in sources
         File source = new File(rootLocation, "modules_core");
 
         return  (source.exists() && source.isDirectory());
+    }
+
+    /**
+     * Obtains the 'source.path' from the Openbravo.properties file
+     * @return The root dir of the current project
+     */
+    public static String getProjectRootDir() {
+        return (String) OBPropertiesProvider.getInstance()
+                .getOpenbravoProperties()
+                .get("source.path");
     }
 
     public static File[] union(File[] array1, File[] array2) {

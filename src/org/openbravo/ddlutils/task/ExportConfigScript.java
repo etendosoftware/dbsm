@@ -86,7 +86,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       getLog().info("Loading model from XML files");
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
-
+      // TODO: Change this when core in JAR
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
           File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/model/");
@@ -116,7 +116,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       final DataReader dataReader = dbdio.getConfiguredCompareDataReader(xmlModel);
 
       final Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(getCoreData());
-
+      // TODO: Change this when core in JAR
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
           File dirF = new File(modulecoredir,
@@ -183,6 +183,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       List<String> configScripts = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
       getLog().info("Loading and applying configuration scripts");
       DatabaseIO dbIOs = new DatabaseIO();
+      // TODO: Change this when core in JAR
       for (String configScript : configScripts) {
         File f = new File(modulecoredir, configScript + "/src-db/database/configScript.xml");
         if (!f.exists()) {
@@ -228,7 +229,7 @@ public class ExportConfigScript extends BaseDatabaseTask {
       dataComparator.generateConfigScript(finalChanges, notExportedChanges);
 
       final DatabaseIO dbIO = new DatabaseIO();
-
+      // TODO: Change this when core in JAR
       File baseDir = new File(modulecoredir, industryTemplate);
       if (!baseDir.exists()) {
         baseDir = new File(moduledir, industryTemplate);

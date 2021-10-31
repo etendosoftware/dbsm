@@ -78,6 +78,7 @@ public class DBUpdater {
     log.info("Max threads " + platform.getMaxThreads());
 
     if (updateCheckSums) {
+      // TODO: Check the path when core in JAR
       DBSMOBUtil
           .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
     }
@@ -208,10 +209,27 @@ public class DBUpdater {
       log.info("Basedir for additional files not specified. Updating database with just Core.");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(model);
     } else {
+
+      // TODO: Check that the model is in correct location
+      // When the core is in JAR the model should be read from root/build/etendo/src-db/database/model
+      // When the core is in SOURCES the model should be read from root/src-db/database/model
       File[] fileArray = new File[] {model};
+
+      // This updates the modules dirs to use
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      String auxBasedir = basedir + "../";
+
+      //Core in JAR
+      if (!ModulesUtil.coreInSources) {
+        auxBasedir = ModulesUtil.getProjectRootDir() + "/";
+      }
+
+      log.info("Basedir 'readDatabaseModelWithoutConfigScript':" + auxBasedir);
+
       for (String moduleDir : ModulesUtil.moduleDirs) {
         log.debug("Reading model files... " + moduleDir);
-        String modulesBaseDir = basedir + "../" + moduleDir + "/";
+        String modulesBaseDir = auxBasedir + moduleDir + "/";
         fileArray = ModulesUtil.union(fileArray, readModelFiles(modulesBaseDir));
       }
       log.debug("Found " + fileArray.length + " module files ");
@@ -224,9 +242,21 @@ public class DBUpdater {
   private DatabaseData readADData(Database db) {
     DatabaseData dbData = new DatabaseData(db);
     if (baseSrcAD != null) {
+      // This updates the modules dirs to use
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      String auxBasedir = basedir + "../";
+
+      //Core in JAR
+      if (!ModulesUtil.coreInSources) {
+        auxBasedir = ModulesUtil.getProjectRootDir() + "/";
+      }
+
+      log.info("Basedir 'readADData':" + auxBasedir);
+
       String[] modulesBaseDir = ModulesUtil.moduleDirs;
       for (int i = 0; i < modulesBaseDir.length; i++) {
-        modulesBaseDir[i] = basedir == null ? null : basedir + "../" + modulesBaseDir[i] + "/";
+        modulesBaseDir[i] = basedir == null ? null : auxBasedir + modulesBaseDir[i] + "/";
       }
       DBSMOBUtil.getInstance()
           .loadDataStructures(dbData, db, modulesBaseDir, datafilter, baseSrcAD);
