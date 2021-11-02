@@ -53,7 +53,7 @@ public class CreateDatabase extends BaseDatabaseTask {
   private String dirFilter;
   private String input;
 
-  private Boolean isCoreInSources = true;
+  private String isCoreInSources;
 
   private static final String MSG_ERROR = "There were serious problems while creating the database. Please review and fix them before continuing with the creation of the database.";
 
@@ -70,7 +70,17 @@ public class CreateDatabase extends BaseDatabaseTask {
 
       preCreateModel(platform);
 
-      ModulesUtil.checkCoreInSources(getCoreInSources());
+      Boolean coreInSources;
+
+      if (isCoreInSources != null) {
+        coreInSources = JavaTaskUtils.getBooleanProperty(getIsCoreInSources());
+      } else {
+        coreInSources = ModulesUtil.coreInSources();
+      }
+
+      getLog().info("Core in sources: " + coreInSources.toString());
+
+      ModulesUtil.checkCoreInSources(coreInSources);
 
       Database db = createModel(platform);
 
@@ -242,7 +252,7 @@ public class CreateDatabase extends BaseDatabaseTask {
          * root/build/etendo/modules/_/src-db/database/sourcedata
          *
          */
-        if (!getCoreInSources()) {
+        if (!ModulesUtil.coreInSources) {
           auxBaseDir = workDir;
         }
 
@@ -437,11 +447,11 @@ public class CreateDatabase extends BaseDatabaseTask {
     this.modulesDir = modulesDir;
   }
 
-  public Boolean getCoreInSources() {
+  public String getIsCoreInSources() {
     return isCoreInSources;
   }
 
-  public void setCoreInSources(Boolean coreInSources) {
+  public void setIsCoreInSources(String coreInSources) {
     isCoreInSources = coreInSources;
   }
 
