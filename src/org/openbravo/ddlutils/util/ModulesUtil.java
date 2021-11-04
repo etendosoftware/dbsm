@@ -1,6 +1,6 @@
 package org.openbravo.ddlutils.util;
 
-import org.openbravo.base.session.OBPropertiesProvider;
+import com.etendoerp.properties.EtendoPropertiesProvider;
 import org.openbravo.ddlutils.coreutils.CoreMetadata;
 import org.openbravo.ddlutils.coreutils.JarCoreMetadata;
 import org.openbravo.ddlutils.coreutils.SourceCoreMetadata;
@@ -84,8 +84,8 @@ public class ModulesUtil {
      * @return The root dir of the current project
      */
     public static String getProjectRootDir() {
-        return (String) OBPropertiesProvider.getInstance()
-                .getOpenbravoProperties()
+        return (String) EtendoPropertiesProvider.getInstance()
+                .getEtendoProperties()
                 .get("source.path");
     }
 
