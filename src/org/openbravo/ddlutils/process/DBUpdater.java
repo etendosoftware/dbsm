@@ -225,7 +225,7 @@ public class DBUpdater {
         auxBasedir = ModulesUtil.getProjectRootDir() + "/";
       }
 
-      log.info("Basedir 'readDatabaseModelWithoutConfigScript':" + auxBasedir);
+      log.info("Basedir 'Read Database Model Without ConfigScript':" + auxBasedir);
 
       for (String moduleDir : ModulesUtil.moduleDirs) {
         log.debug("Reading model files... " + moduleDir);
@@ -252,7 +252,7 @@ public class DBUpdater {
         auxBasedir = ModulesUtil.getProjectRootDir() + "/";
       }
 
-      log.info("Basedir 'readADData':" + auxBasedir);
+      log.info("Basedir 'Read ADData':" + auxBasedir);
 
       String[] modulesBaseDir = ModulesUtil.moduleDirs;
       for (int i = 0; i < modulesBaseDir.length; i++) {
