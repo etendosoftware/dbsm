@@ -99,7 +99,6 @@ public class ImportSampledata extends BaseDatabaseTask {
       }
 
       for (String modDir : ModulesUtil.moduleDirs) {
-        // TODO: Check the new change
         File modules = new File(auxBasedir, "/" + modDir);
         getLog().info("Importing sampledata from module dir: " + modules.getAbsolutePath());
 
@@ -140,7 +139,6 @@ public class ImportSampledata extends BaseDatabaseTask {
       Vector<File> refdirs = new Vector<File>();
       refdirs.add(new File(basedir, "referencedata/sampledata"));
       for (String modDir : ModulesUtil.moduleDirs) {
-        // TODO: Check the new change
         File modules = new File(auxBasedir, "/" + modDir);
         for (int j = 0; j < modules.listFiles().length; j++) {
           final File dirF = new File(modules.listFiles()[j], "referencedata/sampledata");
@@ -206,7 +204,6 @@ public class ImportSampledata extends BaseDatabaseTask {
       if (executeModuleScripts) {
         log.info("Running modulescripts...");
         try {
-          // TODO: Check modulescript handler in core to take into account all modules dirs
           ModuleScriptHandler hd = new ModuleScriptHandler();
           hd.setModulesVersionMap(new HashMap<String, String>());
           hd.setBasedir(new File(basedir));

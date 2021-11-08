@@ -176,8 +176,6 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
 
-      // TODO: Check this work
-
       // This updates the modules dirs to use
       ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
 
