@@ -200,9 +200,10 @@ public class ExportDatabase extends BaseDalInitializingTask {
             }
           }
 
+          // The module being exported does not exists.
+          // Set the path to the 'modules' root dir to be created.
           if (moduleDir == null || !moduleDir.exists()) {
-            throw new IllegalArgumentException("The module directory '" + activeModule + "' does not exists.\n" +
-                    "Searched in the following locations: " + Arrays.toString(ModulesUtil.moduleDirs));
+            moduleDir = new File(rootProject, ModulesUtil.MODULES_BASE + File.separator + activeModule);
           }
 
           getLog().info("Module to export location: " + moduleDir.getAbsolutePath());
@@ -271,10 +272,12 @@ public class ExportDatabase extends BaseDalInitializingTask {
                 }
               }
 
+              // The module being exported does not exists.
+              // Set the path to the 'modules' root dir to be created.
               if (moduleDir == null || !moduleDir.exists()) {
-                throw new IllegalArgumentException("The module directory '" + activeModule + "' does not exists.\n" +
-                        "Searched in the following locations: " + Arrays.toString(ModulesUtil.moduleDirs));
+                moduleDir = new File(rootProject, ModulesUtil.MODULES_BASE + File.separator + activeModule);
               }
+
               path = new File(moduleDir, "/src-db/database/sourcedata/");
             }
 
