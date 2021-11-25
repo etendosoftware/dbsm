@@ -175,7 +175,20 @@ public class AlterDatabaseDataAll extends BaseDatabaseTask {
       modulesBaseDir = null;
       db = DatabaseUtils.readDatabase(getModel(), config);
     } else {
-      File[] fileArray = ModulesUtil.union(getDBUpdater().readModelFiles(modulesBaseDir), getDBUpdater().readModelFiles(modulesCoreBaseDir));
+
+      // This updates the modules dirs to use
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      String auxBasedir = ModulesUtil.getProjectRootDir();
+
+      getLog().info("Reading database model with Base dir: " + auxBasedir);
+
+      File[] fileArray = null;
+      for (String moduleDir : ModulesUtil.moduleDirs) {
+        String modulesDir = auxBasedir + "/" + moduleDir + "/";
+        fileArray = ModulesUtil.union(fileArray, getDBUpdater().readModelFiles(modulesDir));
+      }
+
       getLog().info("Reading model files...");
       db = DatabaseUtils.readDatabase(fileArray, config);
     }

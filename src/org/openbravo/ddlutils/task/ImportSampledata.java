@@ -83,11 +83,25 @@ public class ImportSampledata extends BaseDatabaseTask {
     // Checking changes in the database before import sampledata
     boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().databaseHasChanges();
     try {
+      getLog().info("Import sampledataba 'basedir': " + basedir);
 
       Vector<File> dirs = new Vector<File>();
       dirs.add(new File(basedir, "/src-db/database/model/"));
+
+      // Update modules dir to search
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      String auxBasedir = basedir;
+
+      // Core in JAR
+      if (!ModulesUtil.coreInSources) {
+        auxBasedir = ModulesUtil.getProjectRootDir();
+      }
+
       for (String modDir : ModulesUtil.moduleDirs) {
-        File modules = new File(basedir, "/" + modDir);
+        File modules = new File(auxBasedir, "/" + modDir);
+        getLog().info("Importing sampledata from module dir: " + modules.getAbsolutePath());
+
         for (int j = 0; j < modules.listFiles().length; j++) {
           final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
           if (dirF.exists()) {
@@ -125,7 +139,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       Vector<File> refdirs = new Vector<File>();
       refdirs.add(new File(basedir, "referencedata/sampledata"));
       for (String modDir : ModulesUtil.moduleDirs) {
-        File modules = new File(basedir, "/" + modDir);
+        File modules = new File(auxBasedir, "/" + modDir);
         for (int j = 0; j < modules.listFiles().length; j++) {
           final File dirF = new File(modules.listFiles()[j], "referencedata/sampledata");
           if (dirF.exists()) {

@@ -35,6 +35,7 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModulesUtil;
+import org.openbravo.model.ad.module.Module;
 import org.openbravo.service.system.SystemService;
 
 public class DatabaseUtils {
@@ -435,6 +436,8 @@ public class DatabaseUtils {
       String coreModulesBaseDir, String dirFilter) {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
+
+    // TODO: Update basedir path if need it
     ConfigScriptConfig config = new ConfigScriptConfig(platform, modulesBaseDir + "/../",
         strictMode, applyConfigScriptData);
 
@@ -447,23 +450,26 @@ public class DatabaseUtils {
     // create a final target model.
     final Vector<File> dirs = new Vector<File>();
     dirs.add(model);
-    final DirectoryScanner dirScanner = new DirectoryScanner();
-    dirScanner.setBasedir(new File(modulesBaseDir));
-    final String[] dirFilterA = { dirFilter };
-    dirScanner.setIncludes(dirFilterA);
-    dirScanner.scan();
-    final String[] incDirs = dirScanner.getIncludedDirectories();
-    for (String incDir : incDirs) {
-      final File dirF = new File(modulesBaseDir, incDir);
-      dirs.add(dirF);
-    }
 
-    dirScanner.setBasedir(new File(coreModulesBaseDir));
-    dirScanner.setIncludes(dirFilterA);
-    dirScanner.scan();
-    for (String incDir : dirScanner.getIncludedDirectories()) {
-      final File dirF = new File(coreModulesBaseDir, incDir);
-      dirs.add(dirF);
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+    String rootProjectDir = ModulesUtil.getProjectRootDir();
+
+    log.info("Root project dir: " + rootProjectDir);
+
+    for (String modDir : ModulesUtil.moduleDirs) {
+      modDir = rootProjectDir + "/" + modDir;
+      final DirectoryScanner dirScanner = new DirectoryScanner();
+      dirScanner.setErrorOnMissingDir(false);
+      dirScanner.setBasedir(new File(modDir));
+      final String[] dirFilterA = { dirFilter };
+      dirScanner.setIncludes(dirFilterA);
+      dirScanner.scan();
+      final String[] incDirs = dirScanner.getIncludedDirectories();
+      for (String incDir : incDirs) {
+        final File dirF = new File(modDir, incDir);
+        dirs.add(dirF);
+      }
     }
 
     final File[] fileArray = new File[dirs.size()];

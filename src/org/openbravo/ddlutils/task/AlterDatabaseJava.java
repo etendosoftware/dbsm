@@ -18,6 +18,8 @@
  */
 package org.openbravo.ddlutils.task;
 
+import org.openbravo.ddlutils.util.ModulesUtil;
+
 import java.io.File;
 
 public class AlterDatabaseJava {
@@ -35,6 +37,10 @@ public class AlterDatabaseJava {
     ada.setExcludeobjects(args[4]);
     ada.setModel(new File(args[5]));
     // args[6] was 'filter' now unused
+
+    Boolean isCoreInSources = JavaTaskUtils.getBooleanProperty(args[6]);
+    ModulesUtil.checkCoreInSources(isCoreInSources);
+
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
     ada.setFailonerror(JavaTaskUtils.getBooleanProperty(args[9]));
