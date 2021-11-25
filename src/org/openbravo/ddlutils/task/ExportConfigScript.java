@@ -254,9 +254,10 @@ public class ExportConfigScript extends BaseDatabaseTask {
         }
       }
 
+      // The industry template in development does not exists
+      // Set the 'modules' base dir to be created.
       if (baseDir == null || !baseDir.exists()) {
-        throw new IllegalArgumentException("The module template in development '"+industryTemplate+"' does not exists.\n" +
-                "Searched in the following locations: " + Arrays.toString(ModulesUtil.moduleDirs));
+        baseDir = new File(rootDir, ModulesUtil.MODULES_BASE + File.separator + industryTemplate);
       }
 
       final File configFile = new File(baseDir,
