@@ -1163,7 +1163,7 @@ public class DBSMOBUtil {
       File auxRootDir = rootDir;
 
       // Core in JAR
-      if (ModulesUtil.coreInSources) {
+      if (!ModulesUtil.coreInSources) {
         auxRootDir = new File(ModulesUtil.getProjectRootDir());
       }
 
@@ -1283,6 +1283,14 @@ public class DBSMOBUtil {
       if (!propertiesFile.exists()) {
         propertiesFile = new File(workingDir + "/../../config/Openbravo.properties");
       }
+
+      /**
+       * The core is in jar
+       */
+      if (!propertiesFile.exists()) {
+        propertiesFile = new File (ModulesUtil.getProjectRootDir() + "/config/Openbravo.properties");
+      }
+
       props.load(new FileInputStream(propertiesFile));
     } catch (Exception e) {
       System.out.println("Error while obtaining the Openbravo.properties file");

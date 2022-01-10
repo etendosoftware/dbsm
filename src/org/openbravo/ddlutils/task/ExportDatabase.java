@@ -15,6 +15,8 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
@@ -35,11 +37,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.ddlutils.util.DBSMOBUtil;
-import org.openbravo.ddlutils.util.OBDataset;
-import org.openbravo.ddlutils.util.OBDatasetTable;
-import org.openbravo.ddlutils.util.ValidateAPIData;
-import org.openbravo.ddlutils.util.ValidateAPIModel;
+import org.openbravo.ddlutils.util.*;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.service.system.SystemService;
 import org.openbravo.service.system.SystemValidationResult;
@@ -135,15 +133,29 @@ public class ExportDatabase extends BaseDalInitializingTask {
       Database dbForModel = loadDatabaseForModel(dbForAD, platform, excludeFilter);
       dbForModel.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(dbForAD);
-      // TODO: Change parameter to take into account all the module dirs
+
+      // Update modules dirs
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+      String rootProject = ModulesUtil.getProjectRootDir();
+
+      List<String> modulesDir = new ArrayList<>();
+      for (String modDir : ModulesUtil.moduleDirs) {
+        modulesDir.add(rootProject + File.separator + modDir);
+      }
+
+      getLog().info("Loading data structures from: " + Arrays.toString(modulesDir.toArray()));
+
       DBSMOBUtil.getInstance()
-          .loadDataStructures(databaseOrgData, dbForAD,
-              new String[] {moduledir.getAbsolutePath(), coremoduledir.getAbsolutePath()}, "*/src-db/database/sourcedata", output);
+              .loadDataStructures(databaseOrgData, dbForAD, modulesDir.toArray(new String[0]), "*/src-db/database/sourcedata", output);
+
       OBDataset ad = new OBDataset(databaseOrgData, "AD");
-      DBSMOBUtil.getInstance()
-          .removeSortedTemplates(platform, dbForAD, databaseOrgData, moduledir.getAbsolutePath());
-      DBSMOBUtil.getInstance()
-              .removeSortedTemplates(platform, dbForAD, databaseOrgData, coremoduledir.getAbsolutePath());
+
+      for (String modDir : modulesDir) {
+        getLog().info(" 'AD' - Trying to remove sorted templates from: " + modDir);
+        DBSMOBUtil.getInstance()
+            .removeSortedTemplates(platform, dbForAD, databaseOrgData, modDir);
+      }
+
       for (int i = 0; i < util.getActiveModuleCount(); i++) {
         Database dbI = null;
         try {
@@ -178,13 +190,23 @@ public class ExportDatabase extends BaseDalInitializingTask {
         if (util.getActiveModule(i).name.equalsIgnoreCase("CORE")) {
           path = model;
         } else {
-          // TODO: Change this when core in JAR
-          File moduleDir = new File(
-                  coremoduledir + File.separator + util.getActiveModule(i).dir);
-          if (!moduleDir.exists()) {
-            moduleDir = new File(
-                    moduledir + File.separator + util.getActiveModule(i).dir);
+          File moduleDir = null;
+          String activeModule = util.getActiveModule(i).dir;
+
+          for (String modDir : ModulesUtil.moduleDirs) {
+            moduleDir = new File(rootProject + File.separator + modDir + File.separator + activeModule);
+            if (moduleDir.exists()) {
+              break;
+            }
           }
+
+          // The module being exported does not exists.
+          // Set the path to the 'modules' root dir to be created.
+          if (moduleDir == null || !moduleDir.exists()) {
+            moduleDir = new File(rootProject, ModulesUtil.MODULES_BASE + File.separator + activeModule);
+          }
+
+          getLog().info("Module to export location: " + moduleDir.getAbsolutePath());
           path = new File(moduleDir, getModelPath());
         }
 
@@ -219,7 +241,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         // we just need to reload it once before exporting the source data because the model
         // information is the same for all the modules about to be exported
 
-        // TODO: Check this when core in JAR
+        // 'readDatabaseModel' reads all the location modules using the root project dir.
         Database dbXML = DatabaseUtils.readDatabaseModel(platform, model,
             moduledir.getAbsolutePath(), coremoduledir.getAbsolutePath(), "*/src-db/database/model");
 
@@ -240,13 +262,22 @@ public class ExportDatabase extends BaseDalInitializingTask {
                 path = new File(path, "referencedData");
               }
             } else {
-              // TODO: Change this when core in JAR
-              File moduleDir = new File(
-                      coremoduledir + File.separator + util.getActiveModule(i).dir);
-              if (!moduleDir.exists()) {
-                moduleDir = new File(
-                        moduledir + File.separator + util.getActiveModule(i).dir);
+              File moduleDir = null;
+              String activeModule = util.getActiveModule(i).dir;
+
+              for (String modDir : ModulesUtil.moduleDirs) {
+                moduleDir = new File(rootProject + File.separator + modDir + File.separator + activeModule);
+                if (moduleDir.exists()) {
+                  break;
+                }
               }
+
+              // The module being exported does not exists.
+              // Set the path to the 'modules' root dir to be created.
+              if (moduleDir == null || !moduleDir.exists()) {
+                moduleDir = new File(rootProject, ModulesUtil.MODULES_BASE + File.separator + activeModule);
+              }
+
               path = new File(moduleDir, "/src-db/database/sourcedata/");
             }
 
@@ -295,11 +326,13 @@ public class ExportDatabase extends BaseDalInitializingTask {
               DatabaseData dataToExport = new DatabaseData(dbForModel);
               dbdio.readRowsIntoDatabaseData(platform, dbXML, dataToExport, dataset,
                   util.getActiveModule(i).idMod);
-              // TODO: Check this when core in JAR
-              DBSMOBUtil.getInstance()
-                  .removeSortedTemplates(platform, dataToExport, moduledir.getAbsolutePath());
-              DBSMOBUtil.getInstance()
-                      .removeSortedTemplates(platform, dataToExport, coremoduledir.getAbsolutePath());
+
+              for (String modDir : modulesDir) {
+                getLog().info("'Model' - Trying to remove sorted templates from: " + modDir);
+                DBSMOBUtil.getInstance()
+                      .removeSortedTemplates(platform, dataToExport, modDir);
+              }
+
               path.mkdirs();
               if (datasetI == 0) {
                 final File[] filestodelete = path.listFiles();
@@ -334,7 +367,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
       if (shouldWriteChecksumInfo()) {
         getLog().info("Writing checksum info");
-        // TODO: Check path when core in JAR
         DBSMOBUtil.writeCheckSumInfo(new File(openbravoRootPath).getAbsolutePath());
         DBSMOBUtil.getInstance().updateCRC();
       }
@@ -413,7 +445,6 @@ public class ExportDatabase extends BaseDalInitializingTask {
   }
 
   public void setModuledir(File moduledir) {
-    // TODO: When the core in JAR take into account the 'root' modules dir
     this.openbravoRootPath = moduledir.getAbsolutePath() + "/../";
     this.moduledir = moduledir;
     this.coremoduledir = new File(openbravoRootPath + "/modules_core");

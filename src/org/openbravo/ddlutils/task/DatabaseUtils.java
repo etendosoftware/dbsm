@@ -437,7 +437,6 @@ public class DatabaseUtils {
     boolean strictMode = true;
     boolean applyConfigScriptData = false;
 
-    // TODO: Update basedir path if need it
     ConfigScriptConfig config = new ConfigScriptConfig(platform, modulesBaseDir + "/../",
         strictMode, applyConfigScriptData);
 

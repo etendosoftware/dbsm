@@ -13,6 +13,7 @@
 package org.openbravo.ddlutils.task;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
@@ -36,6 +37,7 @@ import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.ddlutils.util.OBDataset;
 
 /**
@@ -86,16 +88,22 @@ public class ExportConfigScript extends BaseDatabaseTask {
       getLog().info("Loading model from XML files");
       final Vector<File> dirs = new Vector<File>();
       dirs.add(model);
-      // TODO: Change this when core in JAR
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      String rootDir = ModulesUtil.getProjectRootDir();
+      File rootDirFile = new File(rootDir);
+      getLog().info("Export config script root dir: " + rootDirFile.getAbsolutePath());
+
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-          File dirF = new File(moduledir, util.getModule(j).dir + "/src-db/database/model/");
-          if (dirF.exists()) {
-            dirs.add(dirF);
-          } else {
-            dirF = new File(modulecoredir, util.getModule(j).dir + "/src-db/database/model/");
+          for (String modDir : ModulesUtil.moduleDirs) {
+            File modDirFile = new File(rootDirFile, modDir);
+            getLog().debug("Looking for module model '" + util.getModule(j).dir + "' in: " + modDirFile.getAbsolutePath());
+            File dirF = new File(modDirFile,util.getModule(j).dir + "/src-db/database/model/");
             if (dirF.exists()) {
+              getLog().debug("Module dir found: " + util.getModule(j).dir);
               dirs.add(dirF);
+              break;
             }
           }
         }
@@ -116,18 +124,18 @@ public class ExportConfigScript extends BaseDatabaseTask {
       final DataReader dataReader = dbdio.getConfiguredCompareDataReader(xmlModel);
 
       final Vector<File> dataFiles = DBSMOBUtil.loadFilesFromFolder(getCoreData());
-      // TODO: Change this when core in JAR
+
       for (int j = 0; j < util.getModuleCount(); j++) {
         if (!util.getModule(j).name.equalsIgnoreCase("CORE")) {
-          File dirF = new File(modulecoredir,
-              util.getModule(j).dir + "/src-db/database/sourcedata/");
-          if (dirF.exists()) {
-            dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
-          } else {
-            dirF =  new File(moduledir,
-                    util.getModule(j).dir + "/src-db/database/sourcedata/");
+
+          for (String modDir : ModulesUtil.moduleDirs) {
+            File modDirFile = new File(rootDirFile, modDir);
+            getLog().debug("Looking for module source data '" + util.getModule(j).dir + "' in:" + modDirFile.getAbsolutePath());
+            File dirF = new File(modDirFile,util.getModule(j).dir + "/src-db/database/sourcedata/");
             if (dirF.exists()) {
+              getLog().debug("Module dir found: " + util.getModule(j).dir);
               dataFiles.addAll(DBSMOBUtil.loadFilesFromFolder(dirF.getAbsolutePath()));
+              break;
             }
           }
         }
@@ -183,13 +191,18 @@ public class ExportConfigScript extends BaseDatabaseTask {
       List<String> configScripts = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
       getLog().info("Loading and applying configuration scripts");
       DatabaseIO dbIOs = new DatabaseIO();
-      // TODO: Change this when core in JAR
       for (String configScript : configScripts) {
-        File f = new File(modulecoredir, configScript + "/src-db/database/configScript.xml");
-        if (!f.exists()) {
-          f = new File(moduledir, configScript + "/src-db/database/configScript.xml");
+        File f = null;
+        for (String modDir : ModulesUtil.moduleDirs) {
+          File modDirFile = new File(rootDirFile, modDir);
+          getLog().debug("Looking for module config script '"+configScript+"' in:" + modDirFile.getAbsolutePath());
+          f = new File(modDirFile,configScript + "/src-db/database/configScript.xml");
+          if (f.exists()) {
+            break;
+          }
         }
-        if (configScript.equals(industryTemplate) || !f.exists()
+
+        if (configScript.equals(industryTemplate) || f == null || !f.exists()
             || !DBSMOBUtil.isApplied(platform, configScript)) {
           continue;
         }
@@ -229,10 +242,22 @@ public class ExportConfigScript extends BaseDatabaseTask {
       dataComparator.generateConfigScript(finalChanges, notExportedChanges);
 
       final DatabaseIO dbIO = new DatabaseIO();
-      // TODO: Change this when core in JAR
-      File baseDir = new File(modulecoredir, industryTemplate);
-      if (!baseDir.exists()) {
-        baseDir = new File(moduledir, industryTemplate);
+
+      File baseDir = null;
+
+      for (String modDir : ModulesUtil.moduleDirs) {
+        File modDirFile = new File(rootDirFile, modDir);
+        getLog().debug("Looking for module template '"+industryTemplate+"' in:" + modDirFile.getAbsolutePath());
+        baseDir = new File(modDirFile, industryTemplate);
+        if (baseDir.exists()) {
+          break;
+        }
+      }
+
+      // The industry template in development does not exists
+      // Set the 'modules' base dir to be created.
+      if (baseDir == null || !baseDir.exists()) {
+        baseDir = new File(rootDir, ModulesUtil.MODULES_BASE + File.separator + industryTemplate);
       }
 
       final File configFile = new File(baseDir,

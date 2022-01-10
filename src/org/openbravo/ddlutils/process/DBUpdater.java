@@ -78,7 +78,6 @@ public class DBUpdater {
     log.info("Max threads " + platform.getMaxThreads());
 
     if (updateCheckSums) {
-      // TODO: Check the path when core in JAR
       DBSMOBUtil
           .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
     }
@@ -210,7 +209,6 @@ public class DBUpdater {
       db = DatabaseUtils.readDatabaseWithoutConfigScript(model);
     } else {
 
-      // TODO: Check that the model is in correct location
       // When the core is in JAR the model should be read from root/build/etendo/src-db/database/model
       // When the core is in SOURCES the model should be read from root/src-db/database/model
       File[] fileArray = new File[] {model};

@@ -104,7 +104,6 @@ public class CreateDatabase extends BaseDatabaseTask {
 
   private void writeChecksumInfo() {
     getLog().info("Writing checksum info");
-    // TODO: Check path when core in JAR
     DBSMOBUtil
             .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
   }
