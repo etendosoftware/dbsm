@@ -1,1 +1,4 @@
-etendo_project='../etendo_core'
+etendo_project=../etendo_core
+
+mavenUser=
+mavenPassword=

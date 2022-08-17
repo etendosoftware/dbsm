@@ -101,11 +101,15 @@ public class ImportSampledata extends BaseDatabaseTask {
       for (String modDir : ModulesUtil.moduleDirs) {
         File modules = new File(auxBasedir, "/" + modDir);
         getLog().info("Importing sampledata from module dir: " + modules.getAbsolutePath());
-
-        for (int j = 0; j < modules.listFiles().length; j++) {
-          final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
-          if (dirF.exists()) {
-            dirs.add(dirF);
+        File[] listFiles = modules.listFiles();
+        if(listFiles == null) {
+          log.warn("I/O error reading directory " + modules.getAbsolutePath());
+        } else {
+          for (int j = 0; j < listFiles.length; j++) {
+            final File dirF = new File(listFiles[j], "/src-db/database/model/");
+            if (dirF.exists()) {
+              dirs.add(dirF);
+            }
           }
         }
       }
@@ -140,10 +144,15 @@ public class ImportSampledata extends BaseDatabaseTask {
       refdirs.add(new File(basedir, "referencedata/sampledata"));
       for (String modDir : ModulesUtil.moduleDirs) {
         File modules = new File(auxBasedir, "/" + modDir);
-        for (int j = 0; j < modules.listFiles().length; j++) {
-          final File dirF = new File(modules.listFiles()[j], "referencedata/sampledata");
-          if (dirF.exists()) {
-            refdirs.add(dirF);
+        File[] listFiles = modules.listFiles();
+        if(listFiles == null) {
+          log.warn("I/O error reading directory " + modules.getAbsolutePath());
+        } else {
+          for (int j = 0; j < listFiles.length; j++) {
+            final File dirF = new File(listFiles[j], "referencedata/sampledata");
+            if (dirF.exists()) {
+              refdirs.add(dirF);
+            }
           }
         }
       }
