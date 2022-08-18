@@ -70,8 +70,8 @@ publishing {
     repositories {
         maven {
             credentials {
-                username "$mavenUser"
-                password "$mavenPassword"
+                username "$nexusUser"
+                password "$nexusPassword"
             }
             url "https://repo.futit.cloud/repository/maven-public-snapshots"
         }

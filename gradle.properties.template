@@ -1,4 +1,4 @@
 etendo_project=../etendo_core
 
-mavenUser=
-mavenPassword=
+nexusUser=
+nexusPassword=
