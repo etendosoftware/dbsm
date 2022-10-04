@@ -17,11 +17,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,10 +36,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
-import org.openbravo.ddlutils.util.DBSMOBUtil;
-import org.openbravo.ddlutils.util.ModuleRow;
-import org.openbravo.ddlutils.util.OBDataset;
-import org.openbravo.ddlutils.util.OBDatasetTable;
+import org.openbravo.ddlutils.util.*;
 
 /**
  * Task in charge of exporting the sample data of a given client.
@@ -152,9 +145,18 @@ public class ExportSampledata extends BaseDatabaseTask {
       Database db = platform.loadTablesFromDatabase(excludeFilter);
       db.checkDataTypes();
       DatabaseData databaseOrgData = new DatabaseData(db);
+
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+      String rootProject = ModulesUtil.getProjectRootDir();
+
+      List<String> modulesDir = new ArrayList<>();
+      for (String modDir : ModulesUtil.moduleDirs) {
+        modulesDir.add(rootProject + File.separator + modDir);
+      }
+      getLog().info("Loading data structures from: " + Arrays.toString(modulesDir.toArray()));
+
       DBSMOBUtil.getInstance()
-          .loadDataStructures(platform, databaseOrgData, db, db, moduledir.getAbsolutePath(),
-              "*/src-db/database/sourcedata", new File(basedir, "src-db/database/sourcedata"));
+              .loadDataStructures(databaseOrgData, db, modulesDir.toArray(new String[0]), "*/src-db/database/sourcedata", new File(basedir, "src-db/database/sourcedata"));
 
       getLog().info("Exporting client " + client + " to module: " + module);
 
@@ -365,6 +367,19 @@ public class ExportSampledata extends BaseDatabaseTask {
       basePath = new File(basedir);
     } else {
       basePath = new File(new File(basedir, "modules"), moduleToExport.dir);
+
+      if (!basePath.exists()) {
+        // Update modules dir to scan
+        ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+        File rootDir = new File(ModulesUtil.getProjectRootDir());
+
+        for (String modDir : ModulesUtil.moduleDirs) {
+          basePath = new File(new File(rootDir, modDir), moduleToExport.dir);
+          if (basePath.exists()) {
+            break;
+          }
+        }
+      }
     }
     return basePath;
   }

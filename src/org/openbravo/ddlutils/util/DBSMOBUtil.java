@@ -942,6 +942,14 @@ public class DBSMOBUtil {
 
   public void applyConfigScripts(Platform platform, DatabaseData databaseOrgData, Database db,
       String modulesBaseDir, boolean strict, boolean applyConfigScriptData) {
+
+    // This will update the modules dir
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+    // This dir should be the root of the project
+    String rootWorkDir = ModulesUtil.getProjectRootDir();
+
+    getLog().info("Working dir 'applyConfigScripts': " + rootWorkDir);
     getLog().info("Loading and applying configuration scripts");
     sortedTemplates = DBSMOBUtil.getInstance().getSortedTemplates(databaseOrgData);
     for (String template : sortedTemplates) {
@@ -953,15 +961,22 @@ public class DBSMOBUtil {
           getLog().info("Applying structure part of configuration script: " + template);
         }
       }
-      final File modulesDir = new File(modulesBaseDir);
-      File configScript = new File(modulesDir,
-          template + "/src-db/database/configScript.xml");
-      if (!configScript.exists()) {
-        configScript = new File(modulesDir.getParent(),
-                "modules_core/" + template + "/src-db/database/configScript.xml");
+
+      File configScript = null;
+
+      getLog().info("Checking template for 'applyConfigScripts': " + template);
+      for (String moduleDir : ModulesUtil.moduleDirs) {
+        configScript = new File(new File(rootWorkDir + "/" + moduleDir),
+                template + "/src-db/database/configScript.xml");
+        if(configScript.exists()) {
+          break;
+        }
       }
-      applyConfigScript(configScript, platform, databaseOrgData, db, strict, applyConfigScriptData,
-          isApplied);
+
+      if (configScript != null) {
+        applyConfigScript(configScript, platform, databaseOrgData, db, strict, applyConfigScriptData,
+                isApplied);
+      }
     }
   }
 
@@ -1134,9 +1149,26 @@ public class DBSMOBUtil {
   public ExcludeFilter getExcludeFilter(File rootDir) {
     ExcludeFilter ex = new ExcludeFilter();
     try {
+
+      getLog().info("Exclude filter rootDir: " + rootDir.getAbsolutePath());
+      /**
+       * When the core is in JAR the rootDir should be in '/build/etendo'.
+       * Loads the filter in the 'src-db' dir.
+       */
       ex.fillFromFile(new File(rootDir, "src-db/database/model/excludeFilter.xml"));
+
+      // Update dirs where find the modules
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      File auxRootDir = rootDir;
+
+      // Core in JAR
+      if (!ModulesUtil.coreInSources) {
+        auxRootDir = new File(ModulesUtil.getProjectRootDir());
+      }
+
       for (String moduleDir : ModulesUtil.moduleDirs) {
-        File f = new File(rootDir, moduleDir);
+        File f = new File(auxRootDir, moduleDir);
         File[] mods = f.listFiles();
         if (mods != null) {
           for (File mod : mods) {
@@ -1251,6 +1283,14 @@ public class DBSMOBUtil {
       if (!propertiesFile.exists()) {
         propertiesFile = new File(workingDir + "/../../config/Openbravo.properties");
       }
+
+      /**
+       * The core is in jar
+       */
+      if (!propertiesFile.exists()) {
+        propertiesFile = new File (ModulesUtil.getProjectRootDir() + "/config/Openbravo.properties");
+      }
+
       props.load(new FileInputStream(propertiesFile));
     } catch (Exception e) {
       System.out.println("Error while obtaining the Openbravo.properties file");

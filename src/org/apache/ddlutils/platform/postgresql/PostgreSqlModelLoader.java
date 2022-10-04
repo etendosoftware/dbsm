@@ -704,6 +704,11 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
       }
     });
 
+    if(columnIndexes.isEmpty()){
+      _log.error("Table "+ tablename + " was created with incorrect role or has no columns" );
+      throw new RuntimeException();
+    }
+
     // We'll change the types of NVarchar columns (which should have a
     // comment in the database)
     for (int i = 0; i < t.getColumnCount(); i++) {

@@ -15,7 +15,6 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -34,7 +33,7 @@ import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModulesUtil;
 
 /**
- * 
+ *
  * @author Adrian
  */
 public class CreateDatabase extends BaseDatabaseTask {
@@ -54,6 +53,8 @@ public class CreateDatabase extends BaseDatabaseTask {
   private String dirFilter;
   private String input;
 
+  private String isCoreInSources;
+
   private static final String MSG_ERROR = "There were serious problems while creating the database. Please review and fix them before continuing with the creation of the database.";
 
   public CreateDatabase() {
@@ -63,11 +64,23 @@ public class CreateDatabase extends BaseDatabaseTask {
   @Override
   public void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser() + ". System User: "
-        + getSystemUser());
+            + getSystemUser());
     final Platform platform = getPlatformInstance();
     try {
 
       preCreateModel(platform);
+
+      Boolean coreInSources;
+
+      if (isCoreInSources != null) {
+        coreInSources = JavaTaskUtils.getBooleanProperty(getIsCoreInSources());
+      } else {
+        coreInSources = ModulesUtil.coreInSources();
+      }
+
+      getLog().info("Core in sources: " + coreInSources.toString());
+
+      ModulesUtil.checkCoreInSources(coreInSources);
 
       Database db = createModel(platform);
 
@@ -92,14 +105,14 @@ public class CreateDatabase extends BaseDatabaseTask {
   private void writeChecksumInfo() {
     getLog().info("Writing checksum info");
     DBSMOBUtil
-        .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
+            .writeCheckSumInfo(new File(model.getAbsolutePath() + "/../../../").getAbsolutePath());
   }
 
   private Database createModel(final Platform platform) throws Exception {
     Database db = null;
     if (modulesDir == null) {
       getLog()
-          .info("modulesDir for additional files not specified. Creating database with just Core.");
+              .info("modulesDir for additional files not specified. Creating database with just Core.");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(getModel());
     } else {
       // We read model files using the filter, obtaining a file array. The models will be merged
@@ -107,14 +120,18 @@ public class CreateDatabase extends BaseDatabaseTask {
       File[] fileArray = new File[] {};
       if (model.exists()) {
         fileArray = new File[] {model};
+        log.info("Model = " + model.getAbsolutePath());
       }
-      String workDir = System.getProperty("user.dir");
+      String workDir = ModulesUtil.getProjectRootDir();
+
       log.info("Working Directory = " + workDir);
       for (String modDir : ModulesUtil.moduleDirs) {
         modDir = workDir + "/" + modDir;
         log.info("Scanning " + modDir);
         final Vector<File> dirs = new Vector<>();
         final DirectoryScanner dirScanner = new DirectoryScanner();
+        // dirs like modules_core may not exists when core is a (class) jar dependency
+        dirScanner.setErrorOnMissingDir(false);
         dirScanner.setBasedir(new File(modDir));
         final String[] dirFilterA = { dirFilter };
         dirScanner.setIncludes(dirFilterA);
@@ -176,7 +193,7 @@ public class CreateDatabase extends BaseDatabaseTask {
     if (getSystemUser() != null && getSystemPassword() != null) {
       // Create the data source used to execute statements with the system user
       BasicDataSource systemds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getSystemUser(),
-          getSystemPassword());
+              getSystemPassword());
       platform.setSystemDataSource(systemds);
     }
     return platform;
@@ -207,6 +224,9 @@ public class CreateDatabase extends BaseDatabaseTask {
     final String folders = getInput();
     final StringTokenizer strTokFol = new StringTokenizer(folders, ",");
     final Vector<File> files = new Vector<>();
+
+    String workDir = ModulesUtil.getProjectRootDir();
+
     while (strTokFol.hasMoreElements()) {
       if (basedir == null) {
         getLog().info("Basedir not specified, will insert just Core data files.");
@@ -216,15 +236,36 @@ public class CreateDatabase extends BaseDatabaseTask {
           files.add(fileArray[i]);
         }
       } else {
+
+        String auxBaseDir = basedir;
+
+        /**
+         * When the core is in JAR the basedir will be in 'build/etendo'
+         * and the scanner will not be able to get the 'modules' folder in the root project.
+         *
+         * Setting temporary the basedir to the root projects allows to filter the necessary files.
+         *
+         * The scanner will use the following filters passed by parameters:
+         * root/modules/_/src-db/database/sourcedata
+         * root/modules_core/_/src-db/database/sourcedata
+         * root/build/etendo/modules/_/src-db/database/sourcedata
+         *
+         */
+        if (!ModulesUtil.coreInSources) {
+          auxBaseDir = workDir;
+        }
+
         final String token = strTokFol.nextToken();
         final DirectoryScanner dirScanner = new DirectoryScanner();
-        dirScanner.setBasedir(new File(basedir));
+        // dirs like modules_core may not exists when core is a (class) jar dependency
+        dirScanner.setErrorOnMissingDir(false);
+        dirScanner.setBasedir(new File(auxBaseDir));
         final String[] dirFilterA = { token };
         dirScanner.setIncludes(dirFilterA);
         dirScanner.scan();
         final String[] incDirs = dirScanner.getIncludedDirectories();
         for (int j = 0; j < incDirs.length; j++) {
-          final File dirFolder = new File(basedir, incDirs[j] + "/");
+          final File dirFolder = new File(auxBaseDir, incDirs[j] + "/");
           final File[] fileArray = DatabaseUtils.readFileArray(dirFolder);
           for (int i = 0; i < fileArray.length; i++) {
             files.add(fileArray[i]);
@@ -261,7 +302,7 @@ public class CreateDatabase extends BaseDatabaseTask {
     DatabaseUtils.readDataModuleInfo(db, dbData, basedir);
     for (String template : DBSMOBUtil.getInstance().getSortedTemplates(dbData)) {
       File configScript = null;
-      String workDir = System.getProperty("user.dir");
+      getLog().info("Checking template: " + template);
       for (String moduleDir : ModulesUtil.moduleDirs) {
         configScript = new File(new File(workDir + "/" + moduleDir),
                 template + "/src-db/database/configScript.xml");
@@ -300,11 +341,11 @@ public class CreateDatabase extends BaseDatabaseTask {
 
     if (!triggersEnabled) {
       getLog().error(
-          "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct.");
+              "Not all the triggers were correctly activated. The most likely cause of this is that the XML file of the trigger is not correct.");
     }
     if (!fksEnabled) {
       getLog().error(
-          "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references.");
+              "Not all the foreign keys were correctly activated. Please review which ones were not, and fix the missing references.");
     }
     if (!triggersEnabled || !fksEnabled) {
       throw new Exception(MSG_ERROR);
@@ -382,7 +423,7 @@ public class CreateDatabase extends BaseDatabaseTask {
   /**
    * Functionality for deleting data during create.database was removed. Function is kept to not
    * require lock-step update of dbsm.jar & build-create.xml
-   * 
+   *
    * @deprecated
    */
   @Deprecated
@@ -404,4 +445,13 @@ public class CreateDatabase extends BaseDatabaseTask {
   public void setModulesDir(String modulesDir) {
     this.modulesDir = modulesDir;
   }
+
+  public String getIsCoreInSources() {
+    return isCoreInSources;
+  }
+
+  public void setIsCoreInSources(String coreInSources) {
+    isCoreInSources = coreInSources;
+  }
+
 }

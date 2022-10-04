@@ -12,25 +12,6 @@
 
 package org.openbravo.ddlutils.task;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.ddlutils.DdlUtilsException;
@@ -51,8 +32,26 @@ import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.modulescript.ModuleScriptHandler;
 import org.xml.sax.SAXException;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 /**
- * 
  * @author huehner
  */
 public class ImportSampledata extends BaseDatabaseTask {
@@ -73,7 +72,7 @@ public class ImportSampledata extends BaseDatabaseTask {
   public void doExecute() {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
     final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
-        getPassword());
+      getPassword());
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // default value defined for a column should be used on missing data
@@ -83,15 +82,33 @@ public class ImportSampledata extends BaseDatabaseTask {
     // Checking changes in the database before import sampledata
     boolean isDatabaseModifiedPreviously = DBSMOBUtil.getInstance().databaseHasChanges();
     try {
+      getLog().info("Import sampledataba 'basedir': " + basedir);
 
       Vector<File> dirs = new Vector<File>();
       dirs.add(new File(basedir, "/src-db/database/model/"));
+
+      // Update modules dir to search
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+      String auxBasedir = basedir;
+
+      // Core in JAR
+      if (!ModulesUtil.coreInSources) {
+        auxBasedir = ModulesUtil.getProjectRootDir();
+      }
+
       for (String modDir : ModulesUtil.moduleDirs) {
-        File modules = new File(basedir, "/" + modDir);
-        for (int j = 0; j < modules.listFiles().length; j++) {
-          final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
-          if (dirF.exists()) {
-            dirs.add(dirF);
+        File modules = new File(auxBasedir, "/" + modDir);
+        getLog().info("Importing sampledata from module dir: " + modules.getAbsolutePath());
+        File[] listFiles = modules.listFiles();
+        if (listFiles == null) {
+          log.warn("I/O error reading directory " + modules.getAbsolutePath());
+        } else {
+          for (int j = 0; j < listFiles.length; j++) {
+            final File dirF = new File(listFiles[j], "/src-db/database/model/");
+            if (dirF.exists()) {
+              dirs.add(dirF);
+            }
           }
         }
       }
@@ -103,7 +120,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       boolean strictMode = false;
       boolean applyConfigScriptData = false;
       ConfigScriptConfig config = new ConfigScriptConfig(platform, basedir, strictMode,
-          applyConfigScriptData);
+        applyConfigScriptData);
       Database db = DatabaseUtils.readDatabase(fileArray2, config);
 
       log.info("Disabling constraints...");
@@ -125,11 +142,16 @@ public class ImportSampledata extends BaseDatabaseTask {
       Vector<File> refdirs = new Vector<File>();
       refdirs.add(new File(basedir, "referencedata/sampledata"));
       for (String modDir : ModulesUtil.moduleDirs) {
-        File modules = new File(basedir, "/" + modDir);
-        for (int j = 0; j < modules.listFiles().length; j++) {
-          final File dirF = new File(modules.listFiles()[j], "referencedata/sampledata");
-          if (dirF.exists()) {
-            refdirs.add(dirF);
+        File modules = new File(auxBasedir, "/" + modDir);
+        File[] listFiles = modules.listFiles();
+        if (listFiles == null) {
+          log.warn("I/O error reading directory " + modules.getAbsolutePath());
+        } else {
+          for (int j = 0; j < listFiles.length; j++) {
+            final File dirF = new File(listFiles[j], "referencedata/sampledata");
+            if (dirF.exists()) {
+              refdirs.add(dirF);
+            }
           }
         }
       }
@@ -151,7 +173,7 @@ public class ImportSampledata extends BaseDatabaseTask {
            * already in the db. If it is -> skip it. If no AD_CLIENT.xml is present in the folder,
            * skip the check. That allows for easy support of incremental sampledata loading into
            * existing clients.
-           * 
+           *
            */
           if (clientFileIsDefined(entry)) {
             String clientId = getClientIdFromEntry(entry, db);
@@ -220,7 +242,7 @@ public class ImportSampledata extends BaseDatabaseTask {
       // import.sample.data task manually
       if (isDatabaseModifiedPreviously) {
         log.info(
-            "Detected database changes before importing the sample data. Checksum will not be updated.");
+          "Detected database changes before importing the sample data. Checksum will not be updated.");
       } else {
         // Update checksum in order to handle properly the case when a module script modified the
         // database structure.
@@ -261,8 +283,8 @@ public class ImportSampledata extends BaseDatabaseTask {
   private String getClientIdFromCopyFile(File clientFileCopy) {
     String clientId = null;
     try (InputStream fis = new FileInputStream(clientFileCopy);
-        InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
-        BufferedReader br = new BufferedReader(isr);) {
+         InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
+         BufferedReader br = new BufferedReader(isr);) {
 
       // skips the first line, it contains the column names
       br.readLine();
@@ -271,8 +293,8 @@ public class ImportSampledata extends BaseDatabaseTask {
       clientId = values.substring(0, values.indexOf(","));
     } catch (Exception e) {
       getLog().error(
-          "Error while tring to obtain the client id from file " + clientFileCopy.getAbsolutePath(),
-          e);
+        "Error while tring to obtain the client id from file " + clientFileCopy.getAbsolutePath(),
+        e);
     }
     return clientId;
   }
@@ -281,7 +303,7 @@ public class ImportSampledata extends BaseDatabaseTask {
    * Parses a single sourcedata style database and returns it as a list of DynaBeans
    */
   private static Vector<DynaBean> readOneDataXml(Database db, File file)
-      throws IOException, SAXException {
+    throws IOException, SAXException {
     final DatabaseDataIO dbdio = new DatabaseDataIO();
     DataReader dataReader = dbdio.getConfiguredCompareDataReader(db);
 
@@ -294,9 +316,9 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   /**
    * Loads the Dynabean for the specified AD_CLIENT from the database
-   * 
+   *
    * @param clientId
-   *          ad_client_id
+   *   ad_client_id
    */
   private DynaBean findClient(final Platform platform, Database db, String clientId) {
     Connection connection = platform.borrowConnection();
@@ -306,7 +328,7 @@ public class ImportSampledata extends BaseDatabaseTask {
     dsTable.setWhereclause("1=1");
     dsTable.setSecondarywhereclause("ad_client_id" + "=" + "'" + clientId + "'");
     Vector<DynaBean> rowsNewData = dbIO.readRowsFromTableList(connection, platform, db, table,
-        dsTable, null);
+      dsTable, null);
     platform.returnConnection(connection);
     if (rowsNewData != null && rowsNewData.size() > 0) {
       return rowsNewData.get(0);
@@ -336,7 +358,6 @@ public class ImportSampledata extends BaseDatabaseTask {
 
   /**
    * Runnable class that will read data from a file and will write it in the database
-   *
    */
   private static class ImportRunner implements Callable<Void> {
     private final Logger log;
