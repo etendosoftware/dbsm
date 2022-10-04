@@ -63,7 +63,7 @@ publishing {
         maven(MavenPublication) {
             groupId "com.etendoerp"
             artifactId "ddlutils"
-            version "1.0.2-SNAPHOST"
+            version "1.0.3"
             artifact file("build/libs/dbsourcemanager.jar")
         }
     }
@@ -73,7 +73,7 @@ publishing {
                 username "$nexusUser"
                 password "$nexusPassword"
             }
-            url "https://repo.futit.cloud/repository/maven-public-snapshots"
+            url "https://repo.futit.cloud/repository/maven-public-releases"
         }
     }
 }
