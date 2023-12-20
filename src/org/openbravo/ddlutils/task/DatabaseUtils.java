@@ -35,7 +35,6 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.ddlutils.util.ModulesUtil;
-import org.openbravo.model.ad.module.Module;
 import org.openbravo.service.system.SystemService;
 
 public class DatabaseUtils {

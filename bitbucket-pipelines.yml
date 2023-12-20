@@ -4,6 +4,12 @@ clone:
   depth: full
 
 definitions:
+  services:
+    docker:
+      memory: 1024
+    docker-more-memory:
+      memory: 2048
+      type: docker
   steps:
     - step: &make-review
         name: Make Review Step
@@ -22,9 +28,9 @@ definitions:
           -  fi
           -  echo "API call successful with status code $response"
           -  cat response.txt
-        services:
-          - docker
     - step: &build-step
+        services:
+          - docker-more-memory
         name: SonarQube analysis
         script:
           - pipe: sonarsource/sonarqube-scan:1.0.0

@@ -4,11 +4,13 @@ import com.etendoerp.properties.EtendoPropertiesProvider;
 import org.openbravo.ddlutils.coreutils.CoreMetadata;
 import org.openbravo.ddlutils.coreutils.JarCoreMetadata;
 import org.openbravo.ddlutils.coreutils.SourceCoreMetadata;
+import org.openbravo.base.session.OBPropertiesProvider;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Vector;
+import java.util.Properties;
 
 public class ModulesUtil {
 
@@ -16,6 +18,7 @@ public class ModulesUtil {
     public static final String MODULES_JAR  = "build/etendo/modules";
     public static final String MODULES_BASE = "modules";
     public static final String MODULES_CORE = "modules_core";
+    public static final String SOURCE_PATH = "source.path";
     public static String[] moduleDirs = new String[] {MODULES_BASE, MODULES_CORE};
 
     static {
@@ -102,9 +105,14 @@ public class ModulesUtil {
      * @return The root dir of the current project
      */
     public static String getProjectRootDir() {
-        String sourcePath = (String) EtendoPropertiesProvider.getInstance()
-                            .getEtendoProperties()
-                            .get("source.path");
+        String sourcePath = "";
+        try {
+            sourcePath = (String) EtendoPropertiesProvider.getInstance()
+                    .getEtendoProperties()
+                    .get(SOURCE_PATH);
+        }catch(IllegalArgumentException e){
+            sourcePath = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty(SOURCE_PATH);
+        }
         if (sourcePath == null || sourcePath.isBlank() || sourcePath.isEmpty()) {
             throw new IllegalArgumentException("The property 'source.path' is not defined.");
         }
