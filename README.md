@@ -1,22 +1,57 @@
-# DBSM Deployment Process to Github Packages
+# DBSM
 
-## Overview
+## Debugging DBSM
 
-This document outlines the step-by-step process for deploying a new version of DBSM to Github Packages. Follow these instructions carefully to ensure a smooth deployment.
+To debug DBSM, follow these steps:
 
-## Steps
+1. Clone this repository within the `etendo_core` project if possible.
+
+2. If you followed the recommendation in step 1, configure the path of `etendo_project` within gradle.properties as follows:
+
+    ```
+    etendo_project=..
+    ```
+
+3. Inside etendo_core:
+
+   a. In `settings.gradle`, add:
+
+      ```
+      include ":etendo_dbsm"
+      ```
+
+   b. In `build.gradle`, within the dependencies block, add:
+
+      ```
+      dependencies {
+         implementation project(':etendo_dbsm')
+      }
+      ```
+
+4. Follow these debugging steps to set up DBSM for debugging within the `etendo_core` project.
+
+
+## Publish new version of DBSM in Github Packages
+
+The following steps describe the process for publishing a new version of DBSM to Github Packages
 
 1. **Clone the Repository:**
 
-   `git clone <repository_url>`
+   ```
+   git clone <repository_url>
+   ```
 
 2. **Initialize Git Flow:**
 
-   `git flow init`
+   ```
+   git flow init
+   ```
 
 3. **Start a Release:**
 
-   `git flow release start $newVersion`
+   ```
+   git flow release start $newVersion
+   ```
 
 4. **Update Version in build.gradle:**
 
@@ -31,7 +66,9 @@ This document outlines the step-by-step process for deploying a new version of D
 
 6. **Finish Release:**
 
-   `git flow release finish $newVersion`
+   ```
+   git flow release finish $newVersion
+   ```
 
 7. **Create gradle.properties File:**
 
@@ -43,8 +80,12 @@ This document outlines the step-by-step process for deploying a new version of D
 
 9.  **Build Project for JAR Generation**
 
-    `./gradlew build`
+    ```
+    ./gradlew build
+    ```
 
 10. **Publish to Github Packages:**
 
-    `./gradlew publish`
+    ```
+    ./gradlew publish
+    ```
