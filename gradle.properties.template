@@ -1,4 +1,4 @@
 etendo_project=../etendo_core
 
-nexusUser=
-nexusPassword=
+githubUser=
+githubToken=
