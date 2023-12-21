@@ -12,7 +12,7 @@ plugins {
     id 'maven-publish'
 }
 
-final String VERSION = "1.0.4"
+final String VERSION = "1.0.3"
 
 def dbsmVersion = VERSION
 
@@ -42,6 +42,7 @@ dependencies {
     implementation files('lib/log4j-core-2.11.1.jar')
     implementation files('lib/postgresql-42.5.4.jar')
     implementation files('lib/wstx-asl-3.0.2.jar')
+    implementation fileTree("${etendo_project}/lib/runtime")
 
     implementation files("${etendo_project}/build/classes")
     implementation files("${etendo_project}/src-core/build/classes")
@@ -84,5 +85,5 @@ jar {
 
 task deploy(dependsOn: jar, type: Copy) {
     from 'build/libs/dbsourcemanager.jar'
-    into '../etendo_core/src-db/database/lib/'
+    into "${etendo_project}/src-db/database/lib/"
 }
