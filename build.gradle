@@ -12,39 +12,40 @@ plugins {
     id 'maven-publish'
 }
 
+final String VERSION = "1.0.3"
+
+def dbsmVersion = VERSION
+
 System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
 }
 
 dependencies {
     // TODO convert to maven dependencies
-    compile files('lib/ant-1.9.2.jar')
-    compile files('lib/stax-api-1.0.1.jar')
-    compile files('lib/commons-codec-1.3.jar')
-    compile files('lib/log4j-1.2-api-2.11.1.jar')
-    compile files('lib/log4j-core-2.11.1.jar')
-    compile files('lib/commons-betwixt-0.8.jar')
-    compile files('lib/build-only/junit-3.8.2.jar')
-    compile files('lib/build-only/ant-1.6.5.jar')
-    compile files('lib/commons-collections-3.1.jar')
-    compile files('lib/commons-logging-1.0.4.jar')
-    compile files('lib/jakarta-oro-2.0.8.jar')
-    compile files('lib/commons-beanutils-1.7.0.jar')
-    compile files('lib/commons-dbcp-1.2.1.jar')
-    compile files('lib/commons-pool-1.2.jar')
-    compile files('lib/dom4j-1.4.jar')
-    compile files('lib/wstx-asl-3.0.2.jar')
-    compile files('lib/log4j-api-2.11.1.jar')
-    compile files('lib/commons-digester-1.8.1.jar')
-    compile files('lib/commons-lang-2.1.jar')
-    compile files('lib/postgresql-42.5.4.jar')
+    implementation files('lib/build-only/ant-1.9.2.jar')
+    implementation files('lib/build-only/junit-3.8.2.jar')
+    implementation files('lib/ant-1.9.2.jar')
+    implementation files('lib/commons-beanutils-1.7.0.jar')
+    implementation files('lib/commons-betwixt-0.8.jar')
+    implementation files('lib/commons-codec-1.3.jar')
+    implementation files('lib/commons-collections-3.1.jar')
+    implementation files('lib/commons-dbcp-1.2.1.jar')
+    implementation files('lib/commons-digester-1.8.1.jar')
+    implementation files('lib/commons-lang-2.1.jar')
+    implementation files('lib/commons-logging-1.0.4.jar')
+    implementation files('lib/commons-pool-1.2.jar')
+    implementation files('lib/dom4j-1.4.jar')
+    implementation files('lib/jakarta-oro-2.0.8.jar')
+    implementation files('lib/log4j-1.2-api-2.11.1.jar')
+    implementation files('lib/log4j-api-2.11.1.jar')
+    implementation files('lib/log4j-core-2.11.1.jar')
+    implementation files('lib/postgresql-42.5.4.jar')
+    implementation files('lib/wstx-asl-3.0.2.jar')
+    implementation fileTree("${etendo_project}/lib/runtime")
 
-    compile files("${etendo_project}/build/classes")
-    compile files("${etendo_project}/src-core/build/classes")
+    implementation files("${etendo_project}/build/classes")
+    implementation files("${etendo_project}/src-core/build/classes")
 
 }
 sourceSets {
@@ -62,31 +63,27 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId "com.etendoerp"
-            artifactId "ddlutils"
-            version "1.0.3"
+            artifactId "dbsm"
+            version(dbsmVersion)
             artifact file("build/libs/dbsourcemanager.jar")
         }
     }
     repositories {
         maven {
             credentials {
-                username "$nexusUser"
-                password "$nexusPassword"
+                username "$githubUser"
+                password "$githubToken"
             }
-            url "https://repo.futit.cloud/repository/maven-public-releases"
+            url "https://maven.pkg.github.com/etendosoftware/dbsm/"
         }
     }
 }
 
 jar {
     archivesBaseName = "dbsourcemanager"
-    from("src") {
-        include("**/*.xml")
-        include("**/*.dtd")
-    }
 }
 
 task deploy(dependsOn: jar, type: Copy) {
     from 'build/libs/dbsourcemanager.jar'
-    into '../etendo_core/src-db/database/lib/'
+    into "${etendo_project}/src-db/database/lib/"
 }
