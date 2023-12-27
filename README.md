@@ -38,7 +38,7 @@ The following steps describe the process for publishing a new version of DBSM to
 1. **Clone the Repository:**
 
    ```
-   git clone <repository_url>
+   git clone git@github.com:etendosoftware/dbsm.git
    ```
 
 2. **Initialize Git Flow:**
@@ -61,7 +61,7 @@ The following steps describe the process for publishing a new version of DBSM to
 
     ```
     git add build.gradle
-    git commit -m "Update version to $newVersion :zap:"  # Edit the message accordingly
+    git commit -m "Update version to $newVersion :zap:"
     ```
 
 6. **Finish Release:**
