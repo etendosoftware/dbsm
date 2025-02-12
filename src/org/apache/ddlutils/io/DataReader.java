@@ -19,11 +19,15 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import org.apache.commons.digester.Digester;
-import org.apache.ddlutils.io.converters.SqlTypeConverter;
-import org.apache.ddlutils.model.Column;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.List;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.Table;
 
 /**
  * Reads data XML into dyna beans matching a specified database model. Note that the data sink won't
@@ -32,19 +36,13 @@ import org.apache.ddlutils.model.Table;
  * 
  * @version $Revision: 289996 $
  */
-public class DataReader extends Digester {
+public class DataReader {
   /** The database model. */
   private Database _model;
   /** The object to receive the read beans. */
   private DataSink _sink;
-  /**
-   * Specifies whether the (lazy) configuration of the digester still needs to be performed.
-   */
-  private boolean _needsConfiguration = true;
   /** The converters. */
   private ConverterConfiguration _converterConf = new ConverterConfiguration();
-  /** Whether to be case sensitive or not. */
-  private boolean _caseSensitive = false;
 
   /**
    * Returns the converter configuration of this data reader.
@@ -72,7 +70,6 @@ public class DataReader extends Digester {
    */
   public void setModel(Database model) {
     _model = model;
-    _needsConfiguration = true;
   }
 
   /**
@@ -92,63 +89,47 @@ public class DataReader extends Digester {
    */
   public void setSink(DataSink sink) {
     _sink = sink;
-    _needsConfiguration = true;
   }
 
   /**
-   * Determines whether this rules object matches case sensitively.
+   * Parses the XML data from the given input stream.
    * 
-   * @return <code>true</code> if the case of the pattern matters
+   * @param input
+   *          The input stream
    */
-  public boolean isCaseSensitive() {
-    return _caseSensitive;
+  public void parse(InputStream input) throws JAXBException {
+    JAXBContext context = JAXBContext.newInstance(Database.class);
+    Unmarshaller unmarshaller = context.createUnmarshaller();
+    Database database = (Database) unmarshaller.unmarshal(input);
+    processDatabase(database);
   }
 
   /**
-   * Specifies whether this rules object shall match case sensitively.
+   * Parses the XML data from the given reader.
    * 
-   * @param beCaseSensitive
-   *          <code>true</code> if the case of the pattern shall matter
+   * @param reader
+   *          The reader
    */
-  public void setCaseSensitive(boolean beCaseSensitive) {
-    _caseSensitive = beCaseSensitive;
+  public void parse(Reader reader) throws JAXBException {
+    JAXBContext context = JAXBContext.newInstance(Database.class);
+    Unmarshaller unmarshaller = context.createUnmarshaller();
+    Database database = (Database) unmarshaller.unmarshal(reader);
+    processDatabase(database);
   }
 
   /**
-   * {@inheritDoc}
+   * Processes the unmarshalled database and sends the data to the sink.
+   * 
+   * @param database
+   *          The unmarshalled database
    */
-  @Override
-  protected void configure() {
-    if (_needsConfiguration) {
-      if (_model == null) {
-        throw new NullPointerException("No database model specified");
+  private void processDatabase(Database database) {
+    List<Table> tables = database.getTables();
+    for (Table table : tables) {
+      List<DynaBean> rows = table.getRows();
+      for (DynaBean row : rows) {
+        _sink.addBean(row);
       }
-      if (_sink == null) {
-        throw new NullPointerException("No data sink model specified");
-      }
-
-      DigesterRules rules = new DigesterRules();
-
-      rules.setCaseSensitive(isCaseSensitive());
-      setRules(rules);
-      for (int tableIdx = 0; tableIdx < _model.getTableCount(); tableIdx++) {
-        // TODO: For now we hardcode the root as 'data' but ultimately
-        // we should wildcard it ('?')
-        Table table = _model.getTable(tableIdx);
-        String path = "data/" + table.getName();
-
-        addRule(path, new DynaSqlCreateRule(_model, table, _sink));
-        for (int columnIdx = 0; columnIdx < table.getColumnCount(); columnIdx++) {
-          Column column = (Column) table.getColumn(columnIdx);
-          SqlTypeConverter converter = _converterConf.getRegisteredConverter(table, column);
-
-          addRule(path, new SetColumnPropertyRule(column, converter, isCaseSensitive()));
-          addRule(path + "/" + column.getName(),
-              new SetColumnPropertyFromSubElementRule(column, converter));
-        }
-      }
-      _needsConfiguration = false;
     }
-    super.configure();
   }
 }

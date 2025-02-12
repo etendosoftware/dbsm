@@ -19,14 +19,12 @@ package org.apache.ddlutils.io;
  * under the License.
  */
 
-import java.beans.IntrospectionException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Vector;
 
-import org.apache.commons.betwixt.io.BeanReader;
-import org.apache.commons.betwixt.io.BeanWriter;
-import org.apache.commons.betwixt.strategy.HyphenatedNameMapper;
+import javax.xml.bind.*;
+
 import org.apache.ddlutils.DdlUtilsException;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.model.Database;
@@ -37,7 +35,6 @@ import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.View;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * This class provides functions to read and write database models from/to XML.
@@ -95,97 +92,6 @@ public class DatabaseIO {
   }
 
   /**
-   * Returns the commons-betwixt mapping file as an {@link org.xml.sax.InputSource} object. Per
-   * default, this will be classpath resource under the path <code>/mapping.xml</code>.
-   * 
-   * @return The input source for the mapping
-   */
-  protected InputSource getBetwixtMapping() {
-    return new InputSource(getClass().getResourceAsStream("/mapping.xml"));
-  }
-
-  /**
-   * Returns a new bean reader configured to read database models.
-   * 
-   * @return The reader
-   */
-  protected BeanReader getReader() throws IntrospectionException, SAXException, IOException {
-    BeanReader reader = new BeanReader();
-
-    reader.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
-    reader.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-    reader.getXMLIntrospector().getConfiguration().setElementNameMapper(new HyphenatedNameMapper());
-    reader.setValidating(isValidateXml());
-    reader.getBindingConfiguration().setObjectStringConverter(new DBSMObjectStringConverter());
-    if (isUseInternalDtd()) {
-      reader.setEntityResolver(new LocalEntityResolver());
-    }
-    reader.registerMultiMapping(getBetwixtMapping());
-
-    return reader;
-  }
-
-  /**
-   * Returns a new bean writer configured to write database models.
-   * 
-   * @param output
-   *          The target output writer
-   * @return The writer
-   */
-  protected BeanWriter getWriter(OutputStream output) throws DdlUtilsException {
-    try {
-      BeanWriter writer = new BeanWriter(output, "UTF8");
-
-      writer.getXMLIntrospector().register(getBetwixtMapping());
-      writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
-      writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-      writer.getXMLIntrospector()
-          .getConfiguration()
-          .setElementNameMapper(new HyphenatedNameMapper());
-      writer.getBindingConfiguration().setMapIDs(false);
-      writer.getBindingConfiguration()
-          .setValueSuppressionStrategy(new DBSMValueSuppressionStrategy());
-      writer.enablePrettyPrint();
-      // always use linux style line endings
-      writer.setEndOfLine("\n");
-
-      return writer;
-    } catch (Exception ex) {
-      throw new DdlUtilsException(ex);
-    }
-  }
-
-  /**
-   * Returns a new bean writer configured to write database models.
-   * 
-   * @param output
-   *          The target output writer
-   * @return The writer
-   */
-  protected BeanWriter getWriter(Writer writer_) throws DdlUtilsException {
-    try {
-      BeanWriter writer = new BeanWriter(writer_);
-
-      writer.getXMLIntrospector().register(getBetwixtMapping());
-      writer.getXMLIntrospector().getConfiguration().setAttributesForPrimitives(true);
-      writer.getXMLIntrospector().getConfiguration().setWrapCollectionsInElement(false);
-      writer.getXMLIntrospector()
-          .getConfiguration()
-          .setElementNameMapper(new HyphenatedNameMapper());
-      writer.getBindingConfiguration().setMapIDs(false);
-      writer.getBindingConfiguration()
-          .setValueSuppressionStrategy(new DBSMValueSuppressionStrategy());
-      writer.enablePrettyPrint();
-      // always use linux style line endings
-      writer.setEndOfLine("\n");
-
-      return writer;
-    } catch (Exception ex) {
-      throw new DdlUtilsException(ex);
-    }
-  }
-
-  /**
    * Reads the database model contained in the specified file.
    * 
    * @param filename
@@ -196,7 +102,9 @@ public class DatabaseIO {
     Database model = null;
 
     try {
-      model = (Database) getReader().parse(filename);
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      model = (Database) unmarshaller.unmarshal(new File(filename));
     } catch (Exception ex) {
       throw new DdlUtilsException(ex);
     }
@@ -215,7 +123,9 @@ public class DatabaseIO {
     Database model = null;
 
     try {
-      model = (Database) getReader().parse(file);
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      model = (Database) unmarshaller.unmarshal(file);
     } catch (Exception ex) {
       throw new DdlUtilsException(ex.getMessage() + " : " + file.getPath(), ex);
     }
@@ -233,7 +143,9 @@ public class DatabaseIO {
     Database model = null;
 
     try {
-      model = (Database) getReader().parse(file);
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      model = (Database) unmarshaller.unmarshal(file);
     } catch (Exception ex) {
       throw new DdlUtilsException(ex.getMessage() + " : " + file.getPath(), ex);
     }
@@ -252,7 +164,9 @@ public class DatabaseIO {
     Database model = null;
 
     try {
-      model = (Database) getReader().parse(reader);
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      model = (Database) unmarshaller.unmarshal(reader);
     } catch (Exception ex) {
       throw new DdlUtilsException(ex);
     }
@@ -271,7 +185,9 @@ public class DatabaseIO {
     Database model = null;
 
     try {
-      model = (Database) getReader().parse(source);
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      model = (Database) unmarshaller.unmarshal(source.getByteStream());
     } catch (Exception ex) {
       throw new DdlUtilsException(ex);
     }
@@ -498,7 +414,14 @@ public class DatabaseIO {
    *          The output stream
    */
   public void write(Database model, OutputStream output) throws DdlUtilsException {
-    write(model, getWriter(output));
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(model, output);
+    } catch (Exception ex) {
+      throw new DdlUtilsException(ex);
+    }
   }
 
   /**
@@ -511,23 +434,11 @@ public class DatabaseIO {
    *          The output writer
    */
   public void write(Database model, Writer output) throws DdlUtilsException {
-    write(model, getWriter(output));
-  }
-
-  /**
-   * Internal method that writes the database model using the given bean writer.
-   * 
-   * @param model
-   *          The database model
-   * @param writer
-   *          The bean writer
-   */
-  private void write(Database model, BeanWriter writer) throws DdlUtilsException {
     try {
-      // writer.writeXmlDeclaration("<?xml version=\"1.0\"?>\n<!DOCTYPE
-      // database SYSTEM \"" + LocalEntityResolver.DTD_PREFIX + "\">");
-      writer.writeXmlDeclaration("<?xml version=\"1.0\"?>");
-      writer.write(model);
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(model, output);
     } catch (Exception ex) {
       throw new DdlUtilsException(ex);
     }
@@ -535,15 +446,10 @@ public class DatabaseIO {
 
   public void write(File file, Vector<Change> changes) {
     try {
-
-      BeanWriter writer = getWriter(new FileOutputStream(file));
-      writer.writeXmlDeclaration("<?xml version=\"1.0\"?>");
-      writer.flush();
-
-      writer.write(changes);
-      writer.flush();
-
-      writer.close();
+      JAXBContext context = JAXBContext.newInstance(Change.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(changes, file);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -551,12 +457,9 @@ public class DatabaseIO {
 
   public Vector<Change> readChanges(File file) {
     try {
-      BeanReader reader = getReader();
-      reader.setValidating(false);
-      reader.registerBeanClass("vector", java.util.Vector.class);
-
-      Vector<Change> changes = (Vector<Change>) reader.parse(file);
-      return changes;
+      JAXBContext context = JAXBContext.newInstance(Change.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      return (Vector<Change>) unmarshaller.unmarshal(file);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -565,12 +468,9 @@ public class DatabaseIO {
 
   public Vector<Object> readExcludedObjects(File file) {
     try {
-      BeanReader reader = getReader();
-      reader.setValidating(false);
-      reader.registerBeanClass("vector", java.util.Vector.class);
-
-      Vector<Object> objects = (Vector<Object>) reader.parse(file);
-      return objects;
+      JAXBContext context = JAXBContext.newInstance(Object.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      return (Vector<Object>) unmarshaller.unmarshal(file);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -579,15 +479,10 @@ public class DatabaseIO {
 
   public void writeExcludedObjects(File file, Vector<Object> changes) {
     try {
-
-      BeanWriter writer = getWriter(new FileOutputStream(file));
-      writer.writeXmlDeclaration("<?xml version=\"1.0\"?>");
-      writer.flush();
-
-      writer.write(changes);
-      writer.flush();
-
-      writer.close();
+      JAXBContext context = JAXBContext.newInstance(Object.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(changes, file);
     } catch (Exception e) {
       e.printStackTrace();
     }

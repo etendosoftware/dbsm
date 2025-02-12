@@ -40,6 +40,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.commons.logging.Log;
@@ -817,6 +822,127 @@ public class DatabaseDataIO implements DataSetTableExporter {
         System.out.println("problem: " + n.getMessage());
         return 0;
       }
+    }
+  }
+
+  /**
+   * Reads the database model from the specified XML file.
+   * 
+   * @param file
+   *          The XML file
+   * @return The database model
+   * @throws DdlUtilsException
+   *           If an error occurs while reading the XML file
+   */
+  public Database readDatabaseFromFile(File file) throws DdlUtilsException {
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      return (Database) unmarshaller.unmarshal(file);
+    } catch (JAXBException ex) {
+      throw new DdlUtilsException("Error reading database model from file: " + file.getPath(), ex);
+    }
+  }
+
+  /**
+   * Writes the database model to the specified XML file.
+   * 
+   * @param database
+   *          The database model
+   * @param file
+   *          The XML file
+   * @throws DdlUtilsException
+   *           If an error occurs while writing the XML file
+   */
+  public void writeDatabaseToFile(Database database, File file) throws DdlUtilsException {
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(database, file);
+    } catch (JAXBException ex) {
+      throw new DdlUtilsException("Error writing database model to file: " + file.getPath(), ex);
+    }
+  }
+
+  /**
+   * Reads the database model from the specified XML input stream.
+   * 
+   * @param inputStream
+   *          The XML input stream
+   * @return The database model
+   * @throws DdlUtilsException
+   *           If an error occurs while reading the XML input stream
+   */
+  public Database readDatabaseFromInputStream(InputStream inputStream) throws DdlUtilsException {
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      return (Database) unmarshaller.unmarshal(inputStream);
+    } catch (JAXBException ex) {
+      throw new DdlUtilsException("Error reading database model from input stream", ex);
+    }
+  }
+
+  /**
+   * Writes the database model to the specified XML output stream.
+   * 
+   * @param database
+   *          The database model
+   * @param outputStream
+   *          The XML output stream
+   * @throws DdlUtilsException
+   *           If an error occurs while writing the XML output stream
+   */
+  public void writeDatabaseToOutputStream(Database database, OutputStream outputStream)
+      throws DdlUtilsException {
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(database, outputStream);
+    } catch (JAXBException ex) {
+      throw new DdlUtilsException("Error writing database model to output stream", ex);
+    }
+  }
+
+  /**
+   * Reads the database model from the specified XML reader.
+   * 
+   * @param reader
+   *          The XML reader
+   * @return The database model
+   * @throws DdlUtilsException
+   *           If an error occurs while reading the XML reader
+   */
+  public Database readDatabaseFromReader(Reader reader) throws DdlUtilsException {
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Unmarshaller unmarshaller = context.createUnmarshaller();
+      return (Database) unmarshaller.unmarshal(reader);
+    } catch (JAXBException ex) {
+      throw new DdlUtilsException("Error reading database model from reader", ex);
+    }
+  }
+
+  /**
+   * Writes the database model to the specified XML writer.
+   * 
+   * @param database
+   *          The database model
+   * @param writer
+   *          The XML writer
+   * @throws DdlUtilsException
+   *           If an error occurs while writing the XML writer
+   */
+  public void writeDatabaseToWriter(Database database, Writer writer) throws DdlUtilsException {
+    try {
+      JAXBContext context = JAXBContext.newInstance(Database.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      marshaller.marshal(database, writer);
+    } catch (JAXBException ex) {
+      throw new DdlUtilsException("Error writing database model to writer", ex);
     }
   }
 }
