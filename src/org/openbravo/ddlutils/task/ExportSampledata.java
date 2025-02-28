@@ -17,7 +17,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +43,11 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
-import org.openbravo.ddlutils.util.*;
+import org.openbravo.ddlutils.util.DBSMOBUtil;
+import org.openbravo.ddlutils.util.ModuleRow;
+import org.openbravo.ddlutils.util.ModulesUtil;
+import org.openbravo.ddlutils.util.OBDataset;
+import org.openbravo.ddlutils.util.OBDatasetTable;
 
 /**
  * Task in charge of exporting the sample data of a given client.
@@ -47,6 +58,7 @@ public class ExportSampledata extends BaseDatabaseTask {
 
   public enum ExportFormat {
     COPY("copy"), XML("xml");
+
     private String name;
 
     private ExportFormat(String name) {

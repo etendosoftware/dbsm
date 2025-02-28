@@ -12,7 +12,7 @@
 
 package org.apache.ddlutils.translation;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Replacements for functions with out parameters, treated as special to skip to apply regexp when

@@ -36,8 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.collections4.map.ListOrderedMap;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
@@ -99,21 +99,21 @@ public class JdbcModelReader {
   public JdbcModelReader(Platform platform) {
     _platform = platform;
 
-    _defaultSizes.put(new Integer(Types.CHAR), "254");
-    _defaultSizes.put(new Integer(ExtTypes.NCHAR), "254");
-    _defaultSizes.put(new Integer(Types.VARCHAR), "254");
-    _defaultSizes.put(new Integer(ExtTypes.NVARCHAR), "254");
-    _defaultSizes.put(new Integer(Types.LONGVARCHAR), "254");
-    _defaultSizes.put(new Integer(Types.BINARY), "254");
-    _defaultSizes.put(new Integer(Types.VARBINARY), "254");
-    _defaultSizes.put(new Integer(Types.LONGVARBINARY), "254");
-    _defaultSizes.put(new Integer(Types.INTEGER), "32");
-    _defaultSizes.put(new Integer(Types.BIGINT), "64");
-    _defaultSizes.put(new Integer(Types.REAL), "7,0");
-    _defaultSizes.put(new Integer(Types.FLOAT), "15,0");
-    _defaultSizes.put(new Integer(Types.DOUBLE), "15,0");
-    _defaultSizes.put(new Integer(Types.DECIMAL), "15,15");
-    _defaultSizes.put(new Integer(Types.NUMERIC), "15,15");
+    _defaultSizes.put(Integer.valueOf(Types.CHAR), "254");
+    _defaultSizes.put(Integer.valueOf(ExtTypes.NCHAR), "254");
+    _defaultSizes.put(Integer.valueOf(Types.VARCHAR), "254");
+    _defaultSizes.put(Integer.valueOf(ExtTypes.NVARCHAR), "254");
+    _defaultSizes.put(Integer.valueOf(Types.LONGVARCHAR), "254");
+    _defaultSizes.put(Integer.valueOf(Types.BINARY), "254");
+    _defaultSizes.put(Integer.valueOf(Types.VARBINARY), "254");
+    _defaultSizes.put(Integer.valueOf(Types.LONGVARBINARY), "254");
+    _defaultSizes.put(Integer.valueOf(Types.INTEGER), "32");
+    _defaultSizes.put(Integer.valueOf(Types.BIGINT), "64");
+    _defaultSizes.put(Integer.valueOf(Types.REAL), "7,0");
+    _defaultSizes.put(Integer.valueOf(Types.FLOAT), "15,0");
+    _defaultSizes.put(Integer.valueOf(Types.DOUBLE), "15,0");
+    _defaultSizes.put(Integer.valueOf(Types.DECIMAL), "15,15");
+    _defaultSizes.put(Integer.valueOf(Types.NUMERIC), "15,15");
 
     _columnsForTable = initColumnsForTable();
     _columnsForColumn = initColumnsForColumn();
@@ -181,9 +181,9 @@ public class JdbcModelReader {
     result.add(new MetaDataColumnDescriptor("TABLE_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("COLUMN_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("DATA_TYPE", Types.INTEGER,
-        new Integer(java.sql.Types.OTHER)));
-    result.add(new MetaDataColumnDescriptor("NUM_PREC_RADIX", Types.INTEGER, new Integer(10)));
-    result.add(new MetaDataColumnDescriptor("DECIMAL_DIGITS", Types.INTEGER, new Integer(0)));
+        Integer.valueOf(java.sql.Types.OTHER)));
+    result.add(new MetaDataColumnDescriptor("NUM_PREC_RADIX", Types.INTEGER, Integer.valueOf(10)));
+    result.add(new MetaDataColumnDescriptor("DECIMAL_DIGITS", Types.INTEGER, Integer.valueOf(0)));
     result.add(new MetaDataColumnDescriptor("COLUMN_SIZE", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("IS_NULLABLE", Types.VARCHAR, "YES"));
     result.add(new MetaDataColumnDescriptor("REMARKS", Types.VARCHAR));
@@ -228,14 +228,14 @@ public class JdbcModelReader {
     // we're also reading the table name so that a model reader impl can
     // filter manually
     result.add(new MetaDataColumnDescriptor("FKTABLE_NAME", Types.VARCHAR));
-    result.add(new MetaDataColumnDescriptor("KEY_SEQ", Types.TINYINT, new Short((short) 0)));
+    result.add(new MetaDataColumnDescriptor("KEY_SEQ", Types.TINYINT, Short.valueOf((short) 0)));
     result.add(new MetaDataColumnDescriptor("FK_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("PKCOLUMN_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("FKCOLUMN_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("DELETE_RULE", Types.TINYINT,
-        new Short((short) DatabaseMetaData.importedKeyNoAction)));
+        Short.valueOf((short) DatabaseMetaData.importedKeyNoAction)));
     result.add(new MetaDataColumnDescriptor("UPDATE_RULE", Types.TINYINT,
-        new Short((short) DatabaseMetaData.importedKeyNoAction)));
+        Short.valueOf((short) DatabaseMetaData.importedKeyNoAction)));
 
     return result;
   }
@@ -255,8 +255,8 @@ public class JdbcModelReader {
     // filter manually
     result.add(new MetaDataColumnDescriptor("TABLE_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("NON_UNIQUE", Types.BIT, Boolean.TRUE));
-    result
-        .add(new MetaDataColumnDescriptor("ORDINAL_POSITION", Types.TINYINT, new Short((short) 0)));
+    result.add(
+        new MetaDataColumnDescriptor("ORDINAL_POSITION", Types.TINYINT, Short.valueOf((short) 0)));
     result.add(new MetaDataColumnDescriptor("COLUMN_NAME", Types.VARCHAR));
     result.add(new MetaDataColumnDescriptor("TYPE", Types.TINYINT));
 
@@ -771,7 +771,7 @@ public class JdbcModelReader {
     int scale = ((Integer) values.get("DECIMAL_DIGITS")).intValue();
 
     if (size == null) {
-      size = (String) _defaultSizes.get(new Integer(column.getTypeCode()));
+      size = (String) _defaultSizes.get(Integer.valueOf(column.getTypeCode()));
     }
     // we're setting the size after the precision and radix in case
     // the database prefers to return them in the size value
@@ -780,7 +780,7 @@ public class JdbcModelReader {
       // if there is a scale value, set it after the size (which probably
       // did not contain
       // a scale specification)
-      column.setScale(new Integer(scale));
+      column.setScale(Integer.valueOf(scale));
     }
     column.setRequired("NO".equalsIgnoreCase(((String) values.get("IS_NULLABLE")).trim()));
     column.setDescription((String) values.get("REMARKS"));

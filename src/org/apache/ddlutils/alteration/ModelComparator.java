@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.PlatformInfo;
@@ -446,7 +446,7 @@ public class ModelComparator {
         int targetColumnIdx = targetTable.getColumnIndex(targetColumn);
 
         if (targetColumnIdx != (columnIdx - diffPos)) {
-          columnPosChanges.put(sourceColumn, new Integer(targetColumnIdx));
+          columnPosChanges.put(sourceColumn, Integer.valueOf(targetColumnIdx));
         }
       }
     }

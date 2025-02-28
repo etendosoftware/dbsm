@@ -108,7 +108,7 @@ public class DefaultValueHelper {
         && (targetTypeCode == Jdbc3Utils.determineBooleanTypeCode()))) {
       result = value;
     } else if (TypeMap.isNumericType(targetTypeCode)) {
-      result = (value.booleanValue() ? new Integer(1) : new Integer(0));
+      result = (value.booleanValue() ? Integer.valueOf(1) : Integer.valueOf(0));
     } else {
       result = value.toString();
     }

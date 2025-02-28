@@ -244,26 +244,26 @@ public class PlatformInfo {
    * Creates a new platform info object.
    */
   public PlatformInfo() {
-    _typesWithNullDefault.add(new Integer(Types.CHAR));
-    _typesWithNullDefault.add(new Integer(ExtTypes.NCHAR));
-    _typesWithNullDefault.add(new Integer(Types.VARCHAR));
-    _typesWithNullDefault.add(new Integer(ExtTypes.NVARCHAR));
-    _typesWithNullDefault.add(new Integer(Types.LONGVARCHAR));
-    _typesWithNullDefault.add(new Integer(Types.CLOB));
-    _typesWithNullDefault.add(new Integer(Types.BINARY));
-    _typesWithNullDefault.add(new Integer(Types.VARBINARY));
-    _typesWithNullDefault.add(new Integer(Types.LONGVARBINARY));
-    _typesWithNullDefault.add(new Integer(Types.BLOB));
+    _typesWithNullDefault.add(Integer.valueOf(Types.CHAR));
+    _typesWithNullDefault.add(Integer.valueOf(ExtTypes.NCHAR));
+    _typesWithNullDefault.add(Integer.valueOf(Types.VARCHAR));
+    _typesWithNullDefault.add(Integer.valueOf(ExtTypes.NVARCHAR));
+    _typesWithNullDefault.add(Integer.valueOf(Types.LONGVARCHAR));
+    _typesWithNullDefault.add(Integer.valueOf(Types.CLOB));
+    _typesWithNullDefault.add(Integer.valueOf(Types.BINARY));
+    _typesWithNullDefault.add(Integer.valueOf(Types.VARBINARY));
+    _typesWithNullDefault.add(Integer.valueOf(Types.LONGVARBINARY));
+    _typesWithNullDefault.add(Integer.valueOf(Types.BLOB));
 
-    _typesWithSize.add(new Integer(Types.CHAR));
-    _typesWithSize.add(new Integer(ExtTypes.NCHAR));
-    _typesWithSize.add(new Integer(Types.VARCHAR));
-    _typesWithSize.add(new Integer(ExtTypes.NVARCHAR));
-    _typesWithSize.add(new Integer(Types.BINARY));
-    _typesWithSize.add(new Integer(Types.VARBINARY));
+    _typesWithSize.add(Integer.valueOf(Types.CHAR));
+    _typesWithSize.add(Integer.valueOf(ExtTypes.NCHAR));
+    _typesWithSize.add(Integer.valueOf(Types.VARCHAR));
+    _typesWithSize.add(Integer.valueOf(ExtTypes.NVARCHAR));
+    _typesWithSize.add(Integer.valueOf(Types.BINARY));
+    _typesWithSize.add(Integer.valueOf(Types.VARBINARY));
 
-    _typesWithPrecisionAndScale.add(new Integer(Types.DECIMAL));
-    _typesWithPrecisionAndScale.add(new Integer(Types.NUMERIC));
+    _typesWithPrecisionAndScale.add(Integer.valueOf(Types.DECIMAL));
+    _typesWithPrecisionAndScale.add(Integer.valueOf(Types.NUMERIC));
 
     columnOrderManaged = true;
   }
@@ -1075,7 +1075,7 @@ public class PlatformInfo {
    * @return The native type or <code>null</code> if there isn't one defined
    */
   public String getNativeType(int typeCode) {
-    return (String) _nativeTypes.get(new Integer(typeCode));
+    return (String) _nativeTypes.get(Integer.valueOf(typeCode));
   }
 
   /**
@@ -1090,7 +1090,7 @@ public class PlatformInfo {
    * @return The target jdbc type
    */
   public int getTargetJdbcType(int typeCode) {
-    Integer targetJdbcType = (Integer) _targetJdbcTypes.get(new Integer(typeCode));
+    Integer targetJdbcType = (Integer) _targetJdbcTypes.get(Integer.valueOf(typeCode));
 
     return targetJdbcType == null ? typeCode : targetJdbcType.intValue();
   }
@@ -1120,7 +1120,7 @@ public class PlatformInfo {
    *          The native type
    */
   public void addNativeTypeMapping(int jdbcTypeCode, String nativeType) {
-    _nativeTypes.put(new Integer(jdbcTypeCode), nativeType);
+    _nativeTypes.put(Integer.valueOf(jdbcTypeCode), nativeType);
   }
 
   /**
@@ -1136,7 +1136,7 @@ public class PlatformInfo {
    */
   public void addNativeTypeMapping(int jdbcTypeCode, String nativeType, int targetJdbcTypeCode) {
     addNativeTypeMapping(jdbcTypeCode, nativeType);
-    _targetJdbcTypes.put(new Integer(jdbcTypeCode), new Integer(targetJdbcTypeCode));
+    _targetJdbcTypes.put(Integer.valueOf(jdbcTypeCode), Integer.valueOf(targetJdbcTypeCode));
   }
 
   /**
@@ -1202,7 +1202,7 @@ public class PlatformInfo {
    * @return <code>true</code> if the native type has a null default value
    */
   public boolean hasNullDefault(int sqlTypeCode) {
-    return _typesWithNullDefault.contains(new Integer(sqlTypeCode));
+    return _typesWithNullDefault.contains(Integer.valueOf(sqlTypeCode));
   }
 
   /**
@@ -1216,9 +1216,9 @@ public class PlatformInfo {
    */
   public void setHasNullDefault(int sqlTypeCode, boolean hasNullDefault) {
     if (hasNullDefault) {
-      _typesWithNullDefault.add(new Integer(sqlTypeCode));
+      _typesWithNullDefault.add(Integer.valueOf(sqlTypeCode));
     } else {
-      _typesWithNullDefault.remove(new Integer(sqlTypeCode));
+      _typesWithNullDefault.remove(Integer.valueOf(sqlTypeCode));
     }
   }
 
@@ -1231,7 +1231,7 @@ public class PlatformInfo {
    * @return <code>true</code> if the native type has a size specification
    */
   public boolean hasSize(int sqlTypeCode) {
-    return _typesWithSize.contains(new Integer(sqlTypeCode));
+    return _typesWithSize.contains(Integer.valueOf(sqlTypeCode));
   }
 
   /**
@@ -1245,9 +1245,9 @@ public class PlatformInfo {
    */
   public void setHasSize(int sqlTypeCode, boolean hasSize) {
     if (hasSize) {
-      _typesWithSize.add(new Integer(sqlTypeCode));
+      _typesWithSize.add(Integer.valueOf(sqlTypeCode));
     } else {
-      _typesWithSize.remove(new Integer(sqlTypeCode));
+      _typesWithSize.remove(Integer.valueOf(sqlTypeCode));
     }
   }
 
@@ -1259,7 +1259,7 @@ public class PlatformInfo {
    * @return The default size or <code>null</code> if none is defined
    */
   public Integer getDefaultSize(int jdbcTypeCode) {
-    return (Integer) _typesDefaultSizes.get(new Integer(jdbcTypeCode));
+    return (Integer) _typesDefaultSizes.get(Integer.valueOf(jdbcTypeCode));
   }
 
   /**
@@ -1271,7 +1271,7 @@ public class PlatformInfo {
    *          The default size
    */
   public void setDefaultSize(int jdbcTypeCode, int defaultSize) {
-    _typesDefaultSizes.put(new Integer(jdbcTypeCode), new Integer(defaultSize));
+    _typesDefaultSizes.put(Integer.valueOf(jdbcTypeCode), Integer.valueOf(defaultSize));
   }
 
   /**
@@ -1304,7 +1304,7 @@ public class PlatformInfo {
    * @return <code>true</code> if the native type has precision and scale specifications
    */
   public boolean hasPrecisionAndScale(int sqlTypeCode) {
-    return _typesWithPrecisionAndScale.contains(new Integer(sqlTypeCode));
+    return _typesWithPrecisionAndScale.contains(Integer.valueOf(sqlTypeCode));
   }
 
   /**
@@ -1318,9 +1318,9 @@ public class PlatformInfo {
    */
   public void setHasPrecisionAndScale(int sqlTypeCode, boolean hasPrecisionAndScale) {
     if (hasPrecisionAndScale) {
-      _typesWithPrecisionAndScale.add(new Integer(sqlTypeCode));
+      _typesWithPrecisionAndScale.add(Integer.valueOf(sqlTypeCode));
     } else {
-      _typesWithPrecisionAndScale.remove(new Integer(sqlTypeCode));
+      _typesWithPrecisionAndScale.remove(Integer.valueOf(sqlTypeCode));
     }
   }
 

@@ -19,7 +19,7 @@ public class AlterDatabaseModJava {
     // args[6] was 'filter' now unused
     ada.setInput(new File(args[7]));
     ada.setObject(args[8]);
-    ada.setFailonerror(new Boolean(args[9]).booleanValue());
+    ada.setFailonerror(Boolean.valueOf(args[9]));
     ada.setBasedir(args[10]);
     ada.setBaseConfig(args[11]);
     ada.setDirFilter(args[12]);
@@ -30,12 +30,12 @@ public class AlterDatabaseModJava {
     if (force.equalsIgnoreCase("yes")) {
       force = "true";
     }
-    ada.setForce(new Boolean(force).booleanValue());
+    ada.setForce(Boolean.valueOf(force));
     String strict = args[17];
     if (strict.equalsIgnoreCase("yes")) {
       strict = "true";
     }
-    ada.setStrict(new Boolean(strict).booleanValue());
+    ada.setStrict(Boolean.valueOf(strict));
     ada.execute();
 
   }

@@ -82,7 +82,7 @@ public class ConverterConfiguration {
    *          The converter
    */
   public void registerConverter(int sqlTypeCode, SqlTypeConverter converter) {
-    _convertersPerType.put(new Integer(sqlTypeCode), converter);
+    _convertersPerType.put(Integer.valueOf(sqlTypeCode), converter);
   }
 
   /**
@@ -113,7 +113,7 @@ public class ConverterConfiguration {
         .get(table.getName() + "/" + column.getName());
 
     if (result == null) {
-      result = (SqlTypeConverter) _convertersPerType.get(new Integer(column.getTypeCode()));
+      result = (SqlTypeConverter) _convertersPerType.get(Integer.valueOf(column.getTypeCode()));
     }
     return result;
   }

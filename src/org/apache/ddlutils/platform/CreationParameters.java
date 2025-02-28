@@ -22,7 +22,7 @@ package org.apache.ddlutils.platform;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.commons.collections4.map.ListOrderedMap;
 import org.apache.ddlutils.model.Table;
 
 /**
