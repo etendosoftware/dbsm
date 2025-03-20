@@ -19,7 +19,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.io.DatabaseFilter;

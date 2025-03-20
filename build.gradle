@@ -12,7 +12,7 @@ plugins {
     id 'maven-publish'
 }
 
-final String VERSION = "1.0.3"
+final String VERSION = "1.0.4"
 
 def dbsmVersion = VERSION
 
@@ -23,26 +23,9 @@ repositories {
 
 dependencies {
     // TODO convert to maven dependencies
-    implementation files('lib/build-only/ant-1.9.2.jar')
-    implementation files('lib/build-only/junit-3.8.2.jar')
-    implementation files('lib/ant-1.9.2.jar')
-    implementation files('lib/commons-beanutils-1.7.0.jar')
-    implementation files('lib/commons-betwixt-0.8.jar')
-    implementation files('lib/commons-codec-1.3.jar')
-    implementation files('lib/commons-collections-3.1.jar')
-    implementation files('lib/commons-dbcp-1.2.1.jar')
-    implementation files('lib/commons-digester-1.8.1.jar')
-    implementation files('lib/commons-lang-2.1.jar')
-    implementation files('lib/commons-logging-1.0.4.jar')
-    implementation files('lib/commons-pool-1.2.jar')
-    implementation files('lib/dom4j-1.4.jar')
-    implementation files('lib/jakarta-oro-2.0.8.jar')
-    implementation files('lib/log4j-1.2-api-2.11.1.jar')
-    implementation files('lib/log4j-api-2.11.1.jar')
-    implementation files('lib/log4j-core-2.11.1.jar')
-    implementation files('lib/postgresql-42.5.4.jar')
-    implementation files('lib/wstx-asl-3.0.2.jar')
     implementation fileTree("${etendo_project}/lib/runtime")
+    implementation fileTree("${etendo_project}/lib/test")
+    implementation fileTree("${etendo_project}/src-db/database/lib")
 
     implementation files("${etendo_project}/build/classes")
     implementation files("${etendo_project}/src-core/build/classes")

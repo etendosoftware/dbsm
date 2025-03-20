@@ -58,8 +58,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -2886,24 +2886,26 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         value = useIdx ? resultSet.getBigDecimal(columnIdx) : resultSet.getBigDecimal(columnName);
         break;
       case Types.BIT:
-        value = new Boolean(
-            useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
+        value = Boolean
+            .valueOf(useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
         break;
       case Types.TINYINT:
       case Types.SMALLINT:
       case Types.INTEGER:
-        value = new Integer(useIdx ? resultSet.getInt(columnIdx) : resultSet.getInt(columnName));
+        value = Integer
+            .valueOf(useIdx ? resultSet.getInt(columnIdx) : resultSet.getInt(columnName));
         break;
       case Types.BIGINT:
-        value = new Long(useIdx ? resultSet.getLong(columnIdx) : resultSet.getLong(columnName));
+        value = Long.valueOf(useIdx ? resultSet.getLong(columnIdx) : resultSet.getLong(columnName));
         break;
       case Types.REAL:
-        value = new Float(useIdx ? resultSet.getFloat(columnIdx) : resultSet.getFloat(columnName));
+        value = Float
+            .valueOf(useIdx ? resultSet.getFloat(columnIdx) : resultSet.getFloat(columnName));
         break;
       case Types.FLOAT:
       case Types.DOUBLE:
-        value = new Double(
-            useIdx ? resultSet.getDouble(columnIdx) : resultSet.getDouble(columnName));
+        value = Double
+            .valueOf(useIdx ? resultSet.getDouble(columnIdx) : resultSet.getDouble(columnName));
         break;
       case Types.BINARY:
       case Types.VARBINARY:
@@ -2969,8 +2971,8 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
         // special handling for Java 1.4/JDBC 3 types
         if (Jdbc3Utils.supportsJava14JdbcTypes()
             && (jdbcType == Jdbc3Utils.determineBooleanTypeCode())) {
-          value = new Boolean(
-              useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
+          value = Boolean
+              .valueOf(useIdx ? resultSet.getBoolean(columnIdx) : resultSet.getBoolean(columnName));
         } else {
           value = useIdx ? resultSet.getObject(columnIdx) : resultSet.getObject(columnName);
         }

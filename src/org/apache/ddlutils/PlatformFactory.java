@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 import org.apache.ddlutils.platform.oracle.OraclePlatform;
 import org.apache.ddlutils.platform.postgresql.PostgreSql10Platform;
 import org.apache.ddlutils.platform.postgresql.PostgreSql11Platform;
+import org.apache.ddlutils.platform.postgresql.PostgreSql16Platform;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlPlatform;
 
 /**
@@ -71,7 +72,9 @@ public class PlatformFactory {
           selectedPlatform = OraclePlatform.class;
           break;
         case "PostgreSQL":
-          if (majorVersion >= 11) {
+          if (majorVersion >= 16) {
+            selectedPlatform = PostgreSql16Platform.class;
+          } else if (majorVersion >= 11) {
             selectedPlatform = PostgreSql11Platform.class;
           } else if (majorVersion >= 10) {
             selectedPlatform = PostgreSql10Platform.class;

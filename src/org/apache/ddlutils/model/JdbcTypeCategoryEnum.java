@@ -23,7 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.enums.ValuedEnum;
+import org.apache.ddlutils.ValuedEnum;
+
 
 /**
  * Represents the different categories of jdbc types.

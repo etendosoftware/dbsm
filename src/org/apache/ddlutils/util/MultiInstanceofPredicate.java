@@ -19,7 +19,7 @@ package org.apache.ddlutils.util;
  * under the License.
  */
 
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.Predicate;
 
 /**
  * A predicate that tests whether the object is of one of the configured types.

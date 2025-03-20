@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.commons.collections4.map.ListOrderedMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.DdlUtilsException;

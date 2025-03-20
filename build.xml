@@ -18,17 +18,13 @@
   <property name="build.db.src" value="${basedir}/src" />
   <property name="force" value="false"/>
   <property file="dbsm.properties" />
+  <property file="gradle.properties" />
 
   <path id="db.class.path">
-    <fileset dir="${basedir}/lib">
-      <include name="**/*.jar" />
-    </fileset>
-    <fileset dir="${basedir}/lib/build-only">
-      <include name="**/*.jar" />
-    </fileset>
-    <pathelement path="${pathOB}/build/classes/" />
-    <fileset dir="${pathOB}/lib">
-      <include name="**/*.jar" />
+    <pathelement path="${etendo_project}/build/classes/" />
+    <fileset dir="${etendo_project}/">
+      <include name="lib/**/*.jar" />
+      <include name="src-db/database/lib/**/*.jar" />
     </fileset>
   </path>
 
