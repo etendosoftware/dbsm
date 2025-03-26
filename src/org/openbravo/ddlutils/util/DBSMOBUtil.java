@@ -891,7 +891,7 @@ public class DBSMOBUtil {
 
   public void loadDataStructures(DatabaseData databaseOrgData, Database db, String[] modulesBaseDirList,
       String datafilter, File input) {
-    getLog().info("loadDataStructures - dirs to scan " + Arrays.toString(modulesBaseDirList));
+    getLog().debug("loadDataStructures - dirs to scan " + Arrays.toString(modulesBaseDirList));
     final Vector<File> files = new Vector<File>();
     File[] sourceFiles = input.listFiles();
     for (int i = 0; i < sourceFiles.length; i++) {
@@ -920,7 +920,7 @@ public class DBSMOBUtil {
         }
       }
     }
-    getLog().info("loadDataStructures - files to read " + Arrays.toString(files.toArray()));
+    getLog().debug("loadDataStructures - files to read " + Arrays.toString(files.toArray()));
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 
