@@ -102,7 +102,7 @@ public class WriteDataToDatabaseCommand extends ConvertingDatabaseCommand {
    * @ant.not-required The default value is 1.
    */
   public void setBatchSize(int batchSize) {
-    getDataIO().setBatchSize(new Integer(batchSize));
+    getDataIO().setBatchSize(Integer.valueOf(batchSize));
   }
 
   /**

@@ -22,8 +22,8 @@ package org.apache.ddlutils.model;
 import java.io.Serializable;
 import java.sql.Types;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.ddlutils.util.ExtTypes;
 
 /**
@@ -250,10 +250,10 @@ public class Column extends ValueObject implements Cloneable, Serializable {
       _size = size;
       if (pos < 0) {
         _scale = null;
-        _sizeAsInt = new Integer(_size);
+        _sizeAsInt = Integer.valueOf(_size);
       } else {
-        _sizeAsInt = new Integer(size.substring(0, pos));
-        _scale = new Integer(size.substring(pos + 1));
+        _sizeAsInt = Integer.valueOf(size.substring(0, pos));
+        _scale = Integer.valueOf(size.substring(pos + 1));
       }
     } else {
       _size = null;
@@ -294,7 +294,7 @@ public class Column extends ValueObject implements Cloneable, Serializable {
    *          The scale
    */
   public void setSizeAndScale(int size, Integer scale) {
-    _sizeAsInt = new Integer(size);
+    _sizeAsInt = Integer.valueOf(size);
     _scale = scale;
     _size = String.valueOf(size);
     if (scale != null) {
@@ -318,7 +318,7 @@ public class Column extends ValueObject implements Cloneable, Serializable {
    *          The precision radix
    */
   public void setPrecisionRadix(int precisionRadix) {
-    _sizeAsInt = new Integer(precisionRadix);
+    _sizeAsInt = Integer.valueOf(precisionRadix);
     _size = String.valueOf(precisionRadix);
   }
 

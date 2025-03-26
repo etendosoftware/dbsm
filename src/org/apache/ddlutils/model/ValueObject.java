@@ -119,19 +119,19 @@ public abstract class ValueObject implements Cloneable {
         switch (_typeCode) {
           case Types.TINYINT:
           case Types.SMALLINT:
-            return new Short(_defaultValue);
+            return Short.valueOf(_defaultValue);
           case Types.INTEGER:
-            return new Integer(_defaultValue);
+            return Integer.valueOf(_defaultValue);
           case Types.BIGINT:
-            return new Long(_defaultValue);
+            return Long.valueOf(_defaultValue);
           case Types.DECIMAL:
           case Types.NUMERIC:
             return new BigDecimal(_defaultValue);
           case Types.REAL:
-            return new Float(_defaultValue);
+            return Float.valueOf(_defaultValue);
           case Types.DOUBLE:
           case Types.FLOAT:
-            return new Double(_defaultValue);
+            return Double.valueOf(_defaultValue);
           case Types.DATE:
             return Date.valueOf(_defaultValue);
           case Types.TIME:

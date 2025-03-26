@@ -515,7 +515,7 @@ public class DataWriter {
         } else if ((c == '>') && (numFoundCDataEndChars == 2)) {
           // we have to split the CDATA right here before the '>' (see
           // DDLUTILS-174)
-          tmpCutPoints.add(new Integer(charPos));
+          tmpCutPoints.add(Integer.valueOf(charPos));
           numFoundCDataEndChars = 0;
         } else {
           numFoundCDataEndChars = 0;

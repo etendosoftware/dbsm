@@ -31,8 +31,8 @@ import java.util.Vector;
 import java.util.function.Predicate;
 
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.ddlutils.alteration.AddColumnChange;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.dynabean.DynaClassCache;

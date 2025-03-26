@@ -13,22 +13,15 @@
 <project default="check" basedir="." name="build-test">
 
   <property file="dbsm.properties" />
+  <property file="gradle.properties" />
   <property file="checkAPI.properties"/>
-  <property file="${pathOB}/config/Openbravo.properties"/>
+  <property file="${etendo_project}/config/Openbravo.properties"/>
 
   <path id="db.class.path">
-    <fileset dir="${basedir}/build/lib">
-      <include name="**/*.jar" />
-    </fileset>
-    <fileset dir="${basedir}/lib">
-      <include name="**/*.jar" />
-    </fileset>
-    <pathelement path="${pathOB}/build/classes/" />
-    <fileset dir="${pathOB}/lib">
-      <include name="**/*.jar" />
-    </fileset>
-    <fileset dir="${pathOB}/src-db/database/lib/">
-      <include name="**/*.jar" />
+    <pathelement path="${etendo_project}/build/classes/" />
+    <fileset dir="${etendo_project}/">
+      <include name="lib/**/*.jar" />
+      <include name="src-db/database/lib/**/*.jar" />
     </fileset>
   </path>
 

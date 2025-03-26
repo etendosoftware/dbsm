@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.collections4.set.ListOrderedSet;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;

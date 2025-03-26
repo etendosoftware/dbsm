@@ -19,10 +19,20 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.ColumnDataChange;
@@ -881,7 +891,7 @@ public class DBSMOBUtil {
 
   public void loadDataStructures(DatabaseData databaseOrgData, Database db, String[] modulesBaseDirList,
       String datafilter, File input) {
-    getLog().info("loadDataStructures - dirs to scan " + Arrays.toString(modulesBaseDirList));
+    getLog().debug("loadDataStructures - dirs to scan " + Arrays.toString(modulesBaseDirList));
     final Vector<File> files = new Vector<File>();
     File[] sourceFiles = input.listFiles();
     for (int i = 0; i < sourceFiles.length; i++) {
@@ -910,7 +920,7 @@ public class DBSMOBUtil {
         }
       }
     }
-    getLog().info("loadDataStructures - files to read " + Arrays.toString(files.toArray()));
+    getLog().debug("loadDataStructures - files to read " + Arrays.toString(files.toArray()));
     readDataIntoDatabaseData(db, databaseOrgData, files);
   }
 

@@ -22,7 +22,7 @@ package org.apache.ddlutils.io;
 import java.util.Iterator;
 
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.collections4.set.ListOrderedSet;
 
 /**
  * Represents an object waiting for insertion into the database. Is used by the

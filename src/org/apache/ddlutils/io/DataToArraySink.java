@@ -7,7 +7,7 @@ import java.util.Vector;
 
 import org.apache.commons.beanutils.BeanComparator;
 import org.apache.commons.beanutils.DynaBean;
-import org.apache.commons.collections.comparators.ComparatorChain;
+import org.apache.commons.collections4.comparators.ComparatorChain;
 import org.apache.ddlutils.dynabean.SqlDynaClass;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
