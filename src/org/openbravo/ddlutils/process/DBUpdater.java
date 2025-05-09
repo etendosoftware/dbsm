@@ -28,10 +28,7 @@ import org.apache.ddlutils.alteration.Change;
 import org.apache.ddlutils.alteration.DataComparator;
 import org.apache.ddlutils.alteration.RemoveRowChange;
 import org.apache.ddlutils.io.DatabaseIO;
-import org.apache.ddlutils.model.Column;
-import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.DatabaseData;
-import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.*;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
@@ -121,6 +118,17 @@ public class DBUpdater {
       platform.deleteInvalidConstraintRows(db, ad, adTablesWithRemovedRecords, !failonerror);
 
       final Database oldModel = (Database) originaldb.clone();
+      for (Table table : db.getTables()) {
+        if (excludeFilter.isConstraintExcluded(table.getPrimaryKey())) {
+          System.out.println("Target PK " + table.getPrimaryKey());
+          table.setPrimaryKey(null);
+        }
+        for (ForeignKey foreignKey : table.getForeignKeys()) {
+          if(excludeFilter.isConstraintExcluded(foreignKey.getName())) {
+            table.removeForeignKey(foreignKey);
+          }
+        }
+      }
       @SuppressWarnings("rawtypes")
       List changes = platform.alterTablesRecreatePKs(oldModel, db, !failonerror);
 
@@ -232,6 +240,18 @@ public class DBUpdater {
       }
       log.debug("Found " + fileArray.length + " module files ");
       db = DatabaseUtils.readDatabaseWithoutConfigScript(fileArray);
+
+      // Apply exclude filter for constraints
+      for (Table table : db.getTables()) {
+        if (excludeFilter.isConstraintExcluded(table.getPrimaryKey())) {
+          table.setPrimaryKey(null);
+        }
+        for (ForeignKey foreignKey : table.getForeignKeys()) {
+          if (excludeFilter.isConstraintExcluded(foreignKey.getName())) {
+            table.removeForeignKey(foreignKey);
+          }
+        }
+      }
     }
     db.checkDataTypes();
     return db;
@@ -243,7 +263,7 @@ public class DBUpdater {
       // This updates the modules dirs to use
       ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
 
-      String auxBasedir = basedir + "../";
+      String auxBasedir = basedir + "/../";
 
       //Core in JAR
       if (!ModulesUtil.coreInSources) {

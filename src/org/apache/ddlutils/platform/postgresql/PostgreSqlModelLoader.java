@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Function;
@@ -156,6 +157,13 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
   protected void initMetadataSentences() throws SQLException {
     String sql;
     boolean firstExpressionInWhereClause = false;
+    String sql0 =
+        "SELECT UPPER(TABLENAME) FROM PG_TABLES " +
+            "JOIN PG_CLASS ON PG_CLASS.OID = PG_TABLES.oid AND PG_CLASS.RELISPARTITION = false " +
+            " WHERE SCHEMANAME = CURRENT_SCHEMA() "
+            + _filter.getExcludeFilterWhereClause("TABLENAME", _filter.getExcludedTables(),
+            firstExpressionInWhereClause)
+            + " ORDER BY UPPER(TABLENAME)";
     _stmt_listtables = _connection.prepareStatement(
         "SELECT UPPER(TABLENAME) FROM PG_TABLES WHERE SCHEMANAME = CURRENT_SCHEMA() "
             + _filter.getExcludeFilterWhereClause("TABLENAME", _filter.getExcludedTables(),
@@ -240,7 +248,16 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
 
     sql = "SELECT pg_constraint.conname AS constraint_name, upper(fk_table.relname::text), upper(pg_constraint.confdeltype::text), 'A'"
         + " FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid LEFT JOIN pg_class fk_table ON fk_table.oid = pg_constraint.confrelid"
-        + " WHERE pg_constraint.contype = 'f' and pg_class.relname = ?";
+        + " WHERE pg_constraint.contype = 'f' and fk_table.relispartition = false and pg_class.relname = ? "
+        + _filter.getExcludeFilterWhereClause("CONNAME", _filter.getExcludedConstraints(),
+        false);
+    String wildcardFilter = "";
+    for (String excludedConstraint : _filter.getExcludedConstraints()) {
+      if(excludedConstraint.endsWith("%")) {
+        wildcardFilter += " AND NOT upper(conname) like '" + excludedConstraint + "' ";
+      }
+    }
+    sql += wildcardFilter;
     _stmt_listfks = _connection
         .prepareStatement(sql + " ORDER BY upper(pg_constraint.conname::text)");
     _stmt_listfks_noprefix = _connection
@@ -357,7 +374,7 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
         + "WHEN 28 THEN 'INSERT, UPDATE, DELETE' " + "WHEN 24 THEN 'UPDATE, DELETE' "
         + "WHEN 12 THEN 'INSERT, DELETE' " + "END AS trigger_event, " + "p.prosrc AS function_code "
         + "FROM pg_trigger trg, pg_class tbl, pg_proc p "
-        + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
+        + "WHERE trg.tgrelid = tbl.oid AND trg.tgfoid = p.oid AND tbl.relispartition = false AND tbl.relname !~ '^pg_' AND trg.tgname !~ '^RI'"
         + " AND upper(trg.tgname) NOT LIKE 'AU\\\\_%'" + _filter.getExcludeFilterWhereClause(
             "trg.tgname", _filter.getExcludedTriggers(), firstExpressionInWhereClause);
 
@@ -1227,6 +1244,10 @@ public class PostgreSqlModelLoader extends ModelLoaderBase {
     String fkRealName = rs.getString(1);
     String fkName = fkRealName.toUpperCase();
 
+    if (fkName != null && _filter.isConstraintExcluded(fkName)) {
+      _log.debug("Excluding foreign key constraint: " + fkName);
+      return null;
+    }
     final ForeignKey fk = new ForeignKey();
 
     fk.setName(fkName);

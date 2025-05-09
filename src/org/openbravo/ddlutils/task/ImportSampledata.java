@@ -21,7 +21,9 @@ import org.apache.ddlutils.io.DataReader;
 import org.apache.ddlutils.io.DataToArraySink;
 import org.apache.ddlutils.io.DatabaseDataIO;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.ddlutils.platform.postgresql.PostgreSqlDatabaseDataIO;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
@@ -73,6 +75,9 @@ public class ImportSampledata extends BaseDatabaseTask {
     getLog().info("Database connection: " + getUrl() + ". User: " + getUser());
     final BasicDataSource ds = DBSMOBUtil.getDataSource(getDriver(), getUrl(), getUser(),
       getPassword());
+
+    ExcludeFilter excludeFilter = DBSMOBUtil.getInstance()
+        .getExcludeFilter(new File( basedir));
 
     final Platform platform = PlatformFactory.createNewPlatformInstance(ds);
     // default value defined for a column should be used on missing data
@@ -231,6 +236,14 @@ public class ImportSampledata extends BaseDatabaseTask {
         log.info("   Enabling triggers");
         platform.enableAllTriggers(con, db, false);
         log.info("   Enabling foreign keys");
+        // disable excluded foreign keys
+        for (Table table : db.getTables()) {
+          for (ForeignKey foreignKey : table.getForeignKeys()) {
+            if(excludeFilter.isConstraintExcluded(foreignKey.getName())) {
+              table.removeForeignKey(foreignKey);
+            }
+          }
+        }
         platform.enableAllFK(con, db, false);
       } finally {
         if (con != null) {
