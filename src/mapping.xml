@@ -325,5 +325,10 @@ under the License.
       <attribute name="name" property="name"/>
     </element>
   </class>
-  
+
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedColumns">
+    <element name="excludedColumns">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
 </betwixt-config>

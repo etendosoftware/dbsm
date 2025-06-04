@@ -21,13 +21,7 @@ import java.util.Vector;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.io.DatabaseIO;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedConstraint;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedFunction;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedMaterializedView;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedSequence;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedTable;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedTrigger;
-import org.apache.ddlutils.platform.modelexclusion.ExcludedView;
+import org.apache.ddlutils.platform.modelexclusion.*;
 import org.apache.log4j.Logger;
 import org.openbravo.ddlutils.util.ExceptionRow;
 
@@ -55,6 +49,7 @@ public class ExcludeFilter implements Cloneable {
   List<String> excludedMaterializedViews = new ArrayList<>();
   Vector<String> excludedSequences = new Vector<String>();
   Vector<String> excludedConstraints = new Vector<String>();
+  Vector<String> excludedColumns = new Vector<String>();
 
   private Logger log4j = Logger.getLogger(getClass());
 
@@ -85,8 +80,12 @@ public class ExcludeFilter implements Cloneable {
     for (String s : excludedSequences) {
       sb.append("  -" + s + "\n");
     }
-    sb.append("***Filtered constraings: " + "\n");
+    sb.append("***Filtered constraints: " + "\n");
     for (String s : excludedConstraints) {
+      sb.append("  -" + s + "\n");
+    }
+    sb.append("***Filtered columns: " + "\n");
+    for (String s : excludedColumns) {
       sb.append("  -" + s + "\n");
     }
     return sb.toString();
@@ -114,6 +113,7 @@ public class ExcludeFilter implements Cloneable {
     filter.excludedFunctions.addAll(excludedFunctions);
     filter.excludedSequences.addAll(excludedSequences);
     filter.excludedConstraints.addAll(excludedConstraints);
+    filter.excludedColumns.addAll(excludedColumns);
 
     for (ExceptionRow row : exceptions) {
       filter.exceptions.add((ExceptionRow) row.clone());
@@ -146,6 +146,8 @@ public class ExcludeFilter implements Cloneable {
           excludedSequences.add(((ExcludedSequence) obj).getName());
         } else if (obj instanceof ExcludedConstraint) {
           excludedConstraints.add(((ExcludedConstraint) obj).getName());
+        } else if (obj instanceof ExcludedColumn) {
+          excludedColumns.add(((ExcludedColumn) obj).getName());
         }
       }
     } catch (Exception e) {
@@ -188,6 +190,11 @@ public class ExcludeFilter implements Cloneable {
         v.add(new ExcludedConstraint(constraint));
       }
 
+      String[] columns = getExcludedColumns();
+      for (String column : columns) {
+        v.add(new ExcludedColumn(column));
+      }
+
       DatabaseIO dbIO = new DatabaseIO();
       dbIO.writeExcludedObjects(file, v);
     } catch (Exception e) {
@@ -213,6 +220,10 @@ public class ExcludeFilter implements Cloneable {
 
   public String[] getExcludedConstraints() {
     return excludedConstraints.toArray(new String[0]);
+  }
+
+  public String[] getExcludedColumns() {
+    return excludedColumns.toArray(new String[0]);
   }
 
   public String[] getExcludedFunctions() {
@@ -365,6 +376,22 @@ public class ExcludeFilter implements Cloneable {
       return false;
     }
     for (String excluded : excludedConstraints) {
+      if (excluded.endsWith("%")) {
+        String prefix = excluded.substring(0, excluded.length() -1);
+        return constraintName.startsWith(prefix);
+      }
+      if (constraintName.equalsIgnoreCase(excluded)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isColumnExcluded(String constraintName) {
+    if (constraintName == null || constraintName.isEmpty()) {
+      return false;
+    }
+    for (String excluded : excludedColumns) {
       if (excluded.endsWith("%")) {
         String prefix = excluded.substring(0, excluded.length() -1);
         return constraintName.startsWith(prefix);
