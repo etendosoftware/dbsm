@@ -426,24 +426,44 @@ public class ExportDatabase extends BaseDalInitializingTask {
     getLog().info("  Validating Module...");
     final Module moduleToValidate = OBDal.getInstance().get(Module.class, moduleId);
     boolean validateAD = shouldExportAD();
-    List<ModuleDBPrefix> dbPrefixes = moduleToValidate.getModuleDBPrefixList();
-    String dbPrefix = dbPrefixes.get(0).getName();
     List<String> partitionedTables = getPartitionedTables(ds);
-    getLog().info("    Partitioned tables: " + partitionedTables.toString());
-    DatabaseData databaseData = new DatabaseData(dbI);
+    getLog().info("    Partitioned tables: " + partitionedTables);
+    StringBuilder partitionedTablesToRemove = new StringBuilder();
 
     for (Table table : dbI.getTables()) {
       if (partitionedTables.contains(table.getName().toLowerCase())) {
-        throw new OBException("Module contains partitioned table: " + table.getName() + ". Please remove partitioning and try again.");
+        if (!partitionedTablesToRemove.isEmpty()) {
+          partitionedTablesToRemove.append(", ");
+        }
+        partitionedTablesToRemove.append(table.getName().toLowerCase());
       }
     }
+
+    if (!partitionedTablesToRemove.isEmpty()) {
+      String unpartitionMessage = getUnpartitionMessage(partitionedTablesToRemove);
+      throw new OBException(unpartitionMessage);
+    }
+
     final SystemValidationResult result = SystemService.getInstance()
         .validateDatabase(moduleToValidate, dbI, validateAD);
     SystemService.getInstance().logValidationResult(log, result);
-    if (result.getErrors().size() > 0) {
+    if (!result.getErrors().isEmpty()) {
       throw new OBException(
           "Module validation failed, see the above list of errors for more information");
     }
+  }
+
+  private static String getUnpartitionMessage(StringBuilder partitionedTablesToRemove) {
+    String tables = partitionedTablesToRemove.toString();
+    String tableWord = partitionedTablesToRemove.length() > 1 ? "tables" : "table";
+    return "\n" +
+        "=============================================================\n" +
+        "  ERROR: The module contains partitioned " + tableWord + ": " + tables + "\n" +
+        "=============================================================\n" +
+        "Please unpartition the " + tableWord + " and try again.\n" +
+        "HINT: You can unpartition tables by running:\n" +
+        "  python3 modules/com.etendoerp.db.extended/tool/unpartition.py \"" + tables + "\"\n" +
+        "=============================================================\n";
   }
 
   private void validateAPIForModel(Platform platform, Database dbDB, Database dbXml,
