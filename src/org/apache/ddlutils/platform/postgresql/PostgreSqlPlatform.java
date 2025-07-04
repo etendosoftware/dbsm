@@ -371,12 +371,16 @@ public class PostgreSqlPlatform extends PlatformImplBase {
 
   @Override
   protected String getQueryToBuildTriggerDisablementQuery() {
-    return "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'DISABLE TRIGGER USER;' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
+    return "SELECT 'ALTER TABLE'|| ' ' || nspname || '.' || relname || ' ' || 'DISABLE TRIGGER USER;' SQL_STR from (" +
+        "select distinct ns.nspname, relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid JOIN pg_namespace AS ns  ON tbl.relnamespace = ns.oid where tgisinternal = false order by ns.nspname, relname" +
+        ") a";
   }
 
   @Override
   protected String getQueryToBuildTriggerEnablementQuery() {
-    return "SELECT 'ALTER TABLE'|| ' ' || relname || ' ' || 'ENABLE TRIGGER USER;' SQL_STR from (select distinct relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid where tgisinternal = false order by relname) a";
+    return "SELECT 'ALTER TABLE'|| ' ' || nspname || '.' || relname || ' ' || 'ENABLE TRIGGER USER;' SQL_STR from (" +
+        "select distinct ns.nspname, relname from pg_trigger trg left join pg_class tbl on trg.tgrelid = tbl.oid JOIN pg_namespace AS ns  ON tbl.relnamespace = ns.oid where tgisinternal = false order by ns.nspname, relname" +
+        ") a";
   }
 
   @Override

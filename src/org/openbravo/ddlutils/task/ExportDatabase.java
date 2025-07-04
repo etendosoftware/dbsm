@@ -15,6 +15,10 @@ package org.openbravo.ddlutils.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +37,7 @@ import org.apache.ddlutils.io.DatabaseIO;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.DatabaseData;
 import org.apache.ddlutils.model.StructureObject;
+import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.tools.ant.BuildException;
 import org.openbravo.base.exception.OBException;
@@ -44,6 +49,7 @@ import org.openbravo.ddlutils.util.OBDatasetTable;
 import org.openbravo.ddlutils.util.ValidateAPIData;
 import org.openbravo.ddlutils.util.ValidateAPIModel;
 import org.openbravo.model.ad.module.Module;
+import org.openbravo.model.ad.module.ModuleDBPrefix;
 import org.openbravo.service.system.SystemService;
 import org.openbravo.service.system.SystemValidationResult;
 
@@ -222,7 +228,7 @@ public class ExportDatabase extends BaseDalInitializingTask {
         }
 
         if (validateModel) {
-          validateDatabaseForModule(util.getActiveModule(i).idMod, dbI);
+          validateDatabaseForModule(util.getActiveModule(i).idMod, dbI, ds);
         }
 
         getLog().debug("  Path: " + path);
@@ -380,6 +386,21 @@ public class ExportDatabase extends BaseDalInitializingTask {
     }
   }
 
+  private List<String> getPartitionedTables(BasicDataSource ds) {
+    List<String> partitionedTables = new ArrayList<>();
+    String sql = "SELECT relname FROM pg_class WHERE relkind = 'p'";
+    try (Connection conn = ds.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+      while (rs.next()) {
+        partitionedTables.add(rs.getString("relname").toLowerCase());
+      }
+    } catch (SQLException e) {
+      throw new OBException("Error checking partitioned tables: " + e.getMessage(), e);
+    }
+    return partitionedTables;
+  }
+
   protected boolean shouldExportAD() {
     return true;
   }
@@ -401,17 +422,48 @@ public class ExportDatabase extends BaseDalInitializingTask {
     return adDatabase;
   }
 
-  private void validateDatabaseForModule(String moduleId, Database dbI) {
+  private void validateDatabaseForModule(String moduleId, Database dbI, BasicDataSource ds) {
     getLog().info("  Validating Module...");
     final Module moduleToValidate = OBDal.getInstance().get(Module.class, moduleId);
     boolean validateAD = shouldExportAD();
+    List<String> partitionedTables = getPartitionedTables(ds);
+    getLog().info("    Partitioned tables: " + partitionedTables);
+    StringBuilder partitionedTablesToRemove = new StringBuilder();
+
+    for (Table table : dbI.getTables()) {
+      if (partitionedTables.contains(table.getName().toLowerCase())) {
+        if (!partitionedTablesToRemove.isEmpty()) {
+          partitionedTablesToRemove.append(", ");
+        }
+        partitionedTablesToRemove.append(table.getName().toLowerCase());
+      }
+    }
+
+    if (!partitionedTablesToRemove.isEmpty()) {
+      String unpartitionMessage = getUnpartitionMessage(partitionedTablesToRemove);
+      throw new OBException(unpartitionMessage);
+    }
+
     final SystemValidationResult result = SystemService.getInstance()
         .validateDatabase(moduleToValidate, dbI, validateAD);
     SystemService.getInstance().logValidationResult(log, result);
-    if (result.getErrors().size() > 0) {
+    if (!result.getErrors().isEmpty()) {
       throw new OBException(
           "Module validation failed, see the above list of errors for more information");
     }
+  }
+
+  private static String getUnpartitionMessage(StringBuilder partitionedTablesToRemove) {
+    String tables = partitionedTablesToRemove.toString();
+    String tableWord = partitionedTablesToRemove.length() > 1 ? "tables" : "table";
+    return "\n" +
+        "=============================================================\n" +
+        "  ERROR: The module contains partitioned " + tableWord + ": " + tables + "\n" +
+        "=============================================================\n" +
+        "Please unpartition the " + tableWord + " and try again.\n" +
+        "HINT: You can unpartition tables by running:\n" +
+        "  python3 modules/com.etendoerp.db.extended/tool/unpartition.py \"" + tables + "\"\n" +
+        "=============================================================\n";
   }
 
   private void validateAPIForModel(Platform platform, Database dbDB, Database dbXml,

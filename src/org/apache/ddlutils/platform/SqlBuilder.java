@@ -3473,6 +3473,9 @@ public abstract class SqlBuilder {
    */
   protected void writeExternalPrimaryKeysCreateStmt(Table table, String primaryKeyName,
       Column[] primaryKeyColumns) throws IOException {
+    if (table.getPrimaryKey() == null) {
+      return;
+    }
     if ((primaryKeyColumns.length > 0) && shouldGeneratePrimaryKeys(primaryKeyColumns)) {
       print("ALTER TABLE ");
       printlnIdentifier(getStructureObjectName(table));
