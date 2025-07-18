@@ -432,14 +432,14 @@ public class ExportDatabase extends BaseDalInitializingTask {
 
     for (Table table : dbI.getTables()) {
       if (partitionedTables.contains(table.getName().toLowerCase())) {
-        if (!partitionedTablesToRemove.isEmpty()) {
+        if (partitionedTablesToRemove.length() > 0) {
           partitionedTablesToRemove.append(", ");
         }
         partitionedTablesToRemove.append(table.getName().toLowerCase());
       }
     }
 
-    if (!partitionedTablesToRemove.isEmpty()) {
+    if (partitionedTablesToRemove.length() > 0) {
       String unpartitionMessage = getUnpartitionMessage(partitionedTablesToRemove);
       throw new OBException(unpartitionMessage);
     }

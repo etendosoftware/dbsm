@@ -19,11 +19,15 @@ def dbsmVersion = VERSION
 System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
 
 repositories {
+    mavenCentral()
 }
 
 dependencies {
+
     // TODO convert to maven dependencies
-    implementation fileTree("${etendo_project}/lib/runtime")
+    implementation fileTree("${etendo_project}/WebContent/WEB-INF/lib")
+    implementation fileTree("${etendo_project}/build/lib")
+
     implementation fileTree("${etendo_project}/lib/test")
     implementation fileTree("${etendo_project}/src-db/database/lib")
 
