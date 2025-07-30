@@ -7,3 +7,4 @@ src-test/result.xml
 /.gradle
 /libclear
 /gradle.properties
+.settings/
