@@ -13,6 +13,7 @@ plugins {
 }
 
 final String VERSION = "1.1.0"
+final String SUFFIX = "-beta"
 
 def dbsmVersion = VERSION
 
@@ -31,6 +32,7 @@ dependencies {
     implementation files("${etendo_project}/src-core/build/classes")
 
 }
+
 sourceSets {
     main {
         java {
@@ -69,4 +71,50 @@ jar {
 task deploy(dependsOn: jar, type: Copy) {
     from 'build/libs/dbsourcemanager.jar'
     into "${etendo_project}/src-db/database/lib/"
+}
+
+task upgradeVersion() {
+    final String MAJOR = 'major'
+    final String MINOR = 'minor'
+    final String PATCH = 'patch'
+    doLast {
+        def typeVersion
+        if (project.hasProperty('type')){
+            typeVersion = project.getProperty('type')
+        } else {
+            throw new GradleException("The parameter -Ptype is required")
+        }
+
+        if (typeVersion != MAJOR && typeVersion != MINOR && typeVersion != PATCH) {
+            throw new GradleException("The parameter value '${typeVersion}' is not valid, the options should be 'major', 'minor' or 'patch'")
+        }
+
+        def versionParts = VERSION.trim().split("\\.")
+        if (versionParts.length != 3) {
+            throw new GradleException("The version must be in the format major.minor.patch")
+        }
+
+        int major = versionParts[0].toInteger()
+        int minor = versionParts[1].toInteger()
+        int patch = versionParts[2].toInteger()
+
+        if (typeVersion == MAJOR) {
+            major++
+            minor = 0
+            patch = 0
+        } else if (typeVersion == MINOR) {
+            minor++
+            patch = 0
+        } else if (typeVersion == PATCH) {
+            patch++
+        }
+
+        println "Version: ${major}.${minor}.${patch}"
+        def nextVersion = "${major}.${minor}.${patch}"
+
+        // Rewrite build.gradle file with new value
+        def buildGradleContent = file('build.gradle').text
+        buildGradleContent = buildGradleContent.replaceAll(/VERSION = \"${VERSION}\"/, "VERSION = \"${nextVersion}\"")
+        file('build.gradle').write(buildGradleContent)
+    }
 }
