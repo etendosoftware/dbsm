@@ -318,6 +318,17 @@ under the License.
     <element name="excludedSequence">
       <attribute name="name" property="name"/>
     </element>
-  </class>  
-  
+  </class>
+
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedConstraint">
+    <element name="excludedConstraint">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
+
+  <class name="org.apache.ddlutils.platform.modelexclusion.ExcludedColumns">
+    <element name="excludedColumns">
+      <attribute name="name" property="name"/>
+    </element>
+  </class>
 </betwixt-config>

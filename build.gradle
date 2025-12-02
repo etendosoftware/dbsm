@@ -12,7 +12,7 @@ plugins {
     id 'maven-publish'
 }
 
-final String VERSION = "1.1.0"
+final String VERSION = "1.2.0"
 final String SUFFIX = "-beta"
 
 def dbsmVersion = VERSION
@@ -60,8 +60,8 @@ publishing {
     repositories {
         maven {
             credentials {
-                username "$githubUser"
-                password "$githubToken"
+                username = "${githubUser}"
+                password = "${githubToken}"
             }
             url "https://maven.pkg.github.com/etendosoftware/dbsm/"
         }

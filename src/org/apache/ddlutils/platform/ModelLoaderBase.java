@@ -298,7 +298,6 @@ public abstract class ModelLoaderBase implements ModelLoader {
       fillRow(_stmt_pkname, new RowFiller() {
         @Override
         public void fillRow(ResultSet r) throws SQLException {
-          t.setPrimaryKey(r.getString(1).toUpperCase());
           pkNameHolder.append(r.getString(1));
         }
       });
@@ -321,16 +320,25 @@ public abstract class ModelLoaderBase implements ModelLoader {
         }
       });
     }
+    String pkNameReadFromDB = pkNameHolder.toString();
+    String pkNameUpper = pkNameHolder.toString().toUpperCase();
+    boolean pkExcluded = (pkNameUpper != null && !pkNameUpper.isEmpty() && _filter.isConstraintExcluded(pkNameUpper));
+    if (!pkExcluded) {
+      t.setPrimaryKey(pkNameUpper);
+    } else {
+      _log.debug("Excluding primary key constraint: " + pkNameUpper + " for table " + t.getName());
+    }
+
     // Columns
     t.addColumns(readColumns(tableRealName, usePrefix));
 
     // PKS
-    if (t.getPrimaryKey() != null && !t.getPrimaryKey().equals("")) {
-      _stmt_pkcolumns.setString(1, pkNameHolder.toString());
+    if (t.getPrimaryKey() != null && !t.getPrimaryKey().equals("") && !pkExcluded) {
+      _stmt_pkcolumns.setString(1, pkNameReadFromDB);
       fillList(_stmt_pkcolumns, new RowFiller() {
         @Override
         public void fillRow(ResultSet r) throws SQLException {
-          t.findColumn(r.getString(1)).setPrimaryKey(true);
+          t.findColumn(r.getString(1).toUpperCase()).setPrimaryKey(true);
         }
       });
     }
@@ -410,17 +418,23 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Collection readChecks(String tablename, boolean usePrefix) throws SQLException {
+    Collection checks;
     if (_prefix == null || !usePrefix) {
       _stmt_listchecks.setString(1, tablename);
-      return readList(_stmt_listchecks, new RowConstructor() {
+      checks = readList(_stmt_listchecks, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
+          String checkName = r.getString(1);
+          if (checkName != null && _filter.isConstraintExcluded(checkName.toUpperCase())) {
+            _log.debug("Excluding check constraint: " + checkName);
+            return null;
+          }
           return readCheck(r);
         }
       });
     } else if (_filter.compliesWithNamingRuleObject(tablename)) {
       _stmt_listchecks_noprefix.setString(1, tablename);
-      return readList(_stmt_listchecks_noprefix, new RowConstructor() {
+      checks = readList(_stmt_listchecks_noprefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readCheck(r);
@@ -428,13 +442,15 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     } else {
       _stmt_listchecks_prefix.setString(1, tablename);
-      return readList(_stmt_listchecks_prefix, new RowConstructor() {
+      checks = readList(_stmt_listchecks_prefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readCheck(r);
         }
       });
     }
+    checks.removeIf(java.util.Objects::isNull);
+    return checks;
   }
 
   protected Check readCheck(ResultSet rs) throws SQLException {
@@ -454,9 +470,10 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Collection readForeignKeys(String tablename, boolean usePrefix) throws SQLException {
+    Collection fks;
     if (_prefix == null || !usePrefix) {
       _stmt_listfks.setString(1, tablename);
-      return readList(_stmt_listfks, new RowConstructor() {
+      fks = readList(_stmt_listfks, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readForeignKey(r);
@@ -464,7 +481,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     } else if (_filter.compliesWithNamingRuleObject(tablename)) {
       _stmt_listfks_noprefix.setString(1, tablename);
-      return readList(_stmt_listfks_noprefix, new RowConstructor() {
+      fks = readList(_stmt_listfks_noprefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readForeignKey(r);
@@ -472,22 +489,24 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     } else {
       _stmt_listfks_prefix.setString(1, tablename);
-      return readList(_stmt_listfks_prefix, new RowConstructor() {
+      fks = readList(_stmt_listfks_prefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readForeignKey(r);
         }
       });
     }
-
+    fks.removeIf(java.util.Objects::isNull);
+    return fks;
   }
 
   abstract protected ForeignKey readForeignKey(ResultSet rs) throws SQLException;
 
   protected Collection readIndexes(String tablename, boolean usePrefix) throws SQLException {
+    Collection indexes;
     if (_prefix == null || !usePrefix) {
       _stmt_listindexes.setString(1, tablename);
-      return readList(_stmt_listindexes, new RowConstructor() {
+      indexes = readList(_stmt_listindexes, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readIndex(r);
@@ -495,7 +514,7 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     } else if (_filter.compliesWithNamingRuleObject(tablename)) {
       _stmt_listindexes_noprefix.setString(1, tablename);
-      return readList(_stmt_listindexes_noprefix, new RowConstructor() {
+      indexes = readList(_stmt_listindexes_noprefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readIndex(r);
@@ -503,19 +522,30 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     } else {
       _stmt_listindexes_prefix.setString(1, tablename);
-      return readList(_stmt_listindexes_prefix, new RowConstructor() {
+      indexes = readList(_stmt_listindexes_prefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
+          String indexName = r.getString(1);
+          if (indexName != null && _filter.isConstraintExcluded(indexName.toUpperCase())) {
+            _log.debug("Excluding index: " + indexName);
+            return null;
+          }
           return readIndex(r);
         }
       });
     }
-
+    indexes.removeIf(java.util.Objects::isNull);
+    return indexes;
   }
 
   protected Index readIndex(ResultSet rs) throws SQLException {
     String indexRealName = rs.getString(1);
     String indexName = indexRealName.toUpperCase();
+
+    if (indexName != null && _filter.isConstraintExcluded(indexName)) {
+      _log.debug("Excluding index: " + indexName);
+      return null;
+    }
 
     final Index inx = new Index();
 
@@ -536,17 +566,23 @@ public abstract class ModelLoaderBase implements ModelLoader {
   }
 
   protected Collection readUniques(String tablename, boolean usePrefix) throws SQLException {
+    Collection uniques;
     if (_prefix == null || !usePrefix) {
       _stmt_listuniques.setString(1, tablename);
-      return readList(_stmt_listuniques, new RowConstructor() {
+      uniques = readList(_stmt_listuniques, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
+          String uniqueName = r.getString(1);
+          if (uniqueName != null && _filter.isConstraintExcluded(uniqueName.toUpperCase())) {
+            _log.debug("Excluding unique constraint: " + uniqueName);
+            return null;
+          }
           return readUnique(r);
         }
       });
     } else if (_filter.compliesWithNamingRuleObject(tablename)) {
       _stmt_listuniques_noprefix.setString(1, tablename);
-      return readList(_stmt_listuniques_noprefix, new RowConstructor() {
+      uniques = readList(_stmt_listuniques_noprefix, new RowConstructor() {
 
         @Override
         public Object getRow(ResultSet r) throws SQLException {
@@ -555,19 +591,25 @@ public abstract class ModelLoaderBase implements ModelLoader {
       });
     } else {
       _stmt_listuniques_prefix.setString(1, tablename);
-      return readList(_stmt_listuniques_prefix, new RowConstructor() {
+      uniques = readList(_stmt_listuniques_prefix, new RowConstructor() {
         @Override
         public Object getRow(ResultSet r) throws SQLException {
           return readUnique(r);
         }
       });
     }
+    return uniques;
   }
 
   protected Unique readUnique(ResultSet rs) throws SQLException {
     // similar to readTable, see there for definition of both (regarding case)
     String constraintRealName = rs.getString(1);
     String constraintName = constraintRealName.toUpperCase();
+
+    if (constraintName != null && _filter.isConstraintExcluded(constraintName)) {
+      _log.debug("Excluding unique constraint: " + constraintName);
+      return null; // Devolver null si está excluida
+    }
 
     final Unique uni = new Unique();
 

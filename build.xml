@@ -23,7 +23,7 @@
   <path id="db.class.path">
     <pathelement path="${etendo_project}/build/classes/" />
     <fileset dir="${etendo_project}/">
-      <include name="lib/**/*.jar" />
+      <include name="WebContent/WEB-INF/lib/**/*.jar" />
       <include name="src-db/database/lib/**/*.jar" />
     </fileset>
   </path>
