@@ -19,7 +19,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,10 +56,12 @@ import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 
 public class DBSMOBUtil {
 
+  public static final String SSLMODE = "sslmode";
   private Vector<ModuleRow> allModules = new Vector<ModuleRow>();
   private Vector<ModuleRow> activeModules = new Vector<ModuleRow>();
   private HashMap<String, Vector<String>> dependencies = new HashMap<String, Vector<String>>();
@@ -616,19 +617,70 @@ public class DBSMOBUtil {
 
   private Connection getUnpooledConnection() {
     Connection connection = null;
+    Properties connProps = new Properties();
     try {
       Properties obProps = getOpenbravoProperties();
       String strURL = obProps.getProperty("bbdd.url");
       if (obProps.getProperty("bbdd.rdbms").equalsIgnoreCase("POSTGRE")) {
         strURL += "/" + obProps.getProperty("bbdd.sid");
       }
-      connection = DriverManager.getConnection(strURL, obProps.getProperty("bbdd.user"),
-          obProps.getProperty("bbdd.password"));
-    } catch (SQLException e) {
-      getLog().error("Error while retrieving an unpooled connection: ", e);
+      
+      // 1. Prepare base connection properties
+      connProps.setProperty("user", obProps.getProperty("bbdd.user"));
+      connProps.setProperty("password", obProps.getProperty("bbdd.password"));
+  
+      // 2. Check if SSL is enabled
+      if ("true".equalsIgnoreCase(obProps.getProperty("bbdd.ssl"))) {
+        connProps.setProperty("ssl", "true");
+        connProps.setProperty(SSLMODE, obProps.getProperty("bbdd.sslmode", "verify-full"));
+  
+        // Check if an sslfactory was specified.
+        String sslFactoryClass = obProps.getProperty("bbdd.sslfactory");
+  
+        if (StringUtils.isNotBlank(sslFactoryClass)) {
+          // --- If 'bbdd.sslfactory' EXISTS, use it ---
+          // 'bbdd.sslrootcert' is ignored in this case.
+          connProps.setProperty("sslfactory", sslFactoryClass);
+        } else {
+          // --- If 'bbdd.sslfactory' DOES NOT EXIST, use 'bbdd.sslrootcert' ---
+          String sslRootCert = obProps.getProperty("bbdd.sslrootcert");
+          if (StringUtils.isNotBlank(sslRootCert)) {
+            File sslRootCertFile = new File(sslRootCert);
+            if (sslRootCertFile.exists() && sslRootCertFile.isFile()) {
+              if (!sslRootCertFile.canRead()) {
+                throw new OBException("SSL root certificate file is not readable: " + sslRootCertFile.getAbsolutePath());
+              }
+              connProps.setProperty("sslrootcert", sslRootCertFile.getAbsolutePath());
+            } else {
+              throw new OBException("SSL root certificate file not found: " + sslRootCert);
+            }
+          } else {
+            // If the mode requires verification, the certificate is mandatory.
+            if (StringUtils.equals("verify-full", (connProps.getProperty(SSLMODE))) ||
+                StringUtils.equals("verify-ca", (connProps.getProperty(SSLMODE)))) {
+              throw new OBException("bbdd.sslrootcert property is required when bbdd.sslfactory is not set and sslmode is " + connProps.getProperty(
+                  SSLMODE));
+            }
+        }
+      }
     }
-    return connection;
+    
+    connection = DriverManager.getConnection(strURL, connProps);
+
+  } catch (SQLException e) {
+      String sslMode = connProps.getProperty(SSLMODE);
+      String sslFactory = connProps.getProperty("sslfactory");
+      String sslRootCert = connProps.getProperty("sslrootcert");
+      StringBuilder errorMsg = new StringBuilder("Failed to get unpooled connection");
+      errorMsg.append(". SSL configuration: ");
+      errorMsg.append("sslmode=").append(sslMode != null ? sslMode : "not set");
+      errorMsg.append(", sslfactory=").append(sslFactory != null ? sslFactory : "not set");
+      errorMsg.append(", sslrootcert=").append(sslRootCert != null ? sslRootCert : "not set");
+      getLog().error("Error while retrieving an unpooled connection: " + errorMsg.toString(), e);
+      throw new OBException(errorMsg.toString(), e);
   }
+  return connection;
+}
 
   public void deleteInstallTables(Platform platform, Database database) {
     String sql = "DELETE FROM AD_MODULE_INSTALL";
