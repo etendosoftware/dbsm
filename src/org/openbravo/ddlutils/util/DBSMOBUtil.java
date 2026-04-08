@@ -56,7 +56,7 @@ import org.apache.ddlutils.platform.ModelBasedResultSetIterator;
 import org.apache.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
-import org.openbravo.base.exception.OBException;
+
 import org.openbravo.ddlutils.task.DatabaseUtils;
 
 public class DBSMOBUtil {
@@ -648,17 +648,17 @@ public class DBSMOBUtil {
             File sslRootCertFile = new File(sslRootCert);
             if (sslRootCertFile.exists() && sslRootCertFile.isFile()) {
               if (!sslRootCertFile.canRead()) {
-                throw new OBException("SSL root certificate file is not readable: " + sslRootCertFile.getAbsolutePath());
+                throw new DBSMException("SSL root certificate file is not readable: " + sslRootCertFile.getAbsolutePath());
               }
               connProps.setProperty("sslrootcert", sslRootCertFile.getAbsolutePath());
             } else {
-              throw new OBException("SSL root certificate file not found: " + sslRootCert);
+              throw new DBSMException("SSL root certificate file not found: " + sslRootCert);
             }
           } else {
             // If the mode requires verification, the certificate is mandatory.
             if (StringUtils.equals("verify-full", (connProps.getProperty(SSLMODE))) ||
                 StringUtils.equals("verify-ca", (connProps.getProperty(SSLMODE)))) {
-              throw new OBException("bbdd.sslrootcert property is required when bbdd.sslfactory is not set and sslmode is " + connProps.getProperty(
+              throw new DBSMException("bbdd.sslrootcert property is required when bbdd.sslfactory is not set and sslmode is " + connProps.getProperty(
                   SSLMODE));
             }
         }
@@ -677,7 +677,7 @@ public class DBSMOBUtil {
       errorMsg.append(", sslfactory=").append(sslFactory != null ? sslFactory : "not set");
       errorMsg.append(", sslrootcert=").append(sslRootCert != null ? sslRootCert : "not set");
       getLog().error("Error while retrieving an unpooled connection: " + errorMsg.toString(), e);
-      throw new OBException(errorMsg.toString(), e);
+      throw new DBSMException(errorMsg.toString(), e);
   }
   return connection;
 }
