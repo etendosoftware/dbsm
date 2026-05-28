@@ -17,11 +17,11 @@ public class SourceCoreMetadata extends CoreMetadata {
     @Override
     public void loadRequiredModules() {
         this.requiredModulesLocation.add(ModulesUtil.MODULES_BASE);
-        this.requiredModulesLocation.add(ModulesUtil.MODULES_CORE);
     }
 
     @Override
     public void loadOptionalModules() {
+        this.optionalModulesLocation.add(ModulesUtil.MODULES_CORE);
         this.optionalModulesLocation.add(ModulesUtil.MODULES_JAR);
     }
 

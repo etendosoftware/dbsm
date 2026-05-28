@@ -95,7 +95,7 @@ public class ModulesUtil {
         File rootLocation = new File(rootWorkDir);
 
         // File used to verify that the core is in sources
-        File source = new File(rootLocation, "modules_core");
+        File source = new File(rootLocation, "src-core");
 
         return  (source.exists() && source.isDirectory());
     }
