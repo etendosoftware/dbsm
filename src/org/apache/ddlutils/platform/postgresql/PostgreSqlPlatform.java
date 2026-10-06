@@ -25,11 +25,15 @@ import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -41,8 +45,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.PlatformInfo;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
+import org.apache.ddlutils.model.View;
+import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
@@ -56,6 +63,35 @@ import org.openbravo.ddlutils.util.OBDataset;
  * @version $Revision: 231306 $
  */
 public class PostgreSqlPlatform extends PlatformImplBase {
+  @Override
+  protected void prepareDatabaseForAlter(Connection connection, Database currentModel,
+      Database desiredModel, List<ModelChange> changes) {
+    // The model was loaded before the prescripts. Those scripts can remove views through
+    // cascading operator/function drops; missing views must be recreated in this same update.
+    Set<String> existing = new HashSet<>();
+    try (Statement statement = connection.createStatement();
+        ResultSet rows = statement.executeQuery("SELECT c.relname FROM pg_class c "
+            + "JOIN pg_namespace n ON n.oid=c.relnamespace "
+            + "WHERE n.nspname=current_schema() AND c.relkind IN ('v','m')")) {
+      while (rows.next()) {
+        existing.add(rows.getString(1).toUpperCase(Locale.ROOT));
+      }
+    } catch (SQLException e) {
+      throw new DatabaseOperationException("Could not check views after the prescripts", e);
+    }
+    for (View view : currentModel.getViews()) {
+      if (!existing.contains(view.getName().toUpperCase(Locale.ROOT))) {
+        currentModel.removeView(view);
+      }
+    }
+    for (MaterializedView view : new ArrayList<>(currentModel.getMaterializedViews())) {
+      if (!existing.contains(view.getName().toUpperCase(Locale.ROOT))) {
+        currentModel.removeMaterializedView(view);
+      }
+    }
+    super.prepareDatabaseForAlter(connection, currentModel, desiredModel, changes);
+  }
+
   /** Database name of this platform. */
   public static final String DATABASENAME = "PostgreSql";
   /** The standard PostgreSQL jdbc driver. */

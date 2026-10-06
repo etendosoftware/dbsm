@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -199,9 +200,8 @@ public class StandardBatchEvaluator extends JdbcSupport implements SQLBatchEvalu
           _log.info("Executed " + commandCount + " forced SQL command(s)" + errorNumber2);
         }
       }
-      Iterator it = errorMap.keySet().iterator();
-      while (it.hasNext()) {
-        String error = errorMap.get(it.next());
+      for (Map.Entry<String, String> entry : errorMap.entrySet()) {
+        String error = entry.getValue() + "\n" + entry.getKey();
         if (!_ignoreWarns) {
           _log.warn(error);
         } else {
