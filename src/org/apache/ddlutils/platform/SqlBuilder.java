@@ -528,15 +528,7 @@ public abstract class SqlBuilder {
       createFunction(database.getFunction(idx));
     }
 
-    // Write the views
-    for (int idx = 0; idx < database.getViewCount(); idx++) {
-      createView(database.getView(idx));
-    }
-
-    // Write the materialized views
-    for (MaterializedView materializedView : database.getMaterializedViews()) {
-      createMaterializedView(materializedView);
-    }
+    createViews(database);
 
     // Write the triggers
     for (int idx = 0; idx < database.getTriggerCount(); idx++) {
@@ -888,13 +880,7 @@ public abstract class SqlBuilder {
       }
     }
 
-    for (int i = 0; i < desiredModel.getViewCount(); i++) {
-      createView(desiredModel.getView(i));
-    }
-
-    for (MaterializedView materializedView : desiredModel.getMaterializedViews()) {
-      createMaterializedView(materializedView);
-    }
+    createViews(desiredModel);
 
     // We will now recreate the unchanged foreign keys
     ListOrderedMap changesPerTable = new ListOrderedMap();
@@ -1076,12 +1062,27 @@ public abstract class SqlBuilder {
       removedPartialIndexesPostAction(_removedIndexesWithWhereClause);
     }
 
+    dropViews(currentModel);
+  }
+
+  /** Drops views before applying structural changes. Platforms can order or select them. */
+  protected void dropViews(Database currentModel) throws IOException {
     for (View view : currentModel.getViews()) {
       dropView(view);
     }
 
     for (MaterializedView materializedView : currentModel.getMaterializedViews()) {
       dropMaterializedView(materializedView);
+    }
+  }
+
+  /** Creates views after their tables and functions are available. */
+  protected void createViews(Database desiredModel) throws IOException {
+    for (View view : desiredModel.getViews()) {
+      createView(view);
+    }
+    for (MaterializedView view : desiredModel.getMaterializedViews()) {
+      createMaterializedView(view);
     }
   }
 
