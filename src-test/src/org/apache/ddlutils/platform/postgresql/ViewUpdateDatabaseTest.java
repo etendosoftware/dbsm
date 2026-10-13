@@ -76,7 +76,11 @@ public class ViewUpdateDatabaseTest {
   private Platform platform;
   private String schema;
 
-  /** Opens the database connection and creates a disposable schema for the test. */
+  /**
+   * Opens the database connection and creates a disposable schema for the test.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Before
   public void createSchema() throws Exception {
     String driver;
@@ -127,7 +131,11 @@ public class ViewUpdateDatabaseTest {
     return null;
   }
 
-  /** Drops the disposable schema and closes the connection. */
+  /**
+   * Drops the disposable schema and closes the connection.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @After
   public void removeSchema() throws Exception {
     try {
@@ -147,7 +155,11 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
-  /** Unchanged views are not recreated, so they keep their OIDs. */
+  /**
+   * Unchanged views are not recreated, so they keep their OIDs.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void unchangedViewsKeepTheirOids() throws Exception {
     Database desired = invoices(SELECT_1_AS_ID);
@@ -157,7 +169,11 @@ public class ViewUpdateDatabaseTest {
     assertEquals(before, oids());
   }
 
-  /** A change inside a string literal is applied to the database. */
+  /**
+   * A change inside a string literal is applied to the database.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void changesToLiteralContentsAreApplied() throws Exception {
     Database original = ViewUpdatePlanTest.model("BASE", "SELECT 'a;b' AS value");
@@ -171,7 +187,11 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
-  /** Changing the invoice view recreates its dependent without cascading drops. */
+  /**
+   * Changing the invoice view recreates its dependent without cascading drops.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void invoiceChangeUpdatesTheDependentWithoutRetries() throws Exception {
     apply(new Database(), invoices(SELECT_1_AS_ID));
@@ -184,7 +204,11 @@ public class ViewUpdateDatabaseTest {
     assertFalse(sql.contains("CASCADE"));
   }
 
-  /** A view dropped by a prescript is restored during the same update. */
+  /**
+   * A view dropped by a prescript is restored during the same update.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void viewsRemovedByPrescriptsAreRestoredInTheSameUpdate() throws Exception {
     Database desired = invoices(SELECT_1_AS_ID);
@@ -201,7 +225,11 @@ public class ViewUpdateDatabaseTest {
     assertNotEquals(before.get(C_INVOICELINE_V), oids().get(C_INVOICELINE_V));
   }
 
-  /** Changing the payment view recreates its transitive dependents but not unrelated views. */
+  /**
+   * Changing the payment view recreates its transitive dependents but not unrelated views.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void paymentChangeUpdatesTransitiveDependentsWithoutRetries() throws Exception {
     apply(new Database(), payments(SELECT_1_AS_ID));
@@ -212,7 +240,11 @@ public class ViewUpdateDatabaseTest {
     assertEquals(before.get(FIN_PAYMENT_SCHED_ORD_V), oids().get(FIN_PAYMENT_SCHED_ORD_V));
   }
 
-  /** A column size change on a table is not blocked by views that depend on it. */
+  /**
+   * A column size change on a table is not blocked by views that depend on it.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void columnTypeChangesAreNotBlockedByDependentViews() throws Exception {
     execute("CREATE TABLE view_test_table (text VARCHAR(20))");
@@ -238,7 +270,11 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
-  /** Core views read back from the database are not recreated by a second update. */
+  /**
+   * Core views read back from the database are not recreated by a second update.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void coreViewsRoundTripWithoutRecreation() throws Exception {
     String directory = System.getProperty("dbsm.test.viewDirectory");
@@ -308,7 +344,7 @@ public class ViewUpdateDatabaseTest {
     return dropSql + sql;
   }
 
-  private void executeScript(String sql) throws Exception {
+  private void executeScript(String sql) throws SQLException {
     // Execute each generated command once: any dependency/order error fails the test immediately.
     for (String command : sql.split("/-- END[^\\n]*\\n?")) {
       if (!command.replaceAll("(?m)^\\s*--[^\\n]*", "").trim().isEmpty()) {

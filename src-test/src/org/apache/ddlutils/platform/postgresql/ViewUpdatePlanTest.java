@@ -46,7 +46,11 @@ public class ViewUpdatePlanTest {
   private static final String FIN_PAYMENT_PROP_DETAIL_V = "FIN_PAYMENT_PROP_DETAIL_V";
   private static final String MATERIALIZED = "MATERIALIZED";
 
-  /** Views that did not change generate no drop or create SQL. */
+  /**
+   * Views that did not change generate no drop or create SQL.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void unchangedViewsProduceNoSql() throws Exception {
     Database current = model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE);
@@ -147,7 +151,11 @@ public class ViewUpdatePlanTest {
     assertTrue(plan.getCreates().isEmpty());
   }
 
-  /** A table change recreates the views that read from that table and their dependents. */
+  /**
+   * A table change recreates the views that read from that table and their dependents.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void tableChangesStillRecreateViews() throws Exception {
     Database current = model("BASE", "SELECT id FROM test", CHILD, SELECT_ID_FROM_BASE,
@@ -160,7 +168,11 @@ public class ViewUpdatePlanTest {
     assertEquals(Arrays.asList("BASE", CHILD), names(plan.getCreates()));
   }
 
-  /** A function change unrelated to any view keeps all views. */
+  /**
+   * A function change unrelated to any view keeps all views.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void unrelatedFunctionChangesKeepViews() throws Exception {
     Database current = model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE);
@@ -172,7 +184,11 @@ public class ViewUpdatePlanTest {
     assertTrue(plan.getCreates().isEmpty());
   }
 
-  /** A function change recreates the views using it and their dependents. */
+  /**
+   * A function change recreates the views using it and their dependents.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void functionChangesIncludeTheirViewDependents() throws Exception {
     Database current = model("BASE", "SELECT helper(1) AS id", CHILD, SELECT_ID_FROM_BASE,
@@ -185,7 +201,11 @@ public class ViewUpdatePlanTest {
     assertEquals(Arrays.asList("BASE", CHILD), names(plan.getCreates()));
   }
 
-  /** Forcing a table recreation without table changes keeps the views. */
+  /**
+   * Forcing a table recreation without table changes keeps the views.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void forcedRecreationWithoutTableChangesKeepsViews() throws Exception {
     Database current = model("BASE", "SELECT id FROM test", CHILD, SELECT_ID_FROM_BASE);
@@ -200,7 +220,11 @@ public class ViewUpdatePlanTest {
     assertEquals("", sql.toString());
   }
 
-  /** Explicit add/remove view changes are applied to the model without duplicate SQL. */
+  /**
+   * Explicit add/remove view changes are applied to the model without duplicate SQL.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void explicitViewChangesAreAppliedWithoutDuplicateSql() throws Exception {
     Database current = model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE);
@@ -220,7 +244,11 @@ public class ViewUpdatePlanTest {
         < sql.toString().indexOf("CREATE OR REPLACE VIEW CHILD"));
   }
 
-  /** Materialized views are ordered together with regular views. */
+  /**
+   * Materialized views are ordered together with regular views.
+   *
+   * @throws Exception if the test setup or an assertion fails
+   */
   @Test
   public void materializedViewsShareTheDependencyOrder() throws Exception {
     Database current = model("BASE", SELECT_1_AS_ID, CHILD, "SELECT id FROM materialized");
