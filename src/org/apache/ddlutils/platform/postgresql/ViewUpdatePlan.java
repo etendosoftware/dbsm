@@ -17,15 +17,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ddlutils.alteration.AddViewChange;
+import org.apache.ddlutils.DatabaseOperationException;
 import org.apache.ddlutils.alteration.AddFunctionChange;
 import org.apache.ddlutils.alteration.AddTableChange;
+import org.apache.ddlutils.alteration.AddViewChange;
 import org.apache.ddlutils.alteration.ModelChange;
-import org.apache.ddlutils.alteration.RemoveViewChange;
 import org.apache.ddlutils.alteration.RemoveFunctionChange;
+import org.apache.ddlutils.alteration.RemoveViewChange;
 import org.apache.ddlutils.alteration.TableChange;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.MaterializedView;
@@ -54,11 +54,14 @@ class ViewUpdatePlan {
       } else if (change instanceof AddTableChange) {
         changedTables.add(name(((AddTableChange) change).getNewTable().getName(), caseSensitive));
       } else if (change instanceof RemoveFunctionChange) {
-        changedFunctions.add(name(((RemoveFunctionChange) change).getFunction().getName(), caseSensitive));
+        changedFunctions
+            .add(name(((RemoveFunctionChange) change).getFunction().getName(), caseSensitive));
       } else if (change instanceof AddFunctionChange) {
-        changedFunctions.add(name(((AddFunctionChange) change).getNewFunction().getName(), caseSensitive));
+        changedFunctions
+            .add(name(((AddFunctionChange) change).getNewFunction().getName(), caseSensitive));
       } else if (!(change instanceof AddViewChange) && !(change instanceof RemoveViewChange)) {
-        // Retain the previous conservative behavior for other structural changes, such as sequences.
+        // Retain the previous conservative behavior for other structural changes, such as
+        // sequences.
         recreateAll = true;
       }
     }
