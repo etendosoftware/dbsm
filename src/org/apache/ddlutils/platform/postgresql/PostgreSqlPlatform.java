@@ -30,12 +30,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,10 +48,10 @@ import org.apache.ddlutils.PlatformInfo;
 import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.dynabean.SqlDynaProperty;
 import org.apache.ddlutils.model.Database;
-import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
+import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
 import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.util.ExtTypes;
@@ -63,6 +63,13 @@ import org.openbravo.ddlutils.util.OBDataset;
  * @version $Revision: 231306 $
  */
 public class PostgreSqlPlatform extends PlatformImplBase {
+  /** Database name of this platform. */
+  public static final String DATABASENAME = "PostgreSql";
+  /** The standard PostgreSQL jdbc driver. */
+  public static final String JDBC_DRIVER = "org.postgresql.Driver";
+  /** The subprotocol used by the standard PostgreSQL driver. */
+  public static final String JDBC_SUBPROTOCOL = "postgresql";
+
   @Override
   protected void prepareDatabaseForAlter(Connection connection, Database currentModel,
       Database desiredModel, List<ModelChange> changes) {
@@ -91,13 +98,6 @@ public class PostgreSqlPlatform extends PlatformImplBase {
     }
     super.prepareDatabaseForAlter(connection, currentModel, desiredModel, changes);
   }
-
-  /** Database name of this platform. */
-  public static final String DATABASENAME = "PostgreSql";
-  /** The standard PostgreSQL jdbc driver. */
-  public static final String JDBC_DRIVER = "org.postgresql.Driver";
-  /** The subprotocol used by the standard PostgreSQL driver. */
-  public static final String JDBC_SUBPROTOCOL = "postgresql";
 
   /**
    * Creates a new platform instance.

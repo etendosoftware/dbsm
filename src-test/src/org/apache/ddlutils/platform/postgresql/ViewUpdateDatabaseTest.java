@@ -18,9 +18,9 @@ import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -36,23 +36,27 @@ import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.View;
-import org.apache.ddlutils.platform.SqlBuilder;
-import org.apache.ddlutils.platform.PlatformImplBase;
 import org.apache.ddlutils.platform.PGStandardBatchEvaluator;
+import org.apache.ddlutils.platform.PlatformImplBase;
+import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * PostgreSQL integration tests in a disposable schema. Opt in with
- * -Ddbsm.test.coreProperties=/path/to/config/Openbravo.properties.
+ * PostgreSQL integration tests in a disposable schema. The database comes from
+ * -Ddbsm.test.coreProperties=/path/to/config/Openbravo.properties when set, otherwise from the
+ * first PostgreSQL entry of config/db-config.json, as in the rest of ModelSuite. The tests are
+ * skipped only if neither is available.
  */
 public class ViewUpdateDatabaseTest {
   private BasicDataSource dataSource;
@@ -62,22 +66,52 @@ public class ViewUpdateDatabaseTest {
 
   @Before
   public void createSchema() throws Exception {
+    String driver;
+    String url;
+    String user;
+    String password;
     String config = System.getProperty("dbsm.test.coreProperties");
-    Assume.assumeNotNull(config);
-    Properties properties = new Properties();
-    try (FileReader reader = new FileReader(config)) {
-      properties.load(reader);
+    if (config != null) {
+      Properties properties = new Properties();
+      try (FileReader reader = new FileReader(config)) {
+        properties.load(reader);
+      }
+      driver = properties.getProperty("bbdd.driver");
+      url = properties.getProperty("bbdd.url") + "/" + properties.getProperty("bbdd.sid");
+      user = properties.getProperty("bbdd.user");
+      password = properties.getProperty("bbdd.password");
+    } else {
+      File suiteConfig = new File("config/db-config.json");
+      Assume.assumeTrue("No database configuration available", suiteConfig.exists());
+      JSONObject pg = findPostgreSql(suiteConfig);
+      Assume.assumeNotNull(pg);
+      driver = pg.getString("driver");
+      url = pg.getString("url") + "/" + pg.getString("sid");
+      user = pg.getString("user");
+      password = pg.getString("password");
     }
     dataSource = new BasicDataSource();
-    dataSource.setDriverClassName(properties.getProperty("bbdd.driver"));
-    dataSource.setUrl(properties.getProperty("bbdd.url") + "/" + properties.getProperty("bbdd.sid"));
-    dataSource.setUsername(properties.getProperty("bbdd.user"));
-    dataSource.setPassword(properties.getProperty("bbdd.password"));
+    dataSource.setDriverClassName(driver);
+    dataSource.setUrl(url);
+    dataSource.setUsername(user);
+    dataSource.setPassword(password);
     platform = PlatformFactory.createNewPlatformInstance(dataSource);
     connection = dataSource.getConnection();
     schema = "dbsm_view_test_" + UUID.randomUUID().toString().replace("-", "");
     execute("CREATE SCHEMA " + schema);
     execute("SET search_path TO " + schema + ",public");
+  }
+
+  private static JSONObject findPostgreSql(File suiteConfig) throws Exception {
+    String content = new String(java.nio.file.Files.readAllBytes(suiteConfig.toPath()), "UTF-8");
+    JSONArray dbs = new JSONObject(content).getJSONArray("testDBs");
+    for (int i = 0; i < dbs.length(); i++) {
+      JSONObject db = dbs.getJSONObject(i);
+      if ("POSTGRE".equals(db.getString("rdbms")) && !(db.has("skip") && db.getBoolean("skip"))) {
+        return db;
+      }
+    }
+    return null;
   }
 
   @After
