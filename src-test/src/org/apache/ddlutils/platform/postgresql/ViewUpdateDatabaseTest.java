@@ -15,8 +15,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileReader;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,11 +62,21 @@ import org.junit.Test;
  * skipped only if neither is available.
  */
 public class ViewUpdateDatabaseTest {
+  private static final String SELECT_1_AS_ID = "SELECT 1 AS id";
+  private static final String C_INVOICE_V = "c_invoice_v";
+  private static final String C_INVOICELINE_V = "c_invoiceline_v";
+  private static final String UNRELATED = "unrelated";
+  private static final String FIN_PAYMENT_PROP_DETAIL_V = "fin_payment_prop_detail_v";
+  private static final String FIN_PAYMENT_SCHED_ORD_V = "fin_payment_sched_ord_v";
+  private static final String SELECT_INVOICELINE_ID = "SELECT id FROM c_invoiceline_v";
+  private static final String SELECT_PROP_DETAIL_ID = "SELECT id FROM fin_payment_prop_detail_v";
+
   private BasicDataSource dataSource;
   private Connection connection;
   private Platform platform;
   private String schema;
 
+  /** Opens the database connection and creates a disposable schema for the test. */
   @Before
   public void createSchema() throws Exception {
     String driver;
@@ -103,7 +116,7 @@ public class ViewUpdateDatabaseTest {
   }
 
   private static JSONObject findPostgreSql(File suiteConfig) throws Exception {
-    String content = new String(java.nio.file.Files.readAllBytes(suiteConfig.toPath()), "UTF-8");
+    String content = new String(Files.readAllBytes(suiteConfig.toPath()), StandardCharsets.UTF_8);
     JSONArray dbs = new JSONObject(content).getJSONArray("testDBs");
     for (int i = 0; i < dbs.length(); i++) {
       JSONObject db = dbs.getJSONObject(i);
@@ -114,6 +127,7 @@ public class ViewUpdateDatabaseTest {
     return null;
   }
 
+  /** Drops the disposable schema and closes the connection. */
   @After
   public void removeSchema() throws Exception {
     try {
@@ -133,15 +147,17 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
+  /** Unchanged views are not recreated, so they keep their OIDs. */
   @Test
   public void unchangedViewsKeepTheirOids() throws Exception {
-    Database desired = invoices("SELECT 1 AS id");
+    Database desired = invoices(SELECT_1_AS_ID);
     apply(new Database(), desired);
     Map<String, Long> before = oids();
     assertEquals("", apply(readViews(), desired));
     assertEquals(before, oids());
   }
 
+  /** A change inside a string literal is applied to the database. */
   @Test
   public void changesToLiteralContentsAreApplied() throws Exception {
     Database original = ViewUpdatePlanTest.model("BASE", "SELECT 'a;b' AS value");
@@ -155,21 +171,23 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
+  /** Changing the invoice view recreates its dependent without cascading drops. */
   @Test
   public void invoiceChangeUpdatesTheDependentWithoutRetries() throws Exception {
-    apply(new Database(), invoices("SELECT 1 AS id"));
+    apply(new Database(), invoices(SELECT_1_AS_ID));
     Map<String, Long> before = oids();
     String sql = apply(readViews(), invoices("SELECT 2 AS id"));
-    assertEquals(2, value("c_invoiceline_v"));
-    assertNotEquals(before.get("c_invoice_v"), oids().get("c_invoice_v"));
-    assertNotEquals(before.get("c_invoiceline_v"), oids().get("c_invoiceline_v"));
-    assertEquals(before.get("unrelated"), oids().get("unrelated"));
+    assertEquals(2, value(SELECT_INVOICELINE_ID));
+    assertNotEquals(before.get(C_INVOICE_V), oids().get(C_INVOICE_V));
+    assertNotEquals(before.get(C_INVOICELINE_V), oids().get(C_INVOICELINE_V));
+    assertEquals(before.get(UNRELATED), oids().get(UNRELATED));
     assertFalse(sql.contains("CASCADE"));
   }
 
+  /** A view dropped by a prescript is restored during the same update. */
   @Test
   public void viewsRemovedByPrescriptsAreRestoredInTheSameUpdate() throws Exception {
-    Database desired = invoices("SELECT 1 AS id");
+    Database desired = invoices(SELECT_1_AS_ID);
     apply(new Database(), desired);
     Database current = readViews();
     Map<String, Long> before = oids();
@@ -177,22 +195,24 @@ public class ViewUpdateDatabaseTest {
     platform.alterTables(connection, current, desired, true);
     ((PlatformImplBase) platform).alterTablesPostScript(connection, current, desired, true,
         java.util.Collections.<ModelChange>emptyList(), current, null);
-    assertEquals(1, value("c_invoiceline_v"));
-    assertEquals(before.get("c_invoice_v"), oids().get("c_invoice_v"));
-    assertEquals(before.get("unrelated"), oids().get("unrelated"));
-    assertNotEquals(before.get("c_invoiceline_v"), oids().get("c_invoiceline_v"));
+    assertEquals(1, value(SELECT_INVOICELINE_ID));
+    assertEquals(before.get(C_INVOICE_V), oids().get(C_INVOICE_V));
+    assertEquals(before.get(UNRELATED), oids().get(UNRELATED));
+    assertNotEquals(before.get(C_INVOICELINE_V), oids().get(C_INVOICELINE_V));
   }
 
+  /** Changing the payment view recreates its transitive dependents but not unrelated views. */
   @Test
   public void paymentChangeUpdatesTransitiveDependentsWithoutRetries() throws Exception {
-    apply(new Database(), payments("SELECT 1 AS id"));
+    apply(new Database(), payments(SELECT_1_AS_ID));
     Map<String, Long> before = oids();
     apply(readViews(), payments("SELECT 2 AS id"));
-    assertEquals(2, value("fin_payment_prop_detail_v"));
-    assertNotEquals(before.get("fin_payment_prop_detail_v"), oids().get("fin_payment_prop_detail_v"));
-    assertEquals(before.get("fin_payment_sched_ord_v"), oids().get("fin_payment_sched_ord_v"));
+    assertEquals(2, value(SELECT_PROP_DETAIL_ID));
+    assertNotEquals(before.get(FIN_PAYMENT_PROP_DETAIL_V), oids().get(FIN_PAYMENT_PROP_DETAIL_V));
+    assertEquals(before.get(FIN_PAYMENT_SCHED_ORD_V), oids().get(FIN_PAYMENT_SCHED_ORD_V));
   }
 
+  /** A column size change on a table is not blocked by views that depend on it. */
   @Test
   public void columnTypeChangesAreNotBlockedByDependentViews() throws Exception {
     execute("CREATE TABLE view_test_table (text VARCHAR(20))");
@@ -218,6 +238,7 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
+  /** Core views read back from the database are not recreated by a second update. */
   @Test
   public void coreViewsRoundTripWithoutRecreation() throws Exception {
     String directory = System.getProperty("dbsm.test.viewDirectory");
@@ -240,6 +261,7 @@ public class ViewUpdateDatabaseTest {
     assertEquals(before, oids());
   }
 
+  /** A failing forced command logs the SQL statement that failed. */
   @Test
   public void unrecoverableForcedCommandsLogTheSqlStatement() {
     List<String> messages = new ArrayList<>();
@@ -295,7 +317,7 @@ public class ViewUpdateDatabaseTest {
     }
   }
 
-  private void execute(String sql) throws Exception {
+  private void execute(String sql) throws SQLException {
     try (Statement statement = connection.createStatement()) {
       statement.execute(sql);
     }
@@ -317,7 +339,7 @@ public class ViewUpdateDatabaseTest {
     return model;
   }
 
-  private Map<String, Long> oids() throws Exception {
+  private Map<String, Long> oids() throws SQLException {
     Map<String, Long> result = new TreeMap<>();
     try (Statement statement = connection.createStatement();
         ResultSet rows = statement.executeQuery("SELECT c.relname, c.oid FROM pg_class c "
@@ -330,9 +352,10 @@ public class ViewUpdateDatabaseTest {
     return result;
   }
 
-  private int value(String view) throws Exception {
+  /** Runs one of the fixed single-row queries above, so no SQL is built from variable text. */
+  private int value(String query) throws Exception {
     try (Statement statement = connection.createStatement();
-        ResultSet rows = statement.executeQuery("SELECT id FROM " + view)) {
+        ResultSet rows = statement.executeQuery(query)) {
       assertTrue(rows.next());
       return rows.getInt(1);
     }
@@ -345,7 +368,7 @@ public class ViewUpdateDatabaseTest {
 
   private static Database payments(String base) {
     return ViewUpdatePlanTest.model("FIN_PAYMENT_DETAIL_V", base, "FIN_PAYMENT_SCHED_INV_V",
-        "SELECT id FROM fin_payment_detail_v", "FIN_PAYMENT_SCHED_ORD_V", "SELECT 1 AS id",
+        "SELECT id FROM fin_payment_detail_v", "FIN_PAYMENT_SCHED_ORD_V", SELECT_1_AS_ID,
         "FIN_PAYMENT_PROP_DETAIL_V",
         "SELECT i.id, o.id AS order_id FROM fin_payment_sched_inv_v i CROSS JOIN fin_payment_sched_ord_v o");
   }

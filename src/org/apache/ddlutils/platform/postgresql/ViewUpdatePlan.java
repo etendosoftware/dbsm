@@ -42,53 +42,68 @@ class ViewUpdatePlan {
       boolean caseSensitive) {
     Map<String, Entry> before = entries(current, caseSensitive);
     Map<String, Entry> after = entries(desired, caseSensitive);
-    Set<String> affected = new HashSet<>();
-    Set<String> names = new HashSet<>(before.keySet());
-    names.addAll(after.keySet());
-    Set<String> changedTables = new HashSet<>();
-    Set<String> changedFunctions = new HashSet<>();
-    boolean recreateAll = false;
-    for (ModelChange change : changes) {
-      if (change instanceof TableChange) {
-        changedTables.add(name(((TableChange) change).getChangedTable().getName(), caseSensitive));
-      } else if (change instanceof AddTableChange) {
-        changedTables.add(name(((AddTableChange) change).getNewTable().getName(), caseSensitive));
-      } else if (change instanceof RemoveFunctionChange) {
-        changedFunctions
-            .add(name(((RemoveFunctionChange) change).getFunction().getName(), caseSensitive));
-      } else if (change instanceof AddFunctionChange) {
-        changedFunctions
-            .add(name(((AddFunctionChange) change).getNewFunction().getName(), caseSensitive));
-      } else if (!(change instanceof AddViewChange) && !(change instanceof RemoveViewChange)) {
-        // Retain the previous conservative behavior for other structural changes, such as
-        // sequences.
-        recreateAll = true;
-      }
-    }
-    for (String name : names) {
-      Entry oldView = before.get(name);
-      Entry newView = after.get(name);
-      if (recreateAll || oldView == null || newView == null || !oldView.sameAs(newView)
-          || oldView.dependsOn(changedTables, changedFunctions)
-          || newView.dependsOn(changedTables, changedFunctions)) {
-        affected.add(name);
-      }
-    }
+    ChangeSummary summary = new ChangeSummary(changes, caseSensitive);
+    Set<String> affected = affectedViews(before, after, summary);
     // A changed base view also requires its unchanged dependents, including transitive ones.
     boolean expanded;
     do {
-      expanded = includeDependents(before, affected) | includeDependents(after, affected);
+      boolean fromCurrent = includeDependents(before, affected);
+      boolean fromDesired = includeDependents(after, affected);
+      expanded = fromCurrent || fromDesired;
     } while (expanded);
     drops = ordered(before, affected);
     Collections.reverse(drops);
     creates = ordered(after, affected);
     if (log.isDebugEnabled()) {
-      Map<String, Integer> categories = new TreeMap<>();
+      log.debug("View update plan: " + drops.size() + " drops, " + creates.size()
+          + " creates; model changes: " + summary.categories + "; changed functions: "
+          + summary.functions);
+    }
+  }
+
+  private static Set<String> affectedViews(Map<String, Entry> before, Map<String, Entry> after,
+      ChangeSummary summary) {
+    Set<String> names = new HashSet<>(before.keySet());
+    names.addAll(after.keySet());
+    Set<String> affected = new HashSet<>();
+    for (String name : names) {
+      Entry oldView = before.get(name);
+      Entry newView = after.get(name);
+      if (summary.recreateAll || oldView == null || newView == null || !oldView.sameAs(newView)
+          || oldView.dependsOn(summary.tables, summary.functions)
+          || newView.dependsOn(summary.tables, summary.functions)) {
+        affected.add(name);
+      }
+    }
+    return affected;
+  }
+
+  /** Tables and functions touched by the model changes, which invalidate the views using them. */
+  private static class ChangeSummary {
+    private final Set<String> tables = new HashSet<>();
+    private final Set<String> functions = new HashSet<>();
+    private final Map<String, Integer> categories = new TreeMap<>();
+    private boolean recreateAll;
+
+    ChangeSummary(List<ModelChange> changes, boolean caseSensitive) {
       for (ModelChange change : changes) {
         categories.merge(change.getClass().getSimpleName(), 1, Integer::sum);
+        if (change instanceof TableChange) {
+          tables.add(name(((TableChange) change).getChangedTable().getName(), caseSensitive));
+        } else if (change instanceof AddTableChange) {
+          tables.add(name(((AddTableChange) change).getNewTable().getName(), caseSensitive));
+        } else if (change instanceof RemoveFunctionChange) {
+          functions.add(
+              name(((RemoveFunctionChange) change).getFunction().getName(), caseSensitive));
+        } else if (change instanceof AddFunctionChange) {
+          functions.add(
+              name(((AddFunctionChange) change).getNewFunction().getName(), caseSensitive));
+        } else if (!(change instanceof AddViewChange) && !(change instanceof RemoveViewChange)) {
+          // Retain the previous conservative behavior for other structural changes, such as
+          // sequences.
+          recreateAll = true;
+        }
       }
-      log.debug("View update plan: " + drops.size() + " drops, " + creates.size()
-          + " creates; model changes: " + categories + "; changed functions: " + changedFunctions);
     }
   }
 

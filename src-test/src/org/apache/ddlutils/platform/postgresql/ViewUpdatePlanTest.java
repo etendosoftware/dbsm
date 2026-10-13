@@ -32,10 +32,24 @@ import org.apache.ddlutils.model.View;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.junit.Test;
 
+/** Unit tests for the selection and ordering of the views recreated during an update. */
 public class ViewUpdatePlanTest {
+  private static final String SELECT_1_AS_ID = "SELECT 1 AS id";
+  private static final String SELECT_2_AS_ID = "SELECT 2 AS id";
+  private static final String SELECT_ID_FROM_BASE = "SELECT id FROM base";
+  private static final String CHILD = "CHILD";
+  private static final String C_INVOICE_V = "C_INVOICE_V";
+  private static final String C_INVOICELINE_V = "C_INVOICELINE_V";
+  private static final String UNRELATED = "UNRELATED";
+  private static final String FIN_PAYMENT_DETAIL_V = "FIN_PAYMENT_DETAIL_V";
+  private static final String FIN_PAYMENT_SCHED_INV_V = "FIN_PAYMENT_SCHED_INV_V";
+  private static final String FIN_PAYMENT_PROP_DETAIL_V = "FIN_PAYMENT_PROP_DETAIL_V";
+  private static final String MATERIALIZED = "MATERIALIZED";
+
+  /** Views that did not change generate no drop or create SQL. */
   @Test
   public void unchangedViewsProduceNoSql() throws Exception {
-    Database current = model("BASE", "SELECT 1 AS id", "CHILD", "SELECT id FROM base");
+    Database current = model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE);
     SqlBuilder builder = new PostgreSql11Platform().getSqlBuilder();
     StringWriter sql = new StringWriter();
     builder.setWriter(sql);
@@ -46,6 +60,7 @@ public class ViewUpdatePlanTest {
     assertEquals("", sql.toString());
   }
 
+  /** Formatting, case, comments and single-source qualifiers are not treated as changes. */
   @Test
   public void whitespaceCaseAndSingleSourceQualifiersAreNotChanges() {
     Database current = model("BASE", "SELECT id, sum(amount) AS amount FROM payments p GROUP BY id");
@@ -54,12 +69,14 @@ public class ViewUpdatePlanTest {
     assertTrue(plan(current, desired).getDrops().isEmpty());
   }
 
+  /** Qualifiers over a derived table do not alter the normalized definition. */
   @Test
   public void derivedTableQualifiersAreNotChanges() {
     assertEquals(normalized("SELECT id FROM (SELECT 1 AS id) p"),
         normalized("SELECT p.id FROM (SELECT 1 AS id) p"));
   }
 
+  /** Changes inside literals and quoted identifiers are detected. */
   @Test
   public void literalAndQuotedIdentifierChangesAreDetected() {
     assertFalse(normalized("SELECT 'A B; FROM child' AS value")
@@ -68,6 +85,7 @@ public class ViewUpdatePlanTest {
         .equals(normalized("SELECT \"accounttype\" FROM accounts")));
   }
 
+  /** Standardization keeps literals and quoted identifiers intact. */
   @Test
   public void standardizationPreservesLiteralAndIdentifierContents() {
     assertEquals(normalized("SELECT 'a;b::text' AS \"a;label\""),
@@ -78,6 +96,7 @@ public class ViewUpdatePlanTest {
         normalized(ViewDefinition.standardize("SELECT date_trunc('month', created) FROM payments p;")));
   }
 
+  /** Qualifiers of correlated subquery references are kept. */
   @Test
   public void correlatedReferencesArePreserved() {
     String prefix = "SELECT id, (SELECT max(c.id) FROM child c WHERE c.id = ";
@@ -87,58 +106,64 @@ public class ViewUpdatePlanTest {
         .equals(normalized(prefix + "id) FROM parent p")));
   }
 
+  /** A changed invoice view drops its dependent first and recreates it last. */
   @Test
   public void invoiceDependentsDropFirstAndCreateLast() {
-    Database current = model("C_INVOICE_V", "SELECT 1 AS id", "C_INVOICELINE_V",
-        "SELECT id FROM c_invoice_v", "UNRELATED", "SELECT 0 AS id");
-    Database desired = model("C_INVOICE_V", "SELECT 2 AS id", "C_INVOICELINE_V",
-        "SELECT id FROM c_invoice_v", "UNRELATED", "SELECT 0 AS id");
+    Database current = model(C_INVOICE_V, SELECT_1_AS_ID, C_INVOICELINE_V,
+        "SELECT id FROM c_invoice_v", UNRELATED, "SELECT 0 AS id");
+    Database desired = model(C_INVOICE_V, SELECT_2_AS_ID, C_INVOICELINE_V,
+        "SELECT id FROM c_invoice_v", UNRELATED, "SELECT 0 AS id");
     ViewUpdatePlan plan = plan(current, desired);
-    assertEquals(Arrays.asList("C_INVOICELINE_V", "C_INVOICE_V"), names(plan.getDrops()));
-    assertEquals(Arrays.asList("C_INVOICE_V", "C_INVOICELINE_V"), names(plan.getCreates()));
+    assertEquals(Arrays.asList(C_INVOICELINE_V, C_INVOICE_V), names(plan.getDrops()));
+    assertEquals(Arrays.asList(C_INVOICE_V, C_INVOICELINE_V), names(plan.getCreates()));
   }
 
+  /** A changed payment view recreates its transitive dependents in order. */
   @Test
   public void paymentDependentsIncludeTheEntireChain() {
-    Database current = payments("SELECT 1 AS id");
-    ViewUpdatePlan plan = plan(current, payments("SELECT 2 AS id"));
-    assertEquals(Arrays.asList("FIN_PAYMENT_PROP_DETAIL_V", "FIN_PAYMENT_SCHED_INV_V",
-        "FIN_PAYMENT_DETAIL_V"), names(plan.getDrops()));
-    assertEquals(Arrays.asList("FIN_PAYMENT_DETAIL_V", "FIN_PAYMENT_SCHED_INV_V",
-        "FIN_PAYMENT_PROP_DETAIL_V"), names(plan.getCreates()));
+    Database current = payments(SELECT_1_AS_ID);
+    ViewUpdatePlan plan = plan(current, payments(SELECT_2_AS_ID));
+    assertEquals(Arrays.asList(FIN_PAYMENT_PROP_DETAIL_V, FIN_PAYMENT_SCHED_INV_V,
+        FIN_PAYMENT_DETAIL_V), names(plan.getDrops()));
+    assertEquals(Arrays.asList(FIN_PAYMENT_DETAIL_V, FIN_PAYMENT_SCHED_INV_V,
+        FIN_PAYMENT_PROP_DETAIL_V), names(plan.getCreates()));
   }
 
+  /** Adding a view does not recreate the views it depends on. */
   @Test
   public void newViewsDoNotRecreateExistingDependencies() {
-    ViewUpdatePlan plan = plan(model("BASE", "SELECT 1 AS id"),
-        model("BASE", "SELECT 1 AS id", "CHILD", "SELECT id FROM base"));
+    ViewUpdatePlan plan = plan(model("BASE", SELECT_1_AS_ID),
+        model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE));
     assertTrue(plan.getDrops().isEmpty());
-    assertEquals(Collections.singletonList("CHILD"), names(plan.getCreates()));
+    assertEquals(Collections.singletonList(CHILD), names(plan.getCreates()));
   }
 
+  /** Removed views are dropped dependents first. */
   @Test
   public void removedDependentsAreDroppedInReverseOrder() {
-    ViewUpdatePlan plan = plan(model("BASE", "SELECT 1 AS id", "CHILD", "SELECT id FROM base"),
+    ViewUpdatePlan plan = plan(model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE),
         new Database());
-    assertEquals(Arrays.asList("CHILD", "BASE"), names(plan.getDrops()));
+    assertEquals(Arrays.asList(CHILD, "BASE"), names(plan.getDrops()));
     assertTrue(plan.getCreates().isEmpty());
   }
 
+  /** A table change recreates the views that read from that table and their dependents. */
   @Test
   public void tableChangesStillRecreateViews() throws Exception {
-    Database current = model("BASE", "SELECT id FROM test", "CHILD", "SELECT id FROM base",
-        "UNRELATED", "SELECT 1 AS id");
+    Database current = model("BASE", "SELECT id FROM test", CHILD, SELECT_ID_FROM_BASE,
+        UNRELATED, SELECT_1_AS_ID);
     Table removed = new Table();
     removed.setName("TEST");
     ViewUpdatePlan plan = new ViewUpdatePlan(current, (Database) current.clone(),
         Collections.<ModelChange>singletonList(new RemoveTableChange(removed)), false);
-    assertEquals(Arrays.asList("CHILD", "BASE"), names(plan.getDrops()));
-    assertEquals(Arrays.asList("BASE", "CHILD"), names(plan.getCreates()));
+    assertEquals(Arrays.asList(CHILD, "BASE"), names(plan.getDrops()));
+    assertEquals(Arrays.asList("BASE", CHILD), names(plan.getCreates()));
   }
 
+  /** A function change unrelated to any view keeps all views. */
   @Test
   public void unrelatedFunctionChangesKeepViews() throws Exception {
-    Database current = model("BASE", "SELECT 1 AS id", "CHILD", "SELECT id FROM base");
+    Database current = model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE);
     Function function = new Function();
     function.setName("UNRELATED_HELPER");
     ViewUpdatePlan plan = new ViewUpdatePlan(current, (Database) current.clone(),
@@ -147,21 +172,23 @@ public class ViewUpdatePlanTest {
     assertTrue(plan.getCreates().isEmpty());
   }
 
+  /** A function change recreates the views using it and their dependents. */
   @Test
   public void functionChangesIncludeTheirViewDependents() throws Exception {
-    Database current = model("BASE", "SELECT helper(1) AS id", "CHILD", "SELECT id FROM base",
-        "UNRELATED", "SELECT 1 AS id");
+    Database current = model("BASE", "SELECT helper(1) AS id", CHILD, SELECT_ID_FROM_BASE,
+        UNRELATED, SELECT_1_AS_ID);
     Function function = new Function();
     function.setName("HELPER");
     ViewUpdatePlan plan = new ViewUpdatePlan(current, (Database) current.clone(),
         Collections.<ModelChange>singletonList(new RemoveFunctionChange(function)), false);
-    assertEquals(Arrays.asList("CHILD", "BASE"), names(plan.getDrops()));
-    assertEquals(Arrays.asList("BASE", "CHILD"), names(plan.getCreates()));
+    assertEquals(Arrays.asList(CHILD, "BASE"), names(plan.getDrops()));
+    assertEquals(Arrays.asList("BASE", CHILD), names(plan.getCreates()));
   }
 
+  /** Forcing a table recreation without table changes keeps the views. */
   @Test
   public void forcedRecreationWithoutTableChangesKeepsViews() throws Exception {
-    Database current = model("BASE", "SELECT id FROM test", "CHILD", "SELECT id FROM base");
+    Database current = model("BASE", "SELECT id FROM test", CHILD, SELECT_ID_FROM_BASE);
     Table table = new Table();
     table.setName("TEST");
     current.addTable(table);
@@ -173,10 +200,11 @@ public class ViewUpdatePlanTest {
     assertEquals("", sql.toString());
   }
 
+  /** Explicit add/remove view changes are applied to the model without duplicate SQL. */
   @Test
   public void explicitViewChangesAreAppliedWithoutDuplicateSql() throws Exception {
-    Database current = model("BASE", "SELECT 1 AS id", "CHILD", "SELECT id FROM base");
-    Database desired = model("BASE", "SELECT 2 AS id", "CHILD", "SELECT id FROM base");
+    Database current = model("BASE", SELECT_1_AS_ID, CHILD, SELECT_ID_FROM_BASE);
+    Database desired = model("BASE", SELECT_2_AS_ID, CHILD, SELECT_ID_FROM_BASE);
     List<ModelChange> changes = new ArrayList<>(Arrays.<ModelChange>asList(
         new RemoveViewChange(current.findView("BASE")), new AddViewChange(desired.findView("BASE"))));
     SqlBuilder builder = new PostgreSql11Platform().getSqlBuilder();
@@ -186,35 +214,38 @@ public class ViewUpdatePlanTest {
     builder.setWriter(sql);
     builder.alterDatabase(current, desired, null, changes);
     assertEquals("", sql.toString());
-    assertEquals("SELECT 2 AS id", current.findView("BASE").getStatement());
+    assertEquals(SELECT_2_AS_ID, current.findView("BASE").getStatement());
     builder.alterDatabasePostScript(current, desired, null, changes, current, null);
     assertTrue(sql.toString().indexOf("CREATE OR REPLACE VIEW BASE")
         < sql.toString().indexOf("CREATE OR REPLACE VIEW CHILD"));
   }
 
+  /** Materialized views are ordered together with regular views. */
   @Test
   public void materializedViewsShareTheDependencyOrder() throws Exception {
-    Database current = model("BASE", "SELECT 1 AS id", "CHILD", "SELECT id FROM materialized");
-    MaterializedView materialized = new MaterializedView("MATERIALIZED");
-    materialized.setStatement("SELECT id FROM base");
+    Database current = model("BASE", SELECT_1_AS_ID, CHILD, "SELECT id FROM materialized");
+    MaterializedView materialized = new MaterializedView(MATERIALIZED);
+    materialized.setStatement(SELECT_ID_FROM_BASE);
     current.addMaterializedView(materialized);
     Database desired = (Database) current.clone();
-    desired.findView("BASE").setStatement("SELECT 2 AS id");
+    desired.findView("BASE").setStatement(SELECT_2_AS_ID);
     ViewUpdatePlan plan = plan(current, desired);
-    assertEquals(Arrays.asList("CHILD", "MATERIALIZED", "BASE"), names(plan.getDrops()));
-    assertEquals(Arrays.asList("BASE", "MATERIALIZED", "CHILD"), names(plan.getCreates()));
+    assertEquals(Arrays.asList(CHILD, MATERIALIZED, "BASE"), names(plan.getDrops()));
+    assertEquals(Arrays.asList("BASE", MATERIALIZED, CHILD), names(plan.getCreates()));
   }
 
+  /** CTE names are not reported as relations the view depends on. */
   @Test
   public void cteAliasesDoNotCreateFalseDependencies() {
     ViewDefinition query = definition("WITH child AS (SELECT id FROM base) SELECT id FROM child");
     assertEquals(Collections.singleton("BASE"), query.getRelations());
-    assertEquals(Collections.singleton("CHILD"),
+    assertEquals(Collections.singleton(CHILD),
         definition("WITH child AS (SELECT id FROM child) SELECT id FROM child").getRelations());
     assertTrue(definition("WITH RECURSIVE child AS (SELECT 1 AS id UNION ALL SELECT id + 1 FROM child WHERE id < 3) SELECT * FROM child")
         .getRelations().isEmpty());
   }
 
+  /** Relations are found in joins, comma lists and nested queries, ignoring literals. */
   @Test
   public void relationsAreFoundInJoinsCommaListsAndNestedQueries() {
     assertEquals(new java.util.HashSet<>(Arrays.asList("BASE", "SECOND", "THIRD", "FOURTH")),
@@ -226,6 +257,7 @@ public class ViewUpdatePlanTest {
         definition("SELECT 'backslash\\', E'escaped\\\' quote' FROM base").getRelations());
   }
 
+  /** Cyclic view dependencies are rejected before any drop. */
   @Test(expected = DatabaseOperationException.class)
   public void cyclesAreRejectedBeforeDroppingAnything() {
     plan(new Database(), model("A", "SELECT * FROM b", "B", "SELECT * FROM a"));
@@ -244,9 +276,9 @@ public class ViewUpdatePlanTest {
   }
 
   private static Database payments(String base) {
-    return model("FIN_PAYMENT_DETAIL_V", base, "FIN_PAYMENT_SCHED_INV_V",
-        "SELECT id FROM fin_payment_detail_v", "FIN_PAYMENT_SCHED_ORD_V", "SELECT 1 AS id",
-        "FIN_PAYMENT_PROP_DETAIL_V",
+    return model(FIN_PAYMENT_DETAIL_V, base, FIN_PAYMENT_SCHED_INV_V,
+        "SELECT id FROM fin_payment_detail_v", "FIN_PAYMENT_SCHED_ORD_V", SELECT_1_AS_ID,
+        FIN_PAYMENT_PROP_DETAIL_V,
         "SELECT i.id FROM fin_payment_sched_inv_v i JOIN fin_payment_sched_ord_v o ON i.id=o.id");
   }
 
