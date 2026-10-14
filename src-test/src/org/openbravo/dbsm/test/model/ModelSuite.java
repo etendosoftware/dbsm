@@ -56,6 +56,8 @@ import org.openbravo.dbsm.test.sqlscript.PgSystemPreScriptTest;
     Functions.class, //
     FunctionVolatility.class, //
     Views.class, //
+    org.apache.ddlutils.platform.postgresql.ViewUpdatePlanTest.class, //
+    org.apache.ddlutils.platform.postgresql.ViewUpdateDatabaseTest.class, //
     MaterializedViews.class, //
 
     AddDropConstraints.class, //
