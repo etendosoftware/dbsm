@@ -39,10 +39,9 @@ class PostgrePLSQLViewConcurrentStandardization implements Runnable {
   public void run() {
     View view = getView();
     log.debug("Standardizing view: " + view.getName());
-    PostgreSQLStandarization viewStandarization = new PostgreSQLStandarization();
     String body = getView().getStatement();
 
-    String standardizedBody = viewStandarization.exec(body);
+    String standardizedBody = ViewDefinition.standardize(body);
     if (standardizedBody.endsWith("\n")) {
       standardizedBody = standardizedBody.substring(0, standardizedBody.length() - 1);
     }

@@ -21,19 +21,23 @@ import static org.apache.ddlutils.model.TypeMap.VARCHAR;
 
 import java.io.IOException;
 import java.sql.Types;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.alteration.AddColumnChange;
+import org.apache.ddlutils.alteration.AddViewChange;
 import org.apache.ddlutils.alteration.ColumnChange;
 import org.apache.ddlutils.alteration.ColumnDataTypeChange;
 import org.apache.ddlutils.alteration.ColumnDefaultValueChange;
 import org.apache.ddlutils.alteration.ColumnRequiredChange;
 import org.apache.ddlutils.alteration.ColumnSizeChange;
+import org.apache.ddlutils.alteration.ModelChange;
 import org.apache.ddlutils.alteration.RemoveCheckChange;
 import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemoveTriggerChange;
+import org.apache.ddlutils.alteration.RemoveViewChange;
 import org.apache.ddlutils.model.Check;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
@@ -43,10 +47,12 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
 import org.apache.ddlutils.model.MaterializedView;
 import org.apache.ddlutils.model.Parameter;
+import org.apache.ddlutils.model.StructureObject;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.Trigger;
 import org.apache.ddlutils.model.TypeMap;
 import org.apache.ddlutils.model.View;
+import org.apache.ddlutils.platform.CreationParameters;
 import org.apache.ddlutils.platform.SqlBuilder;
 import org.apache.ddlutils.translation.CommentFilter;
 import org.apache.ddlutils.translation.LiteralFilter;
@@ -65,6 +71,7 @@ public class PostgreSqlBuilder extends SqlBuilder {
 
   private Translation plsqltranslation = null;
   private Translation sqltranslation = null;
+  private ViewUpdatePlan viewUpdatePlan;
 
   /**
    * Creates a new builder instance.
@@ -85,14 +92,72 @@ public class PostgreSqlBuilder extends SqlBuilder {
     addEscapedCharSequence("\t", "\\t");
   }
 
-  /*
-   * public void alterDatabase(Database currentModel, Database desiredModel, CreationParameters
-   * params) throws IOException { super.alterDatabase(currentModel, desiredModel, params);
-   * 
-   * //Now we recreate the views, because they may have been //deleted during the table recreation
-   * process for(int i=0;i<desiredModel.getViewCount();i++) { createView(desiredModel.getView(i)); }
-   * }
-   */
+  @Override
+  public void prepareDatabaseForAlter(Database currentModel, Database desiredModel,
+      CreationParameters params, List<ModelChange> changes) throws IOException {
+    // Compute both orders before executing any drops, and before processChanges mutates the models.
+    viewUpdatePlan = new ViewUpdatePlan(currentModel, desiredModel, changes,
+        getPlatform().isDelimitedIdentifierModeOn());
+    super.prepareDatabaseForAlter(currentModel, desiredModel, params, changes);
+  }
+
+  @Override
+  public void createTables(Database database, CreationParameters params, boolean dropTables)
+      throws IOException {
+    viewUpdatePlan = null;
+    super.createTables(database, params, dropTables);
+  }
+
+  @Override
+  protected void dropViews(Database currentModel) throws IOException {
+    if (viewUpdatePlan == null) {
+      super.dropViews(currentModel);
+      return;
+    }
+    for (StructureObject view : viewUpdatePlan.getDrops()) {
+      if (view instanceof MaterializedView) {
+        dropMaterializedView((MaterializedView) view);
+      } else {
+        dropView((View) view);
+      }
+    }
+  }
+
+  @Override
+  protected void createViews(Database desiredModel) throws IOException {
+    List<StructureObject> views = viewUpdatePlan == null
+        ? ViewUpdatePlan.orderForCreation(desiredModel, getPlatform().isDelimitedIdentifierModeOn())
+        : viewUpdatePlan.getCreates();
+    for (StructureObject view : views) {
+      if (view instanceof MaterializedView) {
+        createMaterializedView((MaterializedView) view);
+      } else {
+        createView((View) view);
+      }
+    }
+    viewUpdatePlan = null;
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      CreationParameters params, RemoveViewChange change) throws IOException {
+    if (viewUpdatePlan == null) {
+      super.processChange(currentModel, desiredModel, params, change);
+    } else {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    }
+  }
+
+  @Override
+  protected void processChange(Database currentModel, Database desiredModel,
+      CreationParameters params, AddViewChange change) throws IOException {
+    if (viewUpdatePlan == null) {
+      super.processChange(currentModel, desiredModel, params, change);
+    } else {
+      change.apply(currentModel, getPlatform().isDelimitedIdentifierModeOn());
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
