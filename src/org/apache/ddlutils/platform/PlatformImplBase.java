@@ -705,7 +705,7 @@ public abstract class PlatformImplBase extends JdbcSupport implements Platform {
     doAlterTables(connection, currentModel, desiredModel, continueOnError, changes);
   }
 
-  private void prepareDatabaseForAlter(Connection connection, Database currentModel,
+  protected void prepareDatabaseForAlter(Connection connection, Database currentModel,
       Database desiredModel, List<ModelChange> changes) {
     String sql = null;
 
